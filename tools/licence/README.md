@@ -22,6 +22,10 @@ Les modules de chaque palier se règlent dans `TIERS` (`src/shared/licence.ts`).
 
 ## Émettre une licence
 
+**Le plus simple :** double-cliquez sur **Emettre une licence.cmd** dans ce dossier. Les questions s'enchaînent (client, offre, utilisateurs, durée) et la clé est copiée dans le presse-papiers, prête à envoyer.
+
+En ligne de commande :
+
 ```bash
 node tools/licence/issue.mjs --client "Pharmacie du Progrès SARL" --tier pro --months 12
 node tools/licence/issue.mjs --client "SONABEL" --ifu 00012345A --tier entreprise --perpetual
