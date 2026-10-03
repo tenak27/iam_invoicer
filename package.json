@@ -21,11 +21,12 @@
     "dev:web": "vite --config vite.web.config.ts",
     "build:server": "vite build --config vite.server.config.ts",
     "server": "node out/server/server.cjs",
-    "build:all-server": "npm run build:web && npm run build:server",
+    "build:all-server": "npm run build:web && npm run build:server && npm run build:site",
     "cap:sync": "npm run build:web && cap sync",
     "android": "npm run cap:sync && cap open android",
     "ios": "npm run cap:sync && cap open ios",
-    "android:apk": "npm run cap:sync && cd android && gradlew assembleRelease"
+    "android:apk": "npm run cap:sync && cd android && gradlew assembleRelease",
+    "build:site": "node tools/site/build.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

@@ -9,6 +9,9 @@ import { join, resolve } from 'node:path'
 import { makeXlsx } from './make-xlsx.mjs'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8080'
+// Avec le site de présentation, l'application est servie sous /app/
+const root = base.replace(/\/$/, '')
+const app = (await (await fetch(root + '/app/')).text()).includes('id="root"') ? root + '/app/' : base
 const out = resolve(process.argv[3] ?? 'web-e2e-out')
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
@@ -41,7 +44,7 @@ const call = (page, name, args) =>
 
 // ---------- Ordinateur ----------
 const page = await open({ width: 1440, height: 900 })
-await page.goto(base)
+await page.goto(app)
 await page.getByText('Bienvenue dans IAM INVOICER').waitFor()
 if (await page.getByLabel('Pays').inputValue() !== 'BF') throw new Error('Pays par défaut attendu : Burkina Faso')
 await page.getByLabel('Raison sociale').fill('IAM Technology')
@@ -346,7 +349,7 @@ await page.emulateMedia({ colorScheme: 'light' })
 
 // ---------- Téléphone (iPhone 14 : 390 × 844) ----------
 const phone = await open({ width: 390, height: 844 }, true)
-await phone.goto(base)
+await phone.goto(app)
 await phone.getByLabel("Nom d'utilisateur").fill('admin')
 await phone.getByLabel('Mot de passe').fill('secret123')
 await noOverflow(phone, 'connexion')

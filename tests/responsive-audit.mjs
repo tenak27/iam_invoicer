@@ -8,6 +8,9 @@ import { join, resolve } from 'node:path'
 import { chromium } from 'playwright'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8080'
+// Avec le site de présentation, l'application est servie sous /app/
+const root = base.replace(/\/$/, '')
+const app = (await (await fetch(root + '/app/')).text()).includes('id="root"') ? root + '/app/' : base
 const out = resolve(process.argv[3] ?? 'responsive-out')
 const username = process.argv[4] ?? 'admin'
 const password = process.argv[5] ?? 'secret123'
@@ -36,13 +39,13 @@ const report = []
 for (const s of SCREENS) {
   const ctx = await browser.newContext({ viewport: { width: s.width, height: s.height }, isMobile: s.mobile, hasTouch: s.mobile, reducedMotion: 'reduce' })
   const page = await ctx.newPage()
-  await page.goto(base)
+  await page.goto(app)
   await page.getByLabel("Nom d'utilisateur").fill(username)
   await page.getByLabel('Mot de passe').fill(password)
   await page.getByRole('button', { name: /Se connecter/ }).click()
   await page.locator('.content').waitFor()
   for (const route of ROUTES) {
-    await page.goto(`${base}/#${route}`)
+    await page.goto(`${app.replace(/\/$/, '')}/#${route}`)
     await page.waitForTimeout(700)
     const issues = await page.evaluate(({ mobile }) => {
       const vw = document.documentElement.clientWidth

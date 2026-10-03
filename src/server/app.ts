@@ -14,7 +14,7 @@
 // Authentification : en-tête « Authorization: Bearer <jeton> ».
 
 import { randomBytes } from 'node:crypto'
-import { createReadStream, existsSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { extname, join, normalize, resolve, sep } from 'node:path'
 import type { Db } from '../main/db'
@@ -32,8 +32,12 @@ import { signPageHtml } from './signPage'
 export interface ServerOptions {
   db: Db
   version: string
-  /** Dossier de l'application web compilée (servie à la racine). */
+  /** Dossier de l'application web compilée (servie sous /app/, ou à la racine sans site). */
   webRoot?: string
+  /** Site de présentation (racine du domaine). Absent : l'application est servie à la racine. */
+  siteRoot?: string
+  /** Fichiers d'installation proposés au téléchargement (/telechargements/). */
+  downloadsDir?: string
   /** Origines autorisées pour CORS ; « * » par défaut (jetons, pas de cookies). */
   corsOrigin?: string
 }
@@ -114,6 +118,18 @@ export function createHandler(opts: ServerOptions) {
 
   async function api(req: IncomingMessage, res: ServerResponse, path: string, url: URL) {
     const method = req.method ?? 'GET'
+    // Fichiers d'installation disponibles (site de présentation)
+    if (method === 'GET' && path === '/api/downloads') {
+      const dir = opts.downloadsDir
+      const files = dir && existsSync(dir)
+        ? readdirSync(dir).filter((f) => /\.(exe|zip|dmg|apk|aab|msi|pkg|appimage|deb)$/i.test(f)).map((name) => {
+            const st = statSync(join(dir, name))
+            const platform = /\.(exe|msi)$/i.test(name) || /windows/i.test(name) ? 'windows' : /\.(dmg|pkg)$/i.test(name) ? 'macos' : /\.(apk|aab)$/i.test(name) ? 'android' : /\.(appimage|deb)$/i.test(name) ? 'linux' : 'windows'
+            return { name, platform, size: st.size, updated: st.mtime.toISOString().slice(0, 10), url: '/telechargements/' + encodeURIComponent(name) }
+          }).sort((a, b) => b.updated.localeCompare(a.updated))
+        : []
+      return send(res, 200, { ok: true, data: { version: opts.version, files } })
+    }
     if (method === 'GET' && path === '/api/status') {
       const user = await resolveToken(db, bearer(req))
       return send(res, 200, { ok: true, data: { app: 'IAM INVOICER', version: opts.version, needsSetup: await needsSetup(db), user } })
@@ -228,9 +244,9 @@ export function createHandler(opts: ServerOptions) {
     res.end(p.html.replace('</body>', `${auto}</body>`))
   }
 
-  function serveStatic(req: IncomingMessage, res: ServerResponse, path: string) {
-    if (!opts.webRoot) throw new HttpError(404, 'Application web non installée sur ce serveur.')
-    const root = resolve(opts.webRoot)
+  function serveStatic(req: IncomingMessage, res: ServerResponse, path: string, base = opts.webRoot, spa = true, download = false) {
+    if (!base) throw new HttpError(404, 'Application web non installée sur ce serveur.')
+    const root = resolve(base)
     let decoded: string
     try {
       decoded = decodeURIComponent(path)
@@ -240,13 +256,17 @@ export function createHandler(opts: ServerOptions) {
     let file = normalize(join(root, decoded))
     // Le fichier doit être DANS le dossier web (et pas dans un dossier voisin au nom proche).
     if (file !== root && !file.startsWith(root + sep)) throw new HttpError(403, 'Accès refusé.')
-    if (!existsSync(file) || statSync(file).isDirectory()) file = join(root, 'index.html') // application monopage
+    if (!existsSync(file) || statSync(file).isDirectory()) {
+      if (!spa) throw new HttpError(404, 'Fichier introuvable.')
+      file = join(root, 'index.html') // application monopage
+    }
     if (!existsSync(file)) throw new HttpError(404, 'Page introuvable.')
     const ext = extname(file)
     res.writeHead(200, {
       'Content-Type': MIME[ext] ?? 'application/octet-stream',
-      // Les fichiers compilés portent une empreinte dans leur nom : cache long, sauf index.html.
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
+      // Les fichiers compilés portent une empreinte dans leur nom : cache long, sauf les pages et les installateurs.
+      'Cache-Control': ext === '.html' || download ? 'no-cache' : 'public, max-age=31536000, immutable',
+      ...(download ? { 'Content-Disposition': `attachment; filename="${encodeURIComponent(file.split(sep).pop()!)}"`, 'Content-Length': String(statSync(file).size) } : {})
     })
     if (req.method === 'HEAD') return res.end()
     createReadStream(file).pipe(res)
@@ -276,7 +296,17 @@ export function createHandler(opts: ServerOptions) {
       if (path.startsWith('/print/')) return await printPage(res, path.slice('/print/'.length))
       if (/^\/sign\/[A-Za-z0-9_-]{20,}$/.test(path)) return await signPage(res, path.slice('/sign/'.length))
       if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Méthode non autorisée.')
-      return serveStatic(req, res, path)
+      // Fichiers d'installation
+      if (path.startsWith('/telechargements/')) return serveStatic(req, res, path.slice('/telechargements'.length), opts.downloadsDir, false, true)
+      const site = opts.siteRoot && existsSync(join(opts.siteRoot, 'index.html')) ? opts.siteRoot : null
+      if (!site) return serveStatic(req, res, path)
+      // Site de présentation à la racine, application sous /app/
+      if (path === '/app') {
+        res.writeHead(301, { Location: '/app/' + url.search })
+        return res.end()
+      }
+      if (path.startsWith('/app/')) return serveStatic(req, res, path.slice('/app'.length))
+      return serveStatic(req, res, path, site, true)
     } catch (e) {
       if (res.headersSent) return res.end()
       if (e instanceof HttpError) return send(res, e.status, { ok: false, error: e.message })

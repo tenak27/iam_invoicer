@@ -6,6 +6,8 @@
 //   DATABASE_URL    postgres://utilisateur:motdepasse@hote:5432/base  (recommandé)
 //   DATA_DIR        sans DATABASE_URL : base PostgreSQL intégrée dans ce dossier (./data)
 //   WEB_ROOT        dossier de l'application web (out/web à côté du serveur)
+//   SITE_ROOT       site de présentation servi à la racine (out/site) ; l'application passe sous /app/
+//   DOWNLOADS_DIR   installateurs proposés au téléchargement (DATA_DIR/telechargements par défaut)
 //   CORS_ORIGIN     origines autorisées pour l'API (* par défaut)
 
 import { createServer } from 'node:http'
@@ -23,6 +25,8 @@ async function main() {
     db,
     version: __APP_VERSION__,
     webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'),
+    siteRoot: process.env.SITE_ROOT ?? join(__dirname, '../site'),
+    downloadsDir: process.env.DOWNLOADS_DIR ?? join(process.env.DATA_DIR ?? 'data', 'telechargements'),
     corsOrigin: process.env.CORS_ORIGIN
   })
   const port = Number(process.env.PORT) || 8080

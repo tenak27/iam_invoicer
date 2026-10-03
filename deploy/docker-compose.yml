@@ -26,6 +26,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://iam:${DB_PASSWORD}@db:5432/iam_invoicer
+      DOWNLOADS_DIR: /telechargements
+    volumes:
+      # Déposez ici les installateurs (.exe, .dmg, .apk) proposés sur le site
+      - ./telechargements:/telechargements:ro
     depends_on:
       db:
         condition: service_healthy
