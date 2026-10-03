@@ -5,7 +5,7 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
@@ -102,6 +102,7 @@ const NAV: Section[] = [
     items: [
       { to: '/settings', label: 'Société & paramètres', module: 'settings', icon: Buildings },
       { to: '/users', label: 'Utilisateurs', module: 'users', icon: UserGear },
+      { to: '/import', label: 'Importer des données', short: 'Import', module: 'clients', icon: FileArrowUp },
       { to: '/audit', label: "Journal d'activité", module: 'users', icon: ListChecks }
     ]
   }

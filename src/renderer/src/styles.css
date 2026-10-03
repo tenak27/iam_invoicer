@@ -1273,3 +1273,30 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .tax-chip.withholding.on { background: var(--amber-soft); border-color: var(--c-warning); color: var(--amber); }
 .totals tr.withheld td { color: var(--amber); }
 .space-between { justify-content: space-between; }
+
+/* Importer des données */
+.kpi-rose { background: linear-gradient(135deg, #a01f4c, #c02a60); --kpi-shadow: rgba(160, 31, 76, .6); }
+.kpi-teal { background: linear-gradient(135deg, #0b5f6b, #0e7a87); --kpi-shadow: rgba(11, 95, 107, .6); }
+.import-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.import-tile { border: none; font: inherit; text-align: left; cursor: pointer; min-height: 150px; padding-bottom: 18px; animation: card-in .5s var(--ease-out) backwards; }
+.import-tile:nth-child(2) { animation-delay: .06s; }
+.import-tile:nth-child(3) { animation-delay: .12s; }
+.import-tile:nth-child(4) { animation-delay: .18s; }
+.import-tile:nth-child(n+5) { animation-delay: .24s; }
+.import-tile p { margin: 4px 0 0; color: rgba(255, 255, 255, .92); font-size: 13.5px; }
+.import-tile:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.import-go { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding-top: 10px; }
+.import-steps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 24px; }
+.import-step { display: flex; gap: 14px; align-items: flex-start; }
+.import-step h3 { margin: 2px 0 6px; }
+.step-num { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--tone-grad, var(--c-primary)); box-shadow: 0 6px 14px -6px rgba(var(--tone-rgb, var(--primary-rgb)), .8); }
+.drop-zone { display: flex; align-items: center; gap: 14px; padding: 18px; border: 2px dashed var(--line-strong); border-radius: var(--r-md); background: var(--surface-2); cursor: pointer; color: var(--tone-ink, var(--link)); transition: border-color var(--t-fast), background var(--t-fast); }
+.drop-zone:hover, .drop-zone:focus-within { border-color: var(--tone-b, var(--c-primary)); background: var(--tone-soft, var(--surface-2)); }
+.drop-zone span { color: var(--text-2); }
+.drop-zone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.paste-box { margin-top: 12px; }
+.paste-box summary { cursor: pointer; color: var(--link); font-weight: 600; display: inline-flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.import-preview th { vertical-align: bottom; min-width: 150px; }
+.import-preview th select { margin-top: 4px; font-size: 13px; }
+.info-box.warn-box { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r-md); }
+@media (max-width: 900px) { .import-steps { grid-template-columns: 1fr; } }

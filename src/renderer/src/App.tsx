@@ -8,6 +8,7 @@ import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
+import { ImportPage } from './pages/Import'
 import { DocumentList } from './pages/DocumentList'
 import { DocumentEditor } from './pages/DocumentEditor'
 import { PartyDetail, PartyList } from './pages/Parties'
@@ -128,6 +129,7 @@ export default function App() {
                 <Route path="/messages/modeles" element={<MessageTemplates />} />
                 <Route path="/settings" element={<CompanySettingsPage />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/import" element={<ImportPage />} />
                 <Route path="/audit" element={<AuditLog />} />
                 <Route path="/account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/" />} />

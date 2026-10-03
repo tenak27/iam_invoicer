@@ -6,6 +6,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { makeXlsx } from './make-xlsx.mjs'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8080'
 const out = resolve(process.argv[3] ?? 'web-e2e-out')
@@ -287,6 +288,37 @@ await shot(page, 'tresorerie')
 await page.locator('.nav-link', { hasText: 'Société & paramètres' }).click()
 await page.getByLabel('Régime fiscal').waitFor()
 await shot(page, 'parametres')
+
+// Taxes de facturation : modèles du pays puis droit de timbre automatique
+await page.getByRole('tab', { name: 'Taxes' }).click()
+await page.getByRole('button', { name: 'Ajouter les modèles du pays' }).click()
+await page.locator('tr', { hasText: 'TIMBRE' }).getByRole('button', { name: 'Modifier' }).click()
+await page.locator('.modal').getByRole('textbox', { name: 'Montant' }).fill('200')
+await page.locator('.modal').getByLabel('Active').check()
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.locator('tr', { hasText: 'TIMBRE' }).getByText('Active', { exact: true }).waitFor()
+await shot(page, 'taxes')
+
+// Import de clients depuis un classeur Excel
+await navTo('Importer des données')
+await page.getByRole('button', { name: /Clients/ }).click()
+await page.locator('input[type=file]').setInputFiles({
+  name: 'clients.xlsx',
+  mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  buffer: makeXlsx([
+    ['Raison sociale', 'Tél.', 'Ville', 'N° IFU', 'Délai de paiement'],
+    ['Pharmacie du Progrès', '70 12 34 56', 'Bobo-Dioulasso', '00045678B', 30],
+    ['Boutique Wend-Kuni', '76 00 11 22', 'Ouagadougou', '', 15],
+    ['', '78 00 00 00', 'Koudougou', '', '']
+  ])
+})
+await page.getByRole('button', { name: /Importer 3 ligne/ }).waitFor()
+await shot(page, 'import-apercu')
+await page.getByRole('button', { name: /Importer 3 ligne/ }).click()
+await page.locator('.import-report').getByText('Refusés').waitFor()
+await shot(page, 'import-compte-rendu')
+await page.locator('.sidebar').getByRole('link', { name: 'Clients', exact: true }).click()
+await page.locator('tr', { hasText: 'Pharmacie du Progrès' }).waitFor()
 
 // Thème sombre (préférence du système)
 await page.emulateMedia({ colorScheme: 'dark' })

@@ -22,6 +22,7 @@ import * as projects from './services/projects'
 import * as assets from './services/assets'
 import * as budget from './services/budget'
 import * as taxes from './services/taxes'
+import * as imports from './services/imports'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -57,6 +58,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'taxes.save': { access: 'settings', fn: taxes.saveTax },
   'taxes.delete': { access: 'settings', fn: taxes.deleteTax },
   'taxes.importPresets': { access: 'settings', fn: taxes.importTaxPresets },
+  // Droits vérifiés par type de données dans le service
+  'imports.run': { access: 'user', fn: imports.runImport },
 
   'parties.list': { access: async (_c, a) => partyModule(a), fn: parties.listParties },
   'parties.get': {
