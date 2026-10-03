@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { formatDate } from '@shared/format'
 import { ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
-import { ArrowCounterClockwise, PencilSimple, Prohibit } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
 import { DbConfigForm, REGIMES, TAX_ID_LABELS } from './Auth'
 import { useSession } from '../session'
@@ -319,6 +320,7 @@ export function CompanySettingsPage() {
                 : 'Les sauvegardes se font sur le serveur (pg_dump) : voir le guide de déploiement.'}
             </p>
           </div>
+          {desktop && dbMode === 'remote' && <LocalSyncCard />}
         </div>
       )}
       {showDb && <Modal title={desktop ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide><DbConfigForm /></Modal>}
@@ -474,6 +476,76 @@ export function MyAccount() {
           <Field label="Confirmation"><input type="password" {...f.bind('confirm')} /></Field>
           <div className="form-actions"><button className="btn btn-primary" onClick={submit}>Modifier</button></div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** Ordinateur relié au serveur en ligne : état de la base locale et de la synchronisation. */
+function LocalSyncCard() {
+  const off = window.erp.offline
+  const [, refresh] = useState(0)
+  const [busy, setBusy] = useState<'' | 'sync' | 'load'>('')
+  useEffect(() => {
+    const on = () => refresh((n) => n + 1)
+    window.addEventListener('iam-offline', on)
+    return () => window.removeEventListener('iam-offline', on)
+  }, [])
+  const st = off?.state?.()
+  if (!off || !st) return null
+  const when = (iso: string | null) => (iso ? `${formatDate(iso.slice(0, 10))} à ${iso.slice(11, 16)}` : 'jamais')
+  const size = st.localBytes > 1_048_576 ? `${(st.localBytes / 1_048_576).toFixed(1)} Mo` : `${Math.max(1, Math.round(st.localBytes / 1024))} Ko`
+  const sync = async () => {
+    setBusy('sync')
+    const r = await off.sync()
+    setBusy('')
+    notify(r.sent ? `${r.sent} saisie(s) envoyée(s).` : off.pending() ? "Serveur injoignable : nouvel essai automatique dans 30 secondes." : 'Tout est à jour.', r.sent || !off.pending() ? 'success' : 'info')
+  }
+  const load = async () => {
+    setBusy('load')
+    const n = await run(() => unwrap(off.prefetch!()))
+    setBusy('')
+    if (n !== undefined) notify(`Base locale mise à jour (${n} jeux de données).`, 'success')
+  }
+  return (
+    <div className="card sync-card">
+      <h3>Base locale de ce poste</h3>
+      <p className="muted">
+        Cet ordinateur garde une copie des données de travail (articles, clients, documents récents, caisse…) et continue de fonctionner sans Internet.
+        Les ventes, règlements, temps passés, congés et fiches clients saisis hors connexion partent automatiquement vers le serveur au retour du réseau, sans doublon.
+      </p>
+      <div className="sync-grid">
+        <div className={`sync-stat ${st.reachable ? 'ok' : 'down'}`}>
+          {st.reachable ? <CloudCheck size={26} weight="duotone" aria-hidden="true" /> : <CloudSlash size={26} weight="duotone" aria-hidden="true" />}
+          <span>Serveur</span><strong>{st.reachable ? 'Connecté' : 'Injoignable'}</strong>
+        </div>
+        <div className={`sync-stat ${st.pending ? 'warn' : 'ok'}`}>
+          <ArrowsClockwise size={26} weight="duotone" aria-hidden="true" />
+          <span>Saisies en attente</span><strong>{st.pending}</strong>
+        </div>
+        <div className="sync-stat">
+          <CloudArrowDown size={26} weight="duotone" aria-hidden="true" />
+          <span>Données préchargées</span><strong>{when(st.lastPrefetch)}</strong>
+        </div>
+        <div className="sync-stat">
+          <Database size={26} weight="duotone" aria-hidden="true" />
+          <span>Taille locale</span><strong>{size}</strong>
+        </div>
+      </div>
+      <p className="muted small">Dernier envoi complet : {when(st.lastSync)}.{st.needsLogin ? ' Session expirée : reconnectez-vous pour envoyer les saisies en attente.' : ''}</p>
+      {st.failed.length > 0 && (
+        <div className="info-box warn-box"><span>{st.failed.length} saisie(s) refusée(s) par le serveur : {st.failed.slice(0, 3).map((f) => `${f.name} (${f.error})`).join(' ; ')}.</span></div>
+      )}
+      <div className="row gap wrap">
+        <button className="btn btn-primary" disabled={!!busy} onClick={sync}><ArrowsClockwise size={18} aria-hidden="true" className={busy === 'sync' ? 'spin' : ''} />Synchroniser maintenant</button>
+        <button className="btn" disabled={!!busy || !st.reachable} onClick={load}><CloudArrowDown size={18} aria-hidden="true" />{busy === 'load' ? 'Chargement…' : 'Mettre à jour la base locale'}</button>
+        <button
+          className="btn btn-ghost"
+          disabled={!!busy}
+          onClick={async () => {
+            if (await confirmDialog('Vider les données gardées sur ce poste ?', { detail: 'Les saisies en attente sont conservées. Sans réseau, les écrans resteront vides jusqu’au prochain chargement.' })) await off.clearCache!()
+          }}
+        ><Trash size={18} aria-hidden="true" />Vider les données locales</button>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
-// Mode hors ligne (web et mobile) :
+// Mode hors ligne (web, mobile, et application de bureau reliée à un serveur en ligne) :
 //  - lectures : la dernière réponse de chaque écran est gardée sur l'appareil et
-//    réaffichée si le réseau tombe ;
+//    réaffichée si le réseau tombe (sur le bureau, dans une base locale sur disque) ;
 //  - saisies courantes (vente en caisse, règlement, temps passé, congé, activité
 //    CRM, nouveau client) : mises en file d'attente, puis envoyées dans l'ordre
 //    au retour du réseau. Chaque opération porte un identifiant unique : le

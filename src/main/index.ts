@@ -1,13 +1,47 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell } from 'electron'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { openBackend, RemoteBackend, type AppConfig, type Backend } from './backend'
+import { openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
 import { openDb, restoreLocal } from './db'
 import type { PrintFormat } from './printing'
 import { AppError, type SessionUser } from './services/context'
 
 const configPath = () => join(app.getPath('userData'), 'config.json')
 const localDataDir = () => join(app.getPath('userData'), 'data')
+/** Base locale de travail du mode « serveur en ligne » (données consultées, saisies en attente). */
+const syncDir = () => join(app.getPath('userData'), 'sync')
+
+/**
+ * Connexions mémorisées pour se reconnecter sans réseau, chiffrées par le système
+ * (DPAPI sous Windows, Trousseau sous macOS). Sans chiffrement disponible, rien n'est mémorisé.
+ */
+function createVault(): SessionVault | undefined {
+  if (!safeStorage.isEncryptionAvailable()) return undefined
+  const file = () => join(syncDir(), 'sessions.bin')
+  const readAll = (): Record<string, SavedLogin> => {
+    try {
+      return JSON.parse(safeStorage.decryptString(readFileSync(file())))
+    } catch {
+      return {}
+    }
+  }
+  const key = (url: string, username: string) => `${url}|${username.trim().toLowerCase()}`
+  return {
+    get: (url, username) => readAll()[key(url, username)] ?? null,
+    put: (login) => {
+      const all = readAll()
+      all[key(login.url, login.username)] = login
+      mkdirSync(syncDir(), { recursive: true })
+      writeFileSync(file() + '.tmp', safeStorage.encryptString(JSON.stringify(all)))
+      renameSync(file() + '.tmp', file())
+    }
+  }
+}
+
+/** Prévient la fenêtre que l'état de synchronisation a changé. */
+function pushSyncState() {
+  if (backend instanceof RemoteBackend && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('offline.changed', backend.state())
+}
 
 function readConfig(): AppConfig {
   try {
@@ -25,7 +59,11 @@ async function connect(): Promise<void> {
   const cfg = readConfig()
   try {
     if (cfg.mode === 'local') mkdirSync(localDataDir(), { recursive: true })
-    backend = await openBackend(cfg.mode === 'local' ? { mode: 'local', dataDir: localDataDir() } : cfg)
+    backend = await openBackend(cfg.mode === 'local' ? { mode: 'local', dataDir: localDataDir() } : cfg, {
+      dataDir: syncDir(),
+      vault: createVault(),
+      onChange: pushSyncState
+    })
     backendError = null
   } catch (e) {
     backend = null
@@ -84,8 +122,28 @@ function registerIpc(): void {
     serverUrl: backend instanceof RemoteBackend ? backend.url : null,
     version: app.getVersion(),
     platform: process.platform,
-    user: backend?.user() ?? null
+    user: backend?.user() ?? null,
+    offline: backend instanceof RemoteBackend ? !backend.reachable : false
   }))
+
+  // Synchronisation avec le serveur en ligne (base locale de travail)
+  const remote = () => (backend instanceof RemoteBackend ? backend : null)
+  ipcMain.handle('offline.state', () => remote()?.state() ?? null)
+  ipcMain.handle('offline.sync', async () => (await remote()?.sync()) ?? { sent: 0, failed: 0 })
+  ipcMain.handle('offline.clearFailed', () => {
+    remote()?.clearFailed()
+    return true
+  })
+  ipcMain.handle('offline.prefetch', () => guard(async () => {
+    const b = remote()
+    if (!b) return 0
+    if (!b.reachable) await b.ping()
+    return b.prefetch()
+  }))
+  ipcMain.handle('offline.clearCache', () => {
+    remote()?.clearCache()
+    return true
+  })
 
   ipcMain.handle('session.login', (_e, username: string, password: string) =>
     guard(() => requireBackend().login(username, password))
@@ -288,11 +346,32 @@ else {
   if (legacy && !existsSync(join(app.getPath('userData'), 'data'))) app.setPath('userData', legacy)
 }
 
+/**
+ * Toutes les 30 s : retente le serveur s'il était injoignable et envoie les saisies en attente.
+ * Toutes les 10 min : rafraîchit la base locale avec les données des autres postes.
+ */
+function startSyncLoop() {
+  let ticks = 0
+  setInterval(async () => {
+    const b = backend instanceof RemoteBackend ? backend : null
+    if (!b?.user()) return
+    ticks++
+    try {
+      if (!b.reachable) await b.ping()
+      if (b.state().pending) await b.sync()
+      if (b.reachable && ticks % 20 === 0) await b.prefetch()
+    } catch {
+      /* toujours hors connexion : nouvel essai au prochain passage */
+    }
+  }, 30_000).unref()
+}
+
 app.whenReady().then(async () => {
   if (app.isPackaged && process.platform !== 'darwin') Menu.setApplicationMenu(null)
   registerIpc()
   await connect()
   createWindow()
+  startSyncLoop()
   // macOS : rouvrir la fenêtre quand on clique sur l'icône du Dock.
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

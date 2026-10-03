@@ -10,7 +10,7 @@ import {
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
 import { Navbar } from './Topbar'
-import { OFFLINE_LABELS } from '../offline'
+import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
@@ -182,7 +182,10 @@ function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
   if (!remote) return null
   const pending = off?.pending() ?? 0
   const failed = off?.failed() ?? []
-  if (online && pending === 0 && failed.length === 0) return null
+  // Sur ordinateur, le serveur peut être injoignable alors que le réseau fonctionne.
+  const reachable = online && !(off?.serverDown?.() ?? false)
+  const needsLogin = off?.state?.()?.needsLogin ?? false
+  if (reachable && pending === 0 && failed.length === 0) return null
   const sync = async () => {
     if (!off) return
     setSyncing(true)
@@ -191,14 +194,15 @@ function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
     refresh((n) => n + 1)
   }
   return (
-    <div className={`offline-bar ${online ? 'pending' : ''}`} role="status">
-      {online ? <CloudArrowUp size={18} aria-hidden="true" /> : <WifiSlash size={18} aria-hidden="true" />}
+    <div className={`offline-bar ${reachable ? 'pending' : ''}`} role="status">
+      {reachable ? <CloudArrowUp size={18} aria-hidden="true" /> : <WifiSlash size={18} aria-hidden="true" />}
       <span className="grow">
-        {!online ? 'Hors connexion : vous consultez les dernières données de cet appareil. ' : ''}
-        {pending > 0 ? `${pending} saisie(s) en attente d'envoi.` : !online ? 'Les ventes, règlements et temps saisis seront envoyés au retour du réseau.' : ''}
+        {!reachable ? 'Hors connexion : vous consultez les dernières données de cet appareil. ' : ''}
+        {pending > 0 ? `${pending} saisie(s) en attente d'envoi.` : !reachable ? 'Les ventes, règlements et temps saisis seront envoyés au retour du réseau.' : ''}
+        {reachable && pending > 0 && needsLogin ? ' Reconnectez-vous pour les envoyer (session expirée).' : ''}
         {failed.length > 0 && ` ${failed.length} saisie(s) refusée(s) par le serveur : ${failed.slice(0, 2).map((f) => `${OFFLINE_LABELS[f.name] ?? f.name} (${f.error})`).join(' ; ')}.`}
       </span>
-      {online && pending > 0 && <button className="btn btn-sm" onClick={sync} disabled={syncing}><ArrowsClockwise size={16} aria-hidden="true" className={syncing ? 'spin' : ''} />{syncing ? 'Envoi…' : 'Synchroniser'}</button>}
+      {reachable && pending > 0 && <button className="btn btn-sm" onClick={sync} disabled={syncing}><ArrowsClockwise size={16} aria-hidden="true" className={syncing ? 'spin' : ''} />{syncing ? 'Envoi…' : 'Synchroniser'}</button>}
       {failed.length > 0 && <button className="btn btn-sm btn-ghost" onClick={() => off?.clearFailed()}>Effacer</button>}
     </div>
   )

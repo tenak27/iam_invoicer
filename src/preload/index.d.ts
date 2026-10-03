@@ -15,6 +15,16 @@ interface AppStatus {
   offline?: boolean
 }
 
+interface SyncState {
+  reachable: boolean
+  pending: number
+  failed: { opId: string; name: string; at: string; error: string }[]
+  lastSync: string | null
+  lastPrefetch: string | null
+  localBytes: number
+  needsLogin: boolean
+}
+
 /** Pont vers les données : Electron (IPC) sur ordinateur, HTTP sur le web et le mobile. */
 interface ErpBridge {
   kind: 'desktop' | 'web' | 'mobile'
@@ -35,12 +45,18 @@ interface ErpBridge {
   pickImage(): Promise<Result<string | null>>
   backup(): Promise<Result>
   restore(): Promise<Result>
-  /** Mode hors ligne (web et mobile uniquement). */
+  /** Mode hors ligne : web, mobile, et ordinateur relié à un serveur en ligne. */
   offline?: {
     pending(): number
     failed(): { opId: string; name: string; at: string; error: string }[]
     sync(): Promise<{ sent: number; failed: number }>
     clearFailed(): void
+    /** Ordinateur : le serveur ne répond pas (même si le réseau local fonctionne). */
+    serverDown?(): boolean
+    /** Ordinateur : état détaillé de la base locale de travail. */
+    state?(): SyncState | null
+    prefetch?(): Promise<Result<number>>
+    clearCache?(): Promise<boolean>
   }
 }
 

@@ -3,7 +3,7 @@
 // Le jeton de connexion est conservé sur l'appareil pour rester connecté.
 
 import { Capacitor } from '@capacitor/core'
-import { createOfflineLayer } from './offline'
+import { createOfflineLayer } from '@shared/offline'
 
 const URL_KEY = 'iam.serverUrl'
 const TOKEN_KEY = 'iam.token'

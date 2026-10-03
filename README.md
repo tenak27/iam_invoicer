@@ -22,7 +22,7 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Immobilisations | Registre, amortissement linéaire prorata temporis, dotations annuelles (681/28xx), cession et mise au rebut avec écritures |
 | Budgets et trésorerie | Budget mensuel par compte avec prévu/réalisé, trésorerie prévisionnelle à 8, 13 ou 26 semaines (factures, paie, prévisions) avec alerte de découvert |
 | Facture certifiée | SECeF (DGI) : certification à la validation, code, compteurs et QR code imprimés ; mode simulation et connecteur API |
-| Hors ligne | Web et mobile : consultation des dernières données, ventes, règlements, temps et congés saisis hors connexion puis envoyés au retour du réseau, sans doublon |
+| Hors ligne | Ordinateur, web et mobile : consultation des dernières données, ventes, règlements, temps et congés saisis hors connexion puis envoyés au retour du réseau, sans doublon |
 | Communications | Envoi des documents par e-mail (PDF joint) et par SMS (Orange, Twilio ou passerelle HTTP), relances des factures en retard (une ou toutes), modèles de messages à variables, journal des envois |
 | Signatures | Cachet et signature de la société sur les documents, signature du client sur place (doigt, stylet, souris) ou à distance par lien sécurisé (e-mail/SMS), preuve : empreinte SHA-256, date, IP, appareil |
 | Modèles de documents | Mise en page moderne ou classique, couleur au choix, conditions générales, pied de page |
@@ -74,7 +74,7 @@ Les communications (e-mails, SMS, relances) sont ouvertes à l'administrateur, a
 
 - **Paie** : les taux CNSS, le plafond, le barème IUTS, les abattements et les réductions pour charges de famille sont des valeurs par défaut, modifiables dans *RH → Paramètres de paie*. **Faites-les vérifier par votre comptable ou auprès de la DGI et de la CNSS** : la réglementation évolue.
 - **Facture certifiée (SECeF)** : le mode « simulation » permet de tester le circuit. Le mode « API » suit le modèle des API e-MCF ; son format doit être ajusté à la documentation officielle remise par la DGI avec vos identifiants. En mode API, une facture non certifiée ne peut pas être validée.
-- **Hors ligne** : les ventes enregistrées sans réseau reçoivent leur numéro et leur date au moment de la synchronisation. L'application de bureau en mode « serveur en ligne » n'a pas encore de mode hors ligne (les postes du bureau peuvent rester en base locale ou réseau).
+- **Hors ligne** : les ventes enregistrées sans réseau reçoivent leur numéro et leur date au moment de la synchronisation. Sur ordinateur relié au serveur en ligne, une **base locale** garde les données de travail : on peut démarrer, se connecter (après une première connexion en ligne sur le poste, valable 30 jours) et vendre sans Internet ; tout part automatiquement au retour du réseau (*Société & paramètres → Données → Base locale de ce poste*).
 
 ## E-mails, SMS et signatures
 
@@ -96,7 +96,7 @@ L'emplacement se choisit à l'écran de connexion, sous **Base de données … �
 
 Les applications Android et iOS, ainsi que la version navigateur, se connectent toujours à un **serveur en ligne**.
 
-> Le mode en ligne demande une connexion Internet. Sans connexion, on ne peut ni consulter ni saisir de données. Il n'y a pas encore de mode hors ligne avec synchronisation différée.
+> Sans connexion, chaque appareil relié au serveur en ligne (ordinateur, téléphone, navigateur) continue sur ses données locales ; ventes, règlements, temps passés, congés et fiches clients sont envoyés au retour du réseau, une seule fois. Les numéros définitifs sont attribués par le serveur à ce moment-là.
 
 ## Mettre en ligne le serveur sur votre domaine
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createOfflineLayer, type CallResult, type KeyValueStore } from '../src/renderer/src/offline'
+import { createOfflineLayer, type CallResult, type KeyValueStore } from '../src/shared/offline'
 
 function memoryStore(): KeyValueStore {
   const m = new Map<string, string>()
