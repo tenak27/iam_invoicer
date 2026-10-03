@@ -7,7 +7,8 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
-import { ChatCircleText, EnvelopeSimple } from '@phosphor-icons/react'
+import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, SealCheck, Trash } from '@phosphor-icons/react'
+import { DocumentPreview } from '../components/DocumentPreview'
 
 type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
 let lineKey = 0
@@ -165,6 +166,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     if (await run(() => api('documents.delete', { id: doc.id }), 'Brouillon supprimé.')) nav(`/docs/${type}`)
   }
 
+  const [preview, setPreview] = useState(false)
+  const openPreview = async () => {
+    if (dirty && editable && doc) await save()
+    setPreview(true)
+  }
+
   const pdf = async (mode: 'open' | 'save' | 'print') => {
     if (dirty && editable && doc) await save()
     await run(() => unwrap(window.erp.pdf(doc.id, mode)))
@@ -202,10 +209,10 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         actions={
           editable ? (
             <>
-              {doc && <button className="btn btn-ghost" onClick={remove}>Supprimer</button>}
-              {doc && <button className="btn" onClick={() => pdf('open')}>Aperçu PDF</button>}
-              <button className="btn" onClick={onSave} disabled={busy}>Enregistrer</button>
-              <button className="btn btn-primary" onClick={onValidate} disabled={busy}>Valider</button>
+              {doc && <button className="btn btn-ghost" onClick={remove}><Trash size={18} aria-hidden="true" />Supprimer</button>}
+              {doc && <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>}
+              <button className="btn" onClick={onSave} disabled={busy}><FloppyDisk size={18} aria-hidden="true" />Enregistrer</button>
+              <button className="btn btn-primary" onClick={onValidate} disabled={busy}><SealCheck size={18} aria-hidden="true" />Valider</button>
             </>
           ) : (
             <>
@@ -218,10 +225,10 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
                   <button className="btn" onClick={() => setSending('sms')}><ChatCircleText size={18} aria-hidden="true" />SMS</button>
                 </>
               )}
-              <button className="btn" onClick={duplicate}>Dupliquer</button>
-              <button className="btn" onClick={() => pdf('print')}>Imprimer</button>
-              <button className="btn" onClick={() => pdf('save')}>Enregistrer PDF</button>
-              <button className="btn" onClick={() => pdf('open')}>Ouvrir PDF</button>
+              <button className="btn" onClick={duplicate}><Copy size={18} aria-hidden="true" />Dupliquer</button>
+              <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>
+              <button className="btn" onClick={() => pdf('print')}><Printer size={18} aria-hidden="true" />Imprimer</button>
+              <button className="btn" onClick={() => pdf('save')}><DownloadSimple size={18} aria-hidden="true" />PDF</button>
               {doc.status === 'valide' && info.convertsTo.map((to) => (
                 <button key={to} className="btn btn-accent" onClick={() => convert(to)}>→ {DOC_TYPES[to].label}</button>
               ))}
@@ -432,6 +439,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
       {sending === 'email' && <SendEmailModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
       {sending === 'sms' && <SendSmsModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
+      {preview && doc && <DocumentPreview id={doc.id} ticket={type === 'FAC'} onClose={() => setPreview(false)} />}
       {payOpen && <PaymentModal doc={doc} remaining={remaining} onClose={() => setPayOpen(false)} onDone={() => { setPayOpen(false); onReload() }} />}
     </div>
   )

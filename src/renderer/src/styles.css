@@ -1351,3 +1351,13 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .tier-list li.no { color: var(--muted); opacity: .7; }
 .vendor-card { display: flex; gap: 14px; align-items: center; color: var(--tone-ink); }
 .vendor-card strong { color: var(--text); }
+
+/* Aperçu d'un document */
+.preview-frame { background: var(--surface-3); border-radius: var(--r-md); padding: 14px; display: flex; justify-content: center; max-height: 68vh; overflow: auto; }
+.preview-frame iframe { width: 820px; max-width: 100%; height: 66vh; border: none; background: #fff; border-radius: 4px; box-shadow: 0 10px 30px -12px rgba(15, 20, 35, .4); }
+.preview-frame.ticket iframe { width: 340px; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: var(--r-sm); padding: 3px; gap: 3px; }
+.seg button { display: inline-flex; align-items: center; gap: 6px; border: none; background: none; padding: 6px 12px; border-radius: 6px; font: inherit; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.seg button.on { background: var(--surface); color: var(--link); box-shadow: var(--lift); }
+.modal-foot .grow { flex: 1; }
+.error-text { color: var(--red); }

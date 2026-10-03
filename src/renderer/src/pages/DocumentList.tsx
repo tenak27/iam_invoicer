@@ -4,7 +4,8 @@ import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate } from '@shared/format'
 import { api, exportCsv, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Loading, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge } from '../components/ui'
-import { Copy, Eye, FilePdf, Printer, Trash } from '@phosphor-icons/react'
+import { ArrowSquareOut, Copy, Eye, FilePdf, Printer, Trash } from '@phosphor-icons/react'
+import { DocumentPreview } from '../components/DocumentPreview'
 
 export function DocumentList() {
   const { type } = useParams<{ type: string }>()
@@ -24,6 +25,7 @@ function DocumentListInner({ type }: { type: DocType }) {
   const rows = data ?? []
   const totals = rows.filter((r) => r.status === 'valide').reduce((s, r) => ({ ht: s.ht + r.total_ht, ttc: s.ttc + r.total_ttc, rest: s.rest + (r.total_ttc - r.paid) }), { ht: 0, ttc: 0, rest: 0 })
   const partyLabel = info.side === 'sale' ? 'Client' : 'Fournisseur'
+  const [preview, setPreview] = useState<number | null>(null)
   const duplicate = async (r: any) => {
     const copy = await run(() => api<{ id: number }>('documents.duplicate', { id: r.id }), 'Copie créée en brouillon.')
     if (copy) nav(`/doc/${copy.id}`)
@@ -102,7 +104,8 @@ function DocumentListInner({ type }: { type: DocType }) {
                   {info.payable && <td className="num">{r.status === 'valide' && <Money value={r.total_ttc - r.paid} />}</td>}
                   <td className="actions-col">
                     <RowActions actions={[
-                      { label: 'Ouvrir', icon: Eye, onClick: () => nav(`/doc/${r.id}`) },
+                      { label: 'Aperçu', icon: Eye, onClick: () => setPreview(r.id) },
+                      { label: 'Ouvrir', icon: ArrowSquareOut, onClick: () => nav(`/doc/${r.id}`) },
                       { label: 'Voir le PDF', icon: FilePdf, tone: 'primary', onClick: () => run(() => unwrap(window.erp.pdf(r.id, 'open'))) },
                       { label: 'Imprimer', icon: Printer, onClick: () => run(() => unwrap(window.erp.pdf(r.id, 'print'))) },
                       { label: 'Dupliquer', icon: Copy, tone: 'success', onClick: () => duplicate(r) },
@@ -115,6 +118,7 @@ function DocumentListInner({ type }: { type: DocType }) {
           </table>
         </div>
       )}
+      {preview && <DocumentPreview id={preview} ticket={type === 'FAC'} onClose={() => setPreview(null)} />}
     </div>
   )
 }

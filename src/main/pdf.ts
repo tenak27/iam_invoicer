@@ -121,7 +121,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .notes { flex: 1; }
   .sign { display: flex; justify-content: space-between; margin-top: 28px; page-break-inside: avoid; }
   .sign div { width: 45%; border-top: 1px solid #9aa5b1; padding-top: 4px; font-size: 9pt; color: #5f6b7a; height: 70px; }
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 7.5pt; color: #7b8794; border-top: 1px solid #e4e9ef; padding-top: 4px; }
+  .footer { margin-top: 24px; text-align: center; font-size: 7.5pt; color: #7b8794; border-top: 1px solid #e4e9ef; padding-top: 4px; }
+  /* À l'impression, le pied de page se répète en bas de chaque page ; à l'écran (aperçu), il suit le document. */
+  @media print { .footer { position: fixed; bottom: 0; left: 0; right: 0; margin: 0; } }
   .band { height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
   .signs { display: flex; justify-content: space-between; gap: 18px; margin-top: 24px; page-break-inside: avoid; }
   .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px; min-height: 96px; font-size: 8.5pt; color: #5f6b7a; position: relative; }

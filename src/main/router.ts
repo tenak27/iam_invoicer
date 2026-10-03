@@ -58,6 +58,15 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
   'licence.status': { access: 'user', fn: licence.getLicence },
+  // Aperçu HTML d'un document (droits contrôlés par printable via documents.get)
+  'documents.preview': {
+    access: 'user',
+    fn: async (ctx, a) => {
+      const { printable } = await import('./printing')
+      const p = await printable(ctx, Number(a?.id), a?.format === 'ticket' ? 'ticket' : 'a4', false)
+      return { html: p.html, filename: p.filename }
+    }
+  },
   'licence.activate': { access: 'settings', fn: licence.activateLicence },
   'taxes.list': { access: 'user', fn: taxes.listTaxes },
   'taxes.save': { access: 'settings', fn: taxes.saveTax },

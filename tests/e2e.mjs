@@ -106,12 +106,17 @@ await page.getByText('Règlement enregistré').waitFor()
 await page.locator('.badge', { hasText: 'Partielle' }).first().waitFor()
 await shot('facture-reglee-partiellement')
 
-// 7. PDF
-await page.getByRole('button', { name: 'Ouvrir PDF' }).click()
+// 7. Aperçu puis PDF
+await page.getByRole('button', { name: 'Aperçu', exact: true }).click()
+await modal().locator('.preview-frame iframe').waitFor()
+await page.waitForTimeout(400)
+await shot('apercu-facture')
+await modal().getByRole('button', { name: 'Ouvrir PDF' }).click()
 for (let i = 0; i < 50 && readdirSync(join(out, 'pdf')).length === 0; i++) await page.waitForTimeout(200)
 console.log('PDF :', readdirSync(join(out, 'pdf')))
 const err = await toast()
 if (err) console.log('Notifications :', err)
+await modal().getByRole('button', { name: 'Fermer' }).click()
 
 // 8. Achats : commande → réception (entrée en stock)
 await nav('Bons de commande')
