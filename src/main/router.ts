@@ -24,6 +24,8 @@ import * as budget from './services/budget'
 import * as taxes from './services/taxes'
 import * as imports from './services/imports'
 import * as statements from './services/statements'
+import * as licence from './services/licence'
+import { isReadAction } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -55,6 +57,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
+  'licence.status': { access: 'user', fn: licence.getLicence },
+  'licence.activate': { access: 'settings', fn: licence.activateLicence },
   'taxes.list': { access: 'user', fn: taxes.listTaxes },
   'taxes.save': { access: 'settings', fn: taxes.saveTax },
   'taxes.delete': { access: 'settings', fn: taxes.deleteTax },
@@ -221,16 +225,22 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
 export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }
 
+/** Toujours permis, même licence expirée : se mettre en règle (raison sociale, comptes, licence). */
+const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'users.list', 'users.save', 'auth.changePassword'])
+
 export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
   try {
     const route = routes[name]
     if (!route) fail(`Action inconnue : ${name}`)
     if (route.access !== 'public') {
       if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
+      let mod: Module | null = null
       if (route.access !== 'user') {
-        const mod = typeof route.access === 'function' ? await route.access(ctx, args) : route.access
+        mod = typeof route.access === 'function' ? await route.access(ctx, args) : route.access
         if (!can(ctx.user.role, mod)) fail("Vous n'avez pas les droits pour cette action.")
       }
+      // Licence : module inclus, et écriture seulement si la licence (ou l'évaluation) est valide.
+      if (!LICENCE_FREE.has(name)) await licence.enforceLicence(ctx.db, name, mod, isReadAction(name))
     }
     return { ok: true, data: await route.fn(ctx, args ?? {}) }
   } catch (e) {

@@ -1,5 +1,6 @@
 import type { Db } from '../db'
 import { audit, type Ctx } from './context'
+import { forgetLicenceStatus } from './licence'
 
 export interface CompanySettings {
   name: string
@@ -62,6 +63,9 @@ export interface CompanySettings {
   secef_url: string
   secef_nim: string
 }
+
+/** Clés gérées par le module de licence uniquement. */
+export const PROTECTED_KEYS = ['licence_key', 'trial_start'] as const
 
 /** Clés secrètes : stockées à part, jamais renvoyées à l'interface. */
 export const SECRET_KEYS = ['smtp_password', 'sms_secret', 'secef_token'] as const
@@ -150,6 +154,8 @@ export async function saveSettings(ctx: Ctx, input: Partial<CompanySettings>): P
   await ctx.db.tx(async (db) => {
     for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof CompanySettings)[]) {
       if (!(key in input)) continue
+      // La licence et la date d'évaluation ne se modifient pas par les paramètres.
+      if ((PROTECTED_KEYS as readonly string[]).includes(key)) continue
       await db.query(
         'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
         [key, JSON.stringify(input[key])]
@@ -157,5 +163,6 @@ export async function saveSettings(ctx: Ctx, input: Partial<CompanySettings>): P
     }
     await audit(db, ctx, 'modification', 'parametres', null)
   })
+  forgetLicenceStatus(ctx.db)
   return getSettings(ctx.db)
 }

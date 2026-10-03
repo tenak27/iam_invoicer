@@ -31,7 +31,10 @@ export function pdfFooterTemplate(company: CompanySettings): string {
 }
 
 /** forPdf : le pied de page est rendu par printToPDF au lieu d'un élément fixe. */
-export function documentHtml(doc: any, company: CompanySettings, forPdf = false): string {
+/** Mention portée par les documents tant qu'aucune licence n'est active. */
+const EVALUATION_NOTE = "Document établi avec une version d'évaluation d'IAM INVOICER"
+
+export function documentHtml(doc: any, company: CompanySettings, forPdf = false, evaluation = false): string {
   const type = doc.type as DocType
   const info = DOC_TYPES[type]
   const cur = company.currency || 'FCFA'
@@ -217,13 +220,14 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
   ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}
   ${company.invoice_footer && info.side === 'sale' ? `<p class="muted" style="margin-top:18px;text-align:center">${esc(company.invoice_footer)}</p>` : ''}
+  ${evaluation ? `<p class="muted" style="margin-top:8px;text-align:center;font-size:8pt">${EVALUATION_NOTE}</p>` : ''}
 
   ${forPdf ? '' : `<div class="footer">${legalLine(company)}</div>`}
 </body></html>`
 }
 
 /** Ticket de caisse 80 mm (imprimante thermique). */
-export function receiptHtml(doc: any, company: CompanySettings): string {
+export function receiptHtml(doc: any, company: CompanySettings, evaluation = false): string {
   const cur = company.currency || 'FCFA'
   const lines = doc.lines
     .map(
@@ -273,5 +277,6 @@ export function receiptHtml(doc: any, company: CompanySettings): string {
   </table>
   <hr>
   <div class="c muted">${esc(company.invoice_footer || 'Merci de votre visite.')}</div>
+  ${evaluation ? `<div class="c muted">${EVALUATION_NOTE}</div>` : ''}
 </body></html>`
 }

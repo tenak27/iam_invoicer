@@ -328,6 +328,12 @@ await navTo('Déclarations')
 await page.getByRole('heading', { name: /^TVA/ }).waitFor()
 await shot(page, 'declarations')
 
+// Licence : évaluation et offres
+await navTo('Licence')
+await page.locator('.tier-card').first().waitFor()
+if (!(await page.locator('.licence-bar').textContent()).includes('évaluation')) throw new Error("bandeau d'évaluation attendu")
+await shot(page, 'licence')
+
 // Thème sombre (préférence du système)
 await page.emulateMedia({ colorScheme: 'dark' })
 await page.locator('.nav-link', { hasText: 'Tableau de bord' }).click()

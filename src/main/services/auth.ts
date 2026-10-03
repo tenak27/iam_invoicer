@@ -3,6 +3,7 @@ import type { Role } from '@shared/domain'
 import { ROLE_LABELS } from '@shared/domain'
 import type { Db } from '../db'
 import { audit, fail, str, type Ctx, type SessionUser } from './context'
+import { checkUserQuota } from './licence'
 import { saveSettings, type CompanySettings } from './settings'
 import { revokeUser } from './tokens'
 
@@ -72,6 +73,8 @@ export async function saveUser(
   const username = str(input.username).toLowerCase()
   if (!/^[a-z0-9._-]{2,}$/.test(username)) fail("Nom d'utilisateur invalide (lettres, chiffres, . _ - ; 2 caractères minimum).")
   checkRole(input.role)
+  // Licence : nombre d'utilisateurs actifs
+  if (input.active !== false) await checkUserQuota(ctx.db, input.id)
   if (input.id) {
     if (input.id === ctx.user?.id && (input.role !== 'admin' || input.active === false))
       fail('Vous ne pouvez pas retirer vos propres droits administrateur.')

@@ -9,6 +9,7 @@ import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
 import { ImportPage } from './pages/Import'
+import { LicencePage } from './pages/Licence'
 import { BalanceSheet, Declarations } from './pages/Statements'
 import { DocumentList } from './pages/DocumentList'
 import { DocumentEditor } from './pages/DocumentEditor'
@@ -39,11 +40,13 @@ export default function App() {
   const [serverUrl, setServerUrl] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [company, setCompany] = useState<Session['company'] | null>(null)
+  const [licence, setLicence] = useState<Session['licence']>(null)
 
   const refreshCompany = useCallback(async () => {
-    const c = await api<any>('settings.get')
+    const [c, lic] = await Promise.all([api<any>('settings.get'), api<any>('licence.status').catch(() => null)])
     setDefaultCurrency(c.currency, countryProfile(c.country_code, c.country).currencyWords)
     setCompany(c)
+    setLicence(lic)
   }, [])
 
   const boot = useCallback(async () => {
@@ -94,7 +97,7 @@ export default function App() {
       {phase === 'setup' && <SetupScreen onDone={onLogin} />}
       {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} />}
       {phase === 'ready' && user && company && (
-        <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany }}>
+        <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence }}>
           <HashRouter>
             <Layout>
               <Routes>
@@ -133,6 +136,7 @@ export default function App() {
                 <Route path="/settings" element={<CompanySettingsPage />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/import" element={<ImportPage />} />
+                <Route path="/licence" element={<LicencePage />} />
                 <Route path="/audit" element={<AuditLog />} />
                 <Route path="/account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/" />} />

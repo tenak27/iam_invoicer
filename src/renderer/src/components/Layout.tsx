@@ -5,7 +5,7 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
@@ -105,6 +105,7 @@ const NAV: Section[] = [
       { to: '/settings', label: 'Société & paramètres', module: 'settings', icon: Buildings },
       { to: '/users', label: 'Utilisateurs', module: 'users', icon: UserGear },
       { to: '/import', label: 'Importer des données', short: 'Import', module: 'clients', icon: FileArrowUp },
+      { to: '/licence', label: 'Licence', module: 'settings', icon: Certificate },
       { to: '/audit', label: "Journal d'activité", module: 'users', icon: ListChecks }
     ]
   }
@@ -172,6 +173,24 @@ function useCollapsed(): [boolean, () => void] {
   return [collapsed, toggle]
 }
 
+/** Bandeau de licence : évaluation, expiration proche, lecture seule. */
+function LicenceBar() {
+  const { licence, user } = useSession()
+  if (!licence) return null
+  const readOnly = !licence.canWrite
+  const soon = licence.state === 'active' && licence.daysLeft !== null && licence.daysLeft <= 30
+  if (!readOnly && licence.state !== 'trial' && !soon) return null
+  return (
+    <div className={`licence-bar ${readOnly ? 'blocked' : soon ? 'soon' : 'trial'}`} role="status">
+      {readOnly ? <LockSimple size={18} weight="fill" aria-hidden="true" /> : <Hourglass size={18} aria-hidden="true" />}
+      <span className="grow">
+        {licence.state === 'trial' ? `Version d'évaluation complète : ${licence.daysLeft} jour(s) restant(s).` : licence.message}
+      </span>
+      {user.role === 'admin' && <NavLink className="btn btn-sm" to="/licence">{readOnly ? 'Activer une licence' : 'Voir les offres'}</NavLink>}
+    </div>
+  )
+}
+
 /** Bandeau hors ligne : saisies en attente, synchronisation, saisies refusées. */
 function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
   const off = window.erp.offline
@@ -212,14 +231,14 @@ function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { user, company, dbMode } = useSession()
+  const { user, company, dbMode, licence } = useSession()
   const [open, setOpen] = useState(false)
   const [collapsed, toggleCollapsed] = useCollapsed()
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   useCountUpEnhancer(mainRef, location.pathname)
   const online = useOnline()
-  const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module))
+  const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && (!licence || licence.modules.includes(it.module)))
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
 
   useEffect(() => {
@@ -250,10 +269,11 @@ export function Layout({ children }: { children: ReactNode }) {
       <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />
       <aside className="sidebar" aria-label="Navigation principale">
         <div className="brand">
-          <BrandMark size={34} />
+          {licence?.whiteLabel && company.logo ? <img className="brand-logo brand-own" src={company.logo} width={34} height={34} alt="" /> : <BrandMark size={34} />}
           <div className="brand-text">
-            <div className="brand-name">IAM <span>INVOICER</span></div>
-            <div className="brand-sub">{company.name || 'IAM Technology'}</div>
+            {licence?.whiteLabel
+              ? <><div className="brand-name brand-own-name">{company.name}</div><div className="brand-sub">Gestion commerciale</div></>
+              : <><div className="brand-name">IAM <span>INVOICER</span></div><div className="brand-sub">{company.name || 'Votre société'}</div></>}
           </div>
           <button className="collapse-btn" onClick={toggleCollapsed} aria-pressed={collapsed} aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'} title={collapsed ? 'Déplier le menu' : 'Replier le menu'}>
             <SidebarSimple size={20} aria-hidden="true" />
@@ -266,12 +286,23 @@ export function Layout({ children }: { children: ReactNode }) {
             return (
               <div key={i} className="nav-section">
                 {section.title && <div className="nav-title"><span>{section.title}</span></div>}
-                {items.map((it) => (
-                  <NavLink key={it.to} to={it.to} end={it.end} title={collapsed ? it.label : undefined} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                    <it.icon className="nav-icon" size={21} aria-hidden="true" />
-                    <span className="nav-label">{it.label}</span>
-                  </NavLink>
-                ))}
+                {items.map((it) => {
+                  // Module hors licence : visible, cadenassé, mène à la page Licence.
+                  const locked = !!licence && !licence.modules.includes(it.module)
+                  return (
+                    <NavLink
+                      key={it.to}
+                      to={locked ? '/licence' : it.to}
+                      end={it.end}
+                      title={locked ? `${it.label} — non inclus dans votre licence` : collapsed ? it.label : undefined}
+                      className={({ isActive }) => `nav-link ${isActive && !locked ? 'active' : ''} ${locked ? 'locked' : ''}`}
+                    >
+                      <it.icon className="nav-icon" size={21} aria-hidden="true" />
+                      <span className="nav-label">{it.label}</span>
+                      {locked && <LockSimple className="nav-lock" size={15} weight="fill" aria-label="non inclus" />}
+                    </NavLink>
+                  )
+                })}
               </div>
             )
           })}
@@ -286,6 +317,7 @@ export function Layout({ children }: { children: ReactNode }) {
           left={<BrandMark size={30} />}
         />
         <main id="main" className="content" ref={mainRef} tabIndex={-1}>
+          <LicenceBar />
           <OfflineBar online={online} remote={dbMode === 'remote'} />
           <PageContext.Provider value={{ icon: current?.icon, tone, label: current?.label }}>
             <div className="route-view" data-tone={tone} key={location.pathname}>{children}</div>

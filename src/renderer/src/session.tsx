@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import { can, type Module, type Role } from '@shared/domain'
+import type { LicenceStatus } from '@shared/licence'
 
 export interface User {
   id: number
@@ -15,7 +16,9 @@ export interface Session {
   /** Adresse du serveur IAM INVOICER quand les données sont sur un domaine. */
   serverUrl: string | null
   logout: () => void
+  /** Recharge la société et la licence. */
   refreshCompany: () => void
+  licence: LicenceStatus | null
 }
 
 export const SessionContext = createContext<Session | null>(null)
@@ -24,6 +27,12 @@ export function useSession(): Session {
   const s = useContext(SessionContext)
   if (!s) throw new Error('Session absente')
   return s
+}
+
+/** Module licencié (toujours vrai si l'état de licence est inconnu, hors connexion par exemple). */
+export function useLicensed(module: Module): boolean {
+  const l = useSession().licence
+  return !l || l.modules.includes(module)
 }
 
 export function useCan(module: Module): boolean {
