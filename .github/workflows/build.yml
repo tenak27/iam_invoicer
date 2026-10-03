@@ -157,7 +157,7 @@ jobs:
     permissions: { contents: write }
     steps:
       - uses: actions/download-artifact@v4
-        with: { path: installateurs, merge-multiple: true }
+        with: { path: installateurs, pattern: IAM-INVOICER-*, merge-multiple: true }
       - run: ls -la installateurs && (cd installateurs && sha256sum * > SHA256SUMS.txt)
       - uses: softprops/action-gh-release@v2
         with:
