@@ -677,5 +677,25 @@ export const MIGRATIONS: string[] = [
     ('637', 'Rémunérations de personnel extérieur à l''entreprise'),
     ('638', 'Autres charges externes')
   ON CONFLICT (number) DO NOTHING
+  `,
+  // v8 : factures récurrentes (contrats de maintenance, abonnements, loyers)
+  `
+  CREATE TABLE recurring_invoices (
+    id SERIAL PRIMARY KEY,
+    party_id INT NOT NULL REFERENCES parties(id),
+    label TEXT NOT NULL,
+    lines JSONB NOT NULL,
+    taxes JSONB NOT NULL DEFAULT '[]',
+    frequency TEXT NOT NULL CHECK (frequency IN ('mensuel','trimestriel','semestriel','annuel')),
+    next_date TEXT NOT NULL,
+    end_date TEXT,
+    auto_validate BOOLEAN NOT NULL DEFAULT FALSE,
+    project_id INT REFERENCES projects(id) ON DELETE SET NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    generated INT NOT NULL DEFAULT 0,
+    last_document_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX recurring_due_idx ON recurring_invoices(active, next_date)
   `
 ]

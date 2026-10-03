@@ -5,7 +5,7 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
@@ -35,6 +35,7 @@ const NAV: Section[] = [
       { to: '/docs/BL', label: 'Bons de livraison', module: 'sales', icon: Truck },
       { to: '/docs/FAC', label: 'Factures', module: 'sales', icon: FileText },
       { to: '/docs/AV', label: 'Avoirs', module: 'sales', icon: ArrowUUpLeft },
+      { to: '/recurrentes', label: 'Factures récurrentes', short: 'Récurrentes', module: 'sales', icon: Repeat },
       { to: '/clients', label: 'Clients', module: 'clients', icon: Users },
       { to: '/crm', label: 'CRM et opportunités', short: 'CRM', module: 'crm', icon: Handshake, tone: 'amber' }
     ]

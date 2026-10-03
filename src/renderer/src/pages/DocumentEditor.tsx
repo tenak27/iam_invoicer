@@ -7,7 +7,7 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
-import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, SealCheck, Trash } from '@phosphor-icons/react'
+import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash } from '@phosphor-icons/react'
 import { DocumentPreview } from '../components/DocumentPreview'
 
 type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
@@ -156,6 +156,11 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     if (r) nav(`/doc/${r.id}`)
   }
 
+  const makeRecurring = async () => {
+    if (!(await confirmDialog('Créer un contrat mensuel à partir de cette facture ?', { detail: 'La même facture sera créée chaque mois (brouillon à vérifier). Fréquence, dates et montants restent modifiables dans Factures récurrentes.' }))) return
+    if (await run(() => api('recurring.fromDocument', { id: doc.id, frequency: 'mensuel' }), 'Contrat récurrent créé.')) nav('/recurrentes')
+  }
+
   const duplicate = async () => {
     const r = await run(() => api<{ id: number }>('documents.duplicate', { id: doc.id }), 'Copie créée en brouillon.')
     if (r) nav(`/doc/${r.id}`)
@@ -226,6 +231,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
                 </>
               )}
               <button className="btn" onClick={duplicate}><Copy size={18} aria-hidden="true" />Dupliquer</button>
+              {type === 'FAC' && doc.status === 'valide' && <button className="btn" onClick={makeRecurring}><Repeat size={18} aria-hidden="true" />Rendre récurrente</button>}
               <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>
               <button className="btn" onClick={openPreview}><Printer size={18} aria-hidden="true" />Imprimer</button>
               <button className="btn" onClick={() => pdf('save')}><DownloadSimple size={18} aria-hidden="true" />PDF</button>

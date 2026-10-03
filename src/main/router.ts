@@ -26,6 +26,7 @@ import * as imports from './services/imports'
 import * as statements from './services/statements'
 import * as licence from './services/licence'
 import * as roles from './services/roles'
+import * as recurring from './services/recurring'
 import { isReadAction } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -62,6 +63,12 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'settings.save': { access: 'settings', fn: settings.saveSettings },
   'licence.status': { access: 'user', fn: licence.getLicence },
   'roles.get': { access: 'user', fn: roles.getRoles },
+  'recurring.list': { access: 'sales', fn: recurring.listRecurring },
+  'recurring.save': { access: 'sales', fn: recurring.saveRecurring },
+  'recurring.fromDocument': { access: 'sales', fn: recurring.fromDocument },
+  'recurring.delete': { access: 'sales', fn: recurring.deleteRecurring },
+  'recurring.runDue': { access: 'sales', fn: recurring.runDue },
+  'recurring.upcoming': { access: 'sales', fn: recurring.upcoming },
   'roles.save': { access: 'users', fn: roles.saveRoles },
   // Aperçu HTML d'un document (droits contrôlés par printable via documents.get)
   'documents.preview': {

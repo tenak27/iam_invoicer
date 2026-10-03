@@ -4,7 +4,7 @@ import { api } from './api'
 import { setDefaultCurrency } from '@shared/format'
 import { setRolePermissions } from '@shared/domain'
 import { countryProfile } from '@shared/countries'
-import { ConfirmHost, Loading, Toaster } from './components/ui'
+import { ConfirmHost, Loading, notify, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
@@ -12,6 +12,7 @@ import { Dashboard } from './pages/Dashboard'
 import { ImportPage } from './pages/Import'
 import { LicencePage } from './pages/Licence'
 import { RolesPage } from './pages/Roles'
+import { RecurringPage } from './pages/Recurring'
 import { BalanceSheet, Declarations } from './pages/Statements'
 import { DocumentList } from './pages/DocumentList'
 import { DocumentEditor } from './pages/DocumentEditor'
@@ -44,6 +45,13 @@ export default function App() {
   const [company, setCompany] = useState<Session['company'] | null>(null)
   const [licence, setLicence] = useState<Session['licence']>(null)
 
+  /** Factures récurrentes arrivées à échéance : créées à la connexion. */
+  const runRecurring = useCallback(async (u: User) => {
+    if (!can(u.role, 'sales')) return
+    const r = await api<any>('recurring.runDue').catch(() => null)
+    if (r?.created?.length) notify(`${r.created.length} facture(s) récurrente(s) créée(s) pour les échéances du jour.`, 'success')
+  }, [])
+
   /** Photo de profil de l'utilisateur connecté. */
   const loadProfile = useCallback(async (u: User) => {
     const p = await api<any>('auth.profile').catch(() => null)
@@ -74,6 +82,7 @@ export default function App() {
     if (st.user) {
       setUser(st.user)
       loadProfile(st.user)
+      runRecurring(st.user)
       await refreshCompany()
       setPhase('ready')
     } else setPhase('login')
@@ -89,6 +98,7 @@ export default function App() {
   const onLogin = async (u: User) => {
     setUser(u)
     loadProfile(u)
+    runRecurring(u)
     await refreshCompany()
     setPhase('ready')
   }
@@ -149,6 +159,7 @@ export default function App() {
                 <Route path="/import" element={<ImportPage />} />
                 <Route path="/licence" element={<LicencePage />} />
                 <Route path="/roles" element={<RolesPage />} />
+                <Route path="/recurrentes" element={<RecurringPage />} />
                 <Route path="/audit" element={<AuditLog />} />
                 <Route path="/account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/" />} />
