@@ -36,7 +36,7 @@ await page.getByLabel('Nom complet').fill('Ibrahim Konaté')
 await page.getByLabel('Mot de passe').first().fill('secret123')
 await page.getByLabel('Confirmation').fill('secret123')
 await page.getByRole('button', { name: 'Terminer la configuration' }).click()
-await page.locator('.kpis').waitFor()
+await page.locator('.bento').waitFor()
 await shot('dashboard-vide')
 
 // 2. Client et fournisseur
@@ -132,7 +132,7 @@ await shot('stock-apres-reception')
 
 // 9. Autres écrans
 await nav('Tableau de bord')
-await page.locator('.kpis').waitFor()
+await page.locator('.bento').waitFor()
 await page.waitForTimeout(300)
 await shot('dashboard')
 await nav('Paiements')
@@ -169,7 +169,7 @@ if (debit !== credit) throw new Error(`Balance déséquilibrée : ${debit} / ${c
 
 // 11. Fenêtre étroite : affichage adaptatif
 await page.setViewportSize({ width: 400, height: 820 })
-await page.locator('.topbar').waitFor()
+await page.locator('.tabbar').waitFor()
 await page.waitForTimeout(500) // fin de l'animation du menu
 if (await page.locator('.sidebar').isVisible()) throw new Error('Le menu devrait être replié sur petit écran')
 await shot('fenetre-etroite')

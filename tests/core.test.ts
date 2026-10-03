@@ -168,6 +168,12 @@ describe('ERP — cycle complet', () => {
     // 455 000 (devis→facture) + 300 000 (BL→facture) − 135 000 (avoir)
     expect(d.salesYear).toBe(620000)
     expect(d.lowStock).toHaveLength(0)
+    // Cartes complémentaires : compteurs, ventes du jour, articles vendus, transactions, factures
+    expect(d.counts).toMatchObject({ clients: 1, products: 2 })
+    expect(d.daily.reduce((s: number, x: any) => s + x.sales, 0)).toBe(620000)
+    expect(d.topProducts.map((p: any) => p.name).sort()).toEqual(['Installation réseau', 'Routeur Cisco'])
+    expect(d.transactions.length).toBeGreaterThan(0)
+    expect(d.invoices.every((i: any) => typeof i.paid === 'number')).toBe(true)
     const year = new Date().getFullYear()
     const r = await ok(admin, 'reports.sales', { from: `${year}-01-01`, to: `${year}-12-31` })
     expect(r.byClient[0].ht).toBe(620000)

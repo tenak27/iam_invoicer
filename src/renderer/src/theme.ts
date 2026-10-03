@@ -22,7 +22,7 @@ function apply(choice: ThemeChoice) {
   if (choice === 'system') root.removeAttribute('data-theme')
   else root.setAttribute('data-theme', choice)
   const dark = choice === 'dark' || (choice === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a1120' : '#14223d')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#25293c' : '#2f3349')
 }
 
 /** À appeler avant le premier rendu pour éviter un flash du mauvais thème. */

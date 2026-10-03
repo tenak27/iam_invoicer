@@ -64,7 +64,57 @@ export async function dashboard(ctx: Ctx) {
      FROM payments WHERE date LIKE $1`,
     [month + '%']
   )
+  // Données complémentaires des cartes du tableau de bord.
+  const prev = new Date(Number(year), Number(today.slice(5, 7)) - 2, 1)
+  const prevMonth = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`
+  const since = new Date(Date.now() - 13 * 86400000)
+  const sinceISO = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(since.getDate()).padStart(2, '0')}`
+  const [counts, prevSales, daily, byMethod, topProducts, transactions, invoices] = await Promise.all([
+    db.one(
+      `SELECT (SELECT COUNT(*)::int FROM parties WHERE kind = 'client' AND active AND code <> 'COMPTOIR') AS clients,
+              (SELECT COUNT(*)::int FROM products WHERE active) AS products,
+              (SELECT COUNT(*)::int FROM documents WHERE type = 'FAC' AND status = 'valide' AND date LIKE $1) AS invoices_month`,
+      [month + '%']
+    ),
+    db.one(`SELECT COALESCE(${NET_HT}, 0) AS sales FROM documents d WHERE d.status = 'valide' AND d.type IN ('FAC','AV') AND d.date LIKE $1`, [prevMonth + '%']),
+    db.query(
+      `SELECT d.date, ${NET_HT} AS sales FROM documents d
+       WHERE d.status = 'valide' AND d.type IN ('FAC','AV') AND d.date >= $1 GROUP BY d.date ORDER BY d.date`,
+      [sinceISO]
+    ),
+    db.query(
+      `SELECT method, SUM(amount) AS total, COUNT(*)::int AS n FROM payments
+       WHERE direction = 'in' AND date LIKE $1 GROUP BY method ORDER BY total DESC`,
+      [month + '%']
+    ),
+    db.query(
+      `SELECT p.id, p.name, p.ref, p.kind, SUM(CASE WHEN d.type = 'AV' THEN -l.quantity ELSE l.quantity END) AS qty,
+              SUM(CASE WHEN d.type = 'AV' THEN -l.total_ht ELSE l.total_ht END) AS sales
+       FROM document_lines l JOIN documents d ON d.id = l.document_id JOIN products p ON p.id = l.product_id
+       WHERE d.status = 'valide' AND d.type IN ('FAC','AV') AND d.date LIKE $1
+       GROUP BY p.id, p.name, p.ref, p.kind HAVING SUM(l.total_ht) > 0 ORDER BY sales DESC LIMIT 6`,
+      [year + '%']
+    ),
+    db.query(
+      `SELECT py.id, py.direction, py.method, py.amount, py.date, pa.name AS party_name, d.number AS document_number
+       FROM payments py JOIN parties pa ON pa.id = py.party_id LEFT JOIN documents d ON d.id = py.document_id
+       ORDER BY py.date DESC, py.id DESC LIMIT 7`
+    ),
+    db.query(
+      `SELECT d.id, d.number, d.date, d.due_date, d.total_ttc, p.name AS party_name,
+              COALESCE((SELECT SUM(amount) FROM payments WHERE document_id = d.id), 0) AS paid
+       FROM documents d JOIN parties p ON p.id = d.party_id
+       WHERE d.type = 'FAC' AND d.status = 'valide' ORDER BY d.date DESC, d.id DESC LIMIT 8`
+    )
+  ])
   return {
+    salesPrevMonth: prevSales?.sales ?? 0,
+    counts,
+    daily,
+    byMethod,
+    topProducts,
+    transactions,
+    invoices,
     salesMonth: kpi.sales_month,
     salesYear: kpi.sales_year,
     receivable: receivable.amount,

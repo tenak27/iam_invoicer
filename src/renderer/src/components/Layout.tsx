@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
-  ClockCounterClockwise, Desktop, Tray, DotsThreeOutline, Factory, FileText, House, ListChecks, ListNumbers, Moon,
-  Notepad, Package, Receipt, Scales, ShoppingCart, SignOut, Sun, Truck, UserGear, Users, Wallet, Warehouse,
+  ClockCounterClockwise, Tray, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
+  Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
   WifiSlash, type Icon
 } from '@phosphor-icons/react'
-import { can, ROLE_LABELS, type Module } from '@shared/domain'
+import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
-import { useTheme, type ThemeChoice } from '../theme'
+import { Navbar } from './Topbar'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean }
 type Section = { title?: string; items: Item[] }
@@ -82,30 +82,8 @@ const ALL_ITEMS = NAV.flatMap((s) => s.items)
 /** Onglets du bas sur téléphone : les écrans les plus fréquents du rôle, 4 au maximum + « Menu ». */
 const TAB_PRIORITY = ['/', '/caisse', '/docs/FAC', '/clients', '/compta', '/docs/FF', '/stock', '/products', '/caisse/sessions', '/payments']
 
-const MODE_LABELS: Record<DataMode, string> = { local: 'poste local', server: 'serveur réseau', remote: 'en ligne' }
-
-const THEMES: { value: ThemeChoice; label: string; icon: Icon }[] = [
-  { value: 'system', label: 'Automatique', icon: Desktop },
-  { value: 'light', label: 'Clair', icon: Sun },
-  { value: 'dark', label: 'Sombre', icon: Moon }
-]
-
 export function BrandMark({ size = 38 }: { size?: number }) {
   return <img className="brand-logo" src="./favicon.svg" width={size} height={size} alt="" />
-}
-
-export function ThemeSwitch() {
-  const [theme, setTheme] = useTheme()
-  return (
-    <div className="theme-switch" role="radiogroup" aria-label="Thème d'affichage">
-      {THEMES.map((t) => (
-        <button key={t.value} role="radio" aria-checked={theme === t.value} title={t.label} className={theme === t.value ? 'on' : ''} onClick={() => setTheme(t.value)}>
-          <t.icon size={16} aria-hidden="true" />
-          <span className="sr-only">{t.label}</span>
-        </button>
-      ))}
-    </div>
-  )
 }
 
 function useOnline() {
@@ -123,9 +101,32 @@ function useOnline() {
   return online
 }
 
+const COLLAPSE_KEY = 'iam.nav.collapsed'
+
+function useCollapsed(): [boolean, () => void] {
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggle = () =>
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1')
+      } catch {
+        /* préférence non mémorisée */
+      }
+      return !c
+    })
+  return [collapsed, toggle]
+}
+
 export function Layout({ children }: { children: ReactNode }) {
-  const { user, company, logout, dbMode, serverUrl } = useSession()
+  const { user, company, dbMode } = useSession()
   const [open, setOpen] = useState(false)
+  const [collapsed, toggleCollapsed] = useCollapsed()
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const online = useOnline()
@@ -156,66 +157,56 @@ export function Layout({ children }: { children: ReactNode }) {
     .sort((a, b) => b.to.length - a.to.length)[0]
 
   return (
-    <div className={`app ${open ? 'nav-open' : ''}`}>
+    <div className={`app ${open ? 'nav-open' : ''} ${collapsed ? 'nav-collapsed' : ''}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Aller au contenu</a>
-      <header className="topbar">
-        <BrandMark size={30} />
-        <div className="topbar-title">{current?.label ?? 'IAM INVOICER'}</div>
-      </header>
       <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />
       <aside className="sidebar" aria-label="Navigation principale">
         <div className="brand">
-          <BrandMark />
-          <div>
+          <BrandMark size={34} />
+          <div className="brand-text">
             <div className="brand-name">IAM <span>INVOICER</span></div>
             <div className="brand-sub">{company.name || 'IAM Technology'}</div>
           </div>
+          <button className="collapse-btn" onClick={toggleCollapsed} aria-pressed={collapsed} aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'} title={collapsed ? 'Déplier le menu' : 'Replier le menu'}>
+            <SidebarSimple size={20} aria-hidden="true" />
+          </button>
         </div>
-        <div className="weave" />
         <nav>
           {NAV.map((section, i) => {
             const items = section.items.filter((it) => can(user.role, it.module))
             if (items.length === 0) return null
             return (
               <div key={i} className="nav-section">
-                {section.title && <div className="nav-title">{section.title}</div>}
+                {section.title && <div className="nav-title"><span>{section.title}</span></div>}
                 {items.map((it) => (
-                  <NavLink key={it.to} to={it.to} end={it.end} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                    <it.icon className="nav-icon" size={19} aria-hidden="true" />
-                    <span>{it.label}</span>
+                  <NavLink key={it.to} to={it.to} end={it.end} title={collapsed ? it.label : undefined} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <it.icon className="nav-icon" size={21} aria-hidden="true" />
+                    <span className="nav-label">{it.label}</span>
                   </NavLink>
                 ))}
               </div>
             )
           })}
         </nav>
-        <div className="sidebar-foot">
-          <NavLink to="/account" className="user-chip">
-            <div className="avatar" aria-hidden="true">{user.full_name.slice(0, 1).toUpperCase()}</div>
-            <div>
-              <div className="user-name">{user.full_name}</div>
-              <div className="user-role" title={serverUrl ?? undefined}>
-                {ROLE_LABELS[user.role]} · {MODE_LABELS[dbMode]}
-              </div>
-            </div>
-          </NavLink>
-          <div className="foot-row">
-            <ThemeSwitch />
-            <button className="btn btn-ghost btn-sm logout" onClick={logout}>
-              <SignOut size={16} aria-hidden="true" /> Déconnexion
-            </button>
-          </div>
-        </div>
+        <div className="weave sidebar-weave" />
       </aside>
-      <main id="main" className="content" ref={mainRef} tabIndex={-1}>
-        {!online && dbMode === 'remote' && (
-          <div className="offline-bar" role="status">
-            <WifiSlash size={18} aria-hidden="true" />
-            Hors connexion : les données ne peuvent ni être consultées ni enregistrées. Elles reviendront dès que la connexion sera rétablie.
-          </div>
-        )}
-        {children}
-      </main>
+      <div className="main-col">
+        <Navbar
+          entries={allowed}
+          title={current?.label ?? 'IAM INVOICER'}
+          online={online}
+          left={<BrandMark size={30} />}
+        />
+        <main id="main" className="content" ref={mainRef} tabIndex={-1}>
+          {!online && dbMode === 'remote' && (
+            <div className="offline-bar" role="status">
+              <WifiSlash size={18} aria-hidden="true" />
+              Hors connexion : les données ne peuvent ni être consultées ni enregistrées. Elles reviendront dès que la connexion sera rétablie.
+            </div>
+          )}
+          {children}
+        </main>
+      </div>
       <nav className="tabbar" aria-label="Navigation rapide">
         {tabs.map((it) => (
           <NavLink key={it.to} to={it.to} end={it.end ?? it.to === '/'} className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}>
