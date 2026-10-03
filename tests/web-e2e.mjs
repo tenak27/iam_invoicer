@@ -141,6 +141,16 @@ await page.locator('.nav-link', { hasText: 'Société & paramètres' }).click()
 await page.getByLabel('Régime fiscal').waitFor()
 await shot(page, 'parametres')
 
+// Thème sombre (préférence du système)
+await page.emulateMedia({ colorScheme: 'dark' })
+await page.locator('.nav-link', { hasText: 'Tableau de bord' }).click()
+await page.locator('.kpis').waitFor()
+await shot(page, 'sombre-tableau-de-bord')
+await page.locator('.sidebar').getByRole('link', { name: 'Factures', exact: true }).click()
+await page.locator('.table-wrap').first().waitFor()
+await shot(page, 'sombre-factures')
+await page.emulateMedia({ colorScheme: 'light' })
+
 // ---------- Téléphone (iPhone 14 : 390 × 844) ----------
 const phone = await open({ width: 390, height: 844 }, true)
 await phone.goto(base)
@@ -177,7 +187,18 @@ await phone.locator('.table').waitFor()
 await shot(phone, 'mobile-factures')
 await phone.locator('tr.clickable').first().click()
 await phone.locator('.lines-table').waitFor()
+await noOverflow(phone, 'facture')
 await shot(phone, 'mobile-facture')
+
+// Paysage et thème sombre sur téléphone
+await phone.setViewportSize({ width: 844, height: 390 })
+await noOverflow(phone, 'paysage')
+await shot(phone, 'mobile-paysage')
+await phone.setViewportSize({ width: 390, height: 844 })
+await phone.emulateMedia({ colorScheme: 'dark' })
+await phone.locator('.tab-item', { hasText: 'Accueil' }).click()
+await phone.locator('.kpis').waitFor()
+await shot(phone, 'mobile-sombre')
 
 await browser.close()
 if (errors.length) {

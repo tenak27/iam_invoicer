@@ -25,7 +25,7 @@ export function Toaster() {
     }
   }, [])
   return (
-    <div className="toaster" role="status">
+    <div className="toaster" role="status" aria-live="polite">
       {toasts.map((t) => (
         <div key={t.id} className={`toast toast-${t.kind}`} onClick={() => setToasts((a) => a.filter((x) => x.id !== t.id))}>
           {t.text}
