@@ -22,14 +22,15 @@ export type Module =
   | 'reports'
   | 'cash'
   | 'accounting'
+  | 'messages'
   | 'settings'
   | 'users'
 
 export const PERMISSIONS: Record<Role, Module[]> = {
-  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'settings', 'users'],
-  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash'],
+  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'settings', 'users'],
+  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages'],
   magasinier: ['dashboard', 'purchases', 'stock', 'suppliers', 'products'],
-  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting'],
+  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages'],
   caissier: ['cash']
 }
 

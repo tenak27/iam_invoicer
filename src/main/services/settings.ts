@@ -27,7 +27,38 @@ export interface CompanySettings {
   default_tva: number
   payment_terms: number
   allow_negative_stock: boolean
+
+  // Modèles de documents
+  doc_color: string
+  doc_layout: 'classique' | 'moderne'
+  doc_terms: string
+  doc_show_stamp: boolean
+  stamp: string // cachet de la société (data URL)
+  signature_image: string // signature du responsable (data URL)
+  signatory_name: string
+  signatory_title: string
+
+  // Messagerie (le mot de passe est dans la table secrets)
+  smtp_host: string
+  smtp_port: number
+  smtp_secure: boolean
+  smtp_user: string
+  smtp_from_name: string
+  smtp_from_email: string
+
+  // SMS (la clé secrète est dans la table secrets)
+  sms_provider: '' | 'orange' | 'twilio' | 'http'
+  sms_sender: string
+  sms_account: string
+  sms_http_url: string
+
+  /** Adresse publique du serveur pour les liens de signature (https://facturation.iam.bf). */
+  public_url: string
 }
+
+/** Clés secrètes : stockées à part, jamais renvoyées à l'interface. */
+export const SECRET_KEYS = ['smtp_password', 'sms_secret'] as const
+export type SecretKey = (typeof SECRET_KEYS)[number]
 
 export const DEFAULT_SETTINGS: CompanySettings = {
   name: 'IAM Technology',
@@ -52,7 +83,49 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   currency: 'FCFA',
   default_tva: 18,
   payment_terms: 30,
-  allow_negative_stock: false
+  allow_negative_stock: false,
+  doc_color: '#1d6fd6',
+  doc_layout: 'moderne',
+  doc_terms: '',
+  doc_show_stamp: true,
+  stamp: '',
+  signature_image: '',
+  signatory_name: '',
+  signatory_title: 'Le Directeur',
+  smtp_host: '',
+  smtp_port: 587,
+  smtp_secure: false,
+  smtp_user: '',
+  smtp_from_name: '',
+  smtp_from_email: '',
+  sms_provider: '',
+  sms_sender: '',
+  sms_account: '',
+  sms_http_url: '',
+  public_url: ''
+}
+
+export async function getSecret(db: Db, key: SecretKey): Promise<string> {
+  const row = await db.one<{ value: string }>('SELECT value FROM secrets WHERE key = $1', [key])
+  return row?.value ?? ''
+}
+
+/** Indique seulement quels secrets sont renseignés. */
+export async function secretStatus(ctx: Ctx) {
+  const rows = await ctx.db.query<{ key: string }>("SELECT key FROM secrets WHERE value <> ''")
+  return Object.fromEntries(SECRET_KEYS.map((k) => [k, rows.some((r) => r.key === k)]))
+}
+
+export async function saveSecrets(ctx: Ctx, input: Partial<Record<SecretKey, string>>) {
+  for (const key of SECRET_KEYS) {
+    if (typeof input[key] !== 'string') continue
+    await ctx.db.query(
+      'INSERT INTO secrets (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+      [key, input[key]]
+    )
+  }
+  await audit(ctx.db, ctx, 'modification', 'secrets', null)
+  return secretStatus(ctx)
 }
 
 export async function getSettings(db: Db): Promise<CompanySettings> {

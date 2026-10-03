@@ -23,6 +23,11 @@ import { call } from '../main/router'
 import { login, needsSetup, setup } from '../main/services/auth'
 import { AppError, type Ctx, type SessionUser } from '../main/services/context'
 import { createToken, resolveToken, revokeToken } from '../main/services/tokens'
+import { publicRequest, signRemote } from '../main/services/signatures'
+import { documentHtml } from '../main/pdf'
+import { DOC_TYPES, type DocType } from '@shared/domain'
+import { formatMoney } from '@shared/format'
+import { signPageHtml } from './signPage'
 
 export interface ServerOptions {
   db: Db
@@ -145,6 +150,8 @@ export function createHandler(opts: ServerOptions) {
       // Les appels publics (configuration initiale) passent sans jeton.
       const user = await resolveToken(db, bearer(req))
       if (!user && name !== 'auth.needsSetup') throw new HttpError(401, 'Session expirée, veuillez vous reconnecter.')
+      // Liens de signature : par défaut, l'adresse publique est celle par laquelle on joint ce serveur.
+      if (name === 'signatures.request' && body.args && !body.args.baseUrl) body.args.baseUrl = publicOrigin(req)
       return send(res, 200, await call({ db, user }, name, body.args))
     }
     const docMatch = /^\/api\/document\/(\d+)$/.exec(path)
@@ -165,7 +172,40 @@ export function createHandler(opts: ServerOptions) {
       tickets.set(ticket, { user, id, format, expires: now + 120_000 })
       return send(res, 200, { ok: true, data: { url: `/print/${ticket}` } })
     }
+    const signMatch = /^\/api\/public\/sign\/([A-Za-z0-9_-]{20,})$/.exec(path)
+    if (method === 'POST' && signMatch) {
+      const body = await readJson(req)
+      await signRemote(db, signMatch[1], { name: body.name, image: body.image, ip: clientIp(req), device: String(req.headers['user-agent'] ?? '') })
+      return send(res, 200, { ok: true, data: true })
+    }
     throw new HttpError(404, 'Ressource inconnue.')
+  }
+
+  function publicOrigin(req: IncomingMessage): string {
+    const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0] || 'http'
+    const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '')
+    return `${proto}://${host}`
+  }
+
+  async function signPage(res: ServerResponse, token: string) {
+    let page: string
+    try {
+      const { req, doc, company } = await publicRequest(db, token)
+      const state = req.status === 'signe' ? 'signed' : req.status !== 'en_attente' || !req.active ? 'expired' : 'ok'
+      const info = DOC_TYPES[doc.type as DocType]
+      page = signPageHtml({
+        company,
+        doc: { ...doc, typeLabel: info.label, amount: formatMoney(doc.total_ttc, company.currency) },
+        docHtml: documentHtml(doc, company, false),
+        state,
+        token
+      })
+    } catch (e) {
+      if (!(e instanceof AppError)) throw e
+      throw new HttpError(404, e.message)
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY' })
+    res.end(page)
   }
 
   async function printPage(res: ServerResponse, ticket: string) {
@@ -217,6 +257,7 @@ export function createHandler(opts: ServerOptions) {
       }
       if (path.startsWith('/api/')) return await api(req, res, path, url)
       if (path.startsWith('/print/')) return await printPage(res, path.slice('/print/'.length))
+      if (/^\/sign\/[A-Za-z0-9_-]{20,}$/.test(path)) return await signPage(res, path.slice('/sign/'.length))
       if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Méthode non autorisée.')
       return serveStatic(req, res, path)
     } catch (e) {

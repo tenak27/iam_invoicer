@@ -45,11 +45,16 @@ Les contrastes du texte sont vérifiés à 4,5:1 au moins dans les deux thèmes.
 - **Menu latéral** : élément actif sous forme de pastille en dégradé bleu ombrée. Le menu se replie en icônes seules et la préférence est mémorisée.
 - **Téléphone** : barre d'onglets en bas (4 écrans selon le rôle + Menu) et tiroir pour le reste.
 
+## Indicateurs (KPI)
+
+`.kpi-tile` : 4 dégradés — `kpi-blue` (ventes), `kpi-green` (encaissé), `kpi-amber` (créances), `kpi-violet` (volumes). Texte blanc : libellés en haut à gauche (partie sombre du dégradé, ≥ 4,5:1), chiffre en grand (≥ 3:1). Chiffre animé (`CountUp`), mini-courbe blanche facultative, reflet au survol.
+
 ## Mouvement
 
 - **Animations décoratives :** limitées au personnage d'accueil (salut, clignement d'yeux, pièces qui flottent) et à l'avatar.
 - **Animations d'interface :** ouverture des menus (0,18 s), des fenêtres et du tiroir (0,25 s).
-- **`prefers-reduced-motion`** coupe tout.
+- **Effets du tableau de bord :** entrée en cascade des cartes (une seule fois), graphiques qui se dessinent, anneau et barres qui se remplissent, fondu entre les pages et les onglets, squelette de chargement.
+- **`prefers-reduced-motion`** coupe tout, **délais compris** : le contenu s'affiche immédiatement. Une animation avec délai et `fill-mode: both` laisse sinon le contenu invisible pendant le délai.
 
 ## À ne pas faire
 

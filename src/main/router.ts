@@ -13,6 +13,9 @@ import * as payments from './services/payments'
 import * as reports from './services/reports'
 import * as accounting from './services/accounting'
 import * as cash from './services/cash'
+import * as messaging from './services/messaging'
+import * as signatures from './services/signatures'
+import { saveSecrets, secretStatus } from './services/settings'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -20,9 +23,18 @@ type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Mod
 const partyModule = (args: any): Module => (args?.kind === 'supplier' ? 'suppliers' : 'clients')
 const sideModule = (type: DocType): Module => (DOC_TYPES[type]?.side === 'purchase' ? 'purchases' : 'sales')
 const docModule = async (ctx: Ctx, args: any): Promise<Module> => {
-  const d = await ctx.db.one('SELECT type FROM documents WHERE id = $1', [args?.id ?? args?.document_id])
+  const d = await ctx.db.one('SELECT type FROM documents WHERE id = $1', [args?.id ?? args?.document_id ?? args?.documentId])
   if (!d) fail('Document introuvable.')
   return sideModule(d.type)
+}
+
+/** Envoi lié à un document : droit sur ce document ET droit « messages ». */
+const docOrMessages = async (ctx: Ctx, args: any): Promise<Module> => {
+  if (args?.documentId) {
+    const mod = await docModule(ctx, args)
+    if (!can(ctx.user!.role, mod)) return mod
+  }
+  return 'messages'
 }
 
 export const routes: Record<string, { access: Access; fn: Handler }> = {
@@ -101,7 +113,26 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'accounting.saveEntry': { access: 'accounting', fn: accounting.saveManualEntry },
   'accounting.deleteEntry': { access: 'accounting', fn: accounting.deleteManualEntry },
   'accounting.missing': { access: 'accounting', fn: accounting.missingCount },
-  'accounting.generateMissing': { access: 'accounting', fn: accounting.generateMissing }
+  'accounting.generateMissing': { access: 'accounting', fn: accounting.generateMissing },
+
+  'settings.secrets': { access: 'settings', fn: secretStatus },
+  'settings.saveSecrets': { access: 'settings', fn: saveSecrets },
+
+  // Communications : le droit sur le document est vérifié en plus du droit « messages ».
+  'messages.templates': { access: 'messages', fn: messaging.listTemplates },
+  'messages.saveTemplate': { access: 'settings', fn: messaging.saveTemplate },
+  'messages.preview': { access: docOrMessages, fn: messaging.preview },
+  'messages.sendEmail': { access: docOrMessages, fn: messaging.sendEmail },
+  'messages.sendDocument': { access: docOrMessages, fn: messaging.sendDocument },
+  'messages.sendSms': { access: docOrMessages, fn: messaging.sendSms },
+  'messages.test': { access: 'settings', fn: messaging.sendTest },
+  'messages.log': { access: 'messages', fn: messaging.listLog },
+  'messages.remind': { access: docOrMessages, fn: messaging.remind },
+  'messages.remindAll': { access: 'messages', fn: messaging.remindAll },
+
+  'signatures.list': { access: docModule, fn: signatures.listSignatures },
+  'signatures.signOnSite': { access: docModule, fn: signatures.signOnSite },
+  'signatures.request': { access: docModule, fn: signatures.createRequest }
 }
 
 export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }

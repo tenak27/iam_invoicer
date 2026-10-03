@@ -4,7 +4,9 @@ import { computeTotals, DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type L
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
-import { useSession } from '../session'
+import { useCan, useSession } from '../session'
+import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
+import { ChatCircleText, EnvelopeSimple } from '@phosphor-icons/react'
 
 type Line = LineInput & { key: number; product_ref?: string }
 let lineKey = 0
@@ -46,6 +48,9 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const [payOpen, setPayOpen] = useState(false)
+  const [sending, setSending] = useState<'email' | 'sms' | null>(null)
+  const [msgKey, setMsgKey] = useState(0)
+  const canMessages = useCan('messages')
 
   const totals = useMemo(() => computeTotals(lines.filter((l) => l.description)), [lines])
 
@@ -178,6 +183,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
             <>
               {doc.status === 'valide' && type !== 'FAC' && type !== 'AV' && (
                 <button className="btn btn-ghost" onClick={() => action('documents.cancel', 'Document annulé.', `Annuler ${doc.number} ?`, info.stock !== 0 ? 'Les mouvements de stock seront inversés.' : undefined)}>Annuler le document</button>
+              )}
+              {canMessages && doc.status === 'valide' && info.side === 'sale' && (
+                <>
+                  <button className="btn" onClick={() => setSending('email')}><EnvelopeSimple size={18} aria-hidden="true" />E-mail</button>
+                  <button className="btn" onClick={() => setSending('sms')}><ChatCircleText size={18} aria-hidden="true" />SMS</button>
+                </>
               )}
               <button className="btn" onClick={duplicate}>Dupliquer</button>
               <button className="btn" onClick={() => pdf('print')}>Imprimer</button>
@@ -325,6 +336,9 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         </div>
       )}
 
+      {doc && info.side === 'sale' && <SignaturesPanel doc={doc} />}
+      {doc && canMessages && <DocumentMessages key={msgKey} documentId={doc.id} />}
+
       {doc && doc.children.length > 0 && (
         <div className="card">
           <h3>Documents liés</h3>
@@ -340,6 +354,8 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
       {doc && <p className="muted small">Créé par {doc.created_by_name ?? '—'}{doc.validated_at ? ` · validé le ${new Date(doc.validated_at).toLocaleString('fr-FR')}` : ''}</p>}
 
+      {sending === 'email' && <SendEmailModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
+      {sending === 'sms' && <SendSmsModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
       {payOpen && <PaymentModal doc={doc} remaining={remaining} onClose={() => setPayOpen(false)} onDone={() => { setPayOpen(false); onReload() }} />}
     </div>
   )

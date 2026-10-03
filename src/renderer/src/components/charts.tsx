@@ -52,8 +52,8 @@ export function AreaChart({ points, height = 220, summary }: { points: Point[]; 
         </linearGradient>
       </defs>
       {grid.map((y) => <line key={y} x1={left} x2={W - left} y1={y} y2={y} className="chart-grid" />)}
-      <path d={area} fill={`url(#${gid})`} />
-      <path d={line} className="area-line" />
+      <path d={area} fill={`url(#${gid})`} className="area-fill" />
+      <path d={line} className="area-line draw" pathLength={1} />
       {xy.map(([x, y], i) => (
         <g key={i} className="area-point">
           <rect x={x - step / 2} y={0} width={step} height={H - bottom} fill="transparent" />
@@ -88,8 +88,8 @@ export function Sparkline({ values, summary, height = 64 }: { values: number[]; 
           <stop offset="1" className="area-stop-bottom" />
         </linearGradient>
       </defs>
-      <path d={`${line} L${W},${H} L0,${H} Z`} fill={`url(#${gid})`} />
-      <path d={line} className="area-line" vectorEffect="non-scaling-stroke" />
+      <path d={`${line} L${W},${H} L0,${H} Z`} fill={`url(#${gid})`} className="area-fill" />
+      <path d={line} className="area-line draw" pathLength={1} vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }
@@ -105,7 +105,8 @@ export function Donut({ segments, center, sub, summary }: { segments: { value: n
       {segments.map((s, i) => {
         const len = (s.value / total) * C
         const el = (
-          <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="14" strokeLinecap="round"
+          <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="14" strokeLinecap="round" className="donut-seg"
+            style={{ '--len': `${Math.max(len - 4, 0)}px`, '--c': `${C}px`, animationDelay: `${i * 120}ms` } as React.CSSProperties}
             strokeDasharray={`${Math.max(len - 4, 0)} ${C}`} strokeDashoffset={-offset} transform="rotate(-90 70 70)">
             <title>{`${s.label} : ${formatMoney(s.value)}`}</title>
           </circle>

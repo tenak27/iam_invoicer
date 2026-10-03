@@ -17,6 +17,7 @@ import { AuditLog, CompanySettingsPage, MyAccount, Users } from './pages/Admin'
 import { CashRegister, CashSessionDetail, CashSessions } from './pages/Cash'
 import { Accounts, Balance, Entries, IncomeStatement, Ledger } from './pages/Accounting'
 import { can } from '@shared/domain'
+import { MessagesLog, MessageTemplates } from './pages/Messages'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
 
@@ -105,6 +106,8 @@ export default function App() {
                 <Route path="/compta/balance" element={<Balance />} />
                 <Route path="/compta/resultat" element={<IncomeStatement />} />
                 <Route path="/compta/comptes" element={<Accounts />} />
+                <Route path="/messages" element={<MessagesLog />} />
+                <Route path="/messages/modeles" element={<MessageTemplates />} />
                 <Route path="/settings" element={<CompanySettingsPage />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/audit" element={<AuditLog />} />

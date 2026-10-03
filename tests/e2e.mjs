@@ -17,7 +17,7 @@ page.on('console', (m) => m.type() === 'error' && console.log('[console]', m.tex
 page.on('pageerror', (e) => console.log('[pageerror]', e.message))
 await page.setViewportSize({ width: 1440, height: 900 })
 let n = 0
-const shot = async (name) => page.screenshot({ path: join(out, `${String(++n).padStart(2, '0')}-${name}.png`), animations: 'disabled' })
+const shot = async (name) => page.screenshot({ path: join(out, `${String(++n).padStart(2, '0')}-${name}.png`) })
 const modal = () => page.locator('.modal')
 const nav = (label) => page.locator('.nav-link').getByText(label, { exact: true }).click()
 const confirm = () => page.locator('.modal .btn', { hasText: 'Confirmer' }).click()
@@ -36,7 +36,7 @@ await page.getByLabel('Nom complet').fill('Ibrahim Konaté')
 await page.getByLabel('Mot de passe').first().fill('secret123')
 await page.getByLabel('Confirmation').fill('secret123')
 await page.getByRole('button', { name: 'Terminer la configuration' }).click()
-await page.locator('.bento').waitFor()
+await page.locator('.kpi-tile').first().waitFor()
 await shot('dashboard-vide')
 
 // 2. Client et fournisseur
@@ -132,7 +132,7 @@ await shot('stock-apres-reception')
 
 // 9. Autres écrans
 await nav('Tableau de bord')
-await page.locator('.bento').waitFor()
+await page.locator('.kpi-tile').first().waitFor()
 await page.waitForTimeout(300)
 await shot('dashboard')
 await nav('Paiements')

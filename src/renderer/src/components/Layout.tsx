@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
-  ClockCounterClockwise, Tray, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
+  ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
   WifiSlash, type Icon
 } from '@phosphor-icons/react'
@@ -55,6 +55,13 @@ const NAV: Section[] = [
     items: [
       { to: '/payments', label: 'Paiements', module: 'payments', icon: Wallet },
       { to: '/reports', label: 'Rapports', module: 'reports', icon: ChartBar }
+    ]
+  },
+  {
+    title: 'Communications',
+    items: [
+      { to: '/messages', label: 'E-mails et SMS', module: 'messages', icon: PaperPlaneTilt, end: true },
+      { to: '/messages/modeles', label: 'Modèles de messages', module: 'messages', icon: Notebook }
     ]
   },
   {
@@ -204,7 +211,7 @@ export function Layout({ children }: { children: ReactNode }) {
               Hors connexion : les données ne peuvent ni être consultées ni enregistrées. Elles reviendront dès que la connexion sera rétablie.
             </div>
           )}
-          {children}
+          <div className="route-view" key={location.pathname}>{children}</div>
         </main>
       </div>
       <nav className="tabbar" aria-label="Navigation rapide">

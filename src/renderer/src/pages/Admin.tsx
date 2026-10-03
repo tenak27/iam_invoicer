@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, Tabs, useForm } from '../components/ui'
+import { SignaturePad } from '../components/SignaturePad'
 import { DbConfigForm, REGIMES, TAX_ID_LABELS } from './Auth'
 import { useSession } from '../session'
 
 const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité',
-  settings: 'Paramètres', users: 'Utilisateurs'
+  messages: 'Communications', settings: 'Paramètres', users: 'Utilisateurs'
 }
 
 const DATA_TEXT: Record<DataMode, string> = {
@@ -17,102 +18,302 @@ const DATA_TEXT: Record<DataMode, string> = {
   remote: 'serveur en ligne'
 }
 
+type SettingsTab = 'societe' | 'documents' | 'mail' | 'sms' | 'donnees'
+
+const DOC_COLORS = ['#1d6fd6', '#0b4f8a', '#178a55', '#7367f0', '#c2410c', '#be123c', '#33303f']
+
 export function CompanySettingsPage() {
-  const { refreshCompany, dbMode, serverUrl } = useSession()
+  const { refreshCompany, dbMode, serverUrl, user } = useSession()
   const desktop = window.erp.kind === 'desktop'
   const { data, error, loading, reload } = useQuery<any>('settings.get')
+  const { data: secrets, reload: reloadSecrets } = useQuery<any>('settings.secrets')
   const f = useForm<any>({})
+  const [tab, setTab] = useState<SettingsTab>('societe')
   const [showDb, setShowDb] = useState(false)
+  const [smtpPassword, setSmtpPassword] = useState('')
+  const [smsSecret, setSmsSecret] = useState('')
+  const [drawSig, setDrawSig] = useState(false)
   useEffect(() => {
-    if (data) f.setValues({ ...data, default_tva: String(data.default_tva), payment_terms: String(data.payment_terms) })
+    if (data) f.setValues({ ...data, default_tva: String(data.default_tva), payment_terms: String(data.payment_terms), smtp_port: String(data.smtp_port) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
   if (error) return <ErrorBox error={error} onRetry={reload} />
-  if (loading && !data || !f.values.name && f.values.name !== '') return <Loading />
+  if ((loading && !data) || (!f.values.name && f.values.name !== '')) return <Loading />
   const v = f.values
   const save = async () => {
-    const r = await run(() => api('settings.save', { ...v, default_tva: Number(v.default_tva), payment_terms: Number(v.payment_terms) }), 'Paramètres enregistrés.')
-    if (r) refreshCompany()
+    const r = await run(async () => {
+      await api('settings.save', { ...v, default_tva: Number(v.default_tva), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
+      const sec: any = {}
+      if (smtpPassword) sec.smtp_password = smtpPassword
+      if (smsSecret) sec.sms_secret = smsSecret
+      if (Object.keys(sec).length) await api('settings.saveSecrets', sec)
+      return true
+    }, 'Paramètres enregistrés.')
+    if (r) {
+      setSmtpPassword('')
+      setSmsSecret('')
+      reloadSecrets()
+      refreshCompany()
+    }
   }
-  const pickLogo = async () => {
-    const logo = await run(() => unwrap(window.erp.pickImage()))
-    if (logo) f.set('logo', logo)
+  const pick = async (key: string) => {
+    const img = await run(() => unwrap(window.erp.pickImage()))
+    if (img) f.set(key, img)
   }
+  const test = async (channel: 'email' | 'sms') => {
+    const to = channel === 'email' ? v.smtp_from_email || v.email : v.phone
+    if (!to) return notify(channel === 'email' ? "Renseignez d'abord une adresse d'expédition." : "Renseignez d'abord le téléphone de la société (onglet Société).", 'error')
+    await save()
+    await run(() => api('messages.test', { channel, to }), channel === 'email' ? `E-mail d'essai envoyé à ${to}.` : `SMS d'essai envoyé au ${to}.`)
+  }
+  const ImageField = ({ k, label, hint }: { k: string; label: string; hint: string }) => (
+    <div className="field">
+      <span className="field-label">{label}</span>
+      <div className="logo-box" onClick={() => pick(k)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && pick(k)}>
+        {v[k] ? <img src={v[k]} alt={label} /> : <span className="muted small">{hint}</span>}
+      </div>
+      {v[k] && <button className="link-btn danger small" onClick={() => f.set(k, '')}>Retirer</button>}
+    </div>
+  )
+
   return (
     <div className="page">
-      <PageHeader title="Société & paramètres" subtitle="Ces informations apparaissent sur vos devis, factures et bons." actions={<button className="btn btn-primary" onClick={save}>Enregistrer</button>} />
-      <div className="card">
-        <h3>Identité</h3>
-        <div className="grid grid-4">
-          <div className="field span-1 logo-field">
-            <span className="field-label">Logo</span>
-            <div className="logo-box" onClick={pickLogo} role="button" tabIndex={0}>
-              {v.logo ? <img src={v.logo} alt="Logo" /> : <span className="muted small">Cliquer pour choisir</span>}
+      <PageHeader title="Société & paramètres" subtitle="Identité, modèles de documents, messagerie et SMS." actions={<button className="btn btn-primary" onClick={save}>Enregistrer</button>} />
+      <Tabs value={tab} onChange={setTab} tabs={[
+        { value: 'societe', label: 'Société' },
+        { value: 'documents', label: 'Documents & signature' },
+        { value: 'mail', label: 'Messagerie' },
+        { value: 'sms', label: 'SMS' },
+        { value: 'donnees', label: 'Données' }
+      ]} />
+
+      {tab === 'societe' && (
+        <div className="tab-panel" key="societe">
+          <div className="card">
+            <h3>Identité</h3>
+            <div className="grid grid-4">
+              <div className="field span-1 logo-field">
+                <span className="field-label">Logo</span>
+                <div className="logo-box" onClick={() => pick('logo')} role="button" tabIndex={0}>
+                  {v.logo ? <img src={v.logo} alt="Logo" /> : <span className="muted small">Cliquer pour choisir</span>}
+                </div>
+                {v.logo && <button className="link-btn danger small" onClick={() => f.set('logo', '')}>Retirer</button>}
+              </div>
+              <div className="span-3 grid grid-3">
+                <Field label="Raison sociale"><input {...f.bind('name')} /></Field>
+                <Field label="Forme juridique"><input {...f.bind('legal_form')} /></Field>
+                <Field label="Capital social"><input {...f.bind('capital')} placeholder="1 000 000 FCFA" /></Field>
+                <Field label="Activité (sous le nom)" span={3}><input {...f.bind('activity')} placeholder="Intégration informatique, réseaux, sécurité électronique…" /></Field>
+              </div>
+              <Field label="Adresse" span={2}><textarea rows={2} {...f.bind('address')} /></Field>
+              <Field label="Ville"><input {...f.bind('city')} /></Field>
+              <Field label="Pays"><input {...f.bind('country')} /></Field>
+              <Field label="Téléphone"><input type="tel" {...f.bind('phone')} /></Field>
+              <Field label="Email"><input type="email" {...f.bind('email')} /></Field>
+              <Field label="Site web" span={2}><input {...f.bind('website')} /></Field>
             </div>
-            {v.logo && <button className="link-btn danger small" onClick={() => f.set('logo', '')}>Retirer</button>}
           </div>
-          <div className="span-3 grid grid-3">
-            <Field label="Raison sociale"><input {...f.bind('name')} /></Field>
-            <Field label="Forme juridique"><input {...f.bind('legal_form')} /></Field>
-            <Field label="Capital social"><input {...f.bind('capital')} placeholder="1 000 000 FCFA" /></Field>
-            <Field label="Activité (sous le nom)" span={3}><input {...f.bind('activity')} placeholder="Intégration informatique, réseaux, sécurité électronique…" /></Field>
+          <div className="card">
+            <h3>Mentions légales & banque</h3>
+            <div className="grid grid-4">
+              <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
+              <Field label="Libellé identifiant fiscal">
+                <select {...f.bind('tax_id_label')}>{TAX_ID_LABELS.map((l) => <option key={l}>{l}</option>)}</select>
+              </Field>
+              <Field label={`N° ${v.tax_id_label ?? 'IFU'}`} span={2}><input {...f.bind('tax_id')} /></Field>
+              <Field label="Régime fiscal" span={2}>
+                <select {...f.bind('regime_fiscal')}>{REGIMES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select>
+              </Field>
+              <Field label="Service des impôts de rattachement" span={2}><input {...f.bind('division_fiscale')} placeholder="DGE, DME Centre, CME Ouaga…" /></Field>
+              <Field label="Banque"><input {...f.bind('bank_name')} /></Field>
+              <Field label="RIB / IBAN" span={3}><input {...f.bind('bank_account')} /></Field>
+            </div>
           </div>
-          <Field label="Adresse" span={2}><textarea rows={2} {...f.bind('address')} /></Field>
-          <Field label="Ville"><input {...f.bind('city')} /></Field>
-          <Field label="Pays"><input {...f.bind('country')} /></Field>
-          <Field label="Téléphone"><input {...f.bind('phone')} /></Field>
-          <Field label="Email"><input {...f.bind('email')} /></Field>
-          <Field label="Site web" span={2}><input {...f.bind('website')} /></Field>
+          <div className="card">
+            <h3>Règles de gestion</h3>
+            <div className="grid grid-4">
+              <Field label="TVA par défaut (%)"><input inputMode="decimal" {...f.bind('default_tva')} /></Field>
+              <Field label="Délai de paiement par défaut (jours)"><input inputMode="numeric" {...f.bind('payment_terms')} /></Field>
+              <Field label="Devise"><input {...f.bind('currency')} /></Field>
+              <label className="inline check" style={{ alignSelf: 'end' }}>
+                <input type="checkbox" checked={!!v.allow_negative_stock} onChange={(e) => f.set('allow_negative_stock', e.target.checked)} /> Autoriser le stock négatif
+              </label>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="card">
-        <h3>Mentions légales & banque</h3>
-        <div className="grid grid-4">
-          <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
-          <Field label="Libellé identifiant fiscal">
-            <select {...f.bind('tax_id_label')}>{TAX_ID_LABELS.map((l) => <option key={l}>{l}</option>)}</select>
-          </Field>
-          <Field label={`N° ${v.tax_id_label ?? 'IFU'}`} span={2}><input {...f.bind('tax_id')} /></Field>
-          <Field label="Régime fiscal" span={2}>
-            <select {...f.bind('regime_fiscal')}>{REGIMES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select>
-          </Field>
-          <Field label="Service des impôts de rattachement" span={2}><input {...f.bind('division_fiscale')} placeholder="DGE, DME Centre, CME Ouaga…" /></Field>
-          <Field label="Banque"><input {...f.bind('bank_name')} /></Field>
-          <Field label="RIB / IBAN" span={3}><input {...f.bind('bank_account')} /></Field>
-          <Field label="Pied de page des documents de vente" span={4}><input {...f.bind('invoice_footer')} /></Field>
+      )}
+
+      {tab === 'documents' && (
+        <div className="tab-panel" key="documents">
+          <div className="card">
+            <h3>Modèle des documents</h3>
+            <div className="grid grid-2">
+              <div className="field">
+                <span className="field-label">Mise en page</span>
+                <div className="choice-row">
+                  {(['moderne', 'classique'] as const).map((l) => (
+                    <label key={l} className={`choice ${v.doc_layout === l ? 'active' : ''}`}>
+                      <input type="radio" checked={v.doc_layout === l} onChange={() => f.set('doc_layout', l)} />
+                      <div><strong>{l === 'moderne' ? 'Moderne' : 'Classique'}</strong><div className="muted small">{l === 'moderne' ? 'Bandeau et en-têtes en couleur.' : 'Sobre, en-têtes gris anthracite.'}</div></div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="field">
+                <span className="field-label">Couleur principale</span>
+                <div className="swatches" role="radiogroup" aria-label="Couleur des documents">
+                  {DOC_COLORS.map((c) => (
+                    <button key={c} type="button" role="radio" aria-checked={v.doc_color === c} aria-label={c} className={`swatch ${v.doc_color === c ? 'on' : ''}`} style={{ background: c }} onClick={() => f.set('doc_color', c)} />
+                  ))}
+                  <input type="color" aria-label="Couleur personnalisée" value={v.doc_color || '#1d6fd6'} onChange={(e) => f.set('doc_color', e.target.value)} />
+                </div>
+              </div>
+              <Field label="Pied de page des documents de vente" span={2}><input {...f.bind('invoice_footer')} /></Field>
+              <Field label="Conditions générales (imprimées en bas des documents de vente)" span={2} hint="Pénalités de retard, garantie, réserve de propriété…">
+                <textarea rows={4} {...f.bind('doc_terms')} />
+              </Field>
+            </div>
+          </div>
+          <div className="card">
+            <h3>Cachet et signature de la société</h3>
+            <div className="grid grid-4">
+              <ImageField k="stamp" label="Cachet (PNG transparent)" hint="Choisir le cachet" />
+              <div className="field">
+                <span className="field-label">Signature du responsable</span>
+                <div className="logo-box" onClick={() => setDrawSig(true)} role="button" tabIndex={0}>
+                  {v.signature_image ? <img src={v.signature_image} alt="Signature" /> : <span className="muted small">Dessiner la signature</span>}
+                </div>
+                <div className="row gap">
+                  <button className="link-btn small" onClick={() => pick('signature_image')}>Importer une image</button>
+                  {v.signature_image && <button className="link-btn danger small" onClick={() => f.set('signature_image', '')}>Retirer</button>}
+                </div>
+              </div>
+              <Field label="Nom du signataire"><input {...f.bind('signatory_name')} placeholder={user.full_name} /></Field>
+              <Field label="Qualité"><input {...f.bind('signatory_title')} placeholder="Le Directeur Général" /></Field>
+            </div>
+            <label className="inline check" style={{ marginTop: 12 }}>
+              <input type="checkbox" checked={!!v.doc_show_stamp} onChange={(e) => f.set('doc_show_stamp', e.target.checked)} /> Apposer le cachet et la signature sur les documents de vente validés
+            </label>
+          </div>
+          <div className="card">
+            <h3>Signature électronique des clients</h3>
+            <Field label="Adresse publique du serveur" hint={dbMode === 'remote' ? `Laisser vide pour utiliser ${serverUrl}.` : 'Nécessaire pour envoyer des liens de signature (ex. https://facturation.iam.bf).'}>
+              <input {...f.bind('public_url')} placeholder="https://facturation.iam.bf" inputMode="url" />
+            </Field>
+          </div>
         </div>
-      </div>
-      <div className="card">
-        <h3>Règles de gestion</h3>
-        <div className="grid grid-4">
-          <Field label="TVA par défaut (%)"><input inputMode="decimal" {...f.bind('default_tva')} /></Field>
-          <Field label="Délai de paiement par défaut (jours)"><input inputMode="numeric" {...f.bind('payment_terms')} /></Field>
-          <Field label="Devise"><input {...f.bind('currency')} /></Field>
-          <label className="inline check" style={{ alignSelf: 'end' }}>
-            <input type="checkbox" checked={!!v.allow_negative_stock} onChange={(e) => f.set('allow_negative_stock', e.target.checked)} /> Autoriser le stock négatif
-          </label>
+      )}
+
+      {tab === 'mail' && (
+        <div className="tab-panel" key="mail">
+          <div className="card">
+            <h3>Serveur d'envoi (SMTP)</h3>
+            <p className="muted small">Gmail : smtp.gmail.com, port 587, avec un « mot de passe d'application ». Office 365 : smtp.office365.com, port 587.</p>
+            <div className="grid grid-4">
+              <Field label="Serveur SMTP" span={2}><input {...f.bind('smtp_host')} placeholder="smtp.gmail.com" autoCapitalize="off" /></Field>
+              <Field label="Port"><input inputMode="numeric" {...f.bind('smtp_port')} /></Field>
+              <label className="inline check" style={{ alignSelf: 'end' }}>
+                <input type="checkbox" checked={!!v.smtp_secure} onChange={(e) => f.set('smtp_secure', e.target.checked)} /> SSL direct (port 465)
+              </label>
+              <Field label="Identifiant" span={2}><input {...f.bind('smtp_user')} autoComplete="off" autoCapitalize="off" /></Field>
+              <Field label="Mot de passe" span={2} hint={secrets?.smtp_password ? 'Enregistré. Laisser vide pour le conserver.' : 'Non renseigné.'}>
+                <input type="password" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)} autoComplete="new-password" />
+              </Field>
+              <Field label="Nom de l'expéditeur" span={2}><input {...f.bind('smtp_from_name')} placeholder={v.name} /></Field>
+              <Field label="Adresse de l'expéditeur" span={2}><input type="email" {...f.bind('smtp_from_email')} placeholder="facturation@iam.bf" /></Field>
+            </div>
+            <div className="form-actions"><button className="btn" onClick={() => test('email')}>Envoyer un e-mail d'essai</button></div>
+          </div>
         </div>
-      </div>
-      <div className="card">
-        <h3>Données</h3>
-        <p className="muted">Données : <strong>{DATA_TEXT[dbMode]}</strong>{serverUrl ? <> — {serverUrl}</> : null}.</p>
-        <div className="row gap wrap">
-          {desktop && dbMode === 'local' && (
-            <>
-              <button className="btn" onClick={() => run(async () => { const r = await unwrap(window.erp.backup()); if (r) notify('Sauvegarde créée : ' + r, 'success') })}>Créer une sauvegarde</button>
-              <button className="btn" onClick={() => run(() => unwrap(window.erp.restore()))}>Restaurer une sauvegarde…</button>
-            </>
-          )}
-          <button className="btn" onClick={() => setShowDb(true)}>{desktop ? 'Emplacement des données…' : 'Changer de serveur…'}</button>
+      )}
+
+      {tab === 'sms' && (
+        <div className="tab-panel" key="sms">
+          <div className="card">
+            <h3>Fournisseur SMS</h3>
+            <div className="grid grid-4">
+              <Field label="Fournisseur" span={2}>
+                <select {...f.bind('sms_provider')}>
+                  <option value="">Désactivé</option>
+                  <option value="orange">Orange (API SMS Orange Developer)</option>
+                  <option value="twilio">Twilio</option>
+                  <option value="http">Autre passerelle (URL HTTP)</option>
+                </select>
+              </Field>
+              {v.sms_provider && (
+                <Field label={v.sms_provider === 'orange' ? 'Numéro expéditeur (tel:+226…)' : v.sms_provider === 'twilio' ? 'Numéro Twilio (+1…)' : 'Nom expéditeur'} span={2}>
+                  <input {...f.bind('sms_sender')} placeholder={v.sms_provider === 'orange' ? 'tel:+22600000000' : v.sms_provider === 'twilio' ? '+15550000000' : 'IAM'} />
+                </Field>
+              )}
+              {(v.sms_provider === 'orange' || v.sms_provider === 'twilio') && (
+                <Field label={v.sms_provider === 'orange' ? 'Client ID' : 'Account SID'} span={2}><input {...f.bind('sms_account')} autoComplete="off" /></Field>
+              )}
+              {v.sms_provider === 'http' && (
+                <Field label="URL de la passerelle" span={4} hint="Variables : {to} numéro, {message} texte, {sender} expéditeur, {key} clé secrète.">
+                  <input {...f.bind('sms_http_url')} placeholder="https://api.passerelle.bf/send?to={to}&text={message}&key={key}" />
+                </Field>
+              )}
+              {v.sms_provider && (
+                <Field label={v.sms_provider === 'orange' ? 'Client secret' : v.sms_provider === 'twilio' ? 'Auth token' : 'Clé secrète'} span={2} hint={secrets?.sms_secret ? 'Enregistrée. Laisser vide pour la conserver.' : 'Non renseignée.'}>
+                  <input type="password" value={smsSecret} onChange={(e) => setSmsSecret(e.target.value)} autoComplete="new-password" />
+                </Field>
+              )}
+            </div>
+            {v.sms_provider && <div className="form-actions"><button className="btn" onClick={() => test('sms')}>Envoyer un SMS d'essai au {v.phone || '…'}</button></div>}
+          </div>
         </div>
-        <p className="muted small">
-          {dbMode === 'local'
-            ? 'Conseil : faites une sauvegarde chaque semaine sur une clé USB ou un disque externe.'
-            : 'Les sauvegardes se font sur le serveur (pg_dump) : voir le guide de déploiement.'}
-        </p>
-      </div>
+      )}
+
+      {tab === 'donnees' && (
+        <div className="tab-panel" key="donnees">
+          <div className="card">
+            <h3>Données</h3>
+            <p className="muted">Données : <strong>{DATA_TEXT[dbMode]}</strong>{serverUrl ? <> — {serverUrl}</> : null}.</p>
+            <div className="row gap wrap">
+              {desktop && dbMode === 'local' && (
+                <>
+                  <button className="btn" onClick={() => run(async () => { const r = await unwrap(window.erp.backup()); if (r) notify('Sauvegarde créée : ' + r, 'success') })}>Créer une sauvegarde</button>
+                  <button className="btn" onClick={() => run(() => unwrap(window.erp.restore()))}>Restaurer une sauvegarde…</button>
+                </>
+              )}
+              <button className="btn" onClick={() => setShowDb(true)}>{desktop ? 'Emplacement des données…' : 'Changer de serveur…'}</button>
+            </div>
+            <p className="muted small">
+              {dbMode === 'local'
+                ? 'Conseil : faites une sauvegarde chaque semaine sur une clé USB ou un disque externe.'
+                : 'Les sauvegardes se font sur le serveur (pg_dump) : voir le guide de déploiement.'}
+            </p>
+          </div>
+        </div>
+      )}
       {showDb && <Modal title={desktop ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide><DbConfigForm /></Modal>}
+      {drawSig && (
+        <SignatureModal
+          title="Signature du responsable"
+          name={v.signatory_name || user.full_name}
+          onClose={() => setDrawSig(false)}
+          onDone={(png) => {
+            f.set('signature_image', png)
+            setDrawSig(false)
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+/** Fenêtre de signature réutilisable (responsable, client sur place). */
+export function SignatureModal({ title, name, onClose, onDone, askName = false }: { title: string; name?: string; onClose: () => void; onDone: (png: string, name: string) => void; askName?: boolean }) {
+  const [png, setPng] = useState<string | null>(null)
+  const [signer, setSigner] = useState(name ?? '')
+  return (
+    <Modal title={title} onClose={onClose} footer={<>
+      <button className="btn" onClick={onClose}>Annuler</button>
+      <button className="btn btn-primary" disabled={!png || (askName && signer.trim().length < 2)} onClick={() => png && onDone(png, signer.trim())}>Valider la signature</button>
+    </>}>
+      {askName && <Field label="Nom et prénom du signataire"><input autoFocus value={signer} onChange={(e) => setSigner(e.target.value)} autoComplete="name" /></Field>}
+      <SignaturePad onChange={setPng} typedName={signer} />
+    </Modal>
   )
 }
 

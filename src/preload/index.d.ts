@@ -26,6 +26,8 @@ interface ErpBridge {
   saveDbConfig(cfg: unknown): Promise<void>
   pdf(id: number, action: 'open' | 'save' | 'print', format?: 'a4' | 'ticket'): Promise<Result>
   saveText(name: string, content: string): Promise<Result>
+  /** Envoie un document par e-mail (PDF joint sur ordinateur, HTML depuis le web/mobile). */
+  sendDocumentEmail(input: { documentId: number; to: string; subject: string; body: string }): Promise<Result>
   pickImage(): Promise<Result<string | null>>
   backup(): Promise<Result>
   restore(): Promise<Result>

@@ -16,6 +16,9 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Paiements | Encaissements et décaissements partiels, soldes clients et fournisseurs |
 | Comptabilité | SYSCOHADA révisé : écritures générées automatiquement (ventes, achats, règlements, caisse), opérations diverses, journaux, grand livre, balance, compte de résultat, plan comptable modifiable, exports Excel |
 | Rapports | CA par mois, client et article avec marges, TVA collectée et déductible |
+| Communications | Envoi des documents par e-mail (PDF joint) et par SMS (Orange, Twilio ou passerelle HTTP), relances des factures en retard (une ou toutes), modèles de messages à variables, journal des envois |
+| Signatures | Cachet et signature de la société sur les documents, signature du client sur place (doigt, stylet, souris) ou à distance par lien sécurisé (e-mail/SMS), preuve : empreinte SHA-256, date, IP, appareil |
+| Modèles de documents | Mise en page moderne ou classique, couleur au choix, conditions générales, pied de page |
 | Administration | Société, IFU, RCCM, régime fiscal (RNI, RSI, CME), service des impôts, logo, utilisateurs et rôles, journal d'activité, sauvegarde |
 
 ### Adaptation au Burkina Faso
@@ -54,6 +57,16 @@ Les pièces validées avant l'activation de la comptabilité peuvent être compt
 | Magasinier | Achats, stock, fournisseurs, articles |
 | Comptable | Ventes, achats, paiements, tiers, rapports, comptabilité |
 | Caissier | Caisse uniquement (ses propres sessions) |
+
+Les communications (e-mails, SMS, relances) sont ouvertes à l'administrateur, au commercial et au comptable. Les modèles de messages, la messagerie et les SMS se configurent dans **Société & paramètres** (administrateur).
+
+## E-mails, SMS et signatures
+
+- **E-mail** : *Société & paramètres → Messagerie*. Gmail : `smtp.gmail.com`, port 587, avec un « mot de passe d'application ». Bouton « Envoyer un e-mail d'essai ».
+- **SMS** : *Société & paramètres → SMS*. Orange (compte sur developer.orange.com, API « SMS Burkina Faso »), Twilio, ou toute passerelle qui accepte une URL du type `https://…/send?to={to}&text={message}&key={key}`.
+- Les mots de passe et clés sont stockés à part et ne sont jamais renvoyés à l'interface.
+- **Signature à distance** : nécessite le serveur en ligne (le client ouvre `https://votre-domaine/sign/…`). En mode « ce poste », renseignez l'adresse publique dans *Documents & signature*.
+- Une signature reste liée au contenu signé (empreinte SHA-256) : si le document est modifié ensuite, l'application l'indique.
 
 ## Où sont les données ?
 

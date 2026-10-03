@@ -2,15 +2,16 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowDownLeft, ArrowRight, ArrowUpRight, Bank, ChartLineUp, CreditCard, DeviceMobile, Money as MoneyIcon,
-  Package, TrendDown, TrendUp, Users, Wallet, Warning, type Icon
+  Package, Receipt, TrendDown, TrendUp, Users, Wallet, Warning, type Icon
 } from '@phosphor-icons/react'
 import { formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import { paymentState, PAYMENT_STATE_LABELS } from '@shared/domain'
 import { todayISO } from '@shared/format'
 import { useQuery } from '../api'
 import { AreaChart, compact, Donut, Progress, Sparkline } from '../components/charts'
+import { CountUp, DashboardSkeleton } from '../components/motion'
 import { Mascot } from '../components/Mascot'
-import { Empty, ErrorBox, Loading } from '../components/ui'
+import { Empty, ErrorBox } from '../components/ui'
 import { useCan, useSession } from '../session'
 
 const MONTHS = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
@@ -57,12 +58,31 @@ function Card({ title, sub, action, className = '', children }: { title: string;
   )
 }
 
-function Growth({ now, before }: { now: number; before: number }) {
+const plural = (n: number, word: string) => `${formatNumber(n)} ${word}${n > 1 ? 's' : ''}`
+
+const KPI_STOPS = { blue: 'kpi-blue', green: 'kpi-green', amber: 'kpi-amber', violet: 'kpi-violet' }
+
+/** Tuile d'indicateur en dégradé : chiffre animé, mini-courbe facultative. */
+function Kpi({ tone, icon: I, label, value, foot, spark, money = true }: { tone: keyof typeof KPI_STOPS; icon: Icon; label: string; value: number; foot?: ReactNode; spark?: number[]; money?: boolean }) {
+  return (
+    <section className={`kpi-tile span-3 ${KPI_STOPS[tone]}`}>
+      <div className="kpi-tile-top">
+        <span className="kpi-tile-icon" aria-hidden="true"><I size={24} weight="duotone" /></span>
+        <h2>{label}</h2>
+      </div>
+      <div className="kpi-tile-value"><CountUp value={value} format={(n) => (money ? formatMoney(n) : formatNumber(Math.round(n)))} /></div>
+      <div className="kpi-tile-foot">{foot}</div>
+      {spark && <Sparkline values={spark} summary={`${label} : évolution sur 14 jours`} height={46} />}
+    </section>
+  )
+}
+
+function Growth({ now, before, light = false }: { now: number; before: number; light?: boolean }) {
   if (!before) return null
   const pct = ((now - before) / Math.abs(before)) * 100
   const up = pct >= 0
   return (
-    <span className={`growth ${up ? 'up' : 'down'}`}>
+    <span className={`growth ${up ? 'up' : 'down'} ${light ? 'light' : ''}`}>
       {up ? <TrendUp size={15} weight="bold" aria-hidden="true" /> : <TrendDown size={15} weight="bold" aria-hidden="true" />}
       {up ? '+' : ''}{formatNumber(pct, 1)} %
       <span className="sr-only">{up ? 'en hausse' : 'en baisse'} par rapport au mois précédent</span>
@@ -76,7 +96,7 @@ export function Dashboard() {
   const { data, error, loading, reload } = useQuery<any>('reports.dashboard')
   const canSales = useCan('sales')
   const canPayments = useCan('payments')
-  if (loading && !data) return <Loading />
+  if (loading && !data) return <DashboardSkeleton />
   if (error) return <div className="page"><ErrorBox error={error} onRetry={reload} /></div>
   const d = data!
   const first = user.full_name.split(' ')[0]
@@ -95,7 +115,6 @@ export function Dashboard() {
     const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
     return d.daily.find((x: any) => x.date === key)?.sales ?? 0
   })
-  const days14 = days.reduce((s, v) => s + v, 0)
   const methodsTotal = d.byMethod.reduce((s: number, m: any) => s + m.total, 0)
   const treasury = d.cashIn - d.cashOut
   const finMax = Math.max(d.receivable, d.payable, Math.abs(treasury), 1)
@@ -105,6 +124,16 @@ export function Dashboard() {
     <div className="page dashboard">
       <h1 className="sr-only">Tableau de bord</h1>
       <div className="bento">
+        {/* Indicateurs clés en couleur */}
+        <Kpi tone="blue" icon={ChartLineUp} label="Ventes HT du mois" value={d.salesMonth} spark={days}
+          foot={<Growth now={d.salesMonth} before={d.salesPrevMonth} light />} />
+        <Kpi tone="green" icon={Wallet} label="Encaissé ce mois" value={d.cashIn}
+          foot={<span>{d.byMethod.reduce((n: number, m: any) => n + m.n, 0)} règlement(s) · {d.byMethod[0]?.method ?? 'aucun'} en tête</span>} />
+        <Kpi tone="amber" icon={ArrowDownLeft} label="Créances clients" value={d.receivable}
+          foot={<span>{d.overdue.length > 0 ? `${d.overdue.length} facture(s) en retard` : 'Aucun retard de paiement'}</span>} />
+        <Kpi tone="violet" icon={Receipt} label="Factures du mois" value={d.counts.invoices_month} money={false}
+          foot={<span>{plural(d.counts.clients, 'client')} · {plural(d.counts.products, 'article')}</span>} />
+
         {/* Accueil animé */}
         <section className="dcard hero span-5">
           <div className="hero-text">
@@ -117,28 +146,14 @@ export function Dashboard() {
           <Mascot className="hero-mascot" />
         </section>
 
-        {/* Statistiques */}
-        <Card className="span-7" title="Statistiques" sub={`Mois de ${MONTHS[now.getMonth()].toLowerCase()} ${now.getFullYear()}`}>
-          <div className="stats">
-            <div className="stat"><Tint tone="primary" icon={ChartLineUp} size="lg" /><div><strong>{compact(d.salesMonth)}</strong><span>Ventes HT</span></div></div>
-            <div className="stat"><Tint tone="info" icon={Users} size="lg" /><div><strong>{formatNumber(d.counts.clients)}</strong><span>Clients</span></div></div>
-            <div className="stat"><Tint tone="danger" icon={Package} size="lg" /><div><strong>{formatNumber(d.counts.products)}</strong><span>Articles</span></div></div>
-            <div className="stat"><Tint tone="success" icon={Wallet} size="lg" /><div><strong>{compact(d.cashIn)}</strong><span>Encaissé</span></div></div>
-          </div>
-        </Card>
-
-        {/* Ventes 14 jours */}
-        <Card className="span-3" title="Ventes" sub="14 derniers jours">
-          <div className="metric">
-            <strong>{compact(days14)}</strong>
-            <span className="muted">FCFA HT</span>
-          </div>
-          <Sparkline values={days} summary={`Ventes des 14 derniers jours : ${formatMoney(days14)} au total.`} />
-          <p className="small muted">{formatNumber(d.counts.invoices_month)} facture(s) validée(s) ce mois-ci</p>
+        {/* Chiffre d'affaires 12 mois */}
+        <Card className="span-7" title="Chiffre d'affaires" sub={`Cumul de l'année : ${formatMoney(d.salesYear)} HT`}
+          action={canSales ? <Link className="btn btn-sm btn-tonal" to="/reports">Rapports</Link> : undefined}>
+          <AreaChart points={months} summary={`Chiffre d'affaires HT des 12 derniers mois. Cumul de l'année ${formatMoney(d.salesYear)}.`} />
         </Card>
 
         {/* Encaissements par moyen */}
-        <Card className="span-3" title="Encaissements" sub="Par moyen de paiement, ce mois">
+        <Card className="span-4" title="Encaissements" sub="Par moyen de paiement, ce mois">
           {d.byMethod.length === 0 ? <Empty>Aucun encaissement ce mois-ci.</Empty> : (
             <>
               <Donut
@@ -154,12 +169,6 @@ export function Dashboard() {
               </ul>
             </>
           )}
-        </Card>
-
-        {/* Chiffre d'affaires 12 mois */}
-        <Card className="span-6" title="Chiffre d'affaires" sub={`Cumul de l'année : ${formatMoney(d.salesYear)} HT`}
-          action={canSales ? <Link className="btn btn-sm btn-tonal" to="/reports">Rapports</Link> : undefined}>
-          <AreaChart points={months} summary={`Chiffre d'affaires HT des 12 derniers mois. Cumul de l'année ${formatMoney(d.salesYear)}.`} />
         </Card>
 
         {/* Créances, dettes, trésorerie */}
@@ -201,25 +210,6 @@ export function Dashboard() {
           )}
         </Card>
 
-        {/* Transactions */}
-        <Card className="span-4" title="Transactions" sub="Derniers règlements"
-          action={canPayments ? <Link className="btn btn-sm btn-tonal" to="/payments">Tout voir</Link> : undefined}>
-          {d.transactions.length === 0 ? <Empty>Aucun règlement pour l'instant.</Empty> : (
-            <ul className="rows">
-              {d.transactions.map((t: any) => {
-                const m = methodOf(t.method)
-                return (
-                  <li key={t.id}>
-                    <Tint tone={m.tone} icon={m.icon} size="sm" />
-                    <div className="grow"><b>{t.method}</b><span>{t.party_name}{t.document_number ? ` · ${t.document_number}` : ''}</span></div>
-                    <strong className={`money ${t.direction === 'in' ? 'plus' : 'neg'}`}>{t.direction === 'in' ? '+' : '−'}{formatMoney(t.amount)}</strong>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </Card>
-
         {/* Dernières factures */}
         <Card className="span-8 flush" title="Dernières factures" sub="Factures validées, avec leur état de paiement"
           action={canSales ? <Link className="btn btn-sm btn-primary" to="/docs/FAC/new">Nouvelle facture</Link> : undefined}>
@@ -247,8 +237,27 @@ export function Dashboard() {
           )}
         </Card>
 
+        {/* Transactions */}
+        <Card className="span-4" title="Transactions" sub="Derniers règlements"
+          action={canPayments ? <Link className="btn btn-sm btn-tonal" to="/payments">Tout voir</Link> : undefined}>
+          {d.transactions.length === 0 ? <Empty>Aucun règlement pour l'instant.</Empty> : (
+            <ul className="rows">
+              {d.transactions.map((t: any) => {
+                const m = methodOf(t.method)
+                return (
+                  <li key={t.id}>
+                    <Tint tone={m.tone} icon={m.icon} size="sm" />
+                    <div className="grow"><b>{t.method}</b><span>{t.party_name}{t.document_number ? ` · ${t.document_number}` : ''}</span></div>
+                    <strong className={`money ${t.direction === 'in' ? 'plus' : 'neg'}`}>{t.direction === 'in' ? '+' : '−'}{formatMoney(t.amount)}</strong>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Card>
+
         {/* À surveiller */}
-        <Card className="span-4" title="À surveiller" sub="Retards de paiement et stock bas">
+        <Card className="span-6" title="À surveiller" sub="Retards de paiement et stock bas">
           {d.overdue.length === 0 && d.lowStock.length === 0 ? (
             <Empty>Rien à signaler : aucune facture en retard, aucun article sous le seuil.</Empty>
           ) : (
@@ -269,6 +278,16 @@ export function Dashboard() {
               ))}
             </ul>
           )}
+        </Card>
+
+        {/* Statistiques */}
+        <Card className="span-6" title="Statistiques" sub={`Mois de ${MONTHS[now.getMonth()].toLowerCase()} ${now.getFullYear()}`}>
+          <div className="stats">
+            <div className="stat"><Tint tone="primary" icon={ChartLineUp} size="lg" /><div><strong>{compact(d.salesMonth)}</strong><span>Ventes HT</span></div></div>
+            <div className="stat"><Tint tone="info" icon={Users} size="lg" /><div><strong>{formatNumber(d.counts.clients)}</strong><span>Clients</span></div></div>
+            <div className="stat"><Tint tone="danger" icon={Package} size="lg" /><div><strong>{formatNumber(d.counts.products)}</strong><span>Articles</span></div></div>
+            <div className="stat"><Tint tone="success" icon={Wallet} size="lg" /><div><strong>{compact(d.cashIn)}</strong><span>Encaissé</span></div></div>
+          </div>
         </Card>
       </div>
     </div>

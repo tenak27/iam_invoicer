@@ -811,10 +811,132 @@ td.indent { padding-left: 38px !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }
 
 @media print {
   .sidebar, .navbar, .tabbar, .page-actions, .toolbar, .pos-cart-toggle, .offline-bar { display: none !important; }
   .main-col { overflow: visible; }
+}
+
+/* =====================================================================
+   Effets et animations
+   Un seul moment orchestré : l'entrée en cascade du tableau de bord.
+   Le reste réagit aux actions (survol, ouverture, changement de page).
+   ===================================================================== */
+:root { --ease-spring: cubic-bezier(.34, 1.56, .64, 1); }
+
+/* Tuiles d'indicateurs en dégradé */
+.kpi-tile { position: relative; overflow: hidden; isolation: isolate; border-radius: var(--r-lg); padding: 20px 22px 0; color: #fff; display: flex; flex-direction: column; gap: 6px; min-height: 168px; box-shadow: 0 10px 24px -12px var(--kpi-shadow); transition: transform var(--t-med) var(--ease-out), box-shadow var(--t-med); }
+.kpi-tile::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(160px 160px at 92% -10%, rgba(255, 255, 255, .28), transparent 70%), radial-gradient(220px 140px at -10% 120%, rgba(255, 255, 255, .14), transparent 70%); }
+.kpi-tile::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; z-index: -1; background: linear-gradient(105deg, transparent, rgba(255, 255, 255, .28), transparent); transform: skewX(-18deg); transition: left .8s var(--ease-out); }
+.kpi-tile:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -14px var(--kpi-shadow); }
+.kpi-tile:hover::after { left: 130%; }
+.kpi-blue { background: linear-gradient(135deg, #1550a8, #2a70d6); --kpi-shadow: rgba(21, 80, 168, .65); }
+.kpi-green { background: linear-gradient(135deg, #0b6b40, #128052); --kpi-shadow: rgba(11, 107, 64, .6); }
+.kpi-amber { background: linear-gradient(135deg, #9a4306, #b8590b); --kpi-shadow: rgba(154, 67, 6, .6); }
+.kpi-violet { background: linear-gradient(135deg, #4c34b0, #7357e8); --kpi-shadow: rgba(76, 52, 176, .6); }
+.kpi-tile-top { display: flex; align-items: center; gap: 12px; }
+.kpi-tile-top h2 { color: #fff; font-size: 14.5px; font-weight: 600; }
+.kpi-tile-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); backdrop-filter: blur(4px); }
+.kpi-tile-value { font-size: clamp(22px, 2vw, 28px); font-weight: 800; letter-spacing: -.01em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.kpi-tile-foot { font-size: 13px; color: rgba(255, 255, 255, .92); min-height: 22px; display: flex; align-items: center; margin-bottom: 16px; }
+.kpi-tile .sparkline { margin: auto -22px 0; width: calc(100% + 44px); height: 46px; }
+.kpi-tile .sparkline .area-line { stroke: #fff; stroke-width: 2.5; }
+.kpi-tile .area-stop-top { stop-color: #fff; stop-opacity: .45; }
+.kpi-tile .area-stop-bottom { stop-color: #fff; stop-opacity: 0; }
+.growth.light { background: rgba(255, 255, 255, .22); color: #fff; }
+
+/* Entrée en cascade du tableau de bord (une seule fois, au chargement) */
+.dashboard .bento > * { animation: card-in .55s var(--ease-out) both; }
+.dashboard .bento > *:nth-child(1) { animation-delay: .02s; }
+.dashboard .bento > *:nth-child(2) { animation-delay: .07s; }
+.dashboard .bento > *:nth-child(3) { animation-delay: .12s; }
+.dashboard .bento > *:nth-child(4) { animation-delay: .17s; }
+.dashboard .bento > *:nth-child(5) { animation-delay: .24s; }
+.dashboard .bento > *:nth-child(6) { animation-delay: .29s; }
+.dashboard .bento > *:nth-child(n+7) { animation-delay: .36s; }
+@keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+
+/* Graphiques qui se dessinent */
+.area-line.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-line 1.2s .35s var(--ease-out) forwards; }
+.area-fill { opacity: 0; animation: fade-fill .8s .9s ease-out forwards; }
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+@keyframes fade-fill { to { opacity: 1; } }
+.donut-seg { animation: donut-grow 1s var(--ease-out) both; }
+@keyframes donut-grow { from { stroke-dasharray: 0 var(--c); } to { stroke-dasharray: var(--len) var(--c); } }
+.progress span { animation: bar-grow 1s .4s var(--ease-out) both; transform-origin: left; }
+@keyframes bar-grow { from { transform: scaleX(0); } }
+.area-dot.peak { animation: dot-in .4s 1.4s var(--ease-spring) both; transform-box: fill-box; transform-origin: center; }
+.area-peak-label { animation: fade-fill .4s 1.5s ease-out both; opacity: 0; }
+@keyframes dot-in { from { transform: scale(0); } }
+
+/* Pastilles qui réagissent au survol des lignes et cartes */
+.rows li .tint, .stat .tint { transition: transform var(--t-med) var(--ease-spring); }
+.rows li:hover .tint, .stat:hover .tint { transform: scale(1.08) rotate(-4deg); }
+.dcard { transition: box-shadow var(--t-med), transform var(--t-med) var(--ease-out); }
+.dcard:hover { transform: translateY(-2px); }
+
+/* Transition entre les pages et entre les onglets */
+.route-view { animation: route-in .32s var(--ease-out); }
+@keyframes route-in { from { opacity: 0; transform: translateY(8px); } }
+.tab-panel { animation: route-in .25s var(--ease-out); }
+
+/* Squelette de chargement */
+.skeleton { border-radius: var(--r-lg); background: linear-gradient(100deg, var(--surface) 30%, var(--surface-3) 50%, var(--surface) 70%) 0 0 / 300% 100%; box-shadow: var(--lift); animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -150% 0; } }
+.bento > .skeleton.span-3 { grid-column: span 3; }
+.bento > .skeleton.span-4 { grid-column: span 4; }
+.bento > .skeleton.span-5 { grid-column: span 5; }
+.bento > .skeleton.span-7 { grid-column: span 7; }
+
+/* Boutons : retour de pression plus vivant */
+.btn-primary:active:not(:disabled), .btn-tonal:active:not(:disabled) { transform: scale(.97); }
+
+/* ---------- Signatures, modèles, couleurs ---------- */
+.sigpad { display: flex; flex-direction: column; gap: 10px; }
+.sigpad-area { position: relative; border: 2px dashed var(--line-strong); border-radius: var(--r-md); background: #fff; touch-action: none; transition: border-color var(--t-fast); }
+.sigpad-area.dirty { border-color: var(--c-primary); border-style: solid; }
+.sigpad-area canvas { display: block; width: 100%; height: 200px; cursor: crosshair; }
+.sigpad-hint { position: absolute; left: 16px; bottom: 12px; color: #6d6b77; font-size: 13px; pointer-events: none; }
+.sig-panel .row { margin-bottom: 14px; }
+.link-box { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; margin-bottom: 14px; border-radius: var(--r-md); background: rgba(var(--primary-rgb), .08); }
+.link-box code { font-size: 13px; overflow-wrap: anywhere; color: var(--link); }
+.sig-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.sig-item { margin: 0; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); display: flex; flex-direction: column; gap: 8px; animation: card-in .4s var(--ease-out); }
+.sig-item img { height: 86px; object-fit: contain; background: #fff; border-radius: 6px; }
+.sig-item figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.sig-ok, .sig-bad { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.sig-ok { color: var(--green); }
+.sig-bad { color: var(--red); }
+.swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line-strong); transition: transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast); }
+.swatch:hover { transform: scale(1.12); }
+.swatch.on { box-shadow: 0 0 0 2px var(--c-primary); transform: scale(1.1); }
+.swatches input[type='color'] { width: 40px; height: 34px; padding: 2px; }
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+.tpl-card { gap: 10px; }
+.tpl-subject { margin: 0; font-weight: 600; color: var(--text); }
+.tpl-body { margin: 0; white-space: pre-line; color: var(--text-2); font-size: 13.5px; max-height: 190px; overflow: hidden; mask-image: linear-gradient(#000 75%, transparent); }
+.var-chips { margin-top: 8px; }
+.var-chips .chip { border: none; cursor: pointer; font: inherit; font-size: 12.5px; flex-direction: column; align-items: flex-start; gap: 0; border-radius: var(--r-sm); }
+.var-chips .chip span { font-size: 11.5px; }
+.var-chips .chip:hover { box-shadow: 0 0 0 1px var(--c-primary), var(--lift); }
+
+@media (max-width: 1280px) {
+  .bento > .kpi-tile.span-3, .bento > .skeleton.span-3 { grid-column: span 6; }
+}
+@media (max-width: 900px) {
+  .bento > .skeleton { grid-column: span 12 !important; }
+}
+@media (max-width: 560px) {
+  .bento > .kpi-tile.span-3 { grid-column: span 12; }
+  .kpi-tile { min-height: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Contenu affiché immédiatement, sans entrée animée */
+  .dashboard .bento > *, .route-view, .tab-panel, .donut-seg, .progress span, .area-dot.peak, .sig-item, .area-line.draw, .area-fill, .area-peak-label { animation: none !important; }
+  .area-line.draw { stroke-dashoffset: 0; }
+  .area-fill, .area-peak-label { opacity: 1; }
+  .kpi-tile:hover, .dcard:hover { transform: none; }
 }

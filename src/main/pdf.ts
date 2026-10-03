@@ -37,6 +37,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   const showPrices = type !== 'BL' && type !== 'BR'
   const isDraft = doc.status === 'brouillon'
   const isCancelled = doc.status === 'annule'
+  const c = /^#[0-9a-fA-F]{6}$/.test(company.doc_color ?? '') ? company.doc_color : '#1d6fd6'
+  const modern = company.doc_layout !== 'classique'
+  const signatures: any[] = doc.signatures ?? []
+  const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || company.signature_image) && info.side === 'sale'
 
   const rates = new Map<number, { base: number; tva: number }>()
   for (const l of doc.lines) {
@@ -77,10 +81,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1f2933; margin: 0; }
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
   .logo { max-height: 70px; max-width: 220px; margin-bottom: 6px; }
-  .company-name { font-size: 16pt; font-weight: 700; color: #0b4f8a; }
+  .company-name { font-size: 16pt; font-weight: 700; color: ${c}; }
   .muted { color: #5f6b7a; font-size: 9pt; line-height: 1.45; }
   .doc-title { text-align: right; }
-  .doc-title h1 { margin: 0; font-size: 20pt; color: #0b4f8a; letter-spacing: .5px; text-transform: uppercase; }
+  .doc-title h1 { margin: 0; font-size: 20pt; color: ${c}; letter-spacing: .5px; text-transform: uppercase; }
   .doc-title .num { font-size: 12pt; font-weight: 600; margin-top: 4px; }
   .meta { margin-top: 6px; }
   .meta td { padding: 1px 0 1px 12px; }
@@ -90,7 +94,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   .box .label { font-size: 8pt; text-transform: uppercase; color: #5f6b7a; letter-spacing: .5px; }
   .box .name { font-size: 11.5pt; font-weight: 600; margin: 2px 0 4px; }
   table.lines { width: 100%; border-collapse: collapse; }
-  table.lines th { background: #0b4f8a; color: #fff; font-weight: 600; font-size: 8.5pt; text-align: left; padding: 6px 6px; }
+  table.lines th { background: ${modern ? c : '#33303f'}; color: #fff; font-weight: 600; font-size: 8.5pt; text-align: left; padding: 6px 6px; }
   table.lines td { padding: 6px 6px; border-bottom: 1px solid #e4e9ef; vertical-align: top; }
   table.lines tr:nth-child(even) td { background: #f6f8fb; }
   .num { text-align: right; white-space: nowrap; }
@@ -101,15 +105,24 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   .totals { border-collapse: collapse; min-width: 44%; }
   .totals td { padding: 4px 8px; }
   .totals td:last-child { text-align: right; white-space: nowrap; }
-  .totals .grand td { background: #0b4f8a; color: #fff; font-weight: 700; font-size: 11pt; }
-  .words { margin-top: 16px; padding: 8px 12px; background: #f6f8fb; border-left: 3px solid #0b4f8a; page-break-inside: avoid; }
+  .totals .grand td { background: ${modern ? c : '#33303f'}; color: #fff; font-weight: 700; font-size: 11pt; }
+  .words { margin-top: 16px; padding: 8px 12px; background: #f6f8fb; border-left: 3px solid ${c}; page-break-inside: avoid; }
   .notes { flex: 1; }
   .sign { display: flex; justify-content: space-between; margin-top: 28px; page-break-inside: avoid; }
   .sign div { width: 45%; border-top: 1px solid #9aa5b1; padding-top: 4px; font-size: 9pt; color: #5f6b7a; height: 70px; }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 7.5pt; color: #7b8794; border-top: 1px solid #e4e9ef; padding-top: 4px; }
+  .band { height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
+  .signs { display: flex; justify-content: space-between; gap: 18px; margin-top: 24px; page-break-inside: avoid; }
+  .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px; min-height: 96px; font-size: 8.5pt; color: #5f6b7a; position: relative; }
+  .sigbox .t { text-transform: uppercase; letter-spacing: .4px; font-size: 7.5pt; }
+  .sigbox img.sig { max-height: 58px; max-width: 200px; display: block; margin: 4px 0; }
+  .sigbox img.cachet { position: absolute; right: 10px; top: 10px; max-height: 78px; max-width: 120px; opacity: .9; }
+  .sigbox .proof { font-size: 6.5pt; color: #8a94a3; word-break: break-all; }
+  .terms { margin-top: 16px; font-size: 7.5pt; color: #5f6b7a; border-top: 1px solid #e4e9ef; padding-top: 6px; white-space: pre-line; page-break-inside: avoid; }
   .stamp { position: fixed; top: 40%; left: 15%; font-size: 64pt; color: rgba(200, 30, 30, .13); transform: rotate(-25deg); font-weight: 800; }
 </style></head>
 <body>
+  ${modern ? '<div class="band"></div>' : ''}
   ${isDraft ? '<div class="stamp">BROUILLON</div>' : isCancelled ? '<div class="stamp">ANNULÉ</div>' : ''}
   <div class="head">
     <div>
@@ -173,9 +186,21 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
 
   ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours. Bon pour accord : date, signature et cachet du client.</p>' : ''}
   ${type === 'FAC' && company.bank_account ? `<p class="muted" style="margin-top:14px">Règlement par virement : ${esc(company.bank_name)} — ${esc(company.bank_account)}</p>` : ''}
-  ${type === 'BL' || type === 'BR' || type === 'DEV' || type === 'BC'
-    ? `<div class="sign"><div>${type === 'BL' ? 'Livré par' : type === 'BR' ? 'Réceptionné par' : 'Pour ' + esc(company.name)}</div><div>${type === 'BL' ? 'Reçu par le client (nom, date, signature)' : type === 'BR' ? 'Livreur' : type === 'DEV' ? 'Bon pour accord du client' : 'Signature et cachet'}</div></div>`
-    : ''}
+  ${signatures.length > 0 || showStamp
+    ? `<div class="signs">
+        ${showStamp ? `<div class="sigbox"><div class="t">Pour ${esc(company.name)}</div>
+          ${company.signature_image ? `<img class="sig" src="${company.signature_image}">` : ''}
+          ${company.stamp ? `<img class="cachet" src="${company.stamp}">` : ''}
+          <div>${esc(company.signatory_name)}${company.signatory_title ? ' — ' + esc(company.signatory_title) : ''}</div></div>` : ''}
+        ${signatures.map((g: any) => `<div class="sigbox"><div class="t">${type === 'BL' ? 'Reçu par le client' : 'Bon pour accord du client'}</div>
+          <img class="sig" src="${g.image}">
+          <div><strong>${esc(g.signer_name)}</strong> — signé ${g.method === 'a_distance' ? 'en ligne' : 'sur place'} le ${esc(new Date(g.signed_at).toLocaleString('fr-FR'))}</div>
+          <div class="proof">Empreinte SHA-256 du contenu : ${esc(g.content_hash)}</div></div>`).join('')}
+      </div>`
+    : type === 'BL' || type === 'BR' || type === 'DEV' || type === 'BC'
+      ? `<div class="sign"><div>${type === 'BL' ? 'Livré par' : type === 'BR' ? 'Réceptionné par' : 'Pour ' + esc(company.name)}</div><div>${type === 'BL' ? 'Reçu par le client (nom, date, signature)' : type === 'BR' ? 'Livreur' : type === 'DEV' ? 'Bon pour accord du client' : 'Signature et cachet'}</div></div>`
+      : ''}
+  ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}
   ${company.invoice_footer && info.side === 'sale' ? `<p class="muted" style="margin-top:18px;text-align:center">${esc(company.invoice_footer)}</p>` : ''}
 
   ${forPdf ? '' : `<div class="footer">${legalLine(company)}</div>`}

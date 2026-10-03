@@ -5,6 +5,7 @@ import { call } from './router'
 import { AppError, type Ctx } from './services/context'
 import { loadDocument } from './services/documents'
 import { getSettings } from './services/settings'
+import { signaturesForPrint } from './services/signatures'
 import { documentHtml, pdfFooterTemplate, receiptHtml } from './pdf'
 
 export type PrintFormat = 'a4' | 'ticket'
@@ -32,6 +33,7 @@ export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4'
     if (!own) throw new AppError(check.error)
   }
   const doc = await loadDocument(ctx.db, id)
+  doc.signatures = await signaturesForPrint(ctx.db, id)
   const company = await getSettings(ctx.db)
   const html = format === 'ticket' ? receiptHtml(doc, company) : documentHtml(doc, company, forPdf)
   const filename = `${doc.number ?? 'Brouillon-' + doc.type + '-' + doc.id} - ${doc.party.name}`.replace(/[\/:*?"<>|]/g, '-') + '.pdf'

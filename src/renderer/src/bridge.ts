@@ -141,6 +141,8 @@ function createHttpBridge(): ErpBridge {
       return { ok: true, data: true }
     },
 
+    sendDocumentEmail: (input) => request('POST', '/api/call', { name: 'messages.sendDocument', args: input }),
+
     async saveText(name, content) {
       if (native) {
         const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')])

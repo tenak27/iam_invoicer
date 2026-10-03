@@ -259,5 +259,77 @@ export const MIGRATIONS: string[] = [
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )
+  `,
+  // v3 — communications (e-mail, SMS), modèles de messages, signatures électroniques.
+  `
+  CREATE TABLE secrets (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  CREATE TABLE message_templates (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    channel TEXT NOT NULL CHECK (channel IN ('email','sms')),
+    name TEXT NOT NULL,
+    subject TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  INSERT INTO message_templates (code, channel, name, subject, body) VALUES
+    ('doc_email', 'email', 'Envoi d''un document', '{type} {numero} — {societe}',
+     'Bonjour {client},' || chr(10) || chr(10) || 'Veuillez trouver ci-joint notre {type_min} n° {numero} du {date}, d''un montant de {montant}.' || chr(10) || chr(10) || 'Nous restons à votre disposition pour toute question.' || chr(10) || chr(10) || 'Cordialement,' || chr(10) || '{utilisateur}' || chr(10) || '{societe} — {telephone}'),
+    ('reminder_email', 'email', 'Relance de paiement', 'Rappel : facture {numero} échue le {echeance}',
+     'Bonjour {client},' || chr(10) || chr(10) || 'Sauf erreur de notre part, la facture n° {numero} du {date} reste impayée pour un montant de {reste}. Son échéance était le {echeance}.' || chr(10) || chr(10) || 'Merci de procéder au règlement par virement, Orange Money ou Moov Money. Si le paiement a déjà été effectué, veuillez ne pas tenir compte de ce message.' || chr(10) || chr(10) || 'Cordialement,' || chr(10) || '{societe} — {telephone}'),
+    ('sign_email', 'email', 'Demande de signature', 'Signature de votre {type_min} {numero}',
+     'Bonjour {client},' || chr(10) || chr(10) || 'Merci de consulter et signer en ligne notre {type_min} n° {numero} d''un montant de {montant} :' || chr(10) || '{lien}' || chr(10) || chr(10) || 'Ce lien est valable 30 jours.' || chr(10) || chr(10) || 'Cordialement,' || chr(10) || '{societe}'),
+    ('doc_sms', 'sms', 'Document envoyé (SMS)', '',
+     '{societe} : votre {type_min} {numero} de {montant} est disponible. Merci de votre confiance.'),
+    ('reminder_sms', 'sms', 'Relance de paiement (SMS)', '',
+     '{societe} : rappel, la facture {numero} ({reste}) était due le {echeance}. Paiement possible par Orange Money ou Moov Money. Merci.'),
+    ('sign_sms', 'sms', 'Demande de signature (SMS)', '',
+     '{societe} : merci de signer votre {type_min} {numero} ici : {lien}');
+
+  CREATE TABLE message_log (
+    id SERIAL PRIMARY KEY,
+    channel TEXT NOT NULL CHECK (channel IN ('email','sms')),
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('envoye','echec')),
+    error TEXT NOT NULL DEFAULT '',
+    document_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    party_id INT REFERENCES parties(id) ON DELETE SET NULL,
+    kind TEXT NOT NULL DEFAULT 'manuel',
+    user_id INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX message_log_created_idx ON message_log(created_at);
+  CREATE INDEX message_log_document_idx ON message_log(document_id);
+
+  CREATE TABLE signatures (
+    id SERIAL PRIMARY KEY,
+    document_id INT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    signer_name TEXT NOT NULL,
+    signer_role TEXT NOT NULL DEFAULT 'client',
+    image TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    method TEXT NOT NULL CHECK (method IN ('sur_place','a_distance')),
+    ip TEXT NOT NULL DEFAULT '',
+    device TEXT NOT NULL DEFAULT '',
+    user_id INT REFERENCES users(id),
+    signed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX signatures_document_idx ON signatures(document_id);
+
+  CREATE TABLE sign_requests (
+    token_hash TEXT PRIMARY KEY,
+    document_id INT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'en_attente' CHECK (status IN ('en_attente','signe','annule')),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )
   `
 ]

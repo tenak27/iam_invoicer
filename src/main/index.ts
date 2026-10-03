@@ -144,6 +144,18 @@ function registerIpc(): void {
     })
   )
 
+  // E-mail d'un document : le PDF est fabriqué ici puis joint au message.
+  ipcMain.handle('mail.sendDocument', (_e, input: { documentId: number; to: string; subject: string; body: string }) =>
+    guard(async () => {
+      requireSession()
+      const doc = await requireBackend().printable(input.documentId, 'a4')
+      const pdf = await renderPdf(doc.html, doc.footer, 'a4')
+      const r = await requireBackend().call('messages.sendDocument', { ...input, pdf: pdf.toString('base64') })
+      if (!r.ok) throw new AppError(r.error)
+      return true
+    })
+  )
+
   ipcMain.handle('file.saveText', (_e, defaultName: string, content: string) =>
     guard(async () => {
       requireSession()
