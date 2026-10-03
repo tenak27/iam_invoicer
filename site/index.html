@@ -21,6 +21,7 @@
     :root { --ink: #eef1f8; --text-2: #c9cfdc; --muted: #9aa3b5; --line: #2c3346; --soft: #1d2333; --surface: #171c2a; --bg: #10141f; --shadow: 0 18px 40px -22px rgba(0, 0, 0, .8); }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { scroll-behavior: smooth; }
   body { margin: 0; font-family: 'Public Sans', 'Segoe UI', system-ui, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16.5px; }
   a { color: inherit; }
@@ -112,14 +113,76 @@
   .tier .btn { margin: 0 24px 24px; }
   .badge { display: inline-block; background: var(--gold); color: #3a2a00; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
 
+  /* Galerie */
+  .gallery-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 26px; }
+  .gallery-tabs button { font: inherit; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text-2); cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+  .gallery-tabs button:hover { border-color: var(--blue-2); color: var(--ink); }
+  .gallery-tabs button[aria-selected='true'] { background: linear-gradient(135deg, var(--blue), var(--blue-2)); color: #fff; border-color: transparent; }
+  .laptop { max-width: 1000px; margin: 0 auto; }
+  .laptop .bezel { background: #0d1526; border-radius: 18px 18px 0 0; padding: 14px 14px 0; box-shadow: var(--shadow); }
+  .laptop .bezel .bar { display: flex; gap: 6px; padding: 0 4px 10px; }
+  .laptop .bezel .bar i { width: 10px; height: 10px; border-radius: 50%; background: #3a4560; }
+  .laptop .bezel .bar i:first-child { background: #e5534b; } .laptop .bezel .bar i:nth-child(2) { background: var(--gold); } .laptop .bezel .bar i:nth-child(3) { background: #2fa463; }
+  .laptop .view { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #fff; border-radius: 6px 6px 0 0; }
+  .laptop .view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; transition: opacity .45s ease; }
+  .laptop .base { height: 16px; margin: 0 -4%; border-radius: 0 0 16px 16px; background: linear-gradient(#c9d0de, #9aa3b5); }
+  .gallery-caption { text-align: center; color: var(--muted); margin-top: 18px; min-height: 1.6em; }
+
+  /* Étapes */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: step; }
+  .step { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 26px 22px 22px; box-shadow: var(--shadow); }
+  .step::before { counter-increment: step; content: counter(step); position: absolute; top: -16px; left: 22px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--blue), var(--blue-2)); box-shadow: 0 6px 14px -6px rgba(21, 80, 168, .8); }
+  .step h3 { margin: 8px 0 6px; font-size: 18px; display: flex; gap: 8px; align-items: center; }
+  .step h3 svg { color: var(--blue-2); }
+  .step p { margin: 0; color: var(--muted); font-size: 15.5px; }
+
   /* Téléchargements */
-  .downloads { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-  .dl { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: var(--shadow); }
-  .dl .ic { width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; background: var(--soft); color: var(--blue-2); }
-  .dl h3 { margin: 4px 0 0; font-size: 18px; }
-  .dl small { color: var(--muted); min-height: 2.6em; }
-  .dl .btn { width: 100%; min-height: 44px; padding: 0 12px; font-size: 15px; }
-  .dl .btn[aria-disabled='true'] { opacity: .55; pointer-events: none; }
+  .dl-reco { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 22px 26px; margin-bottom: 26px; border-radius: var(--r); color: #fff; background: linear-gradient(135deg, var(--navy), var(--blue-2)); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .dl-reco::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--weave); }
+  .dl-reco .ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.14); }
+  .dl-reco .txt { flex: 1; min-width: 220px; }
+  .dl-reco .txt b { display: block; font-size: 20px; }
+  .dl-reco .txt span { opacity: .9; }
+  .dl-reco .acts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .downloads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+  .dl { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s, border-color .3s; }
+  .dl.is-reco { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), var(--shadow); }
+  .dl-top { display: flex; gap: 12px; align-items: center; }
+  .dl .ic { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; color: #fff; }
+  .dl h3 { margin: 0; font-size: 18px; line-height: 1.25; }
+  .dl small { color: var(--muted); display: block; font-size: 14px; line-height: 1.4; }
+  .reco-tag { display: none; align-self: flex-start; background: var(--gold); color: #3a2a00; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .dl.is-reco .reco-tag { display: inline-block; }
+  .dl-files { display: grid; gap: 8px; }
+  .dl-files .btn { width: 100%; min-height: 48px; padding: 6px 14px; font-size: 15px; justify-content: space-between; text-align: left; line-height: 1.25; }
+  .dl-files .btn em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .85; white-space: nowrap; }
+  .btn .lbl { display: inline-flex; align-items: center; gap: 8px; }
+  .dl-reco .btn em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .8; margin-left: 6px; }
+  .dl-files .btn[aria-disabled='true'] { opacity: .6; pointer-events: none; }
+  .dl-note { font-size: 13.5px; color: var(--muted); background: var(--soft); border-radius: 10px; padding: 8px 10px; margin: 0; }
+  .dl-qr { display: flex; gap: 12px; align-items: center; background: var(--soft); border-radius: 12px; padding: 10px; font-size: 13.5px; color: var(--text-2); }
+  .dl-qr svg { width: 92px; height: 92px; background: #fff; border-radius: 8px; padding: 4px; }
+  .dl-how { padding: 0; border: 0; background: none; }
+  .dl-how summary { font-size: 15px; color: var(--blue-2); min-height: 32px; align-items: center; }
+  .dl-how ol { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); font-size: 14.5px; display: grid; gap: 6px; }
+  .dl-meta { font-size: 13px; color: var(--muted); }
+  .web-strip { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; justify-content: space-between; margin-top: 18px; padding: 18px 22px; border-radius: var(--r); background: var(--surface); border: 1px dashed var(--blue-2); }
+  .web-strip div { display: flex; gap: 12px; align-items: center; }
+  .web-strip svg { color: var(--blue-2); }
+  .all-files { margin-top: 18px; }
+  .all-files .table { overflow-x: auto; margin-top: 12px; }
+  .all-files table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .all-files th, .all-files td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .all-files th { color: var(--muted); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+  .all-files code { font-size: 12px; color: var(--text-2); word-break: break-all; }
+  .copy { font: inherit; font-size: 13px; font-weight: 700; color: var(--blue-2); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-height: 36px; cursor: pointer; white-space: nowrap; }
+  .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+  .doc { display: flex; gap: 14px; align-items: center; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; box-shadow: var(--shadow); transition: transform .25s; }
+  .doc:hover { transform: translateY(-3px); }
+  .doc .ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+  .doc b { display: block; }
+  .doc span { color: var(--muted); font-size: 14.5px; }
+  .doc > svg { margin-left: auto; color: var(--blue-2); }
 
   /* À propos, FAQ, contact */
   .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
@@ -152,8 +215,11 @@
   }
 
   /* Écrans moyens et petits */
+  @media (max-width: 1100px) {
+    .downloads { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: repeat(2, 1fr); row-gap: 30px; }
+  }
   @media (max-width: 1040px) {
-    .downloads { grid-template-columns: repeat(3, 1fr); }
     .tiers { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
     .tier.featured { transform: none; }
   }
@@ -171,8 +237,14 @@
     .contact { padding: 30px 22px; }
   }
   @media (min-width: 901px) { nav.links .login-mobile { display: none; } }
+  @media (max-width: 640px) {
+    .downloads, .steps, .docs { grid-template-columns: 1fr; }
+    .dl.is-reco { order: -1; }
+    .dl-reco { padding: 20px; }
+    .dl-reco .acts, .dl-reco .acts .btn { width: 100%; }
+    .all-files .sha { display: none; }
+  }
   @media (max-width: 560px) {
-    .downloads { grid-template-columns: 1fr 1fr; }
     .values { grid-template-columns: 1fr; }
     .stat b { font-size: 28px; }
     body { font-size: 16px; }
@@ -205,7 +277,7 @@
         <h1>Toute votre gestion, <em>simple et conforme</em>, même sans Internet.</h1>
         <p class="lead">Devis, factures, caisse et mobile money, stock, comptabilité, paie CNSS/IUTS et déclarations : IAM INVOICER réunit tout dans une seule application, sur ordinateur, téléphone et navigateur.</p>
         <div class="cta">
-          <a class="btn btn-light" href="#telecharger"><i data-icon="DownloadSimple"></i>Essai gratuit 30 jours</a>
+          <a class="btn btn-light" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essai gratuit 30 jours</span></a>
           <a class="btn btn-outline-white" href="/app/"><i data-icon="SignIn"></i>Accéder à mon espace</a>
         </div>
         <div class="trust">
@@ -251,7 +323,34 @@
     </div>
   </section>
 
-  <section class="alt">
+  <section id="apercu" class="alt">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Aperçu</div>
+        <h2>Découvrez l'application, écran par écran</h2>
+        <p>Les mêmes écrans sur Windows, macOS, navigateur, tablette et téléphone.</p>
+      </div>
+      <div class="gallery-tabs reveal" role="tablist" aria-label="Écrans de l'application">
+        <button role="tab" aria-selected="true" data-img="tableau-de-bord" data-cap="Tableau de bord : ventes, encaissements, créances et alertes du jour."><i data-icon="ChartPieSlice"></i>Tableau de bord</button>
+        <button role="tab" aria-selected="false" data-img="facture" data-cap="Facture avec taxes, retenues, aperçu avant impression et envoi au client."><i data-icon="FileText"></i>Factures</button>
+        <button role="tab" aria-selected="false" data-img="caisse" data-cap="Point de vente tactile : espèces, Orange Money, Moov Money, Wave."><i data-icon="CashRegister"></i>Caisse</button>
+        <button role="tab" aria-selected="false" data-img="stock" data-cap="Stock par dépôt, valorisation et alertes de seuil."><i data-icon="Package"></i>Stock</button>
+        <button role="tab" aria-selected="false" data-img="bilan" data-cap="Bilan SYSCOHADA tenu à jour par les écritures automatiques."><i data-icon="Scales"></i>Comptabilité</button>
+        <button role="tab" aria-selected="false" data-img="rh-paie" data-cap="Paie : bulletins, CNSS, IUTS, TPA et écritures de salaires."><i data-icon="IdentificationBadge"></i>Paie</button>
+        <button role="tab" aria-selected="false" data-img="projet-taches" data-cap="Projets : tâches, temps passés, dépenses et rentabilité."><i data-icon="Kanban"></i>Projets</button>
+        <button role="tab" aria-selected="false" data-img="roles" data-cap="Rôles et droits : chaque utilisateur ne voit que ce qui le concerne."><i data-icon="UsersThree"></i>Droits</button>
+      </div>
+      <div class="laptop reveal">
+        <div class="bezel"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="view"><img id="gallery-img" src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord d'IAM INVOICER" width="1280" height="800" loading="lazy"></div>
+        </div>
+        <div class="base" aria-hidden="true"></div>
+      </div>
+      <p class="gallery-caption" id="gallery-cap" aria-live="polite">Tableau de bord : ventes, encaissements, créances et alertes du jour.</p>
+    </div>
+  </section>
+
+  <section>
     <div class="wrap">
       <div class="spot reveal">
         <div>
@@ -291,6 +390,22 @@
           </ul>
         </div>
         <div class="spot-img"><img src="assets/captures/bilan.png" alt="Bilan SYSCOHADA : actif et passif" width="1440" height="900" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Mise en route</div>
+        <h2>Opérationnel en une matinée</h2>
+        <p>Pas de consultant, pas de longue installation : vous facturez le jour même.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><h3><i data-icon="DownloadSimple"></i>Installer</h3><p>Téléchargez l'application pour votre ordinateur ou téléphone, ou ouvrez-la dans le navigateur.</p></div>
+        <div class="step reveal"><h3><i data-icon="Buildings"></i>Créer la société</h3><p>Logo, pays, identifiant fiscal (IFU…), régime de TVA et devise : tout s'adapte à votre pays.</p></div>
+        <div class="step reveal"><h3><i data-icon="FileXls"></i>Importer</h3><p>Reprenez clients, fournisseurs, articles et stocks depuis vos fichiers Excel.</p></div>
+        <div class="step reveal"><h3><i data-icon="Receipt"></i>Facturer</h3><p>Devis, factures, caisse : la comptabilité et les déclarations suivent automatiquement.</p></div>
       </div>
     </div>
   </section>
@@ -347,12 +462,67 @@
         <h2>Installez IAM INVOICER sur tous vos appareils</h2>
         <p>Une seule base de données pour tous vos postes, téléphones et tablettes.</p>
       </div>
+      <div class="dl-reco reveal" id="dl-reco" hidden>
+        <div class="ic" id="dl-reco-ic"></div>
+        <div class="txt"><b id="dl-reco-title"></b><span id="dl-reco-sub"></span></div>
+        <div class="acts" id="dl-reco-acts"></div>
+      </div>
       <div class="downloads">
-        <div class="dl reveal" data-platform="windows"><div class="ic"><i data-icon="WindowsLogo" data-size="30"></i></div><h3>Windows</h3><small>Windows 10 et 11</small><a class="btn btn-primary" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
-        <div class="dl reveal" data-platform="macos"><div class="ic"><i data-icon="AppleLogo" data-size="30"></i></div><h3>macOS</h3><small>Puce Apple et Intel</small><a class="btn btn-primary" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
-        <div class="dl reveal" data-platform="android"><div class="ic"><i data-icon="AndroidLogo" data-size="30"></i></div><h3>Android</h3><small>Téléphones et tablettes</small><a class="btn btn-primary" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
-        <div class="dl reveal" data-platform="ios"><div class="ic"><i data-icon="DeviceMobile" data-size="30"></i></div><h3>iPhone et iPad</h3><small>Via TestFlight ou l'App Store</small><a class="btn btn-primary" aria-disabled="true" href="#contact">Sur demande</a></div>
-        <div class="dl reveal"><div class="ic"><i data-icon="Globe" data-size="30"></i></div><h3>Navigateur</h3><small>Sans installation</small><a class="btn btn-primary" href="/app/">Ouvrir l'application</a></div>
+        <article class="dl reveal" data-platform="windows">
+          <div class="dl-top"><div class="ic t1"><i data-icon="WindowsLogo" data-size="28"></i></div><div><h3>Windows</h3><small>Windows 10 et 11, 64 bits</small></div></div>
+          <span class="reco-tag">Votre appareil</span>
+          <div class="dl-files"><a class="btn btn-ghost" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
+          <details class="dl-how"><summary>Comment installer</summary><ol>
+            <li>Ouvrez le fichier <b>IAM-INVOICER-Setup</b> téléchargé.</li>
+            <li>Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur <b>Informations complémentaires</b> puis <b>Exécuter quand même</b>.</li>
+            <li>Choisissez le dossier d'installation, puis lancez IAM INVOICER depuis le Bureau.</li>
+          </ol></details>
+        </article>
+        <article class="dl reveal" data-platform="macos">
+          <div class="dl-top"><div class="ic t4"><i data-icon="AppleLogo" data-size="28"></i></div><div><h3>macOS</h3><small>macOS 12 ou plus récent, puce Apple et Intel</small></div></div>
+          <span class="reco-tag">Votre appareil</span>
+          <div class="dl-files"><a class="btn btn-ghost" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
+          <p class="dl-note">Mac de 2020 et après (M1 à M4) : choisissez <b>Puce Apple</b>. Le menu Pomme → <b>À propos de ce Mac</b> indique votre puce.</p>
+          <details class="dl-how"><summary>Comment installer</summary><ol>
+            <li>Ouvrez le fichier <b>.dmg</b> et glissez IAM INVOICER dans <b>Applications</b>.</li>
+            <li>Au premier lancement, faites un clic droit sur l'application → <b>Ouvrir</b>.</li>
+            <li>Si macOS bloque l'ouverture : <b>Réglages Système → Confidentialité et sécurité → Ouvrir quand même</b>.</li>
+          </ol></details>
+        </article>
+        <article class="dl reveal" data-platform="android">
+          <div class="dl-top"><div class="ic t2"><i data-icon="AndroidLogo" data-size="28"></i></div><div><h3>Android</h3><small>Android 7 ou plus récent, téléphones et tablettes</small></div></div>
+          <span class="reco-tag">Votre appareil</span>
+          <div class="dl-files"><a class="btn btn-ghost" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
+          <div class="dl-qr" hidden></div>
+          <details class="dl-how"><summary>Comment installer</summary><ol>
+            <li>Téléchargez l'<b>APK</b> depuis le téléphone (ou scannez le code QR).</li>
+            <li>Ouvrez le fichier ; si Android le demande, autorisez votre navigateur à <b>installer des applications inconnues</b>.</li>
+            <li>Touchez <b>Installer</b>. Si Play Protect affiche un avertissement : <b>Plus de détails → Installer quand même</b>.</li>
+          </ol></details>
+        </article>
+        <article class="dl reveal" data-platform="ios">
+          <div class="dl-top"><div class="ic t6"><i data-icon="DeviceMobile" data-size="28"></i></div><div><h3>iPhone et iPad</h3><small>iOS 15 ou plus récent</small></div></div>
+          <span class="reco-tag">Votre appareil</span>
+          <div class="dl-files"><a class="btn btn-ghost" aria-disabled="true" href="#contact">Sur demande</a></div>
+          <div class="dl-qr" hidden></div>
+          <p class="dl-note" data-ios-note>En attendant, l'application web s'installe sur l'écran d'accueil : Safari → <b>Partager → Sur l'écran d'accueil</b>.</p>
+          <details class="dl-how"><summary>Comment installer</summary><ol data-ios-steps>
+            <li><b>TestFlight</b> (recommandé) : installez TestFlight depuis l'App Store, puis ouvrez le lien d'invitation.</li>
+            <li><b>IPA signé</b> (iPhone enregistré auprès de nous) : ouvrez cette page dans Safari sur l'iPhone et touchez <b>Installer</b>.</li>
+            <li><b>IPA non signé</b> : installez-le depuis un ordinateur avec <b>Sideloadly</b> ou <b>AltStore</b> et votre identifiant Apple (à renouveler tous les 7 jours avec un compte gratuit).</li>
+          </ol></details>
+        </article>
+      </div>
+      <div class="web-strip reveal">
+        <div><i data-icon="Globe" data-size="34"></i><span><b>Sans installation</b><br><small style="color:var(--muted)">Chrome, Edge, Firefox ou Safari, sur n'importe quel appareil</small></span></div>
+        <a class="btn btn-primary" href="/app/"><i data-icon="ArrowSquareOut"></i>Ouvrir l'application web</a>
+      </div>
+      <details class="all-files reveal" id="all-files" hidden><summary>Tous les fichiers et empreintes SHA-256</summary>
+        <div class="table"><table><thead><tr><th>Fichier</th><th>Taille</th><th>Date</th><th class="sha">SHA-256</th><th></th></tr></thead><tbody id="all-files-body"></tbody></table></div>
+      </details>
+      <div class="docs">
+        <a class="doc reveal" href="docs/IAM-INVOICER-Guide-installation.pdf" download><div class="ic t5"><i data-icon="BookOpenText" data-size="26"></i></div><div><b>Guide d'installation</b><span>Tous les systèmes et modules, serveur, sauvegardes (PDF)</span></div><i data-icon="DownloadSimple" data-size="22"></i></a>
+        <a class="doc reveal" href="docs/IAM-INVOICER-Manuel-de-formation.pdf" download><div class="ic t3"><i data-icon="GraduationCap" data-size="26"></i></div><div><b>Manuel de formation</b><span>Parcours par rôle, captures d'écran et exercices (PDF)</span></div><i data-icon="DownloadSimple" data-size="22"></i></a>
       </div>
       <p id="dl-version" style="text-align:center;color:var(--muted);margin-top:20px"></p>
     </div>
@@ -410,7 +580,10 @@
   </div>
 </footer>
 
+<template id="ic-dl"><i data-icon="DownloadSimple"></i></template>
+<template id="ic-phone"><i data-icon="DeviceMobileCamera"></i></template>
 <script src="config.js"></script>
+<script src="qrcode.js" defer></script>
 <script>
   (function () {
     var cfg = window.IAM_SITE || {}
@@ -433,24 +606,132 @@
     if (cfg.email) items.push('<a href="mailto:' + cfg.email + '">' + cfg.email + '</a>')
     items.push('<span>' + [cfg.company, cfg.address, cfg.city].filter(Boolean).join(' · ') + '</span>')
     list.innerHTML = items.join('')
-    if (cfg.iosUrl) {
-      var ios = document.querySelector('[data-platform="ios"] .btn')
-      ios.href = cfg.iosUrl; ios.removeAttribute('aria-disabled'); ios.textContent = 'Installer'
+    // Galerie d'écrans (onglets, flèches du clavier)
+    var tabs = [].slice.call(document.querySelectorAll('.gallery-tabs [role=tab]'))
+    var gimg = document.getElementById('gallery-img'), gcap = document.getElementById('gallery-cap')
+    function showShot(i) {
+      tabs.forEach(function (t, j) { t.setAttribute('aria-selected', String(i === j)); t.tabIndex = i === j ? 0 : -1 })
+      var t = tabs[i], next = new Image()
+      gimg.style.opacity = '0'
+      next.onload = function () { gimg.src = next.src; gimg.alt = t.textContent.trim() + ' — IAM INVOICER'; gimg.style.opacity = '1' }
+      next.src = 'assets/galerie/' + t.dataset.img + '.jpg'
+      gcap.textContent = t.dataset.cap
+    }
+    tabs.forEach(function (t, i) {
+      t.tabIndex = i ? -1 : 0
+      t.addEventListener('click', function () { showShot(i) })
+      t.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+        if (!d) return
+        e.preventDefault()
+        var n = (i + d + tabs.length) % tabs.length
+        showShot(n); tabs[n].focus()
+      })
+    })
+
+    // Appareil du visiteur : sa carte de téléchargement est mise en avant
+    var ua = navigator.userAgent
+    var device = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'ios'
+      : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Macintosh|Mac OS X/.test(ua) ? 'macos' : null
+    var NAMES = { windows: 'Windows', macos: 'macOS', android: 'Android', ios: 'iPhone et iPad' }
+    var card = function (p) { return document.querySelector('.dl[data-platform="' + p + '"]') }
+    if (device) card(device).classList.add('is-reco')
+    // Mac : la puce (Apple ou Intel) n'est connue que des navigateurs Chromium
+    var archP = device === 'macos' && navigator.userAgentData && navigator.userAgentData.getHighEntropyValues
+      ? navigator.userAgentData.getHighEntropyValues(['architecture']).then(function (v) { return v.architecture === 'arm' ? 'arm64' : v.architecture === 'x86' ? 'x64' : null }).catch(function () { return null })
+      : Promise.resolve(null)
+
+    var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
+    var size = function (b) { var m = b / 1048576; return String(m < 10 ? m.toFixed(1) : Math.round(m)).replace('.', ',') + ' Mo' }
+    var frDate = function (d) { return d.split('-').reverse().join('/') }
+    var ICON_DL = document.getElementById('ic-dl').innerHTML, ICON_PHONE = document.getElementById('ic-phone').innerHTML
+    function label(f) {
+      if (f.platform === 'macos') return f.arch === 'arm64' ? 'Puce Apple' : f.arch === 'x64' ? 'Mac Intel' : f.arch === 'universal' ? 'Apple et Intel' : 'Fichier .dmg'
+      if (f.platform === 'windows') return f.kind === 'portable' ? 'Version portable' : 'Installateur'
+      if (f.platform === 'android') return 'Fichier APK'
+      if (f.platform === 'ios') return f.signed ? 'Fichier IPA' : 'IPA non signé'
+      return f.name
+    }
+    function btn(href, text, meta, cls, icon, dl) {
+      return '<a class="btn ' + cls + '" href="' + esc(href) + '"' + (dl ? ' download' : '') + '><span class="lbl">' + (icon || ICON_DL) + esc(text) + '</span>' + (meta ? '<em>' + esc(meta) + '</em>' : '') + '</a>'
+    }
+    function qr(box, text, caption) {
+      // qrcode.js est chargé en différé : attendre la fin du chargement si besoin
+      if (!window.QRCode) return document.readyState === 'complete' ? undefined : window.addEventListener('load', function () { if (window.QRCode) qr(box, text, caption) }, { once: true })
+      window.QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b2f63', light: '#ffffff' } }).then(function (svg) {
+        box.innerHTML = svg + '<span>' + esc(caption) + '</span>'
+        box.querySelector('svg').setAttribute('role', 'img')
+        box.querySelector('svg').setAttribute('aria-label', 'Code QR : ' + caption)
+        box.hidden = false
+      }).catch(function () {})
+    }
+    function copy(text, b) {
+      var done = function () { var t = b.textContent; b.textContent = 'Copié'; setTimeout(function () { b.textContent = t }, 1500) }
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {})
+      else { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done() } catch (e) {} ta.remove() }
     }
 
     // Installateurs disponibles sur le serveur
-    fetch('/api/downloads').then(function (r) { return r.json() }).then(function (r) {
+    Promise.all([fetch('/api/downloads').then(function (r) { return r.json() }), archP]).then(function (res) {
+      var r = res[0], arch = res[1]
       if (!r.ok) return
-      var labels = { windows: 'Télécharger', macos: 'Télécharger', android: 'Télécharger l’APK' }
-      ;['windows', 'macos', 'android'].forEach(function (p) {
-        var f = r.data.files.filter(function (x) { return x.platform === p })[0]
-        if (!f) return
-        var btn = document.querySelector('[data-platform="' + p + '"] .btn')
-        btn.href = f.url; btn.removeAttribute('aria-disabled')
-        btn.textContent = labels[p] + ' (' + Math.round(f.size / 1048576) + ' Mo)'
+      var files = r.data.files, latest = {}
+      // Dernière version de chaque plateforme (la liste arrive triée, plus récente d'abord)
+      files.forEach(function (f) {
+        if (f.kind === 'aab') return
+        var l = latest[f.platform]
+        if (!l) latest[f.platform] = [f]
+        else if (l[0].version === f.version) l.push(f)
       })
+      if (latest.macos) latest.macos.sort(function (a, b) { var w = function (f) { return f.arch === (arch || 'arm64') ? 0 : f.arch === 'universal' ? 1 : 2 }; return w(a) - w(b) })
+      var origin = location.origin, primary = {}
+
+      ;['windows', 'macos', 'android', 'ios'].forEach(function (p) {
+        var c = card(p), list = latest[p] || [], html = []
+        if (p === 'ios') {
+          var signed = list.filter(function (f) { return f.signed })[0], unsigned = list.filter(function (f) { return !f.signed })[0]
+          if (cfg.iosUrl) html.push(btn(cfg.iosUrl, 'TestFlight', '', 'btn-primary', ICON_PHONE))
+          if (signed && device === 'ios' && location.protocol === 'https:')
+            html.push(btn('itms-services://?action=download-manifest&url=' + encodeURIComponent(origin + '/api/ios-manifest/' + encodeURIComponent(signed.name) + '.plist'), 'Installer', size(signed.size), html.length ? 'btn-ghost' : 'btn-primary', ICON_PHONE))
+          if (signed) html.push(btn(signed.url, label(signed), size(signed.size), html.length ? 'btn-ghost' : 'btn-primary', null, true))
+          if (unsigned) html.push(btn(unsigned.url, label(unsigned), size(unsigned.size), html.length ? 'btn-ghost' : 'btn-primary', null, true))
+          if (html.length) c.querySelector('[data-ios-note]').hidden = true
+          if (device !== 'ios' && (cfg.iosUrl || signed)) qr(c.querySelector('.dl-qr'), cfg.iosUrl || origin + '/#telecharger', 'Scannez avec l’iPhone pour installer')
+        } else {
+          list.forEach(function (f, i) { html.push(btn(f.url, label(f), size(f.size), i ? 'btn-ghost' : 'btn-primary', null, true)) })
+          if (p === 'android' && list[0] && device !== 'android') qr(c.querySelector('.dl-qr'), origin + list[0].url, 'Scannez avec le téléphone pour télécharger l’APK')
+        }
+        if (!html.length) return
+        primary[p] = html
+        c.querySelector('.dl-files').innerHTML = html.join('')
+        if (list[0]) c.querySelector('.dl-files').insertAdjacentHTML('afterend', '<div class="dl-meta">Version ' + esc(list[0].version || r.data.version) + ' · ' + frDate(list[0].updated) + '</div>')
+      })
+
+      // Bandeau « Pour votre appareil »
+      if (device && primary[device]) {
+        document.getElementById('dl-reco-ic').innerHTML = card(device).querySelector('.ic').innerHTML
+        document.getElementById('dl-reco-title').textContent = 'IAM INVOICER pour ' + NAMES[device]
+        document.getElementById('dl-reco-sub').textContent = 'Version ' + ((latest[device] && latest[device][0].version) || r.data.version) + ', conseillée pour votre appareil. Essai complet de 30 jours.'
+        document.getElementById('dl-reco-acts').innerHTML = primary[device].slice(0, 2).join('').replace(/btn-primary|btn-ghost/g, 'btn-light')
+        document.getElementById('dl-reco').hidden = false
+        document.querySelector('#hero-dl span').textContent = 'Télécharger pour ' + NAMES[device]
+      }
+
+      // Tous les fichiers, avec leur empreinte
+      if (files.length) {
+        document.getElementById('all-files-body').innerHTML = files.map(function (f) {
+          return '<tr><td><a href="' + esc(f.url) + '" download>' + esc(f.name) + '</a></td><td>' + size(f.size) + '</td><td>' + frDate(f.updated) + '</td>'
+            + '<td class="sha"><code title="' + esc(f.sha256) + '">' + esc(f.sha256.slice(0, 12)) + '…' + esc(f.sha256.slice(-8)) + '</code></td>'
+            + '<td><button type="button" class="copy" data-sha="' + esc(f.sha256) + '">Copier l’empreinte</button></td></tr>'
+        }).join('')
+        document.getElementById('all-files').hidden = false
+      }
       document.getElementById('dl-version').textContent = 'Version ' + r.data.version + ' — essai complet de 30 jours inclus.'
     }).catch(function () {})
+    document.getElementById('all-files-body').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sha]')
+      if (b) copy(b.dataset.sha, b)
+    })
 
     // Apparition au défilement et compteurs
     var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches

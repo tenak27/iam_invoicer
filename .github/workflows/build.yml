@@ -1,6 +1,8 @@
 # Compilation de toutes les versions d'IAM INVOICER sur les machines de GitHub :
-# Windows (.exe), macOS (.dmg), Android (.apk), iOS (vérification de compilation)
+# Windows (.exe), macOS (.dmg Apple Silicon et Intel), Android (.apk), iOS (.ipa)
 # et image du serveur. Lancement : à chaque tag « v* » ou manuellement (Actions → Run workflow).
+# Sur un tag, les installateurs sont publiés dans une « Release » GitHub, téléchargeable
+# sans compte : tools/site/fetch-release.mjs les copie ensuite dans le dossier du site.
 name: build
 
 on:
@@ -27,9 +29,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npm run dist:win
+      # « --publish never » : sans cela, electron-builder tente de publier lui-même sur un tag
+      # et échoue faute de jeton. La publication est faite par le job « release ».
+      - run: npm run dist:win -- --publish never
       - uses: actions/upload-artifact@v4
-        with: { name: IAM-INVOICER-Windows, path: dist/*.exe }
+        with: { name: IAM-INVOICER-Windows, path: dist/*.exe, if-no-files-found: error }
 
   macos:
     needs: test
@@ -42,13 +46,15 @@ jobs:
       # Signature Apple facultative : ajoutez les secrets CSC_LINK, CSC_KEY_PASSWORD,
       # APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD et APPLE_TEAM_ID, et retirez « identity: null »
       # dans electron-builder.yml.
-      - run: npm run dist:mac
+      - run: npm run dist:mac -- --publish never
       - uses: actions/upload-artifact@v4
-        with: { name: IAM-INVOICER-macOS, path: dist/*.dmg }
+        with: { name: IAM-INVOICER-macOS, path: dist/*.dmg, if-no-files-found: error }
 
   android:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,23 +63,114 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - run: npm ci --ignore-scripts
       - run: npm run build:web && npx cap sync android
-      # APK de test installable directement. Pour le Play Store : voir README (bundleRelease signé).
-      - run: cd android && ./gradlew assembleDebug
+      - run: chmod +x android/gradlew
+      # Avec une clé de signature (secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+      # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD) : APK de publication signé.
+      # Sans clé : APK de test (signé avec la clé de débogage), installable directement.
+      - name: APK signé
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+          cd android && ./gradlew assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "../IAM-INVOICER-$(node -p "require('../package.json').version")-android.apk"
+      - name: APK de test
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: |
+          cd android && ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk "../IAM-INVOICER-$(node -p "require('../package.json').version")-android.apk"
       - uses: actions/upload-artifact@v4
-        with: { name: IAM-INVOICER-Android, path: android/app/build/outputs/apk/debug/*.apk }
+        with: { name: IAM-INVOICER-Android, path: '*.apk', if-no-files-found: error }
 
   ios:
     needs: test
     runs-on: macos-latest
+    env:
+      IOS_CERT_P12_BASE64: ${{ secrets.IOS_CERT_P12_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci --ignore-scripts
       - run: npm run build:web && npx cap sync ios
-      # Compilation pour le simulateur (sans signature). La version App Store / TestFlight
-      # se signe avec un compte Apple Developer : voir README.
-      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build
+      - run: echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+      # Sans compte Apple Developer : .ipa NON signé. Il s'installe en le signant avec son
+      # propre identifiant Apple (Sideloadly, AltStore) ; voir le guide d'installation.
+      - name: IPA non signé
+        if: env.IOS_CERT_P12_BASE64 == ''
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -configuration Release \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" archive
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qr "$GITHUB_WORKSPACE/IAM-INVOICER-$VERSION-ios-unsigned.ipa" Payload)
+      # Avec un compte Apple Developer (secrets IOS_CERT_P12_BASE64, IOS_CERT_PASSWORD,
+      # IOS_PROFILE_BASE64 [profil ad hoc ou entreprise], IOS_TEAM_ID et IOS_EXPORT_METHOD
+      # [release-testing ou enterprise]) : .ipa signé, installable depuis le site sur les iPhone autorisés.
+      - name: IPA signé
+        if: env.IOS_CERT_P12_BASE64 != ''
+        env:
+          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_EXPORT_METHOD: ${{ secrets.IOS_EXPORT_METHOD || 'release-testing' }}
+        run: |
+          KC="$RUNNER_TEMP/build.keychain-db"; KCP="$(uuidgen)"
+          echo "$IOS_CERT_P12_BASE64" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KCP" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KCP" "$KC"
+          security import "$RUNNER_TEMP/cert.p12" -P "$IOS_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KCP" "$KC"
+          security list-keychains -d user -s "$KC"
+          echo "$IOS_PROFILE_BASE64" | base64 -d > "$RUNNER_TEMP/profile.mobileprovision"
+          UUID=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$RUNNER_TEMP/profile.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -configuration Release \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Distribution" PROVISIONING_PROFILE_SPECIFIER="$UUID" archive
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>$IOS_EXPORT_METHOD</string>
+            <key>teamID</key><string>$IOS_TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict><key>com.iamtechnology.invoicer</key><string>$UUID</string></dict>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export"
+          cp "$RUNNER_TEMP"/export/*.ipa "IAM-INVOICER-$VERSION-ios.ipa"
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-iOS, path: '*.ipa', if-no-files-found: error }
+
+  # Publication des installateurs (même si une plateforme a échoué : les autres restent disponibles)
+  release:
+    needs: [windows, macos, android, ios]
+    if: startsWith(github.ref, 'refs/tags/') && !cancelled()
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: installateurs, merge-multiple: true }
+      - run: ls -la installateurs && (cd installateurs && sha256sum * > SHA256SUMS.txt)
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: IAM INVOICER ${{ github.ref_name }}
+          files: installateurs/*
+          fail_on_unmatched_files: false
+          body: |
+            Installateurs d'IAM INVOICER ${{ github.ref_name }}.
+            - Windows : IAM-INVOICER-Setup-*.exe
+            - macOS : *-arm64.dmg (puce Apple M1…M4) ou *-x64.dmg (Intel)
+            - Android : *-android.apk
+            - iPhone / iPad : *-ios.ipa (signé) ou *-ios-unsigned.ipa (à signer avec Sideloadly ou AltStore)
+            Empreintes SHA-256 : SHA256SUMS.txt
 
   server:
     needs: test

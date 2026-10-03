@@ -11,10 +11,12 @@
 //   GET  /api/document/:id?format=   HTML imprimable (export PDF des postes de bureau)
 //   POST /api/print                  { id, format } → { url } lien d'impression à usage unique
 //   GET  /print/:ticket              page imprimable (navigateur, mobile)
+//   GET  /api/downloads              installateurs disponibles (site de présentation)
+//   GET  /api/ios-manifest/:fichier  manifeste d'installation iPhone d'un .ipa signé
 // Authentification : en-tête « Authorization: Bearer <jeton> ».
 
 import { randomBytes } from 'node:crypto'
-import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { extname, join, normalize, resolve, sep } from 'node:path'
 import type { Db } from '../main/db'
@@ -28,6 +30,7 @@ import { documentHtml } from '../main/pdf'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatMoney } from '@shared/format'
 import { signPageHtml } from './signPage'
+import { iosManifest, listDownloads } from './downloads'
 
 export interface ServerOptions {
   db: Db
@@ -52,7 +55,18 @@ const MIME: Record<string, string> = {
   '.ico': 'image/x-icon',
   '.json': 'application/json',
   '.webmanifest': 'application/manifest+json',
-  '.woff2': 'font/woff2'
+  '.woff2': 'font/woff2',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain; charset=utf-8',
+  // Installateurs : le bon type permet à Android et macOS de proposer l'installation
+  '.apk': 'application/vnd.android.package-archive',
+  '.ipa': 'application/octet-stream',
+  '.dmg': 'application/x-apple-diskimage',
+  '.exe': 'application/vnd.microsoft.portable-executable',
+  '.zip': 'application/zip'
 }
 
 class HttpError extends Error {
@@ -120,15 +134,24 @@ export function createHandler(opts: ServerOptions) {
     const method = req.method ?? 'GET'
     // Fichiers d'installation disponibles (site de présentation)
     if (method === 'GET' && path === '/api/downloads') {
-      const dir = opts.downloadsDir
-      const files = dir && existsSync(dir)
-        ? readdirSync(dir).filter((f) => /\.(exe|zip|dmg|apk|aab|msi|pkg|appimage|deb)$/i.test(f)).map((name) => {
-            const st = statSync(join(dir, name))
-            const platform = /\.(exe|msi)$/i.test(name) || /windows/i.test(name) ? 'windows' : /\.(dmg|pkg)$/i.test(name) ? 'macos' : /\.(apk|aab)$/i.test(name) ? 'android' : /\.(appimage|deb)$/i.test(name) ? 'linux' : 'windows'
-            return { name, platform, size: st.size, updated: st.mtime.toISOString().slice(0, 10), url: '/telechargements/' + encodeURIComponent(name) }
-          }).sort((a, b) => b.updated.localeCompare(a.updated))
-        : []
+      const files = await listDownloads(opts.downloadsDir)
       return send(res, 200, { ok: true, data: { version: opts.version, files } })
+    }
+    const manifest = /^\/api\/ios-manifest\/([^/]+)\.plist$/.exec(path)
+    if (method === 'GET' && manifest) {
+      let name: string
+      try {
+        name = decodeURIComponent(manifest[1])
+      } catch {
+        throw new HttpError(400, 'Adresse invalide.')
+      }
+      const file = (await listDownloads(opts.downloadsDir)).find((f) => f.name === name && f.kind === 'ipa' && f.signed)
+      if (!file) throw new HttpError(404, 'Fichier introuvable.')
+      const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '')
+      if (!/^[A-Za-z0-9.-]+(:\d+)?$/.test(host)) throw new HttpError(400, 'Hôte invalide.')
+      const proto = String(req.headers['x-forwarded-proto'] ?? 'http').split(',')[0].trim() === 'https' ? 'https' : 'http'
+      res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' })
+      return res.end(iosManifest(`${proto}://${host}`, file, opts.version))
     }
     if (method === 'GET' && path === '/api/status') {
       const user = await resolveToken(db, bearer(req))
