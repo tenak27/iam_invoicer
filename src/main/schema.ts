@@ -617,5 +617,14 @@ export const MIGRATIONS: string[] = [
     ('645', 'Impôts et taxes indirects'),
     ('646', 'Droits d''enregistrement')
   ON CONFLICT (number) DO NOTHING
+  `,
+  // v6 : cotisations sociales supplémentaires, photo de profil des utilisateurs
+  `
+  ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT '';
+  INSERT INTO accounts (number, label) VALUES
+    ('438', 'Organismes sociaux, autres cotisations'),
+    ('4413', 'État, impôt sur les bénéfices (acomptes BIC/IS)'),
+    ('891', 'Impôts sur les bénéfices de l''exercice')
+  ON CONFLICT (number) DO NOTHING
   `
 ]

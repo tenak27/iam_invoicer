@@ -17,11 +17,22 @@ export async function getParams(db: Db): Promise<PayrollParams> {
 
 export async function saveParams(ctx: Ctx, input: Partial<PayrollParams>) {
   const p = { ...(await getParams(ctx.db)), ...input }
-  for (const k of ['cnss_employee_rate', 'cnss_employer_rate', 'tpa_rate', 'abatement_cadre', 'abatement_non_cadre'] as const) {
+  for (const k of ['cnss_employee_rate', 'cnss_employer_rate', 'cnss_employer_family', 'cnss_employer_risk', 'cnss_employer_pension', 'tpa_rate', 'abatement_cadre', 'abatement_non_cadre'] as const) {
     p[k] = num(p[k])
     if (p[k] < 0 || p[k] > 100) fail('Un taux doit être compris entre 0 et 100 %.')
   }
   if (!Array.isArray(p.iuts_brackets) || p.iuts_brackets.length === 0) fail("Le barème IUTS doit comporter au moins une tranche.")
+  p.cnss_employer_rate = p.cnss_employer_family + p.cnss_employer_risk + p.cnss_employer_pension
+  p.contributions = (Array.isArray(p.contributions) ? p.contributions : []).map((c: any, i: number) => {
+    const out = {
+      code: str(c.code) || `COT${i + 1}`, label: str(c.label), base: (['gross', 'cnss_base', 'base_salary'].includes(c.base) ? c.base : 'gross') as 'gross' | 'cnss_base' | 'base_salary',
+      employee_rate: num(c.employee_rate), employer_rate: num(c.employer_rate), ceiling: Math.max(0, num(c.ceiling)), deductible: !!c.deductible, account: str(c.account) || '438', active: c.active !== false
+    }
+    if (!out.label) fail('Chaque cotisation doit avoir un libellé.')
+    if ([out.employee_rate, out.employer_rate].some((x) => x < 0 || x > 100)) fail(`Taux invalide pour « ${out.label} ».`)
+    return out
+  })
+  for (const c of p.contributions) if (!(await ctx.db.one('SELECT 1 FROM accounts WHERE number = $1', [c.account]))) fail(`Compte ${c.account} (${c.label}) inconnu du plan comptable.`)
   p.iuts_brackets = p.iuts_brackets.map((b, i, all) => ({ upTo: i === all.length - 1 ? null : num(b.upTo), rate: num(b.rate) }))
   await ctx.db.query(
     "INSERT INTO settings (key, value) VALUES ('payroll_params', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
@@ -203,6 +214,8 @@ export async function validateRun(ctx: Ctx, args: { id: number }) {
     const slips = await db.query<{ detail: string }>('SELECT detail FROM payslips WHERE run_id = $1', [args.id])
     if (slips.length === 0) fail('Aucun bulletin dans cette paie.')
     let salaries = 0, allowances = 0, cnssE = 0, cnssR = 0, iuts = 0, tpa = 0, advances = 0, others = 0, net = 0
+    const contrib = new Map<string, { label: string; amount: number }>()
+    let contribEmployer = 0
     for (const s of slips) {
       const d = JSON.parse(s.detail)
       const allowance = d.lines.filter((l: any) => /Indemnité|Autres indemnités/.test(l.label)).reduce((x: number, l: any) => x + (l.gain ?? 0), 0)
@@ -212,6 +225,12 @@ export async function validateRun(ctx: Ctx, args: { id: number }) {
       cnssR += d.cnssEmployer
       iuts += d.iuts
       tpa += d.tpa ?? 0
+      for (const c of d.contributions ?? []) {
+        const g = contrib.get(c.account) ?? { label: c.label, amount: 0 }
+        g.amount += c.employee + c.employer
+        contrib.set(c.account, g)
+        contribEmployer += c.employer
+      }
       advances += d.variables?.advance ?? 0
       others += d.variables?.other_deductions ?? 0
       net += d.net
@@ -219,9 +238,11 @@ export async function validateRun(ctx: Ctx, args: { id: number }) {
     const lines: EntryLine[] = [
       { account: '661', label: 'Salaires bruts', debit: salaries },
       { account: '663', label: 'Indemnités', debit: allowances },
-      { account: '664', label: 'Charges sociales patronales', debit: cnssR + tpa },
+      { account: '664', label: 'Charges sociales patronales', debit: cnssR + contribEmployer },
+      { account: '641', label: "Taxe patronale d'apprentissage", debit: tpa },
       { account: '431', label: 'CNSS (parts salariale et patronale)', credit: cnssE + cnssR },
       { account: '447', label: 'IUTS retenu' + (tpa ? ' et taxe patronale' : ''), credit: iuts + tpa },
+      ...[...contrib.entries()].map(([account, g]) => ({ account, label: g.label, credit: g.amount })),
       { account: '421', label: 'Avances récupérées', credit: advances },
       { account: '423', label: 'Autres retenues', credit: others },
       { account: '422', label: 'Salaires nets à payer', credit: net }

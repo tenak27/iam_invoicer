@@ -78,7 +78,7 @@ describe('Taxes sur les factures', () => {
   afterAll(() => db?.close())
 
   it('modèles du pays importés inactifs, puis paramétrés', async () => {
-    expect(await ok(admin, 'taxes.importPresets')).toBe(4)
+    expect(await ok(admin, 'taxes.importPresets')).toBe(5)
     expect(await ok(admin, 'taxes.importPresets')).toBe(0) // pas de doublon
     const all = await ok<any[]>(admin, 'taxes.list')
     expect(all.every((t) => !t.active)).toBe(true)

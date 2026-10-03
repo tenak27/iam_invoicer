@@ -17,6 +17,8 @@ export interface CountryProfile {
   /** Devise en toutes lettres (montant en lettres des factures). */
   currencyWords: string
   defaultTva: number
+  /** Taux de l'impôt sur les bénéfices (BIC / IS), en %. */
+  isRate: number
   /** Nom de la taxe sur la valeur ajoutée (TVA, IGV…). */
   vatName: string
   taxId: { short: string; long: string }
@@ -41,7 +43,7 @@ const fcfa = { currency: 'FCFA', currencyWords: 'francs CFA' }
 
 export const COUNTRIES: CountryProfile[] = [
   {
-    code: 'BF', name: 'Burkina Faso', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'BF', name: 'Burkina Faso', ...fcfa, defaultTva: 18, isRate: 27.5, vatName: 'TVA',
     taxId: { short: 'IFU', long: 'Identifiant financier unique' }, register: 'RCCM',
     regimes: [
       { value: '', label: '— Choisir —' },
@@ -52,7 +54,7 @@ export const COUNTRIES: CountryProfile[] = [
     taxOfficeHint: 'DGE, DME Centre, CME Ouaga…', socialSecurity: 'CNSS', wageTax: 'IUTS', capital: 'Ouagadougou', zone: 'UEMOA', verified: true
   },
   {
-    code: 'CI', name: "Côte d'Ivoire", ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'CI', name: "Côte d'Ivoire", ...fcfa, defaultTva: 18, isRate: 25, vatName: 'TVA',
     taxId: { short: 'NCC', long: 'Numéro de compte contribuable' }, register: 'RCCM',
     regimes: [
       { value: '', label: '— Choisir —' },
@@ -63,7 +65,7 @@ export const COUNTRIES: CountryProfile[] = [
     taxOfficeHint: 'DGE, centre des impôts de rattachement…', socialSecurity: 'CNPS', wageTax: 'ITS', capital: 'Abidjan', zone: 'UEMOA', verified: false
   },
   {
-    code: 'SN', name: 'Sénégal', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'SN', name: 'Sénégal', ...fcfa, defaultTva: 18, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NINEA', long: 'Numéro d’identification nationale des entreprises et associations' }, register: 'RCCM',
     regimes: [
       { value: '', label: '— Choisir —' },
@@ -74,17 +76,17 @@ export const COUNTRIES: CountryProfile[] = [
     taxOfficeHint: 'DGE, centre des services fiscaux…', socialSecurity: 'IPRES / CSS', wageTax: 'IR', capital: 'Dakar', zone: 'UEMOA', verified: false
   },
   {
-    code: 'ML', name: 'Mali', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'ML', name: 'Mali', ...fcfa, defaultTva: 18, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGE, centre des impôts…', socialSecurity: 'INPS', wageTax: 'ITS', capital: 'Bamako', zone: 'UEMOA', verified: false
   },
   {
-    code: 'NE', name: 'Niger', ...fcfa, defaultTva: 19, vatName: 'TVA',
+    code: 'NE', name: 'Niger', ...fcfa, defaultTva: 19, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGE, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'IUTS', capital: 'Niamey', zone: 'UEMOA', verified: false
   },
   {
-    code: 'BJ', name: 'Bénin', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'BJ', name: 'Bénin', ...fcfa, defaultTva: 18, isRate: 30, vatName: 'TVA',
     taxId: { short: 'IFU', long: 'Identifiant fiscal unique' }, register: 'RCCM',
     regimes: [
       { value: '', label: '— Choisir —' },
@@ -94,22 +96,22 @@ export const COUNTRIES: CountryProfile[] = [
     taxOfficeHint: 'DGE, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'ITS', capital: 'Cotonou', zone: 'UEMOA', verified: false
   },
   {
-    code: 'TG', name: 'Togo', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'TG', name: 'Togo', ...fcfa, defaultTva: 18, isRate: 27, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'OTR, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'IRPP', capital: 'Lomé', zone: 'UEMOA', verified: false
   },
   {
-    code: 'GW', name: 'Guinée-Bissau', ...fcfa, defaultTva: 19, vatName: 'IVA',
+    code: 'GW', name: 'Guinée-Bissau', ...fcfa, defaultTva: 19, isRate: 25, vatName: 'IVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'Direction des contributions…', socialSecurity: 'INSS', wageTax: 'IPR', capital: 'Bissau', zone: 'UEMOA', verified: false
   },
   {
-    code: 'GN', name: 'Guinée', currency: 'GNF', currencyWords: 'francs guinéens', defaultTva: 18, vatName: 'TVA',
+    code: 'GN', name: 'Guinée', currency: 'GNF', currencyWords: 'francs guinéens', defaultTva: 18, isRate: 25, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DNI, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'RTS', capital: 'Conakry', zone: 'OHADA', verified: false
   },
   {
-    code: 'CM', name: 'Cameroun', ...fcfa, defaultTva: 19.25, vatName: 'TVA',
+    code: 'CM', name: 'Cameroun', ...fcfa, defaultTva: 19.25, isRate: 33, vatName: 'TVA',
     taxId: { short: 'NIU', long: 'Numéro d’identifiant unique' }, register: 'RCCM',
     regimes: [
       { value: '', label: '— Choisir —' },
@@ -120,42 +122,42 @@ export const COUNTRIES: CountryProfile[] = [
     taxOfficeHint: 'DGE, CIME, CDI…', socialSecurity: 'CNPS', wageTax: 'IRPP', capital: 'Yaoundé', zone: 'CEMAC', verified: false
   },
   {
-    code: 'GA', name: 'Gabon', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'GA', name: 'Gabon', ...fcfa, defaultTva: 18, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGI, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'IRPP', capital: 'Libreville', zone: 'CEMAC', verified: false
   },
   {
-    code: 'CG', name: 'Congo', ...fcfa, defaultTva: 18.9, vatName: 'TVA',
+    code: 'CG', name: 'Congo', ...fcfa, defaultTva: 18.9, isRate: 28, vatName: 'TVA',
     taxId: { short: 'NIU', long: 'Numéro d’identification unique' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGE, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'IRPP', capital: 'Brazzaville', zone: 'CEMAC', verified: false
   },
   {
-    code: 'TD', name: 'Tchad', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'TD', name: 'Tchad', ...fcfa, defaultTva: 18, isRate: 35, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGI, centre des impôts…', socialSecurity: 'CNPS', wageTax: 'IRPP', capital: "N'Djamena", zone: 'CEMAC', verified: false
   },
   {
-    code: 'CF', name: 'Centrafrique', ...fcfa, defaultTva: 19, vatName: 'TVA',
+    code: 'CF', name: 'Centrafrique', ...fcfa, defaultTva: 19, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGID, centre des impôts…', socialSecurity: 'CNSS', wageTax: 'IRPP', capital: 'Bangui', zone: 'CEMAC', verified: false
   },
   {
-    code: 'GQ', name: 'Guinée équatoriale', ...fcfa, defaultTva: 15, vatName: 'IVA',
+    code: 'GQ', name: 'Guinée équatoriale', ...fcfa, defaultTva: 15, isRate: 35, vatName: 'IVA',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'Direction des impôts…', socialSecurity: 'INSESO', wageTax: 'IRPF', capital: 'Malabo', zone: 'CEMAC', verified: false
   },
   {
-    code: 'CD', name: 'RD Congo', currency: 'CDF', currencyWords: 'francs congolais', defaultTva: 16, vatName: 'TVA',
+    code: 'CD', name: 'RD Congo', currency: 'CDF', currencyWords: 'francs congolais', defaultTva: 16, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Numéro impôt' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'DGE, CIS, CDI…', socialSecurity: 'CNSS', wageTax: 'IPR', capital: 'Kinshasa', zone: 'OHADA', verified: false
   },
   {
-    code: 'KM', name: 'Comores', currency: 'KMF', currencyWords: 'francs comoriens', defaultTva: 10, vatName: 'TC',
+    code: 'KM', name: 'Comores', currency: 'KMF', currencyWords: 'francs comoriens', defaultTva: 10, isRate: 35, vatName: 'TC',
     taxId: { short: 'NIF', long: 'Numéro d’identification fiscale' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'AGID…', socialSecurity: 'CNPS', wageTax: 'ITS', capital: 'Moroni', zone: 'OHADA', verified: false
   },
   {
-    code: 'XX', name: 'Autre pays', ...fcfa, defaultTva: 18, vatName: 'TVA',
+    code: 'XX', name: 'Autre pays', ...fcfa, defaultTva: 18, isRate: 30, vatName: 'TVA',
     taxId: { short: 'NIF', long: 'Identifiant fiscal' }, register: 'RCCM',
     regimes: GENERIC_REGIMES, taxOfficeHint: 'Centre des impôts de rattachement', socialSecurity: 'Sécurité sociale', wageTax: 'Impôt sur salaires', capital: '', zone: 'Autre', verified: false
   }

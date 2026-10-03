@@ -102,8 +102,8 @@ export function Declarations() {
   ]
   const payTables = (): ReportTable[] => data.payroll ? [{
     title: `Salaires (${data.payroll.employees} salarié(s), paie ${data.payroll.status === 'valide' ? 'validée' : 'en préparation'})`, head: ['Élément', 'Montant'], numeric: [1],
-    rows: [['Salaires bruts', data.payroll.gross], ['Cotisations salariales', data.payroll.cnssEmployee], ['Cotisations patronales', data.payroll.cnssEmployer], ['Impôt sur les salaires (IUTS)', data.payroll.iuts]],
-    foot: ['Total à reverser (cotisations + impôt)', data.payroll.cnssEmployee + data.payroll.cnssEmployer + data.payroll.iuts]
+    rows: [['Salaires bruts', data.payroll.gross], ['Cotisations salariales', data.payroll.cnssEmployee], ['Cotisations patronales', data.payroll.cnssEmployer], ['  dont prestations familiales', data.payroll.cnssFamily], ['  dont risques professionnels', data.payroll.cnssRisk], ['  dont pension', data.payroll.cnssPension], ['Impôt sur les salaires (IUTS)', data.payroll.iuts], ["Taxe patronale d'apprentissage", data.payroll.tpa], ...data.payroll.contributions.map((c: any) => [c.label, c.employee + c.employer])],
+    foot: ['Total à reverser (cotisations + impôts)', data.payroll.cnssEmployee + data.payroll.cnssEmployer + data.payroll.iuts + data.payroll.tpa + data.payroll.contributions.reduce((s: number, c: any) => s + c.employee + c.employer, 0)]
   }] : []
   const print = (what: 'tout' | 'tva' | 'retenues' | 'salaires') => {
     const t = what === 'tva' ? vatTables() : what === 'retenues' ? whTables() : what === 'salaires' ? payTables() : [...vatTables(), ...whTables(), ...payTables()]
@@ -154,9 +154,14 @@ export function Declarations() {
                     <tr><td>Salaires bruts</td><td className="num money">{formatNumber(data.payroll.gross)}</td></tr>
                     <tr><td>Cotisations salariales</td><td className="num money">{formatNumber(data.payroll.cnssEmployee)}</td></tr>
                     <tr><td>Cotisations patronales</td><td className="num money">{formatNumber(data.payroll.cnssEmployer)}</td></tr>
+                    {data.payroll.cnssFamily > 0 && <tr className="sub"><td>dont prestations familiales</td><td className="num money">{formatNumber(data.payroll.cnssFamily)}</td></tr>}
+                    {data.payroll.cnssRisk > 0 && <tr className="sub"><td>dont risques professionnels</td><td className="num money">{formatNumber(data.payroll.cnssRisk)}</td></tr>}
+                    {data.payroll.cnssPension > 0 && <tr className="sub"><td>dont pension</td><td className="num money">{formatNumber(data.payroll.cnssPension)}</td></tr>}
+                    {data.payroll.tpa > 0 && <tr><td>Taxe patronale d'apprentissage</td><td className="num money">{formatNumber(data.payroll.tpa)}</td></tr>}
+                    {data.payroll.contributions.map((c: any) => <tr key={c.label}><td>{c.label} (salarié + employeur)</td><td className="num money">{formatNumber(c.employee + c.employer)}</td></tr>)}
                     <tr><td>Impôt sur les salaires</td><td className="num money">{formatNumber(data.payroll.iuts)}</td></tr>
                   </tbody>
-                  <tfoot><tr><td>Total à reverser</td><td className="num">{formatNumber(data.payroll.cnssEmployee + data.payroll.cnssEmployer + data.payroll.iuts)}</td></tr></tfoot>
+                  <tfoot><tr><td>Total à reverser</td><td className="num">{formatNumber(data.payroll.cnssEmployee + data.payroll.cnssEmployer + data.payroll.iuts + data.payroll.tpa + data.payroll.contributions.reduce((s: number, c: any) => s + c.employee + c.employer, 0))}</td></tr></tfoot>
                 </table>
               )}
               {data.payroll && data.payroll.status !== 'valide' && <p className="muted small">Paie encore en préparation : montants provisoires.</p>}
@@ -181,6 +186,19 @@ export function Declarations() {
                 ))}
               </div>
             )}
+          </div>
+          <div className="card">
+            <h3>Impôt sur les bénéfices (BIC / IS) — estimation</h3>
+            <table className="table compact decl">
+              <tbody>
+                <tr><td>Résultat avant impôt du 1er janvier à fin {monthLabel(month)}</td><td className="num money">{formatNumber(data.profitTax.resultBeforeTax)}</td></tr>
+                <tr><td>Taux de l'impôt</td><td className="num">{formatNumber(data.profitTax.rate, 1)} %</td></tr>
+                <tr className="sep"><td>Impôt estimé sur la période</td><td className="num money">{formatNumber(data.profitTax.estimated)}</td></tr>
+                <tr><td>− Acomptes et prélèvements BIC déjà payés (compte 4413)</td><td className="num money">{formatNumber(data.profitTax.advancesPaid)}</td></tr>
+              </tbody>
+              <tfoot><tr><td>{data.profitTax.estimated - data.profitTax.advancesPaid >= 0 ? 'Reste à provisionner' : 'Excédent d’acomptes'}</td><td className="num">{formatNumber(Math.abs(data.profitTax.estimated - data.profitTax.advancesPaid))}</td></tr></tfoot>
+            </table>
+            <p className="muted small">Estimation de gestion : le montant définitif dépend des réintégrations, déductions et du minimum d’imposition propres à votre pays. Le taux se règle dans Société &amp; paramètres.</p>
           </div>
           <p className="muted small">États préparatoires : reportez les montants sur les formulaires officiels (télédéclaration, CNSS…) après vérification par votre comptable.</p>
         </>

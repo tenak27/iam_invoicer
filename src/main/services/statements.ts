@@ -5,6 +5,7 @@
 // retenues), qui sont la source des écritures automatiques.
 
 import type { AppliedTax } from '@shared/taxes'
+import { countryProfile } from '@shared/countries'
 import { fail, type Ctx } from './context'
 
 const round = (n: number) => Math.round(n)
@@ -144,21 +145,62 @@ export async function monthlyDeclarations(ctx: Ctx, args: { month: string }) {
 
   // Salaires : paie du mois (validée ou en préparation)
   const run = await ctx.db.one<{ id: number; status: string }>('SELECT id, status FROM payroll_runs WHERE period = $1', [month])
-  let payroll: null | { status: string; employees: number; gross: number; cnssEmployee: number; cnssEmployer: number; iuts: number; net: number } = null
+  let payroll: null | {
+    status: string; employees: number; gross: number; cnssEmployee: number; cnssEmployer: number; iuts: number; net: number
+    tpa: number; cnssFamily: number; cnssRisk: number; cnssPension: number; contributions: { label: string; employee: number; employer: number }[]
+  } = null
   if (run) {
-    const p = await ctx.db.one<any>(
-      `SELECT COUNT(*)::int AS employees, COALESCE(SUM(gross), 0) AS gross, COALESCE(SUM(cnss_employee), 0) AS cnss_employee,
-              COALESCE(SUM(cnss_employer), 0) AS cnss_employer, COALESCE(SUM(iuts), 0) AS iuts, COALESCE(SUM(net), 0) AS net
-       FROM payslips WHERE run_id = $1`,
+    const slips = await ctx.db.query<{ detail: string; gross: number; cnss_employee: number; cnss_employer: number; iuts: number; net: number }>(
+      'SELECT detail, gross, cnss_employee, cnss_employer, iuts, net FROM payslips WHERE run_id = $1',
       [run.id]
     )
-    payroll = { status: run.status, employees: p.employees, gross: round(p.gross), cnssEmployee: round(p.cnss_employee), cnssEmployer: round(p.cnss_employer), iuts: round(p.iuts), net: round(p.net) }
+    const sum = (f: (s: any) => number) => round(slips.reduce((t, s) => t + (f(s) || 0), 0))
+    const details = slips.map((s) => JSON.parse(s.detail))
+    const contrib = new Map<string, { label: string; employee: number; employer: number }>()
+    for (const d of details) for (const c of d.contributions ?? []) {
+      const g = contrib.get(c.code) ?? { label: c.label, employee: 0, employer: 0 }
+      g.employee += c.employee
+      g.employer += c.employer
+      contrib.set(c.code, g)
+    }
+    payroll = {
+      status: run.status, employees: slips.length, gross: sum((s) => s.gross), cnssEmployee: sum((s) => s.cnss_employee), cnssEmployer: sum((s) => s.cnss_employer),
+      iuts: sum((s) => s.iuts), net: sum((s) => s.net), tpa: round(details.reduce((t, d) => t + (d.tpa ?? 0), 0)),
+      cnssFamily: round(details.reduce((t, d) => t + (d.cnssEmployerDetail?.family ?? 0), 0)),
+      cnssRisk: round(details.reduce((t, d) => t + (d.cnssEmployerDetail?.risk ?? 0), 0)),
+      cnssPension: round(details.reduce((t, d) => t + (d.cnssEmployerDetail?.pension ?? 0), 0)),
+      contributions: [...contrib.values()].map((g) => ({ ...g, employee: round(g.employee), employer: round(g.employer) }))
+    }
+  }
+
+  // Impôt sur les bénéfices (BIC / IS) : estimation sur le résultat de l'année jusqu'à la fin du mois
+  const settings = await ctx.db.query<{ key: string; value: string }>("SELECT key, value FROM settings WHERE key IN ('is_rate', 'country_code', 'country')")
+  const setting = (k: string) => { const r = settings.find((x) => x.key === k); return r ? JSON.parse(r.value) : '' }
+  const isRate = Number(setting('is_rate')) || countryProfile(setting('country_code'), setting('country')).isRate
+  const ytd = await ctx.db.query<{ number: string; balance: number }>(
+    `SELECT l.account AS number, SUM(l.debit - l.credit) AS balance FROM journal_lines l JOIN journal_entries e ON e.id = l.entry_id
+     WHERE e.date BETWEEN $1 AND $2 AND (l.account LIKE '6%' OR l.account LIKE '7%' OR l.account LIKE '8%') GROUP BY l.account`,
+    [`${month.slice(0, 4)}-01-01`, to]
+  )
+  // Résultat avant impôt (hors comptes 89 d'impôt sur le résultat)
+  const resultBeforeTax = round(ytd.filter((r) => !r.number.startsWith('89')).reduce((s, r) => s - (isProduct(r.number) || isCharge(r.number) ? r.balance : 0), 0))
+  const advances = await ctx.db.one<{ amount: number }>(
+    `SELECT COALESCE(SUM(l.debit - l.credit), 0) AS amount FROM journal_lines l JOIN journal_entries e ON e.id = l.entry_id
+     WHERE l.account LIKE '4413%' AND e.date BETWEEN $1 AND $2`,
+    [`${month.slice(0, 4)}-01-01`, to]
+  )
+  const profitTax = {
+    rate: isRate,
+    resultBeforeTax,
+    estimated: Math.max(0, round((resultBeforeTax * isRate) / 100)),
+    advancesPaid: round(advances?.amount ?? 0)
   }
 
   return {
     month,
     vat,
     withholdings: { suffered, operated, totalSuffered: round(suffered.reduce((s, g) => s + g.amount, 0)), totalOperated: round(operated.reduce((s, g) => s + g.amount, 0)) },
-    payroll
+    payroll,
+    profitTax
   }
 }

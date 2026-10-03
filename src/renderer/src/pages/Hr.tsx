@@ -360,13 +360,53 @@ function Params() {
     <>
       <div className="info-box"><span>Ces taux sont des valeurs par défaut. <strong>Faites-les vérifier par votre comptable ou auprès de la DGI et de la CNSS</strong> avant d'établir des bulletins réels : la réglementation évolue.</span></div>
       <div className="card">
-        <h3>CNSS et taxes patronales</h3>
+        <h3>Sécurité sociale (CNSS) et taxes sur salaires</h3>
         <div className="grid grid-4">
-          {numField('cnss_employee_rate', 'CNSS salarié (%)')}
-          {numField('cnss_employer_rate', 'CNSS employeur (%)', 'Pensions + prestations familiales + risques professionnels')}
-          {numField('cnss_ceiling', 'Plafond mensuel CNSS')}
-          {numField('tpa_rate', 'Taxe patronale (%)', '0 si non applicable')}
+          {numField('cnss_employee_rate', 'CNSS salarié — pension (%)')}
+          {numField('cnss_ceiling', 'Plafond mensuel de la base CNSS')}
+          {numField('tpa_rate', "Taxe patronale d'apprentissage (%)", '0 si non applicable')}
+          <div />
+          {numField('cnss_employer_family', 'Employeur — prestations familiales (%)')}
+          {numField('cnss_employer_risk', 'Employeur — risques professionnels (%)', "Selon le secteur d'activité")}
+          {numField('cnss_employer_pension', 'Employeur — pension (%)')}
+          <Field label="Total part patronale CNSS"><div className="readonly strong">{formatNumber((cur.cnss_employer_family ?? 0) + (cur.cnss_employer_risk ?? 0) + (cur.cnss_employer_pension ?? 0), 2)} %</div></Field>
         </div>
+      </div>
+      <div className="card">
+        <div className="row space-between wrap gap">
+          <h3>Autres cotisations et retenues</h3>
+          <div className="row gap wrap">
+            <button className="btn btn-sm" onClick={() => set('contributions', [...(cur.contributions ?? []), { code: 'AMU', label: 'Assurance maladie universelle', base: 'gross', employee_rate: 0, employer_rate: 0, ceiling: 0, deductible: true, account: '438', active: false }])}>+ Assurance maladie</button>
+            <button className="btn btn-sm" onClick={() => set('contributions', [...(cur.contributions ?? []), { code: 'MUT', label: 'Mutuelle santé', base: 'gross', employee_rate: 0, employer_rate: 0, ceiling: 0, deductible: false, account: '438', active: true }])}>+ Mutuelle</button>
+            <button className="btn btn-sm" onClick={() => set('contributions', [...(cur.contributions ?? []), { code: 'COT' + ((cur.contributions ?? []).length + 1), label: '', base: 'gross', employee_rate: 0, employer_rate: 0, ceiling: 0, deductible: false, account: '438', active: true }])}>+ Autre cotisation</button>
+          </div>
+        </div>
+        <p className="muted small">Retraite complémentaire, assurance maladie, mutuelle, cotisation syndicale… Part salariale retenue sur le net, part patronale ajoutée au coût employeur, comptabilisées au compte indiqué.</p>
+        {(cur.contributions ?? []).length === 0 ? <p className="muted">Aucune cotisation supplémentaire.</p> : (
+          <div className="table-wrap">
+            <table className="table compact contrib-table">
+              <thead><tr><th>Libellé</th><th>Base</th><th>Salarié %</th><th>Employeur %</th><th>Plafond</th><th>Déductible IUTS</th><th>Compte</th><th>Active</th><th /></tr></thead>
+              <tbody>
+                {(cur.contributions ?? []).map((c, i) => {
+                  const up = (patch: any) => set('contributions', (cur.contributions ?? []).map((x, j) => (j === i ? { ...x, ...patch } : x)))
+                  return (
+                    <tr key={i}>
+                      <td><input aria-label="Libellé" value={c.label} onChange={(e) => up({ label: e.target.value })} /></td>
+                      <td><select aria-label="Base" value={c.base} onChange={(e) => up({ base: e.target.value })}><option value="gross">Brut</option><option value="cnss_base">Base CNSS</option><option value="base_salary">Salaire de base</option></select></td>
+                      <td><input aria-label="Taux salarié" inputMode="decimal" value={c.employee_rate} onChange={(e) => up({ employee_rate: Number(e.target.value.replace(',', '.')) || 0 })} /></td>
+                      <td><input aria-label="Taux employeur" inputMode="decimal" value={c.employer_rate} onChange={(e) => up({ employer_rate: Number(e.target.value.replace(',', '.')) || 0 })} /></td>
+                      <td><input aria-label="Plafond" inputMode="numeric" value={c.ceiling} onChange={(e) => up({ ceiling: Number(e.target.value) || 0 })} /></td>
+                      <td><input aria-label="Déductible de l'IUTS" type="checkbox" checked={c.deductible} onChange={(e) => up({ deductible: e.target.checked })} /></td>
+                      <td><input aria-label="Compte" value={c.account} onChange={(e) => up({ account: e.target.value })} style={{ width: 80 }} /></td>
+                      <td><input aria-label="Active" type="checkbox" checked={c.active} onChange={(e) => up({ active: e.target.checked })} /></td>
+                      <td><button className="icon-btn" aria-label="Supprimer" onClick={() => set('contributions', (cur.contributions ?? []).filter((_, j) => j !== i))}>×</button></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
       <div className="card">
         <h3>IUTS : abattements et exonérations</h3>

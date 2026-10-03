@@ -70,6 +70,7 @@ export function FiscalFields({ f }: { f: Form }) {
       <Field label="Service des impôts de rattachement" span={2}><input {...f.bind('division_fiscale')} placeholder={p.taxOfficeHint} /></Field>
       <Field label="Devise"><input {...f.bind('currency')} /></Field>
       <Field label={`${p.vatName} par défaut (%)`}><input inputMode="decimal" {...f.bind('default_tva')} /></Field>
+      <Field label="Impôt sur les bénéfices (%)" hint={`BIC / IS — vide : ${String(p.isRate).replace('.', ',')} % (${p.name})`}><input inputMode="decimal" value={f.values.is_rate ? String(f.values.is_rate) : ''} onChange={(e) => f.set('is_rate', Number(e.target.value.replace(',', '.')) || 0)} placeholder={String(p.isRate)} /></Field>
       {!p.verified && (
         <p className="span-4 country-note">
           <Warning size={16} weight="fill" aria-hidden="true" />

@@ -28,6 +28,8 @@ export interface CompanySettings {
   invoice_footer: string
   currency: string
   default_tva: number
+  /** Taux de l'impôt sur les bénéfices (BIC / IS), en % — vide = taux du pays. */
+  is_rate: number
   payment_terms: number
   allow_negative_stock: boolean
 
@@ -104,6 +106,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   invoice_footer: 'Merci pour votre confiance.',
   currency: 'FCFA',
   default_tva: 18,
+  is_rate: 0,
   payment_terms: 30,
   allow_negative_stock: false,
   doc_color: '#1d6fd6',

@@ -112,6 +112,10 @@ export function taxPresets(countryCode: string): TaxDef[] {
       account_sale: '449', account_purchase: '447', applies_to: 'both', auto: false, active: false
     },
     {
+      code: 'PREL-BIC', label: 'Prélèvement à la source BIC (acompte sur l’impôt)', kind: 'addition', base: 'ht', rate: 2, amount: 0,
+      account_sale: '447', account_purchase: '4413', applies_to: 'both', auto: false, active: false
+    },
+    {
       code: 'TIMBRE', label: 'Droit de timbre', kind: 'addition', base: 'fixed', rate: 0, amount: 0,
       account_sale: '447', account_purchase: '646', applies_to: 'both', auto: false, active: false
     },

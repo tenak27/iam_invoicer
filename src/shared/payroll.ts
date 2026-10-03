@@ -12,9 +12,31 @@ export interface Bracket {
   rate: number
 }
 
+/** Cotisation ou retenue supplémentaire (assurance maladie, mutuelle, caisse de retraite, syndicat…). */
+export interface Contribution {
+  code: string
+  label: string
+  /** Base de calcul : brut, base sécurité sociale (plafonnée) ou salaire de base. */
+  base: 'gross' | 'cnss_base' | 'base_salary'
+  employee_rate: number
+  employer_rate: number
+  /** Plafond mensuel de la base (0 = sans plafond). */
+  ceiling: number
+  /** Part salariale déductible de la base imposable (IUTS). */
+  deductible: boolean
+  /** Compte créditeur (organisme), ex. 438. */
+  account: string
+  active: boolean
+}
+
 export interface PayrollParams {
   cnss_employee_rate: number // % salarié (pension)
   cnss_employer_rate: number // % employeur (pension + prestations familiales + risques professionnels)
+  /** Détail de la part patronale CNSS (la somme remplace cnss_employer_rate). */
+  cnss_employer_family: number
+  cnss_employer_risk: number
+  cnss_employer_pension: number
+  contributions: Contribution[]
   cnss_ceiling: number // plafond mensuel de la base CNSS
   tpa_rate: number // % taxe patronale éventuelle (0 si non applicable)
   abatement_cadre: number // % abattement forfaitaire sur le salaire de base, cadres
@@ -33,8 +55,14 @@ export interface PayrollParams {
 export const DEFAULT_PAYROLL_PARAMS: PayrollParams = {
   cnss_employee_rate: 5.5,
   cnss_employer_rate: 16,
+  // Prestations familiales 7 %, risques professionnels 3,5 % (selon l'activité), pension 5,5 %
+  cnss_employer_family: 7,
+  cnss_employer_risk: 3.5,
+  cnss_employer_pension: 5.5,
+  contributions: [],
   cnss_ceiling: 600000,
-  tpa_rate: 0,
+  // Taxe patronale d'apprentissage (Burkina Faso) : à confirmer avec votre comptable
+  tpa_rate: 3,
   abatement_cadre: 20,
   abatement_non_cadre: 25,
   housing_exempt_rate: 20,
@@ -95,8 +123,20 @@ export interface Payslip {
   otherDeductions: number
   net: number
   cnssEmployer: number
+  /** Détail de la part patronale CNSS. */
+  cnssEmployerDetail: { family: number; risk: number; pension: number }
   tpa: number
+  /** Cotisations supplémentaires. */
+  contributions: { code: string; label: string; base: number; employee: number; employer: number; account: string }[]
+  contribEmployee: number
+  contribEmployer: number
   employerCost: number
+}
+
+/** Taux patronal CNSS total (somme du détail s'il est renseigné). */
+export function employerCnssRate(p: PayrollParams): number {
+  const parts = [p.cnss_employer_family, p.cnss_employer_risk, p.cnss_employer_pension]
+  return parts.every((x) => typeof x === 'number') ? parts.reduce((s, x) => s + x, 0) : p.cnss_employer_rate
 }
 
 const r = Math.round
@@ -123,14 +163,30 @@ export function computePayslip(e: EmployeePay, p: PayrollParams = DEFAULT_PAYROL
 
   const cnssBase = Math.min(gross, p.cnss_ceiling)
   const cnssEmployee = r((cnssBase * p.cnss_employee_rate) / 100)
-  const cnssEmployer = r((cnssBase * p.cnss_employer_rate) / 100)
+  const detailed = [p.cnss_employer_family, p.cnss_employer_risk, p.cnss_employer_pension].every((x) => typeof x === 'number')
+  const cnssEmployerDetail = detailed
+    ? { family: r((cnssBase * p.cnss_employer_family) / 100), risk: r((cnssBase * p.cnss_employer_risk) / 100), pension: r((cnssBase * p.cnss_employer_pension) / 100) }
+    : { family: 0, risk: 0, pension: 0 }
+  const cnssEmployer = detailed ? cnssEmployerDetail.family + cnssEmployerDetail.risk + cnssEmployerDetail.pension : r((cnssBase * p.cnss_employer_rate) / 100)
   const tpa = r((gross * p.tpa_rate) / 100)
+
+  // Cotisations supplémentaires
+  const contributions = (p.contributions ?? [])
+    .filter((c) => c.active && (c.employee_rate > 0 || c.employer_rate > 0))
+    .map((c) => {
+      const raw = c.base === 'gross' ? gross : c.base === 'cnss_base' ? cnssBase : base
+      const b = c.ceiling > 0 ? Math.min(raw, c.ceiling) : raw
+      return { code: c.code, label: c.label, base: b, employee: r((b * c.employee_rate) / 100), employer: r((b * c.employer_rate) / 100), account: c.account, deductible: c.deductible, employee_rate: c.employee_rate }
+    })
+  const contribEmployee = contributions.reduce((s, c) => s + c.employee, 0)
+  const contribEmployer = contributions.reduce((s, c) => s + c.employer, 0)
+  const contribDeductible = contributions.filter((c) => c.deductible).reduce((s, c) => s + c.employee, 0)
 
   const exHousing = Math.min(e.housing, (base * p.housing_exempt_rate) / 100, p.housing_exempt_cap)
   const exTransport = Math.min(e.transport, (base * p.transport_exempt_rate) / 100, p.transport_exempt_cap)
   const exFunction = Math.min(e.function_allowance, (base * p.function_exempt_rate) / 100, p.function_exempt_cap)
   const abatement = (base * (e.category === 'cadre' ? p.abatement_cadre : p.abatement_non_cadre)) / 100
-  const taxable = Math.max(0, Math.floor((gross - cnssEmployee - exHousing - exTransport - exFunction - abatement) / 100) * 100)
+  const taxable = Math.max(0, Math.floor((gross - cnssEmployee - contribDeductible - exHousing - exTransport - exFunction - abatement) / 100) * 100)
 
   const iutsGross = iutsFromBrackets(taxable, p.iuts_brackets)
   const reductionRate = p.family_reductions[Math.min(Math.max(e.family_charges, 0), p.family_reductions.length - 1)] ?? 0
@@ -138,7 +194,7 @@ export function computePayslip(e: EmployeePay, p: PayrollParams = DEFAULT_PAYROL
   const iuts = r(iutsGross - familyReduction)
 
   const otherDeductions = r((v.advance ?? 0) + (v.other_deductions ?? 0))
-  const net = gross - cnssEmployee - iuts - otherDeductions
+  const net = gross - cnssEmployee - contribEmployee - iuts - otherDeductions
 
   const lines: PayLine[] = [
     { label: absence ? `Salaire de base (${absence} j d'absence déduits)` : 'Salaire de base', gain: base },
@@ -148,11 +204,14 @@ export function computePayslip(e: EmployeePay, p: PayrollParams = DEFAULT_PAYROL
     e.other_allowances ? { label: 'Autres indemnités', gain: r(e.other_allowances) } : null,
     bonus ? { label: 'Primes', gain: bonus } : null,
     overtime ? { label: 'Heures supplémentaires', gain: overtime } : null,
-    { label: 'Cotisation CNSS', base: cnssBase, rate: p.cnss_employee_rate, deduction: cnssEmployee, employer: cnssEmployer },
+    { label: 'CNSS — pension (part salariale)', base: cnssBase, rate: p.cnss_employee_rate, deduction: cnssEmployee, employer: detailed ? cnssEmployerDetail.pension : cnssEmployer },
+    detailed && cnssEmployerDetail.family ? { label: 'CNSS — prestations familiales', base: cnssBase, rate: p.cnss_employer_family, employer: cnssEmployerDetail.family } : null,
+    detailed && cnssEmployerDetail.risk ? { label: 'CNSS — risques professionnels', base: cnssBase, rate: p.cnss_employer_risk, employer: cnssEmployerDetail.risk } : null,
+    ...contributions.map((c) => ({ label: c.label, base: c.base, rate: c.employee_rate || undefined, deduction: c.employee || undefined, employer: c.employer || undefined })),
     { label: `IUTS${e.family_charges ? ` (réduction ${reductionRate} % pour ${e.family_charges} charge(s))` : ''}`, base: taxable, deduction: iuts },
     v.advance ? { label: 'Avance sur salaire', deduction: r(v.advance) } : null,
     v.other_deductions ? { label: 'Autres retenues', deduction: r(v.other_deductions) } : null,
-    tpa ? { label: 'Taxe patronale', base: gross, rate: p.tpa_rate, employer: tpa } : null
+    tpa ? { label: "Taxe patronale d'apprentissage (TPA)", base: gross, rate: p.tpa_rate, employer: tpa } : null
   ].filter(Boolean) as PayLine[]
 
   return {
@@ -167,8 +226,12 @@ export function computePayslip(e: EmployeePay, p: PayrollParams = DEFAULT_PAYROL
     otherDeductions,
     net,
     cnssEmployer,
+    cnssEmployerDetail,
     tpa,
-    employerCost: gross + cnssEmployer + tpa
+    contributions: contributions.map(({ deductible: _d, employee_rate: _r, ...c }) => c),
+    contribEmployee,
+    contribEmployer,
+    employerCost: gross + cnssEmployer + tpa + contribEmployer
   }
 }
 
