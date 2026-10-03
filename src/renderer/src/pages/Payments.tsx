@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, formatMoney } from '@shared/format'
-import { exportCsv, useQuery } from '../api'
-import { Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, SearchInput, Tabs } from '../components/ui'
+import { api, exportCsv, run, useQuery } from '../api'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs } from '../components/ui'
+import { Eye, Trash } from '@phosphor-icons/react'
 import { useCan } from '../session'
 import { PaymentModal } from './DocumentEditor'
 
@@ -50,7 +51,7 @@ export function Payments() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : rows.length === 0 ? <Empty>Aucun règlement sur la période.</Empty> : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Date</th><th>Tiers</th><th>Document</th><th>Mode</th><th>Référence</th><th>Saisi par</th><th className="num">Montant</th></tr></thead>
+            <thead><tr><th>Date</th><th>Tiers</th><th>Document</th><th>Mode</th><th>Référence</th><th>Saisi par</th><th className="num">Montant</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className={r.document_id ? 'clickable' : ''} onClick={() => r.document_id && nav(`/doc/${r.document_id}`)}>
@@ -61,6 +62,18 @@ export function Payments() {
                   <td className="muted">{r.reference}</td>
                   <td className="muted">{r.user_name}</td>
                   <td className="num strong"><Money value={r.direction === 'in' ? r.amount : -r.amount} /></td>
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Voir le document', icon: Eye, hidden: !r.document_id, onClick: () => nav(`/doc/${r.document_id}`) },
+                      {
+                        label: 'Supprimer le règlement', icon: Trash, tone: 'danger',
+                        onClick: async () => {
+                          if (await confirmDialog(`Supprimer le règlement de ${formatMoney(r.amount)} ?`, { danger: true, detail: "L'écriture comptable correspondante est aussi supprimée. Impossible pour un règlement d'une caisse clôturée." }))
+                            if (await run(() => api('payments.delete', { id: r.id }), 'Règlement supprimé.')) reload()
+                        }
+                      }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>

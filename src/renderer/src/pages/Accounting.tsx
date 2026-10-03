@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { JOURNALS } from '@shared/domain'
 import { formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
+import { PencilSimple, Trash } from '@phosphor-icons/react'
 
 const amount = (n: number) => (n ? formatNumber(n, n % 1 ? 2 : 0) : '')
 const firstOfYear = () => `${todayISO().slice(0, 4)}-01-01`
@@ -84,7 +85,7 @@ export function Entries() {
                   <td>{formatDate(e.date)}</td>
                   <td><span className="badge badge-valide">{e.journal}</span> {e.number}</td>
                   <td colSpan={3} className="strong">{e.label}</td>
-                  <td className="num">{!e.source && <button className="link-btn danger small" onClick={() => remove(e)}>Supprimer</button>}</td>
+                  <td className="actions-col"><RowActions actions={[{ label: "Supprimer l'écriture", icon: Trash, tone: 'danger', hidden: !!e.source, onClick: () => remove(e) }]} /></td>
                 </tr>
                 {e.lines.map((l: any) => (
                   <tr key={l.id}>
@@ -291,13 +292,14 @@ export function Accounts() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : (
         <div className="table-wrap">
           <table className="table compact">
-            <thead><tr><th>Compte</th><th>Intitulé</th><th className="num">Débit</th><th className="num">Crédit</th><th className="num">Solde</th></tr></thead>
+            <thead><tr><th>Compte</th><th>Intitulé</th><th className="num">Débit</th><th className="num">Crédit</th><th className="num">Solde</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {rows.map((a) => (
                 <tr key={a.number} className={`clickable ${a.active ? '' : 'inactive'}`} onClick={() => setEditing(a)}>
                   <td className="strong">{a.number}</td><td>{a.label}</td>
                   <td className="num money">{amount(a.debit)}</td><td className="num money">{amount(a.credit)}</td>
                   <td className="num money">{a.debit || a.credit ? formatNumber(a.debit - a.credit) : ''}</td>
+                  <td className="actions-col"><RowActions actions={[{ label: 'Modifier le compte', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(a) }]} /></td>
                 </tr>
               ))}
             </tbody>

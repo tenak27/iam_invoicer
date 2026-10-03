@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { CalendarCheck, CheckCircle, Money as MoneyIcon, Printer, UserPlus, Users, XCircle } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, CalendarCheck, CheckCircle, Eye, Money as MoneyIcon, PencilSimple, Printer, Prohibit, Trash, UserPlus, Users, XCircle } from '@phosphor-icons/react'
 import { computePayslip, DEFAULT_PAYROLL_PARAMS, workingDays, type PayrollParams } from '@shared/payroll'
 import { PAYMENT_METHODS } from '@shared/domain'
 import { formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, exportCsv, run, unwrap, useQuery } from '../api'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
 
 type Tab = 'salaries' | 'paie' | 'conges' | 'parametres'
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
@@ -48,7 +48,7 @@ function Employees() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : rows.length === 0 ? <Empty>Aucun salarié. Ajoutez votre premier salarié pour préparer la paie.</Empty> : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Salarié</th><th>Emploi</th><th>Catégorie</th><th>Embauche</th><th className="num">Salaire de base</th><th className="num">Brut mensuel</th><th className="num">Congés dispo.</th></tr></thead>
+            <thead><tr><th>Salarié</th><th>Emploi</th><th>Catégorie</th><th>Embauche</th><th className="num">Salaire de base</th><th className="num">Brut mensuel</th><th className="num">Congés dispo.</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {rows.map((e) => (
                 <tr key={e.id} className={`clickable ${e.active ? '' : 'inactive'}`} onClick={() => setEditing(e)}>
@@ -59,6 +59,20 @@ function Employees() {
                   <td className="num money">{formatMoney(e.base_salary)}</td>
                   <td className="num money">{formatMoney(e.base_salary + e.housing + e.transport + e.function_allowance + e.other_allowances)}</td>
                   <td className="num">{formatNumber(e.leave_balance, 1)} j</td>
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Modifier', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(e) },
+                      e.active
+                        ? {
+                            label: 'Désactiver', icon: Prohibit, tone: 'danger',
+                            onClick: async () => {
+                              if (await confirmDialog(`Désactiver ${e.first_name} ${e.last_name} ?`, { detail: 'Le salarié ne sera plus inclus dans les prochaines paies. Ses bulletins sont conservés.' }))
+                                if (await run(() => api('hr.saveEmployee', { ...e, active: false }), 'Salarié désactivé.')) reload()
+                            }
+                          }
+                        : { label: 'Réactiver', icon: ArrowCounterClockwise, tone: 'warning', onClick: async () => { if (await run(() => api('hr.saveEmployee', { ...e, active: true }), 'Salarié réactivé.')) reload() } }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -138,13 +152,25 @@ function Payroll() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : data!.length === 0 ? <Empty>Aucune paie. Choisissez un mois et cliquez sur « Préparer la paie ».</Empty> : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Période</th><th>Salariés</th><th className="num">Brut</th><th className="num">Net à payer</th><th className="num">Coût employeur</th><th>État</th></tr></thead>
+            <thead><tr><th>Période</th><th>Salariés</th><th className="num">Brut</th><th className="num">Net à payer</th><th className="num">Coût employeur</th><th>État</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {data!.map((r) => (
                 <tr key={r.id} className="clickable" onClick={() => setOpen(r.id)}>
                   <td className="strong">{periodLabel(r.period)}</td><td>{r.employees}</td>
                   <td className="num money">{formatMoney(r.gross)}</td><td className="num money">{formatMoney(r.net)}</td><td className="num money">{formatMoney(r.employer_cost)}</td>
                   <td><span className={`badge ${r.status === 'brouillon' ? 'badge-brouillon' : r.paid ? 'pay-payee' : 'badge-valide'}`}>{r.status === 'brouillon' ? 'Brouillon' : r.paid ? 'Payée' : 'Validée'}</span></td>
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Ouvrir la paie', icon: Eye, onClick: () => setOpen(r.id) },
+                      {
+                        label: 'Supprimer la paie', icon: Trash, tone: 'danger', hidden: r.status !== 'brouillon',
+                        onClick: async () => {
+                          if (await confirmDialog(`Supprimer la paie de ${periodLabel(r.period)} ?`, { danger: true }))
+                            if (await run(() => api('hr.deleteRun', { id: r.id }), 'Paie supprimée.')) reload()
+                        }
+                      }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>

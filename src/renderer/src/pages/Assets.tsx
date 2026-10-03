@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Buildings, Calculator, Plus } from '@phosphor-icons/react'
+import { Buildings, Calculator, HandCoins, ListNumbers, PencilSimple, Plus } from '@phosphor-icons/react'
 import { PAYMENT_METHODS } from '@shared/domain'
 import { formatDate, formatMoney, todayISO } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { Progress } from '../components/charts'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
 
 export function AssetsPage() {
   const [search, setSearch] = useState('')
@@ -48,7 +48,7 @@ export function AssetsPage() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : rows.length === 0 ? <Empty>Aucun bien. Enregistrez vos véhicules, ordinateurs, mobilier… pour calculer leurs amortissements.</Empty> : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Bien</th><th>Compte</th><th>Acquisition</th><th className="num">Valeur</th><th>Amortissement</th><th className="num">VNC</th><th /></tr></thead>
+            <thead><tr><th>Bien</th><th>Compte</th><th>Acquisition</th><th className="num">Valeur</th><th>Amortissement</th><th className="num">VNC</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {rows.map((a) => (
                 <tr key={a.id}>
@@ -58,10 +58,12 @@ export function AssetsPage() {
                   <td className="num money">{formatMoney(a.value)}</td>
                   <td style={{ minWidth: 150 }}><Progress value={(a.cumulated / (a.value - a.residual)) * 100} color="var(--c-info)" label="Part amortie" /><div className="muted small">{formatMoney(a.cumulated)} amortis fin {year}</div></td>
                   <td className="num money strong">{formatMoney(a.net_value)}</td>
-                  <td className="num nowrap">
-                    <button className="btn btn-sm" onClick={() => setPlan(a)}>Plan</button>{' '}
-                    <button className="btn btn-sm" onClick={() => setEditing(a)}>Modifier</button>{' '}
-                    {a.status === 'actif' && <button className="btn btn-sm btn-tonal" onClick={() => setDisposing(a)}>Céder</button>}
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: "Plan d'amortissement", icon: ListNumbers, onClick: () => setPlan(a) },
+                      { label: 'Modifier', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(a) },
+                      { label: 'Céder ou mettre au rebut', icon: HandCoins, tone: 'warning', hidden: a.status !== 'actif', onClick: () => setDisposing(a) }
+                    ]} />
                   </td>
                 </tr>
               ))}

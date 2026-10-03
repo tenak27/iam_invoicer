@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Clock, FileText, Kanban, Plus, Receipt, Timer, TrendUp } from '@phosphor-icons/react'
+import { Clock, FileText, Kanban, Plus, Receipt, Timer, Trash, TrendUp } from '@phosphor-icons/react'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, run, useQuery } from '../api'
 import { Progress } from '../components/charts'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, StatusBadge, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, StatusBadge, Tabs, useForm } from '../components/ui'
 import { useCan } from '../session'
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -117,7 +117,7 @@ export function ProjectDetail() {
           <h3>Temps passés</h3>
           {p.entries.length === 0 ? <Empty>Aucun temps saisi.</Empty> : (
             <table className="table compact">
-              <thead><tr><th>Date</th><th>Travail</th><th>Par</th><th className="num">Heures</th><th /></tr></thead>
+              <thead><tr><th>Date</th><th>Travail</th><th>Par</th><th className="num">Heures</th><th className="actions-col">Actions</th></tr></thead>
               <tbody>
                 {p.entries.map((t: any) => (
                   <tr key={t.id}>
@@ -125,7 +125,7 @@ export function ProjectDetail() {
                     <td>{t.description}{!t.billable && <span className="muted small"> · non facturable</span>}{t.invoice_number && <div className="muted small">Facturé : {t.invoice_number}</div>}</td>
                     <td className="muted">{t.user_name}</td>
                     <td className="num">{formatNumber(t.hours, 2)}</td>
-                    <td className="num">{!t.invoice_id && <button className="link-btn danger small" onClick={async () => { if (await confirmDialog('Supprimer cette saisie ?', { danger: true })) if (await run(() => api('projects.deleteTime', { id: t.id }))) reload() }}>Supprimer</button>}</td>
+                    <td className="actions-col"><RowActions actions={[{ label: 'Supprimer la saisie', icon: Trash, tone: 'danger', hidden: !!t.invoice_id, onClick: async () => { if (await confirmDialog('Supprimer cette saisie ?', { danger: true })) if (await run(() => api('projects.deleteTime', { id: t.id }), 'Saisie supprimée.')) reload() } }]} /></td>
                   </tr>
                 ))}
               </tbody>

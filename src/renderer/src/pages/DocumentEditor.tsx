@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { computeTotals, DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
@@ -36,11 +36,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const products = useQuery<any[]>('products.list', {})
   const warehouses = useQuery<any[]>('warehouses.options')
   const projects = useQuery<any[]>('projects.options')
+  const [params] = useSearchParams()
 
   const [header, setHeader] = useState({
     warehouse_id: String(doc?.warehouse_id ?? 1),
     project_id: doc?.project_id ? String(doc.project_id) : '',
-    party_id: doc?.party_id ? String(doc.party_id) : '',
+    party_id: doc?.party_id ? String(doc.party_id) : (params.get('party') ?? ''),
     date: doc?.date ?? todayISO(),
     due_date: doc?.due_date ?? '',
     reference: doc?.reference ?? '',

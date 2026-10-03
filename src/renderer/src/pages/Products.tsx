@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { formatMoney, formatQty } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
-import { Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, SearchInput, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
+import { ArrowCounterClockwise, Copy, PencilSimple, Prohibit } from '@phosphor-icons/react'
 import { useCan, useSession } from '../session'
+
+/** Copie d'un article : nouvelle référence attribuée à l'enregistrement, sans stock. */
+function duplicateOf(r: any) {
+  const { id: _id, ref: _ref, stock_qty: _qty, ...rest } = r
+  return { ...rest, name: `${r.name} (copie)`, active: true, sale_price: String(r.sale_price), purchase_price: String(r.purchase_price), tva_rate: String(r.tva_rate), min_stock: String(r.min_stock) }
+}
 
 export function Products() {
   const [search, setSearch] = useState('')
@@ -10,6 +17,10 @@ export function Products() {
   const [inactive, setInactive] = useState(false)
   const [editing, setEditing] = useState<any | null>(null)
   const { data, error, loading, reload } = useQuery<any[]>('products.list', { search, kind, includeInactive: inactive })
+  const toggleActive = async (r: any) => {
+    if (r.active && !(await confirmDialog(`Désactiver « ${r.name} » ?`, { detail: 'Il ne sera plus proposé dans les documents ni à la caisse. Son historique et son stock sont conservés.' }))) return
+    if (await run(() => api('products.save', { ...r, active: !r.active }), r.active ? 'Article désactivé.' : 'Article réactivé.')) reload()
+  }
   const canStock = useCan('stock')
   const rows = data ?? []
   return (
@@ -41,7 +52,7 @@ export function Products() {
         <div className="table-wrap">
           <table className="table">
             <thead>
-              <tr><th>Réf.</th><th>Désignation</th><th>Catégorie</th><th className="num">Prix de vente HT</th><th className="num">Prix d'achat HT</th><th className="num">TVA</th>{canStock && <th className="num">Stock</th>}</tr>
+              <tr><th>Réf.</th><th>Désignation</th><th>Catégorie</th><th className="num">Prix de vente HT</th><th className="num">Prix d'achat HT</th><th className="num">TVA</th>{canStock && <th className="num">Stock</th>}<th className="actions-col">Actions</th></tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -53,6 +64,15 @@ export function Products() {
                   <td className="num"><Money value={r.purchase_price} /></td>
                   <td className="num">{r.tva_rate} %</td>
                   {canStock && <td className="num">{r.kind === 'produit' ? <span className={r.stock_qty <= r.min_stock ? 'text-warn' : ''}>{formatQty(r.stock_qty)} {r.unit}</span> : '—'}</td>}
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Modifier', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(r) },
+                      { label: 'Dupliquer', icon: Copy, tone: 'success', onClick: () => setEditing(duplicateOf(r)) },
+                      r.active
+                        ? { label: 'Désactiver', icon: Prohibit, tone: 'danger', onClick: () => toggleActive(r) }
+                        : { label: 'Réactiver', icon: ArrowCounterClockwise, tone: 'warning', onClick: () => toggleActive(r) }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, type ReactNode } from 'react'
-import { Tray } from '@phosphor-icons/react'
+import { Tray, type Icon } from '@phosphor-icons/react'
 import { PageContext } from './pageContext'
 import { createPortal } from 'react-dom'
 import { PAYMENT_STATE_LABELS, paymentState, type DocStatus } from '@shared/domain'
@@ -123,6 +123,40 @@ export function useForm<T extends Record<string, any>>(initial: T) {
 }
 
 // ---------- Affichage ----------
+
+// ---------- Actions sur une ligne de tableau ----------
+
+export type RowAction = {
+  label: string
+  icon: Icon
+  onClick: () => void
+  tone?: 'primary' | 'success' | 'warning' | 'danger'
+  hidden?: boolean
+  disabled?: boolean
+}
+
+/** Boutons d'action d'une ligne (voir, modifier, dupliquer, supprimer…). Le clic ne déclenche pas celui de la ligne. */
+export function RowActions({ actions }: { actions: RowAction[] }) {
+  const visible = actions.filter((a) => !a.hidden)
+  if (!visible.length) return null
+  return (
+    <div className="row-actions" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+      {visible.map((a) => (
+        <button
+          key={a.label}
+          type="button"
+          className={`ra-btn${a.tone ? ' ra-' + a.tone : ''}`}
+          aria-label={a.label}
+          data-tip={a.label}
+          disabled={a.disabled}
+          onClick={a.onClick}
+        >
+          <a.icon size={18} weight="duotone" aria-hidden="true" />
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /** En-tête de page : bandeau coloré à la teinte de la section, avec l'icône de l'écran. */
 export function PageHeader(props: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {

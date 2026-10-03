@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
-import { Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, SearchInput, StatusBadge, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge, useForm } from '../components/ui'
+import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit } from '@phosphor-icons/react'
 import { useSession } from '../session'
 
 type Kind = 'client' | 'supplier'
@@ -21,6 +22,11 @@ export function PartyList({ kind }: { kind: Kind }) {
   const L = LABELS[kind]
   const rows = data ?? []
   const total = rows.reduce((s, r) => s + r.balance, 0)
+  const newDocType = kind === 'client' ? 'FAC' : 'BC'
+  const toggleActive = async (r: any) => {
+    if (r.active && !(await confirmDialog(`Désactiver « ${r.name} » ?`, { detail: 'Il ne sera plus proposé dans les nouveaux documents. Son historique est conservé.' }))) return
+    if (await run(() => api('parties.save', { ...r, active: !r.active }), r.active ? 'Fiche désactivée.' : 'Fiche réactivée.')) reload()
+  }
   return (
     <div className="page" key={kind}>
       <PageHeader
@@ -46,7 +52,7 @@ export function PartyList({ kind }: { kind: Kind }) {
       ) : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Code</th><th>Nom</th><th>Contact</th><th>Téléphone</th><th>Ville</th><th className="num">{L.balance}</th><th /></tr></thead>
+            <thead><tr><th>Code</th><th>Nom</th><th>Contact</th><th>Téléphone</th><th>Ville</th><th className="num">{L.balance}</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className={`clickable ${r.active ? '' : 'inactive'}`} onClick={() => nav(`/party/${r.id}`)}>
@@ -56,7 +62,16 @@ export function PartyList({ kind }: { kind: Kind }) {
                   <td>{r.phone}</td>
                   <td>{r.city}</td>
                   <td className="num"><Money value={r.balance} /></td>
-                  <td className="num"><button className="link-btn" onClick={(e) => { e.stopPropagation(); setEditing(r) }}>Modifier</button></td>
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Voir la fiche', icon: Eye, onClick: () => nav(`/party/${r.id}`) },
+                      { label: 'Modifier', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(r) },
+                      { label: kind === 'client' ? 'Nouvelle facture' : 'Nouveau bon de commande', icon: FilePlus, tone: 'success', hidden: !r.active, onClick: () => nav(`/docs/${newDocType}/new?party=${r.id}`) },
+                      r.active
+                        ? { label: 'Désactiver', icon: Prohibit, tone: 'danger', onClick: () => toggleActive(r) }
+                        : { label: 'Réactiver', icon: ArrowCounterClockwise, tone: 'warning', onClick: () => toggleActive(r) }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>

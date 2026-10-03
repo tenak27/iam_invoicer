@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, Tabs, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
+import { ArrowCounterClockwise, PencilSimple, Prohibit } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
 import { DbConfigForm, REGIMES, TAX_ID_LABELS } from './Auth'
 import { useSession } from '../session'
@@ -360,12 +361,26 @@ export function Users() {
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : (
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Statut</th><th /></tr></thead>
+            <thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Statut</th><th className="actions-col">Actions</th></tr></thead>
             <tbody>
               {data!.map((u) => (
                 <tr key={u.id} className={`clickable ${u.active ? '' : 'inactive'}`} onClick={() => setEditing(u)}>
                   <td className="strong">{u.full_name}</td><td>{u.username}</td><td>{ROLE_LABELS[u.role as Role]}</td>
-                  <td>{u.active ? 'Actif' : 'Désactivé'}</td><td className="num"><button className="link-btn">Modifier</button></td>
+                  <td>{u.active ? 'Actif' : 'Désactivé'}</td>
+                  <td className="actions-col">
+                    <RowActions actions={[
+                      { label: 'Modifier', icon: PencilSimple, tone: 'primary', onClick: () => setEditing(u) },
+                      u.active
+                        ? {
+                            label: 'Désactiver', icon: Prohibit, tone: 'danger',
+                            onClick: async () => {
+                              if (await confirmDialog(`Désactiver le compte de ${u.full_name} ?`, { detail: 'Ses sessions ouvertes sont fermées immédiatement. Son historique est conservé.', danger: true }))
+                                if (await run(() => api('users.save', { id: u.id, username: u.username, full_name: u.full_name, role: u.role, active: false }), 'Compte désactivé.')) reload()
+                            }
+                          }
+                        : { label: 'Réactiver', icon: ArrowCounterClockwise, tone: 'warning', onClick: async () => { if (await run(() => api('users.save', { id: u.id, username: u.username, full_name: u.full_name, role: u.role, active: true }), 'Compte réactivé.')) reload() } }
+                    ]} />
+                  </td>
                 </tr>
               ))}
             </tbody>

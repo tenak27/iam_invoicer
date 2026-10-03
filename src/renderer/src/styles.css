@@ -1203,3 +1203,39 @@ td.indent { padding-left: 38px !important; }
   .page-hero h1, .page-hero .page-subtitle { color: inherit; }
   .hero-icon, .hero-weave { display: none; }
 }
+
+/* =====================================================================
+   Boutons d'action des lignes de tableau (voir, modifier, dupliquer…)
+   ===================================================================== */
+.actions-col { width: 1%; white-space: nowrap; text-align: right; }
+.table th.actions-col { text-align: right; }
+.row-actions { display: inline-flex; gap: 6px; justify-content: flex-end; }
+.ra-btn { --ra: var(--text-2); --ra-rgb: 93, 100, 117; position: relative; width: 34px; height: 34px; border-radius: 10px; border: none; display: grid; place-items: center; cursor: pointer; color: var(--ra); background: rgba(var(--ra-rgb), .1); transition: background var(--t-fast), color var(--t-fast), transform var(--t-fast) var(--ease-spring), box-shadow var(--t-fast); }
+.ra-btn:hover:not(:disabled) { background: var(--ra); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 14px -6px rgba(var(--ra-rgb), .8); }
+.ra-btn:active:not(:disabled) { transform: translateY(0) scale(.94); }
+.ra-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(var(--ra-rgb), .45); }
+.ra-btn:disabled { opacity: .4; cursor: not-allowed; }
+.ra-primary { --ra: #1d6fd6; --ra-rgb: 29, 111, 214; }
+.ra-success { --ra: #128052; --ra-rgb: 18, 128, 82; }
+.ra-warning { --ra: #b8590b; --ra-rgb: 184, 89, 11; }
+.ra-danger { --ra: #c43a3d; --ra-rgb: 196, 58, 61; }
+.route-view .ra-btn:not(.ra-primary):not(.ra-success):not(.ra-warning):not(.ra-danger) { --ra: var(--tone-b); --ra-rgb: var(--tone-rgb); color: var(--tone-ink); }
+.route-view .ra-btn:not(.ra-primary):not(.ra-success):not(.ra-warning):not(.ra-danger):hover:not(:disabled) { color: #fff; }
+/* Colonne d'actions toujours visible, même quand le tableau défile horizontalement */
+.table td.actions-col { position: sticky; right: 0; z-index: 1; background: var(--surface); box-shadow: -10px 0 12px -12px rgba(15, 20, 35, .35); }
+.table th.actions-col { position: sticky; right: 0; z-index: 3; box-shadow: -10px 0 12px -12px rgba(15, 20, 35, .35); }
+.route-view .table th.actions-col { box-shadow: inset 0 -2px 0 rgba(var(--tone-rgb), .35), -10px 0 12px -12px rgba(15, 20, 35, .35); }
+tr.clickable:hover td.actions-col { background: var(--row-hover); }
+.route-view tr.clickable:hover td.actions-col { background: color-mix(in srgb, var(--tone-b) 10%, var(--surface)); }
+.table tbody tr:hover td.actions-col { z-index: 4; }
+/* Info-bulle */
+.ra-btn::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px); padding: 5px 9px; border-radius: 6px; background: #1f2433; color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity var(--t-fast), transform var(--t-fast); z-index: 5; }
+.ra-btn:hover::after, .ra-btn:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.row-actions .ra-btn:last-child::after { left: auto; right: 0; transform: translate(0, 4px); }
+.row-actions .ra-btn:last-child:hover::after, .row-actions .ra-btn:last-child:focus-visible::after { transform: translate(0, 0); }
+/* Les en-têtes collants passent sous l'info-bulle des premières lignes */
+@media (max-width: 760px), (pointer: coarse) {
+  .ra-btn { width: 44px; height: 44px; }
+  .ra-btn::after { display: none; }
+}
+@media print { .actions-col { display: none; } }
