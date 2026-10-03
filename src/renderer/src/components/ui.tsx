@@ -1,4 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useState, type ReactNode } from 'react'
+import { Tray } from '@phosphor-icons/react'
+import { PageContext } from './pageContext'
 import { createPortal } from 'react-dom'
 import { PAYMENT_STATE_LABELS, paymentState, type DocStatus } from '@shared/domain'
 import { formatMoney, todayISO } from '@shared/format'
@@ -122,14 +124,24 @@ export function useForm<T extends Record<string, any>>(initial: T) {
 
 // ---------- Affichage ----------
 
+/** En-tête de page : bandeau coloré à la teinte de la section, avec l'icône de l'écran. */
 export function PageHeader(props: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+  const { icon: PageIcon } = useContext(PageContext)
   return (
-    <div className="page-header">
-      <div>
-        <h1>{props.title}</h1>
-        {props.subtitle && <div className="page-subtitle">{props.subtitle}</div>}
+    <div className="page-header page-hero">
+      <div className="hero-main">
+        {PageIcon && (
+          <span className="hero-icon" aria-hidden="true">
+            <PageIcon size={26} weight="duotone" />
+          </span>
+        )}
+        <div>
+          <h1>{props.title}</h1>
+          {props.subtitle && <div className="page-subtitle">{props.subtitle}</div>}
+        </div>
       </div>
       {props.actions && <div className="page-actions">{props.actions}</div>}
+      <span className="hero-weave" aria-hidden="true" />
     </div>
   )
 }
@@ -150,7 +162,12 @@ export function PaymentBadge({ total, paid, dueDate }: { total: number; paid: nu
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="empty">{children}</div>
+  return (
+    <div className="empty">
+      <span className="empty-art" aria-hidden="true"><Tray size={30} weight="duotone" /></span>
+      <div>{children}</div>
+    </div>
+  )
 }
 
 export function Loading() {

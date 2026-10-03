@@ -1,23 +1,26 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { PageContext, type Tone } from './pageContext'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
 import { Navbar } from './Topbar'
 import { OFFLINE_LABELS } from '../offline'
+import { useCountUpEnhancer } from './motion'
 
-type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean }
-type Section = { title?: string; items: Item[] }
+type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
+type Section = { title?: string; tone: Tone; items: Item[] }
 
 const NAV: Section[] = [
-  { items: [{ to: '/', label: 'Tableau de bord', short: 'Accueil', module: 'dashboard', icon: House, end: true }] },
+  { tone: 'blue', items: [{ to: '/', label: 'Tableau de bord', short: 'Accueil', module: 'dashboard', icon: House, end: true }] },
   {
     title: 'Caisse',
+    tone: 'green',
     items: [
       { to: '/caisse', label: 'Point de vente', short: 'Caisse', module: 'cash', icon: CashRegister, end: true },
       { to: '/caisse/sessions', label: 'Sessions de caisse', short: 'Sessions', module: 'cash', icon: ClockCounterClockwise }
@@ -25,17 +28,19 @@ const NAV: Section[] = [
   },
   {
     title: 'Ventes',
+    tone: 'blue',
     items: [
       { to: '/docs/DEV', label: 'Devis', module: 'sales', icon: Notepad },
       { to: '/docs/BL', label: 'Bons de livraison', module: 'sales', icon: Truck },
       { to: '/docs/FAC', label: 'Factures', module: 'sales', icon: FileText },
       { to: '/docs/AV', label: 'Avoirs', module: 'sales', icon: ArrowUUpLeft },
       { to: '/clients', label: 'Clients', module: 'clients', icon: Users },
-      { to: '/crm', label: 'CRM et opportunités', short: 'CRM', module: 'crm', icon: Handshake }
+      { to: '/crm', label: 'CRM et opportunités', short: 'CRM', module: 'crm', icon: Handshake, tone: 'amber' }
     ]
   },
   {
     title: 'Achats',
+    tone: 'amber',
     items: [
       { to: '/docs/BC', label: 'Bons de commande', module: 'purchases', icon: ShoppingCart },
       { to: '/docs/BR', label: 'Réceptions', module: 'purchases', icon: Tray },
@@ -45,6 +50,7 @@ const NAV: Section[] = [
   },
   {
     title: 'Catalogue & stock',
+    tone: 'teal',
     items: [
       { to: '/products', label: 'Articles & prestations', short: 'Articles', module: 'products', icon: Package },
       { to: '/stock', label: 'État du stock', short: 'Stock', module: 'stock', icon: Warehouse, end: true },
@@ -55,6 +61,7 @@ const NAV: Section[] = [
   },
   {
     title: 'Finance',
+    tone: 'violet',
     items: [
       { to: '/payments', label: 'Paiements', module: 'payments', icon: Wallet },
       { to: '/reports', label: 'Rapports', module: 'reports', icon: ChartBar }
@@ -62,15 +69,17 @@ const NAV: Section[] = [
   },
   {
     title: 'Gestion',
+    tone: 'indigo',
     items: [
       { to: '/projets', label: 'Projets et chantiers', short: 'Projets', module: 'projects', icon: Kanban },
-      { to: '/rh', label: 'Ressources humaines', short: 'RH', module: 'hr', icon: IdentificationBadge },
-      { to: '/immobilisations', label: 'Immobilisations', module: 'assets', icon: Bank },
-      { to: '/budget', label: 'Budgets et trésorerie', short: 'Trésorerie', module: 'budget', icon: ChartPieSlice }
+      { to: '/rh', label: 'Ressources humaines', short: 'RH', module: 'hr', icon: IdentificationBadge, tone: 'rose' },
+      { to: '/immobilisations', label: 'Immobilisations', module: 'assets', icon: Bank, tone: 'slate' },
+      { to: '/budget', label: 'Budgets et trésorerie', short: 'Trésorerie', module: 'budget', icon: ChartPieSlice, tone: 'violet' }
     ]
   },
   {
     title: 'Communications',
+    tone: 'cyan',
     items: [
       { to: '/messages', label: 'E-mails et SMS', module: 'messages', icon: PaperPlaneTilt, end: true },
       { to: '/messages/modeles', label: 'Modèles de messages', module: 'messages', icon: Notebook }
@@ -78,6 +87,7 @@ const NAV: Section[] = [
   },
   {
     title: 'Comptabilité',
+    tone: 'teal',
     items: [
       { to: '/compta', label: 'Journaux & écritures', short: 'Compta', module: 'accounting', icon: BookOpen, end: true },
       { to: '/compta/grand-livre', label: 'Grand livre', module: 'accounting', icon: ListNumbers },
@@ -88,6 +98,7 @@ const NAV: Section[] = [
   },
   {
     title: 'Administration',
+    tone: 'slate',
     items: [
       { to: '/settings', label: 'Société & paramètres', module: 'settings', icon: Buildings },
       { to: '/users', label: 'Utilisateurs', module: 'users', icon: UserGear },
@@ -96,7 +107,18 @@ const NAV: Section[] = [
   }
 ]
 
-const ALL_ITEMS = NAV.flatMap((s) => s.items)
+const ALL_ITEMS = NAV.flatMap((s) => s.items.map((it) => ({ ...it, tone: it.tone ?? s.tone })))
+
+/** Correspondance entre une adresse et l'écran du menu (le plus précis l'emporte). */
+export function currentItem(pathname: string) {
+  const match = ALL_ITEMS.filter((it) => (it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(it.to + '/'))).sort((a, b) => b.to.length - a.to.length)[0]
+  if (match) return match
+  // Pages de détail : document, tiers… rattachées à leur section
+  if (pathname.startsWith('/doc/') || pathname.startsWith('/party/')) return { ...ALL_ITEMS.find((it) => it.to === '/docs/FAC')!, label: undefined }
+  if (pathname.startsWith('/caisse/session')) return ALL_ITEMS.find((it) => it.to === '/caisse/sessions')
+  if (pathname === '/account') return { to: '/account', label: 'Mon compte', module: 'dashboard' as Module, icon: UserCircle, tone: 'slate' as Tone }
+  return undefined
+}
 
 /** Onglets du bas sur téléphone : les écrans les plus fréquents du rôle, 4 au maximum + « Menu ». */
 const TAB_PRIORITY = ['/', '/caisse', '/docs/FAC', '/crm', '/rh', '/projets', '/clients', '/compta', '/docs/FF', '/stock', '/products', '/caisse/sessions', '/payments']
@@ -188,6 +210,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const [collapsed, toggleCollapsed] = useCollapsed()
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
+  useCountUpEnhancer(mainRef, location.pathname)
   const online = useOnline()
   const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module))
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
@@ -211,9 +234,8 @@ export function Layout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const current = ALL_ITEMS
-    .filter((it) => (it.end ? location.pathname === it.to : location.pathname.startsWith(it.to)))
-    .sort((a, b) => b.to.length - a.to.length)[0]
+  const current = currentItem(location.pathname)
+  const tone: Tone = current?.tone ?? 'blue'
 
   return (
     <div className={`app ${open ? 'nav-open' : ''} ${collapsed ? 'nav-collapsed' : ''}`}>
@@ -258,7 +280,9 @@ export function Layout({ children }: { children: ReactNode }) {
         />
         <main id="main" className="content" ref={mainRef} tabIndex={-1}>
           <OfflineBar online={online} remote={dbMode === 'remote'} />
-          <div className="route-view" key={location.pathname}>{children}</div>
+          <PageContext.Provider value={{ icon: current?.icon, tone, label: current?.label }}>
+            <div className="route-view" data-tone={tone} key={location.pathname}>{children}</div>
+          </PageContext.Provider>
         </main>
       </div>
       <nav className="tabbar" aria-label="Navigation rapide">
