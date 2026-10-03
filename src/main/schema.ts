@@ -589,5 +589,33 @@ export const MIGRATIONS: string[] = [
     ('812', 'Valeurs comptables des cessions d''immobilisations'),
     ('822', 'Produits des cessions d''immobilisations')
   ON CONFLICT (number) DO NOTHING
+  `,
+  // v5 : taxes de facturation (taxes additionnelles et retenues à la source)
+  `
+  CREATE TABLE taxes (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('addition','withholding')),
+    base TEXT NOT NULL CHECK (base IN ('ht','tva','ttc','fixed')),
+    rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+    amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+    account_sale TEXT NOT NULL DEFAULT '',
+    account_purchase TEXT NOT NULL DEFAULT '',
+    applies_to TEXT NOT NULL DEFAULT 'both' CHECK (applies_to IN ('sale','purchase','both')),
+    auto BOOLEAN NOT NULL DEFAULT false,
+    active BOOLEAN NOT NULL DEFAULT true,
+    position INT NOT NULL DEFAULT 0
+  );
+  ALTER TABLE documents ADD COLUMN taxes JSONB NOT NULL DEFAULT '[]';
+  ALTER TABLE documents ADD COLUMN total_taxes DOUBLE PRECISION NOT NULL DEFAULT 0;
+  ALTER TABLE documents ADD COLUMN total_withheld DOUBLE PRECISION NOT NULL DEFAULT 0;
+  ALTER TABLE payments ADD COLUMN tax_account TEXT;
+  INSERT INTO accounts (number, label) VALUES
+    ('447', 'État, impôts retenus à la source'),
+    ('449', 'État, créances et dettes diverses'),
+    ('645', 'Impôts et taxes indirects'),
+    ('646', 'Droits d''enregistrement')
+  ON CONFLICT (number) DO NOTHING
   `
 ]

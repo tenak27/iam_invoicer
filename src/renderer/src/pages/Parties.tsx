@@ -14,6 +14,8 @@ const LABELS = {
 }
 
 export function PartyList({ kind }: { kind: Kind }) {
+  const { company } = useSession()
+  const taxLabel = company.tax_id_label || 'NIF'
   const nav = useNavigate()
   const [search, setSearch] = useState('')
   const [inactive, setInactive] = useState(false)
@@ -37,7 +39,7 @@ export function PartyList({ kind }: { kind: Kind }) {
             <button className="btn" disabled={!rows.length} onClick={() => exportCsv(`${L.title}.csv`, [
               { label: 'Code', value: (r) => r.code }, { label: 'Nom', value: (r) => r.name }, { label: 'Contact', value: (r) => r.contact },
               { label: 'Téléphone', value: (r) => r.phone }, { label: 'Email', value: (r) => r.email }, { label: 'Ville', value: (r) => r.city },
-              { label: 'NIF', value: (r) => r.tax_id }, { label: 'RCCM', value: (r) => r.rccm }, { label: L.balance, value: (r) => r.balance }
+              { label: taxLabel, value: (r) => r.tax_id }, { label: 'RCCM', value: (r) => r.rccm }, { label: L.balance, value: (r) => r.balance }
             ], rows)}>Exporter (Excel)</button>
             <button className="btn btn-primary" onClick={() => setEditing({ kind })}>Nouveau {L.one}</button>
           </>
@@ -115,7 +117,7 @@ export function PartyForm({ party, onClose, onSaved }: { party: any; onClose: ()
         <Field label="Adresse" span={2}><textarea rows={2} {...f.bind('address')} /></Field>
         <Field label="Ville"><input {...f.bind('city')} /></Field>
         <div />
-        <Field label={company.tax_id_label || 'NIF'}><input {...f.bind('tax_id')} /></Field>
+        <Field label={`N° ${company.tax_id_label || 'NIF'}`}><input {...f.bind('tax_id')} /></Field>
         <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
         <Field label="Notes internes" span={2}><input {...f.bind('notes')} /></Field>
       </div>
@@ -127,6 +129,7 @@ export function PartyForm({ party, onClose, onSaved }: { party: any; onClose: ()
 }
 
 export function PartyDetail() {
+  const { company } = useSession()
   const { id } = useParams()
   const nav = useNavigate()
   const { data, error, loading, reload } = useQuery<any>('parties.get', { id: Number(id) })
@@ -156,7 +159,7 @@ export function PartyDetail() {
         <div className="kpi"><div className="kpi-label">{L.balance}</div><div className="kpi-value">{Math.round(party.balance).toLocaleString('fr-FR')} FCFA</div></div>
         <div className="kpi"><div className="kpi-label">Contact</div><div className="kpi-text">{party.contact || '—'}<br />{party.phone}<br />{party.email}</div></div>
         <div className="kpi"><div className="kpi-label">Adresse</div><div className="kpi-text pre">{[party.address, party.city].filter(Boolean).join('\n') || '—'}</div></div>
-        <div className="kpi"><div className="kpi-label">Fiscal</div><div className="kpi-text">NIF : {party.tax_id || '—'}<br />RCCM : {party.rccm || '—'}<br />Délai : {party.payment_terms} j</div></div>
+        <div className="kpi"><div className="kpi-label">Fiscal</div><div className="kpi-text">{company.tax_id_label || 'NIF'} : {party.tax_id || '—'}<br />RCCM : {party.rccm || '—'}<br />Délai : {party.payment_terms} j</div></div>
       </div>
       <div className="dash-grid two">
         <section className="card">

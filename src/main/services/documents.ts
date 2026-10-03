@@ -5,13 +5,15 @@
 // stock mis à jour) → éventuellement annulé. Les factures et avoirs validés ne
 // s'annulent pas : on corrige une facture par un avoir.
 
-import { computeTotals, DOC_TYPES, lineHT, type DocType, type LineInput } from '@shared/domain'
+import { DOC_TYPES, lineHT, type DocType, type LineInput } from '@shared/domain'
+import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } from '@shared/taxes'
+import { resolveTaxes } from './taxes'
 import { addDays, todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, num, str, type Ctx } from './context'
 import { getSettings } from './settings'
 import { applyStockMovement, lineLots, moveLots } from './stock'
-import { postDocument } from './accounting'
+import { postDocument, postPayment, removeSourceEntry } from './accounting'
 import { certify } from './secef'
 
 function checkType(type: string): asserts type is DocType {
@@ -90,7 +92,7 @@ function cleanLines(raw: any[]): (LineInput & { lot_refs: string })[] {
   return lines
 }
 
-async function writeLines(db: Db, docId: number, lines: (LineInput & { lot_refs?: string })[]) {
+async function writeLines(db: Db, docId: number, lines: (LineInput & { lot_refs?: string })[], taxes: Omit<TaxDef, 'auto' | 'active' | 'applies_to'>[]) {
   await db.query('DELETE FROM document_lines WHERE document_id = $1', [docId])
   let pos = 0
   for (const l of lines) {
@@ -100,8 +102,24 @@ async function writeLines(db: Db, docId: number, lines: (LineInput & { lot_refs?
       [docId, pos++, l.product_id, l.description, l.quantity, l.unit_price, l.discount, l.tva_rate, lineHT(l), l.lot_refs ?? '']
     )
   }
-  const t = computeTotals(lines)
-  await db.query('UPDATE documents SET total_ht=$1, total_tva=$2, total_ttc=$3, updated_at=now() WHERE id=$4', [t.ht, t.tva, t.ttc, docId])
+  const t = computeFullTotals(lines, taxes)
+  await db.query(
+    'UPDATE documents SET total_ht=$1, total_tva=$2, total_ttc=$3, total_taxes=$4, total_withheld=$5, taxes=$6, updated_at=now() WHERE id=$7',
+    [t.ht, t.tva, t.ttc, t.additions, t.withheld, JSON.stringify(t.taxes), docId]
+  )
+}
+
+/** Taxes d'un document : retenues à la source seulement sur les pièces réglées par un tiers (pas sur un avoir). */
+async function documentTaxes(db: Db, type: DocType, requested: unknown, existingId?: number) {
+  const side = DOC_TYPES[type].side === 'purchase' ? 'purchase' : 'sale'
+  let codes = requested
+  if (codes === undefined && existingId) {
+    // Modification sans changer les taxes : on garde celles du brouillon.
+    const row = await db.one<{ taxes: AppliedTax[] }>('SELECT taxes FROM documents WHERE id = $1', [existingId])
+    codes = (row?.taxes ?? []).map((t) => t.code)
+  }
+  const defs = await resolveTaxes(db, side, codes)
+  return type === 'AV' ? defs.filter((t) => t.kind !== 'withholding') : defs
 }
 
 /** Création ou modification d'un brouillon. */
@@ -142,7 +160,7 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
       id = row!.id
       await audit(db, ctx, 'creation', type, id)
     }
-    await writeLines(db, id, lines)
+    await writeLines(db, id, lines, await documentTaxes(db, type as DocType, input.taxes, input.id ? id : undefined))
     return { id }
   })
 }
@@ -157,6 +175,25 @@ export async function deleteDraft(ctx: Ctx, args: { id: number }) {
     await audit(db, ctx, 'suppression', doc.type, args.id)
     return true
   })
+}
+
+/**
+ * Retenues à la source d'une facture validée : le tiers verse le net et reverse la retenue à l'État.
+ * Chaque retenue est enregistrée comme un règlement « Retenue à la source » (compte de la taxe).
+ */
+async function recordWithholdings(db: Db, ctx: Ctx, docId: number) {
+  const doc = await db.one('SELECT id, type, number, date, party_id, taxes FROM documents WHERE id = $1', [docId])
+  if (!doc || (doc.type !== 'FAC' && doc.type !== 'FF')) return
+  const purchase = doc.type === 'FF'
+  for (const t of (doc.taxes ?? []) as AppliedTax[]) {
+    if (t.kind !== 'withholding' || t.value <= 0) continue
+    const row = await db.one<{ id: number }>(
+      `INSERT INTO payments (direction, party_id, document_id, date, amount, method, reference, note, user_id, tax_account)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+      [purchase ? 'out' : 'in', doc.party_id, doc.id, doc.date, t.value, WITHHOLDING_METHOD, t.code, t.label, ctx.user?.id ?? null, purchase ? t.account_purchase : t.account_sale]
+    )
+    await postPayment(db, ctx, row!.id)
+  }
 }
 
 /** Numéro suivant, atomique même avec plusieurs postes : FAC-2026-0001. */
@@ -225,6 +262,7 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
     )
     if (type === 'FAC' || type === 'AV') await certify(db, ctx, doc.id)
     await postDocument(db, ctx, doc.id)
+    await recordWithholdings(db, ctx, doc.id)
     await audit(db, ctx, 'validation', type, doc.id, number)
   })
   return loadDocument(ctx.db, args.id)
@@ -237,8 +275,14 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
     if (doc.status !== 'valide') fail('Seul un document validé peut être annulé.')
     if (doc.type === 'FAC' || doc.type === 'AV')
       fail('Une facture ou un avoir validé ne peut pas être annulé : établissez un avoir.')
-    const pay = await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM payments WHERE document_id = $1', [doc.id])
+    const pay = await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM payments WHERE document_id = $1 AND method <> $2', [doc.id, WITHHOLDING_METHOD])
     if (pay!.n > 0) fail("Supprimez d'abord les paiements liés à ce document.")
+    // Retenues à la source enregistrées automatiquement : annulées avec le document.
+    for (const r of await db.query<{ id: number }>('SELECT id FROM payments WHERE document_id = $1 AND method = $2', [doc.id, WITHHOLDING_METHOD])) {
+      await removeSourceEntry(db, 'payment', r.id)
+      await db.query('DELETE FROM payments WHERE id = $1', [r.id])
+    }
+    await removeSourceEntry(db, 'document', doc.id)
     const child = await db.one("SELECT number FROM documents WHERE source_id = $1 AND status = 'valide'", [doc.id])
     if (child) fail(`Ce document a été transformé en ${child.number} ; annulez d'abord ce dernier.`)
     if (doc.stock_applied) {
@@ -285,12 +329,13 @@ export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType 
     source_id: src.id,
     warehouse_id: src.warehouse_id,
     project_id: src.project_id,
-    lines: src.lines
+    lines: src.lines,
+    taxes: (src.taxes ?? []).map((t: AppliedTax) => t.code)
   })
 }
 
 /** Duplique n'importe quel document en nouveau brouillon du même type. */
 export async function duplicateDocument(ctx: Ctx, args: { id: number }) {
   const src = await loadDocument(ctx.db, args.id)
-  return saveDocument(ctx, { type: src.type, party_id: src.party_id, date: todayISO(), notes: src.notes, lines: src.lines })
+  return saveDocument(ctx, { type: src.type, party_id: src.party_id, date: todayISO(), notes: src.notes, lines: src.lines, taxes: (src.taxes ?? []).map((t: AppliedTax) => t.code) })
 }

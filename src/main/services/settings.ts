@@ -8,6 +8,8 @@ export interface CompanySettings {
   address: string
   city: string
   country: string
+  /** Code du profil pays (BF, CI, SN…), voir src/shared/countries.ts. */
+  country_code: string
   phone: string
   email: string
   website: string
@@ -66,12 +68,13 @@ export const SECRET_KEYS = ['smtp_password', 'sms_secret', 'secef_token'] as con
 export type SecretKey = (typeof SECRET_KEYS)[number]
 
 export const DEFAULT_SETTINGS: CompanySettings = {
-  name: 'IAM Technology',
+  name: '',
   legal_form: 'SARL',
   activity: '',
   address: '',
   city: 'Ouagadougou',
   country: 'Burkina Faso',
+  country_code: '',
   phone: '',
   email: '',
   website: '',

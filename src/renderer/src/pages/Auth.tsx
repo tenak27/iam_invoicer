@@ -3,14 +3,8 @@ import { run, unwrap } from '../api'
 import { Field, Modal, notify, useForm } from '../components/ui'
 import type { User } from '../session'
 import { BrandMark } from '../components/Layout'
-
-export const REGIMES = [
-  { value: '', label: '—' },
-  { value: 'RNI', label: 'RNI — Réel normal d’imposition' },
-  { value: 'RSI', label: 'RSI — Réel simplifié d’imposition' },
-  { value: 'CME', label: 'CME — Contribution des micro-entreprises' }
-]
-export const TAX_ID_LABELS = ['IFU', 'NIF', 'NINEA', 'NCC']
+import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
+import { countryDefaults, countryProfile, DEFAULT_COUNTRY } from '@shared/countries'
 const isDesktop = () => window.erp.kind === 'desktop'
 
 function AuthCard(props: { title: string; subtitle?: string; children: React.ReactNode; wide?: boolean }) {
@@ -70,19 +64,17 @@ export function LoginScreen({ onLogin, dbMode, serverUrl }: { onLogin: (u: User)
 }
 
 export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
-  const f = useForm({
-    name: 'IAM Technology',
+  const f = useForm<any>({
+    name: '',
     legal_form: 'SARL',
     address: '',
-    city: 'Ouagadougou',
-    country: 'Burkina Faso',
     phone: '',
     email: '',
+    logo: '',
     rccm: '',
-    tax_id_label: 'IFU',
     tax_id: '',
-    regime_fiscal: '',
     division_fiscale: '',
+    ...countryDefaults(countryProfile(DEFAULT_COUNTRY)),
     full_name: '',
     username: 'admin',
     password: '',
@@ -96,7 +88,7 @@ export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
     setBusy(true)
     const { full_name, username, password, password2: _, ...company } = v
     const user = await run(
-      () => unwrap<User>(window.erp.setup({ company: { ...company, currency: 'FCFA', default_tva: 18 }, full_name, username, password })),
+      () => unwrap<User>(window.erp.setup({ company: { ...company, default_tva: Number(String(company.default_tva).replace(',', '.')) || 0 }, full_name, username, password })),
       'Configuration terminée. Bienvenue !'
     )
     setBusy(false)
@@ -106,25 +98,23 @@ export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
     <AuthCard title="Bienvenue dans IAM INVOICER" subtitle="Première configuration : votre société et le compte administrateur" wide>
       <form onSubmit={submit}>
         <h3 className="section-title">Société</h3>
-        <div className="grid grid-4">
-          <Field label="Raison sociale" span={2}><input required {...f.bind('name')} /></Field>
-          <Field label="Forme juridique"><input {...f.bind('legal_form')} placeholder="SARL, SA, SUARL…" /></Field>
-          <Field label="Téléphone"><input {...f.bind('phone')} /></Field>
-          <Field label="Adresse" span={2}><input {...f.bind('address')} /></Field>
-          <Field label="Ville"><input {...f.bind('city')} /></Field>
-          <Field label="Pays"><input {...f.bind('country')} /></Field>
-          <Field label="Email"><input type="email" {...f.bind('email')} /></Field>
-          <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
-          <Field label="Identifiant fiscal">
-            <select {...f.bind('tax_id_label')}>{TAX_ID_LABELS.map((l) => <option key={l}>{l}</option>)}</select>
-          </Field>
-          <Field label={`N° ${v.tax_id_label}`}><input {...f.bind('tax_id')} /></Field>
-          <Field label="Régime fiscal" span={2}>
-            <select {...f.bind('regime_fiscal')}>{REGIMES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select>
-          </Field>
-          <Field label="Service des impôts" span={2}><input {...f.bind('division_fiscale')} placeholder="DGE, DME Centre, CME Ouaga…" /></Field>
+        <div className="setup-identity">
+          <ImagePicker value={v.logo} onChange={(img) => f.set('logo', img)} label="Logo de la société" hint="Votre logo sur les factures, devis et tickets" />
+          <div className="grid grid-4">
+            <Field label="Raison sociale" span={2}><input required {...f.bind('name')} placeholder="Nom de votre société" /></Field>
+            <Field label="Forme juridique"><input {...f.bind('legal_form')} placeholder="SARL, SA, SUARL…" /></Field>
+            <Field label="Téléphone"><input {...f.bind('phone')} /></Field>
+            <CountryField f={f} />
+            <Field label="Ville"><input {...f.bind('city')} /></Field>
+            <Field label="Adresse" span={2}><input {...f.bind('address')} /></Field>
+            <Field label="Email" span={2}><input type="email" {...f.bind('email')} /></Field>
+          </div>
         </div>
-        <p className="muted small">Logo, banque et autres informations pourront être complétés ensuite dans « Société & paramètres ».</p>
+        <h3 className="section-title">Mentions légales et fiscalité</h3>
+        <div className="grid grid-4">
+          <FiscalFields f={f} />
+        </div>
+        <p className="muted small">Banque, cachet, signature et modèles de documents se complètent ensuite dans « Société & paramètres ».</p>
         <h3 className="section-title">Compte administrateur</h3>
         <div className="grid grid-4">
           <Field label="Nom complet"><input required {...f.bind('full_name')} /></Field>

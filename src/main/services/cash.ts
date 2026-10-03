@@ -110,7 +110,8 @@ export async function sale(
       date: todayISO(),
       due_date: todayISO(),
       notes: str(input.notes) || 'Vente au comptoir',
-      lines: input.lines
+      lines: input.lines,
+      taxes: []
     })
     const doc = await validateDocument(c, { id })
     const pays = (input.payments ?? [])

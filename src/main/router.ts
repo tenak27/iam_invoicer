@@ -21,6 +21,7 @@ import * as crm from './services/crm'
 import * as projects from './services/projects'
 import * as assets from './services/assets'
 import * as budget from './services/budget'
+import * as taxes from './services/taxes'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -52,6 +53,10 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
+  'taxes.list': { access: 'user', fn: taxes.listTaxes },
+  'taxes.save': { access: 'settings', fn: taxes.saveTax },
+  'taxes.delete': { access: 'settings', fn: taxes.deleteTax },
+  'taxes.importPresets': { access: 'settings', fn: taxes.importTaxPresets },
 
   'parties.list': { access: async (_c, a) => partyModule(a), fn: parties.listParties },
   'parties.get': {

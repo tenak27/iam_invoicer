@@ -5,7 +5,9 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
 import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
-import { DbConfigForm, REGIMES, TAX_ID_LABELS } from './Auth'
+import { DbConfigForm } from './Auth'
+import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
+import { TaxSettings } from '../components/TaxSettings'
 import { useSession } from '../session'
 
 const MODULE_LABELS: Record<string, string> = {
@@ -21,7 +23,7 @@ const DATA_TEXT: Record<DataMode, string> = {
   remote: 'serveur en ligne'
 }
 
-type SettingsTab = 'societe' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees'
+type SettingsTab = 'societe' | 'taxes' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees'
 
 const DOC_COLORS = ['#1d6fd6', '#0b4f8a', '#178a55', '#7367f0', '#c2410c', '#be123c', '#33303f']
 
@@ -46,7 +48,7 @@ export function CompanySettingsPage() {
   const v = f.values
   const save = async () => {
     const r = await run(async () => {
-      await api('settings.save', { ...v, default_tva: Number(v.default_tva), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
+      await api('settings.save', { ...v, default_tva: Number(String(v.default_tva).replace(',', '.')), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
       const sec: any = {}
       if (smtpPassword) sec.smtp_password = smtpPassword
       if (smsSecret) sec.sms_secret = smsSecret
@@ -87,6 +89,7 @@ export function CompanySettingsPage() {
       <PageHeader title="Société & paramètres" subtitle="Identité, modèles de documents, messagerie et SMS." actions={<button className="btn btn-primary" onClick={save}>Enregistrer</button>} />
       <Tabs value={tab} onChange={setTab} tabs={[
         { value: 'societe', label: 'Société' },
+        { value: 'taxes', label: 'Taxes' },
         { value: 'documents', label: 'Documents & signature' },
         { value: 'mail', label: 'Messagerie' },
         { value: 'sms', label: 'SMS' },
@@ -99,13 +102,7 @@ export function CompanySettingsPage() {
           <div className="card">
             <h3>Identité</h3>
             <div className="grid grid-4">
-              <div className="field span-1 logo-field">
-                <span className="field-label">Logo</span>
-                <div className="logo-box" onClick={() => pick('logo')} role="button" tabIndex={0}>
-                  {v.logo ? <img src={v.logo} alt="Logo" /> : <span className="muted small">Cliquer pour choisir</span>}
-                </div>
-                {v.logo && <button className="link-btn danger small" onClick={() => f.set('logo', '')}>Retirer</button>}
-              </div>
+              <div className="span-1"><ImagePicker value={v.logo} onChange={(img) => f.set('logo', img)} label="Logo" /></div>
               <div className="span-3 grid grid-3">
                 <Field label="Raison sociale"><input {...f.bind('name')} /></Field>
                 <Field label="Forme juridique"><input {...f.bind('legal_form')} /></Field>
@@ -114,7 +111,7 @@ export function CompanySettingsPage() {
               </div>
               <Field label="Adresse" span={2}><textarea rows={2} {...f.bind('address')} /></Field>
               <Field label="Ville"><input {...f.bind('city')} /></Field>
-              <Field label="Pays"><input {...f.bind('country')} /></Field>
+              <CountryField f={f} />
               <Field label="Téléphone"><input type="tel" {...f.bind('phone')} /></Field>
               <Field label="Email"><input type="email" {...f.bind('email')} /></Field>
               <Field label="Site web" span={2}><input {...f.bind('website')} /></Field>
@@ -123,15 +120,7 @@ export function CompanySettingsPage() {
           <div className="card">
             <h3>Mentions légales & banque</h3>
             <div className="grid grid-4">
-              <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
-              <Field label="Libellé identifiant fiscal">
-                <select {...f.bind('tax_id_label')}>{TAX_ID_LABELS.map((l) => <option key={l}>{l}</option>)}</select>
-              </Field>
-              <Field label={`N° ${v.tax_id_label ?? 'IFU'}`} span={2}><input {...f.bind('tax_id')} /></Field>
-              <Field label="Régime fiscal" span={2}>
-                <select {...f.bind('regime_fiscal')}>{REGIMES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select>
-              </Field>
-              <Field label="Service des impôts de rattachement" span={2}><input {...f.bind('division_fiscale')} placeholder="DGE, DME Centre, CME Ouaga…" /></Field>
+              <FiscalFields f={f} />
               <Field label="Banque"><input {...f.bind('bank_name')} /></Field>
               <Field label="RIB / IBAN" span={3}><input {...f.bind('bank_account')} /></Field>
             </div>
@@ -139,9 +128,7 @@ export function CompanySettingsPage() {
           <div className="card">
             <h3>Règles de gestion</h3>
             <div className="grid grid-4">
-              <Field label="TVA par défaut (%)"><input inputMode="decimal" {...f.bind('default_tva')} /></Field>
               <Field label="Délai de paiement par défaut (jours)"><input inputMode="numeric" {...f.bind('payment_terms')} /></Field>
-              <Field label="Devise"><input {...f.bind('currency')} /></Field>
               <label className="inline check" style={{ alignSelf: 'end' }}>
                 <input type="checkbox" checked={!!v.allow_negative_stock} onChange={(e) => f.set('allow_negative_stock', e.target.checked)} /> Autoriser le stock négatif
               </label>
@@ -270,6 +257,8 @@ export function CompanySettingsPage() {
           </div>
         </div>
       )}
+
+      {tab === 'taxes' && <div className="tab-panel" key="taxes"><TaxSettings /></div>}
 
       {tab === 'secef' && (
         <div className="tab-panel" key="secef">

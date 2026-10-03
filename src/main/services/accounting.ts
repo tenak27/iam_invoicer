@@ -6,6 +6,7 @@
 // diverses sont saisies à la main dans le journal OD.
 
 import { JOURNALS, treasuryFor, type DocType } from '@shared/domain'
+import { WITHHOLDING_METHOD } from '@shared/taxes'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, num, str, type Ctx } from './context'
@@ -86,7 +87,7 @@ async function hasEntry(db: Db, source: string, sourceId: number): Promise<boole
 /** Écriture d'une facture, d'un avoir ou d'une facture fournisseur validés. */
 export async function postDocument(db: Db, ctx: Ctx, docId: number): Promise<void> {
   const doc = await db.one(
-    `SELECT d.id, d.type, d.number, d.date, d.party_id, d.total_ht, d.total_tva, d.total_ttc, d.status, p.name AS party_name
+    `SELECT d.id, d.type, d.number, d.date, d.party_id, d.total_ht, d.total_tva, d.total_ttc, d.taxes, d.status, p.name AS party_name
      FROM documents d JOIN parties p ON p.id = d.party_id WHERE d.id = $1`,
     [docId]
   )
@@ -103,10 +104,13 @@ export async function postDocument(db: Db, ctx: Ctx, docId: number): Promise<voi
     [docId]
   )
   const label = `${doc.number} ${doc.party_name}`
+  // Taxes additionnelles (droit de timbre…) comprises dans le TTC.
+  const additions = ((doc.taxes ?? []) as { kind: string; value: number; account_sale: string; account_purchase: string }[]).filter((t) => t.kind === 'addition' && t.value > 0)
   const lines: EntryLine[] = []
   if (type === 'FF') {
     for (const s of split) lines.push({ account: s.service ? '605' : '601', debit: s.ht })
     lines.push({ account: '4452', debit: doc.total_tva })
+    for (const t of additions) lines.push({ account: t.account_purchase, debit: t.value })
     lines.push({ account: '401', party_id: doc.party_id, credit: doc.total_ttc })
   } else {
     const sign = type === 'FAC' ? 1 : -1
@@ -115,6 +119,7 @@ export async function postDocument(db: Db, ctx: Ctx, docId: number): Promise<voi
     lines.push({ account: '411', party_id: doc.party_id, ...side(doc.total_ttc) })
     for (const s of split) lines.push({ account: s.service ? '706' : '701', ...side(-s.ht) })
     lines.push({ account: '4431', ...side(-doc.total_tva) })
+    for (const t of additions) lines.push({ account: t.account_sale, ...side(-t.value) })
   }
   await postEntry(db, ctx, { journal: type === 'FF' ? 'AC' : 'VT', date: doc.date, label, source: 'document', source_id: docId, lines })
 }
@@ -129,7 +134,8 @@ export async function postPayment(db: Db, ctx: Ctx, paymentId: number): Promise<
     [paymentId]
   )
   if (!p) return
-  const { account, journal } = treasuryFor(p.method)
+  // Retenue à la source : compte de la taxe au lieu d'un compte de trésorerie.
+  const { account, journal } = p.method === WITHHOLDING_METHOD && p.tax_account ? { account: p.tax_account as string, journal: 'OD' as const } : treasuryFor(p.method)
   const third = p.party_kind === 'supplier' ? '401' : '411'
   const label = `Règlement ${p.document_number ?? ''} ${p.party_name}`.replace(/\s+/g, ' ')
   const lines: EntryLine[] =

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { api } from './api'
+import { setDefaultCurrency } from '@shared/format'
+import { countryProfile } from '@shared/countries'
 import { ConfirmHost, Loading, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
@@ -37,7 +39,9 @@ export default function App() {
   const [company, setCompany] = useState<Session['company'] | null>(null)
 
   const refreshCompany = useCallback(async () => {
-    setCompany(await api('settings.get'))
+    const c = await api<any>('settings.get')
+    setDefaultCurrency(c.currency, countryProfile(c.country_code, c.country).currencyWords)
+    setCompany(c)
   }, [])
 
   const boot = useCallback(async () => {

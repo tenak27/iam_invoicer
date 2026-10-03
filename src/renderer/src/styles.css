@@ -1250,3 +1250,26 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .sync-stat.warn { background: var(--amber-soft); color: var(--amber); }
 .sync-stat.down { background: rgba(196, 58, 61, .12); color: var(--red); }
 .warn-box { background: var(--amber-soft); color: var(--amber); margin-bottom: 12px; }
+
+/* Configuration de la société : logo à côté de l'identité, note sur les valeurs du pays */
+.setup-identity { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px; align-items: start; }
+.setup-identity .logo-box { height: 150px; }
+.logo-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; text-align: center; color: var(--tone-ink, var(--link)); }
+.country-note { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 10px 12px; border-radius: var(--r-md); background: var(--amber-soft); color: var(--amber); font-size: 13px; grid-column: 1 / -1; }
+.country-note svg { flex-shrink: 0; margin-top: 2px; }
+@media (max-width: 760px) {
+  .setup-identity { grid-template-columns: 1fr; }
+  .setup-identity .logo-box { height: 120px; max-width: 220px; }
+}
+
+/* Taxes et retenues d'un document */
+.tax-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 4px; }
+.tax-picker .field-label { width: 100%; margin: 0; }
+.tax-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-2); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast) var(--ease-spring); }
+.tax-chip:hover { transform: translateY(-1px); border-color: var(--tone-b, var(--c-primary)); }
+.tax-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; transition: background var(--t-fast); }
+.tax-chip.on { background: var(--tone-soft, rgba(var(--primary-rgb), .1)); border-color: var(--tone-b, var(--c-primary)); color: var(--tone-ink, var(--link)); font-weight: 600; }
+.tax-chip.on .tax-dot { background: currentColor; }
+.tax-chip.withholding.on { background: var(--amber-soft); border-color: var(--c-warning); color: var(--amber); }
+.totals tr.withheld td { color: var(--amber); }
+.space-between { justify-content: space-between; }

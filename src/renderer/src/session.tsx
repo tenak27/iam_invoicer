@@ -10,7 +10,7 @@ export interface User {
 
 export interface Session {
   user: User
-  company: { name: string; currency: string; default_tva: number; tax_id_label: string; logo: string }
+  company: { name: string; currency: string; default_tva: number; tax_id_label: string; logo: string; country?: string; country_code?: string }
   dbMode: DataMode
   /** Adresse du serveur IAM INVOICER quand les données sont sur un domaine. */
   serverUrl: string | null

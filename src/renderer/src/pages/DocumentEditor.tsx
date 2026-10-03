@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { computeTotals, DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
+import { DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
+import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
@@ -57,7 +58,23 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const [msgKey, setMsgKey] = useState(0)
   const canMessages = useCan('messages')
 
-  const totals = useMemo(() => computeTotals(lines.filter((l) => l.description)), [lines])
+  // Taxes du document : choisies sur un brouillon, figées une fois validé.
+  const taxDefs = useQuery<TaxDef[]>('taxes.list', { activeOnly: true, side: info.side === 'purchase' ? 'purchase' : 'sale' })
+  const availableTaxes = (taxDefs.data ?? []).filter((t) => type !== 'AV' || t.kind !== 'withholding')
+  const [taxCodes, setTaxCodes] = useState<string[] | null>(doc ? ((doc.taxes ?? []) as AppliedTax[]).map((t) => t.code) : null)
+  const chosenCodes = taxCodes ?? availableTaxes.filter((t) => t.auto && t.kind === 'addition').map((t) => t.code)
+  const toggleTax = (code: string) => {
+    setTaxCodes(chosenCodes.includes(code) ? chosenCodes.filter((c) => c !== code) : [...chosenCodes, code])
+    setDirty(true)
+  }
+  const totals = useMemo(
+    () => computeFullTotals(
+      lines.filter((l) => l.description),
+      editable ? availableTaxes.filter((t) => chosenCodes.includes(t.code)) : ((doc?.taxes ?? []) as AppliedTax[])
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lines, taxDefs.data, chosenCodes.join(','), editable]
+  )
   const trackingOf = (l: Line) => l.tracking ?? products.data?.find((x) => x.id === l.product_id)?.tracking ?? 'aucun'
 
   const setH = (k: keyof typeof header, v: string) => {
@@ -93,7 +110,8 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         warehouse_id: Number(header.warehouse_id) || 1,
         project_id: Number(header.project_id) || null,
         source_id: doc?.source_id ?? null,
-        lines: lines.map(({ key: _k, ...l }) => l)
+        lines: lines.map(({ key: _k, ...l }) => l),
+        taxes: chosenCodes
       })
     )
     setBusy(false)
@@ -330,6 +348,20 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           <button className="btn btn-sm add-line" onClick={() => setLines((ls) => [...ls, emptyLine(company.default_tva)])}>+ Ajouter une ligne</button>
         )}
 
+        {editable && availableTaxes.length > 0 && (
+          <div className="tax-picker" role="group" aria-label="Taxes et retenues">
+            <span className="field-label">Taxes et retenues</span>
+            {availableTaxes.map((t) => {
+              const on = chosenCodes.includes(t.code)
+              return (
+                <button key={t.code} type="button" className={`tax-chip ${t.kind} ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => toggleTax(t.code)}>
+                  <span className="tax-dot" aria-hidden="true" />{taxCaption(t)}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         <div className="doc-totals">
           <div className="words muted">{totals.ttc > 0 && info.side === 'sale' && <>Arrêté à la somme de : <em>{amountInWords(totals.ttc)}</em></>}</div>
           <table className="totals">
@@ -338,7 +370,14 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
               {totals.byRate.filter((r) => r.rate > 0).map((r) => (
                 <tr key={r.rate}><td>TVA {formatNumber(r.rate)} %</td><td><Money value={r.tva} /></td></tr>
               ))}
-              <tr className="grand"><td>Total TTC</td><td><Money value={totals.ttc} /></td></tr>
+              {totals.taxes.filter((t) => t.kind === 'addition' && t.value > 0).map((t) => (
+                <tr key={t.code}><td>{t.label}</td><td><Money value={t.value} /></td></tr>
+              ))}
+              <tr className={totals.withheld > 0 ? 'strong' : 'grand'}><td>Total TTC</td><td><Money value={totals.ttc} /></td></tr>
+              {totals.taxes.filter((t) => t.kind === 'withholding' && t.value > 0).map((t) => (
+                <tr key={t.code} className="withheld"><td>− {taxCaption(t)}</td><td><Money value={-t.value} /></td></tr>
+              ))}
+              {totals.withheld > 0 && <tr className="grand"><td>Net à payer</td><td><Money value={totals.net} /></td></tr>}
               {doc && info.payable && doc.status === 'valide' && (
                 <>
                   <tr><td>Déjà réglé</td><td><Money value={doc.paid} /></td></tr>

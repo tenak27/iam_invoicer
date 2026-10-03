@@ -7,7 +7,15 @@ export function formatNumber(n: number, decimals = 0): string {
   return (n < 0 ? '-' : '') + grouped + (dec ? ',' + dec : '')
 }
 
-export function formatMoney(n: number, currency = 'FCFA'): string {
+/** Devise par défaut des montants affichés (celle de la société). */
+let defaultCurrency = 'FCFA'
+let defaultCurrencyWords = 'francs CFA'
+export function setDefaultCurrency(currency: string, words?: string): void {
+  defaultCurrency = currency || 'FCFA'
+  defaultCurrencyWords = words || (defaultCurrency === 'FCFA' ? 'francs CFA' : defaultCurrency)
+}
+
+export function formatMoney(n: number, currency = defaultCurrency): string {
   return `${formatNumber(Math.round(n))} ${currency}`
 }
 
@@ -84,7 +92,7 @@ function below1000Big(n: number): string {
   return n < 1000 ? below1000(n) : numberToFrenchWords(n)
 }
 
-export function amountInWords(n: number, currency = 'francs CFA'): string {
+export function amountInWords(n: number, currency = defaultCurrencyWords): string {
   const words = numberToFrenchWords(n)
   return words.charAt(0).toUpperCase() + words.slice(1) + ' ' + currency
 }

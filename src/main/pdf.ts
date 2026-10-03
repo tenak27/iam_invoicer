@@ -1,6 +1,8 @@
 // Mise en page HTML des documents imprimables (convertie en PDF par Electron).
 
 import { DOC_TYPES, type DocType } from '@shared/domain'
+import { countryProfile } from '../shared/countries'
+import { taxCaption, type AppliedTax } from '../shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import type { CompanySettings } from './services/settings'
 import { qrSvg } from './services/secef'
@@ -73,6 +75,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
 
   const partyLabel = info.side === 'sale' ? (type === 'DEV' ? 'Client' : 'Facturé à') : 'Fournisseur'
   const remaining = doc.total_ttc - (doc.paid ?? 0)
+  // Taxes du document ; les retenues à la source sont enregistrées comme règlements à la validation.
+  const applied = (doc.taxes ?? []) as AppliedTax[]
+  const cashPaid = Math.max(0, (doc.paid ?? 0) - (doc.status === 'valide' ? doc.total_withheld ?? 0 : 0))
 
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>${esc(doc.number ?? info.label)}</title>
@@ -106,6 +111,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   .totals { border-collapse: collapse; min-width: 44%; }
   .totals td { padding: 4px 8px; }
   .totals td:last-child { text-align: right; white-space: nowrap; }
+  .totals .strong td { font-weight: 700; }
+  .totals .withheld td { color: #9a4306; }
   .totals .grand td { background: ${modern ? c : '#33303f'}; color: #fff; font-weight: 700; font-size: 11pt; }
   .words { margin-top: 16px; padding: 8px 12px; background: #f6f8fb; border-left: 3px solid ${c}; page-break-inside: avoid; }
   .notes { flex: 1; }
@@ -181,11 +188,14 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
     <table class="totals">
       <tr><td>Total HT</td><td>${money(doc.total_ht)}</td></tr>
       ${tvaRows}
-      <tr class="grand"><td>Total TTC</td><td>${money(doc.total_ttc)}</td></tr>
-      ${info.payable && doc.paid > 0 ? `<tr><td>Déjà réglé</td><td>${money(doc.paid)}</td></tr><tr><td><strong>Reste à payer</strong></td><td><strong>${money(remaining)}</strong></td></tr>` : ''}
+      ${applied.filter((t) => t.kind === 'addition' && t.value > 0).map((t) => `<tr><td>${esc(t.label)}</td><td>${money(t.value)}</td></tr>`).join('')}
+      <tr class="${doc.total_withheld > 0 ? 'strong' : 'grand'}"><td>Total TTC</td><td>${money(doc.total_ttc)}</td></tr>
+      ${applied.filter((t) => t.kind === 'withholding' && t.value > 0).map((t) => `<tr class="withheld"><td>− ${esc(taxCaption(t))}</td><td>− ${money(t.value)}</td></tr>`).join('')}
+      ${doc.total_withheld > 0 ? `<tr class="grand"><td>Net à payer</td><td>${money(doc.total_ttc - doc.total_withheld)}</td></tr>` : ''}
+      ${info.payable && cashPaid > 0 ? `<tr><td>Déjà réglé</td><td>${money(cashPaid)}</td></tr><tr><td><strong>Reste à payer</strong></td><td><strong>${money(remaining)}</strong></td></tr>` : ''}
     </table>
   </div>
-  <div class="words">Arrêté${type === 'FAC' || type === 'FF' ? 'e' : ''} ${type === 'DEV' ? 'le présent devis' : type === 'BC' ? 'le présent bon de commande' : type === 'AV' ? 'le présent avoir' : 'la présente facture'} à la somme de : <strong>${esc(amountInWords(doc.total_ttc))}</strong> TTC.</div>
+  <div class="words">Arrêté${type === 'FAC' || type === 'FF' ? 'e' : ''} ${type === 'DEV' ? 'le présent devis' : type === 'BC' ? 'le présent bon de commande' : type === 'AV' ? 'le présent avoir' : 'la présente facture'} à la somme de : <strong>${esc(amountInWords(doc.total_ttc, countryProfile(company.country_code, company.country).currencyWords))}</strong> TTC.</div>
   ` : doc.notes ? `<div class="muted" style="margin-top:14px"><strong>Observations</strong><br>${nl2br(doc.notes)}</div>` : ''}
 
   ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours. Bon pour accord : date, signature et cachet du client.</p>' : ''}
