@@ -1,0 +1,166 @@
+<p align="center"><img src="resources/logo.svg" alt="IAM INVOICER" width="520"></p>
+
+# IAM INVOICER
+
+Logiciel de facturation, de caisse, de stock et de comptabilité SYSCOHADA d'IAM Technology, adapté au Burkina Faso.
+Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes les versions partagent les mêmes données grâce à un serveur installé sur votre nom de domaine.
+
+## Fonctionnalités
+
+| Module | Contenu |
+|---|---|
+| Ventes | Devis → bon de livraison → facture → avoir, numérotation automatique `FAC-2026-0001`, PDF avec montant en lettres |
+| Caisse | Point de vente tactile et lecteur de codes-barres, ouverture et clôture de caisse par caissier, paiement en espèces, Orange Money, Moov Money ou Wave (y compris paiement mixte), rendu de monnaie, entrées et sorties d'espèces, écart de caisse, ticket 80 mm |
+| Achats | Bon de commande → bon de réception (entrée en stock) → facture fournisseur |
+| Stock | Mouvements automatiques, coût moyen pondéré (CMUP), inventaire, alertes de seuil |
+| Paiements | Encaissements et décaissements partiels, soldes clients et fournisseurs |
+| Comptabilité | SYSCOHADA révisé : écritures générées automatiquement (ventes, achats, règlements, caisse), opérations diverses, journaux, grand livre, balance, compte de résultat, plan comptable modifiable, exports Excel |
+| Rapports | CA par mois, client et article avec marges, TVA collectée et déductible |
+| Administration | Société, IFU, RCCM, régime fiscal (RNI, RSI, CME), service des impôts, logo, utilisateurs et rôles, journal d'activité, sauvegarde |
+
+### Adaptation au Burkina Faso
+
+- Valeurs par défaut : Burkina Faso, Ouagadougou, **IFU**, FCFA, TVA 18 %.
+- Le régime fiscal (RNI, RSI, CME) et le service des impôts de rattachement apparaissent dans les mentions légales des documents.
+- Moyens de paiement : espèces, Orange Money, Moov Money, Wave, virement, chèque et carte. Le mobile money est comptabilisé au compte 552 (monnaie électronique), les espèces au 571, la banque au 521.
+
+### Écritures comptables automatiques
+
+| Pièce | Débit | Crédit | Journal |
+|---|---|---|---|
+| Facture client | 411 Clients (TTC) | 701 Marchandises / 706 Services (HT), 4431 TVA facturée | VT |
+| Avoir | inverse de la facture | | VT |
+| Facture fournisseur | 601 Marchandises / 605 Autres achats (HT), 4452 TVA récupérable | 401 Fournisseurs (TTC) | AC |
+| Encaissement | 571 / 552 / 521 | 411 | CA / MM / BQ |
+| Décaissement | 401 (ou 411 si remboursement d'avoir) | 571 / 552 / 521 | CA / MM / BQ |
+| Sortie de caisse | compte de charge choisi (618, 6053…) | 571 | CA |
+| Écart de caisse | 658 (manquant) ou 571 (excédent) | 571 ou 758 | CA |
+
+Les pièces validées avant l'activation de la comptabilité peuvent être comptabilisées en un clic : **Comptabilité → Journaux & écritures → Générer les écritures**.
+
+### Règles de gestion
+
+- Un document est d'abord un **brouillon** (modifiable, sans numéro). À la **validation**, il reçoit un numéro définitif et continu par type et par année, le stock est mis à jour et l'écriture comptable est passée.
+- Une facture validée ne s'annule pas : on établit un **avoir**.
+- Une vente au **client comptoir** doit être réglée en totalité. Pour une vente à crédit, il faut choisir le client.
+- Une caisse ne peut être clôturée avec un écart que si l'écart est expliqué. Les règlements d'une caisse clôturée ne peuvent plus être supprimés.
+
+### Rôles
+
+| Rôle | Accès |
+|---|---|
+| Administrateur | Tout |
+| Commercial | Ventes, caisse, clients, articles, paiements |
+| Magasinier | Achats, stock, fournisseurs, articles |
+| Comptable | Ventes, achats, paiements, tiers, rapports, comptabilité |
+| Caissier | Caisse uniquement (ses propres sessions) |
+
+## Où sont les données ?
+
+L'emplacement se choisit à l'écran de connexion, sous **Base de données … — modifier** :
+
+| Mode | Pour qui | Synchronisation |
+|---|---|---|
+| **Ce poste uniquement** | Un seul ordinateur | Aucune |
+| **Serveur en ligne (domaine)** | Plusieurs sites, ordinateurs, téléphones et tablettes | Oui, en temps réel par Internet |
+| **Serveur du bureau** | Plusieurs postes dans les mêmes locaux | Oui, par le réseau local |
+
+Les applications Android et iOS, ainsi que la version navigateur, se connectent toujours à un **serveur en ligne**.
+
+> Le mode en ligne demande une connexion Internet. Sans connexion, on ne peut ni consulter ni saisir de données. Il n'y a pas encore de mode hors ligne avec synchronisation différée.
+
+## Mettre en ligne le serveur sur votre domaine
+
+Il vous faut un serveur Linux (VPS, 1 Go de mémoire suffit) avec Docker, et un nom de domaine, par exemple `facturation.iam.bf`.
+
+1. Chez votre registraire, créez un enregistrement DNS **A** qui pointe `facturation.iam.bf` vers l'adresse IP du serveur.
+2. Sur le serveur :
+   ```bash
+   git clone <votre dépôt> iam-invoicer && cd iam-invoicer
+   cp deploy/.env.example deploy/.env      # renseignez DOMAIN et DB_PASSWORD
+   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+   ```
+   Caddy obtient automatiquement le certificat HTTPS.
+3. Ouvrez `https://facturation.iam.bf`. La première visite affiche la configuration initiale (société et compte administrateur).
+4. Sur chaque appareil, renseignez l'adresse `facturation.iam.bf` :
+   - sur ordinateur, à l'écran de connexion, sous **Serveur en ligne (domaine)** ;
+   - sur téléphone, au premier lancement de l'application.
+5. Mettez en place les sauvegardes quotidiennes avec cron : `0 2 * * * /chemin/iam-invoicer/deploy/backup.sh`. Les fichiers sont dans `deploy/backups/` ; copiez-les régulièrement hors du serveur.
+
+Si vous migrez depuis le mode « Ce poste », saisissez à nouveau les fiches ou demandez une reprise de données. Le transfert automatique d'une base locale vers le serveur n'existe pas encore.
+
+**Sans Docker**, il faut Node.js 20 ou plus récent :
+
+```bash
+npm ci && npm run build:all-server
+DATABASE_URL=postgres://iam:motdepasse@localhost:5432/iam_invoicer PORT=8080 npm run server
+```
+
+Variables : `PORT`, `HOST`, `DATABASE_URL` (sinon base intégrée dans `DATA_DIR`), `CORS_ORIGIN`, `DB_POOL_SIZE`. Placez un proxy HTTPS (Caddy ou nginx) devant le port 8080.
+
+**Sécurité :** mots de passe chiffrés avec scrypt, jetons de connexion valables 30 jours et révoqués à la déconnexion ou à la désactivation du compte, blocage après 10 mots de passe erronés, liens d'impression à usage unique. Le serveur doit être exposé **uniquement en HTTPS**.
+
+## Fabriquer les applications
+
+| Plateforme | Commande | Où |
+|---|---|---|
+| Windows (.exe) | `npm run dist:win` | Windows |
+| macOS (.dmg, Intel et Apple Silicon) | `npm run dist:mac` | Mac |
+| Android (.apk ou .aab) | `npm run android` (ouvre Android Studio) | Android Studio + JDK 21 |
+| iOS (App Store / TestFlight) | `npm run ios` (ouvre Xcode) | Mac + Xcode |
+| Serveur + application web | `npm run build:all-server` | partout |
+
+**Sans Mac ni Android Studio**, utilisez GitHub. Le workflow `.github/workflows/build.yml` fabrique le .exe, le .dmg et l'APK Android, et vérifie que la version iOS compile. Il se lance à chaque tag `v*` ou depuis **Actions → build → Run workflow**. Les fichiers sont à télécharger dans l'onglet **Artifacts** de l'exécution.
+
+### Signatures et publication dans les magasins
+
+- **Windows :** l'installateur n'est pas signé, donc Windows SmartScreen affiche un avertissement à la première installation. Un certificat de signature de code le supprime.
+- **macOS :** sans compte Apple Developer (99 $/an), l'application n'est pas signée. Au premier lancement, faites clic droit → **Ouvrir**. Pour signer, ajoutez les secrets `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` et `APPLE_TEAM_ID` dans GitHub, puis retirez `identity: null` de `electron-builder.yml`.
+- **Android :** l'APK produit par GitHub est une version de test, installable directement si l'installation de sources inconnues est autorisée. Pour le Play Store (compte à 25 $), générez une clé (`keytool`) et produisez un `.aab` signé avec Android Studio (**Build → Generate Signed Bundle**).
+- **iOS :** il faut un compte Apple Developer et Xcode sur un Mac. Ouvrez `ios/App/App.xcodeproj`, choisissez votre équipe dans **Signing & Capabilities**, puis **Product → Archive** pour envoyer sur TestFlight ou l'App Store. Sur iOS, le serveur doit être en HTTPS.
+
+Identifiant des applications mobiles : `com.iamtechnology.invoicer`.
+
+## Logo
+
+| Fichier | Contenu |
+|---|---|
+| `resources/logo-mark.svg` | Pictogramme : une facture validée, avec l'étoile du Burkina Faso |
+| `resources/logo.svg` | Logo horizontal « IAM INVOICER » |
+| `resources/icon.png` | Icône 1024 px pour Windows et macOS |
+
+Après une modification du logo, `npm run icons` régénère toutes les icônes : web, Windows, macOS, Android (icône adaptative) et iOS, ainsi que les écrans de démarrage.
+
+## Développement
+
+```bash
+npm install
+npm run dev              # application de bureau en développement
+npm run dev:web          # version navigateur (http://localhost:5173), à connecter à un serveur
+npm test                 # tests : métier, comptabilité, caisse, serveur HTTP
+npm run e2e              # parcours complet dans l'application de bureau (Playwright)
+node tests/web-e2e.mjs http://127.0.0.1:8080   # parcours web ordinateur et téléphone (Edge ou Chrome), serveur démarré
+npm run typecheck
+```
+
+Si l'application démarre comme un simple Node depuis VS Code, retirez la variable `ELECTRON_RUN_AS_NODE` de l'environnement.
+
+### Organisation du code
+
+```
+src/shared/        règles métier communes (documents, TVA, droits, comptes de trésorerie, montants en lettres)
+src/main/          cœur métier + application de bureau (Electron)
+  backend.ts       source des données : poste (PGlite), PostgreSQL du bureau, ou serveur en ligne (HTTPS)
+  db.ts, schema.ts base de données et migrations — ajouter une migration, ne jamais modifier une migration livrée
+  router.ts        point d'entrée unique des appels + contrôle des droits
+  services/        documents, stock, paiements, caisse (cash.ts), comptabilité (accounting.ts), jetons (tokens.ts)
+  pdf.ts           facture A4 et ticket de caisse 80 mm
+src/server/        serveur web : API JSON, impression, application web (app.ts), démarrage (main.ts)
+src/renderer/      interface React adaptative, commune à l'ordinateur, au web et au mobile
+  src/bridge.ts    pont HTTP utilisé par le navigateur et par les applications iOS et Android
+android/, ios/     projets natifs Capacitor
+deploy/            Docker, PostgreSQL, Caddy (HTTPS), sauvegardes
+tests/             tests vitest + parcours de bout en bout
+```
+
+Données locales de l'application de bureau : `%APPDATA%\IAM INVOICER\data` sous Windows, `~/Library/Application Support/IAM INVOICER/data` sous macOS. Un ancien dossier « IAM ERP » est repris automatiquement.

@@ -1,0 +1,8 @@
+node_modules/
+out/
+dist/
+*.log
+deploy/.env
+deploy/backups/
+e2e-out/
+web-e2e-out/

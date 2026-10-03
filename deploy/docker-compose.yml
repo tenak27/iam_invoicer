@@ -1,0 +1,49 @@
+# Déploiement sur un serveur (VPS) avec un nom de domaine :
+#   1. Faites pointer le domaine (ex. facturation.iam.bf) vers l'adresse IP du serveur.
+#   2. Copiez deploy/.env.example en deploy/.env et remplissez-le.
+#   3. docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+# Caddy obtient et renouvelle automatiquement le certificat HTTPS.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iam_invoicer
+      POSTGRES_USER: iam
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Renseignez DB_PASSWORD dans deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam -d iam_invoicer"]
+      interval: 10s
+      retries: 5
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://iam:${DB_PASSWORD}@db:5432/iam_invoicer
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Renseignez DOMAIN dans deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:

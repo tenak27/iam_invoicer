@@ -1,0 +1,91 @@
+# Compilation de toutes les versions d'IAM INVOICER sur les machines de GitHub :
+# Windows (.exe), macOS (.dmg), Android (.apk), iOS (vérification de compilation)
+# et image du serveur. Lancement : à chaque tag « v* » ou manuellement (Actions → Run workflow).
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm test
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-Windows, path: dist/*.exe }
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      # Signature Apple facultative : ajoutez les secrets CSC_LINK, CSC_KEY_PASSWORD,
+      # APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD et APPLE_TEAM_ID, et retirez « identity: null »
+      # dans electron-builder.yml.
+      - run: npm run dist:mac
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-macOS, path: dist/*.dmg }
+
+  android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci --ignore-scripts
+      - run: npm run build:web && npx cap sync android
+      # APK de test installable directement. Pour le Play Store : voir README (bundleRelease signé).
+      - run: cd android && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-Android, path: android/app/build/outputs/apk/debug/*.apk }
+
+  ios:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run build:web && npx cap sync ios
+      # Compilation pour le simulateur (sans signature). La version App Store / TestFlight
+      # se signe avec un compte Apple Developer : voir README.
+      - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build
+
+  server:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          tags: ghcr.io/${{ github.repository_owner }}/iam-invoicer:latest

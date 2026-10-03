@@ -1,0 +1,179 @@
+// Parcours de bout en bout dans la vraie application Electron.
+// Usage : npm run build && node tests/e2e.mjs <dossier-de-sortie>
+import { _electron as electron } from 'playwright'
+import { mkdirSync, rmSync, readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+
+const out = resolve(process.argv[2] ?? 'e2e-out')
+rmSync(out, { recursive: true, force: true })
+mkdirSync(join(out, 'pdf'), { recursive: true })
+
+const app = await electron.launch({
+  args: ['.'],
+  env: { ...Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE')), IAM_ERP_DATA: join(out, 'data'), IAM_ERP_PDF_DIR: join(out, 'pdf') }
+})
+const page = await app.firstWindow()
+page.on('console', (m) => m.type() === 'error' && console.log('[console]', m.text()))
+page.on('pageerror', (e) => console.log('[pageerror]', e.message))
+await page.setViewportSize({ width: 1440, height: 900 })
+let n = 0
+const shot = async (name) => page.screenshot({ path: join(out, `${String(++n).padStart(2, '0')}-${name}.png`), animations: 'disabled' })
+const modal = () => page.locator('.modal')
+const nav = (label) => page.locator('.nav-link').getByText(label, { exact: true }).click()
+const confirm = () => page.locator('.modal .btn', { hasText: 'Confirmer' }).click()
+const toast = async () => (await page.locator('.toast').allTextContents()).join(' | ')
+
+// 1. Configuration initiale
+await page.getByText('Bienvenue dans IAM INVOICER').waitFor()
+await shot('setup')
+await page.getByLabel('Adresse').fill('Ouaga 2000, avenue Pascal Zagré')
+await page.getByLabel('Ville').fill('Ouagadougou')
+await page.getByLabel('Pays').fill('Burkina Faso')
+await page.getByLabel('Téléphone').fill('+226 25 00 00 00')
+await page.getByLabel('RCCM').fill('BF-OUA-01-2024-B12-01234')
+await page.getByLabel('N° IFU').fill('00123456A')
+await page.getByLabel('Nom complet').fill('Ibrahim Konaté')
+await page.getByLabel('Mot de passe').first().fill('secret123')
+await page.getByLabel('Confirmation').fill('secret123')
+await page.getByRole('button', { name: 'Terminer la configuration' }).click()
+await page.locator('.kpis').waitFor()
+await shot('dashboard-vide')
+
+// 2. Client et fournisseur
+await nav('Clients')
+await page.getByRole('button', { name: 'Nouveau client' }).click()
+await modal().getByLabel('Nom / raison sociale').fill('Orange Burkina Faso')
+await modal().getByLabel('Contact').fill('M. Traoré')
+await modal().getByLabel('Téléphone').fill('+226 70 00 00 00')
+await modal().getByLabel('Ville').fill('Ouagadougou')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('CLI-0001').waitFor()
+await nav('Fournisseurs')
+await page.getByRole('button', { name: 'Nouveau fournisseur' }).click()
+await modal().getByLabel('Nom / raison sociale').fill('Faso Informatique Distribution')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('FRS-0001').waitFor()
+
+// 3. Articles
+await nav('Articles & prestations')
+await page.getByRole('button', { name: 'Nouveau produit' }).click()
+await modal().getByLabel('Désignation', { exact: true }).fill('Switch Cisco 24 ports')
+await modal().getByLabel('Catégorie').fill('Réseau')
+await modal().getByLabel('Prix de vente HT').fill('350000')
+await modal().getByLabel("Prix d'achat HT").fill('240000')
+await modal().getByLabel('Stock minimum (alerte)').fill('3')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('ART-0001').waitFor()
+await page.getByRole('button', { name: 'Nouvelle prestation' }).click()
+await modal().getByLabel('Désignation', { exact: true }).fill('Installation et configuration réseau')
+await modal().getByLabel('Prix de vente HT').fill('150000')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('PRE-0001').waitFor()
+await shot('articles')
+
+// 4. Stock initial
+await nav('État du stock')
+await page.getByRole('button', { name: 'Entrée / sortie' }).first().click()
+await modal().getByLabel('Quantité').fill('10')
+await modal().getByLabel('Motif').fill('Stock initial')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('Mouvement enregistré').waitFor()
+await shot('stock')
+
+// 5. Facture
+await nav('Factures')
+await page.getByRole('button', { name: 'Nouvelle facture' }).click()
+await page.locator('.doc-head select').first().selectOption({ label: 'Orange Burkina Faso (CLI-0001)' })
+await page.getByLabel('Référence client (commande, marché…)').fill('BC-OM-2026-117')
+const articleSelects = page.getByLabel('Article')
+await articleSelects.nth(0).selectOption({ index: 1 })
+await page.locator('.lines-table tbody tr').nth(0).locator('.num-input').nth(0).fill('4')
+await page.getByRole('button', { name: '+ Ajouter une ligne' }).click()
+await articleSelects.nth(1).selectOption({ index: 2 })
+await shot('facture-brouillon')
+await page.getByRole('button', { name: 'Valider' }).click()
+await confirm()
+await page.getByText(/Facture FAC-\d{4}-0001/).waitFor()
+await shot('facture-validee')
+
+// 6. Encaissement partiel
+await page.getByRole('button', { name: 'Encaisser' }).click()
+await modal().getByLabel('Montant').fill('1000000')
+await modal().getByLabel('Mode de paiement').selectOption('Orange Money')
+await modal().getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('Règlement enregistré').waitFor()
+await page.locator('.badge', { hasText: 'Partielle' }).first().waitFor()
+await shot('facture-reglee-partiellement')
+
+// 7. PDF
+await page.getByRole('button', { name: 'Ouvrir PDF' }).click()
+for (let i = 0; i < 50 && readdirSync(join(out, 'pdf')).length === 0; i++) await page.waitForTimeout(200)
+console.log('PDF :', readdirSync(join(out, 'pdf')))
+const err = await toast()
+if (err) console.log('Notifications :', err)
+
+// 8. Achats : commande → réception (entrée en stock)
+await nav('Bons de commande')
+await page.getByRole('button', { name: 'Nouveau bon de commande' }).click()
+await page.locator('.doc-head select').first().selectOption({ index: 1 })
+await page.getByLabel('Article').nth(0).selectOption({ index: 2 })
+await page.locator('.lines-table tbody tr').nth(0).locator('.num-input').nth(0).fill('5')
+await page.getByRole('button', { name: 'Valider' }).click()
+await confirm()
+await page.getByText(/Bon de commande BC-\d{4}-0001/).waitFor()
+await page.getByRole('button', { name: '→ Bon de réception' }).click()
+await page.getByText('Bon de réception — brouillon').waitFor()
+await page.getByRole('button', { name: 'Valider' }).click()
+await confirm()
+await page.getByText(/Bon de réception BR-\d{4}-0001/).waitFor()
+await nav('État du stock')
+await page.getByText('14', { exact: true }).waitFor() // 10 + 5 − 1
+await shot('stock-apres-reception')
+
+// 9. Autres écrans
+await nav('Tableau de bord')
+await page.locator('.kpis').waitFor()
+await page.waitForTimeout(300)
+await shot('dashboard')
+await nav('Paiements')
+await page.waitForTimeout(300)
+await shot('paiements')
+await nav('Rapports')
+await page.waitForTimeout(300)
+await shot('rapports')
+await nav('Mouvements')
+await page.waitForTimeout(300)
+await shot('mouvements')
+await nav('Société & paramètres')
+await page.waitForTimeout(300)
+await shot('parametres')
+
+// 10. Caisse : vente au comptoir puis comptabilité
+await nav('Point de vente')
+await page.getByLabel('Fonds de caisse (FCFA)').fill('50000')
+await page.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+await page.locator('.pos-tile', { hasText: 'Switch Cisco' }).click()
+await page.getByRole('button', { name: /^Encaisser/ }).click()
+await page.getByRole('button', { name: 'Valider la vente' }).click()
+await page.getByText('Vente enregistrée').waitFor()
+await shot('caisse-vente')
+await page.getByRole('button', { name: 'Facture A4' }).click()
+for (let i = 0; i < 50 && readdirSync(join(out, 'pdf')).length < 2; i++) await page.waitForTimeout(200)
+await page.getByRole('button', { name: 'Nouvelle vente' }).click()
+await nav('Journaux & écritures')
+await page.locator('tbody.entry').first().waitFor()
+await shot('comptabilite')
+await nav('Balance')
+const [debit, credit] = await page.locator('tfoot td.num').allTextContents()
+if (debit !== credit) throw new Error(`Balance déséquilibrée : ${debit} / ${credit}`)
+
+// 11. Fenêtre étroite : affichage adaptatif
+await page.setViewportSize({ width: 400, height: 820 })
+await page.locator('.topbar').waitFor()
+await page.waitForTimeout(500) // fin de l'animation du menu
+if (await page.locator('.sidebar').isVisible()) throw new Error('Le menu devrait être replié sur petit écran')
+await shot('fenetre-etroite')
+console.log('PDF :', readdirSync(join(out, 'pdf')))
+
+await app.close()
+console.log('E2E OK —', out)

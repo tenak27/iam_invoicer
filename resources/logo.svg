@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1720 400" width="1720" height="400">
+  <svg x="0" y="0" width="400" height="400" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1268b3"/>
+      <stop offset="1" stop-color="#0a2a4a"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7e4f2"/>
+      <stop offset="1" stop-color="#a9c2dc"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <!-- Facture -->
+  <path d="M292 196 H612 L732 316 V784 a44 44 0 0 1 -44 44 H292 a44 44 0 0 1 -44 -44 V240 a44 44 0 0 1 44 -44 Z" fill="#ffffff"/>
+  <path d="M612 196 V280 a36 36 0 0 0 36 36 H732 Z" fill="url(#fold)"/>
+  <!-- En-tête « IAM » stylisé : trois barres -->
+  <rect x="316" y="282" width="34" height="112" rx="10" fill="#0b4f8a"/>
+  <path d="M374 394 L410 282 H446 L482 394 H446 L428 334 L410 394 Z" fill="#0b4f8a"/>
+  <rect x="408" y="350" width="40" height="22" fill="#0b4f8a"/>
+  <path d="M504 394 V282 H538 L562 330 L586 282 H620 V394 H590 V336 L562 384 L534 336 V394 Z" fill="#0b4f8a"/>
+  <!-- Lignes de la facture -->
+  <rect x="316" y="452" width="340" height="26" rx="13" fill="#c9d8e8"/>
+  <rect x="316" y="512" width="280" height="26" rx="13" fill="#c9d8e8"/>
+  <rect x="316" y="572" width="200" height="26" rx="13" fill="#c9d8e8"/>
+  <rect x="316" y="652" width="150" height="40" rx="14" fill="#0b4f8a"/>
+  <!-- Badge validé -->
+  <circle cx="706" cy="728" r="150" fill="#0a2a4a"/>
+  <circle cx="706" cy="728" r="124" fill="#1fa463"/>
+  <path d="M646 730 L690 774 L772 688" fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Étoile du Burkina Faso -->
+  <path d="M812 168 l17 35 38 5 -28 27 7 38 -34 -18 -34 18 7 -38 -28 -27 38 -5 Z" fill="#f4c430"/>
+</svg><!--mark-->
+  <text x="456" y="232" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="176" font-weight="800" fill="#0b4f8a" letter-spacing="2">IAM</text>
+  <text x="840" y="232" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="176" font-weight="300" fill="#1c2733" letter-spacing="6">INVOICER</text>
+  <text x="462" y="320" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="58" font-weight="500" fill="#64707d" letter-spacing="4">FACTURATION · CAISSE · COMPTABILITÉ</text>
+</svg>

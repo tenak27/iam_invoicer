@@ -1,0 +1,42 @@
+// Démarrage du serveur IAM INVOICER.
+//
+// Variables d'environnement :
+//   PORT            port d'écoute (8080)
+//   HOST            adresse d'écoute (0.0.0.0)
+//   DATABASE_URL    postgres://utilisateur:motdepasse@hote:5432/base  (recommandé)
+//   DATA_DIR        sans DATABASE_URL : base PostgreSQL intégrée dans ce dossier (./data)
+//   WEB_ROOT        dossier de l'application web (out/web à côté du serveur)
+//   CORS_ORIGIN     origines autorisées pour l'API (* par défaut)
+
+import { createServer } from 'node:http'
+import { join } from 'node:path'
+import { openDb } from '../main/db'
+import { createHandler } from './app'
+import { dbConfigFromEnv } from './config'
+
+declare const __APP_VERSION__: string
+
+async function main() {
+  const cfg = dbConfigFromEnv(process.env)
+  const db = await openDb(cfg)
+  const handler = createHandler({
+    db,
+    version: __APP_VERSION__,
+    webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'),
+    corsOrigin: process.env.CORS_ORIGIN
+  })
+  const port = Number(process.env.PORT) || 8080
+  const host = process.env.HOST ?? '0.0.0.0'
+  const server = createServer(handler)
+  server.listen(port, host, () => {
+    console.log(`IAM INVOICER ${__APP_VERSION__} — http://${host}:${port} — base ${cfg.mode === 'server' ? `PostgreSQL ${cfg.host}` : `intégrée (${cfg.dataDir})`}`)
+  })
+  const stop = () => server.close(() => db.close().finally(() => process.exit(0)))
+  process.on('SIGINT', stop)
+  process.on('SIGTERM', stop)
+}
+
+main().catch((e) => {
+  console.error('Démarrage impossible :', e)
+  process.exit(1)
+})

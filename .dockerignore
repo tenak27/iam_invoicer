@@ -1,0 +1,10 @@
+node_modules
+out
+dist
+android
+ios
+deploy/.env
+deploy/backups
+e2e-out
+web-e2e-out
+.git
