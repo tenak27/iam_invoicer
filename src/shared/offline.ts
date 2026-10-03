@@ -20,7 +20,7 @@ export interface KeyValueStore {
 export const QUEUEABLE = new Set(['cash.sale', 'payments.add', 'parties.save', 'crm.save', 'crm.saveActivity', 'projects.saveTime', 'hr.saveLeave'])
 
 /** Lectures conservées pour la consultation hors ligne. */
-const CACHEABLE = /^(settings\.get|licence\.status|reports\.dashboard|cash\.(current|options)|products\.(list|categories)|parties\.(list|get|options)|documents\.(list|get)|payments\.list|warehouses\.options|projects\.(list|get|options)|crm\.(list|get|pipeline|agenda)|hr\.(employees|leaves))$/
+const CACHEABLE = /^(settings\.get|licence\.status|roles\.get|reports\.dashboard|cash\.(current|options)|products\.(list|categories)|parties\.(list|get|options)|documents\.(list|get)|payments\.list|warehouses\.options|projects\.(list|get|options)|crm\.(list|get|pipeline|agenda)|hr\.(employees|leaves))$/
 
 const QUEUE_KEY = 'iam.offline.queue'
 const FAILED_KEY = 'iam.offline.failed'

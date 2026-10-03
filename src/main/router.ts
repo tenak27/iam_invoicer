@@ -25,6 +25,7 @@ import * as taxes from './services/taxes'
 import * as imports from './services/imports'
 import * as statements from './services/statements'
 import * as licence from './services/licence'
+import * as roles from './services/roles'
 import { isReadAction } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -51,6 +52,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'auth.needsSetup': { access: 'public', fn: (ctx) => auth.needsSetup(ctx.db) },
   'auth.setup': { access: 'public', fn: auth.setup },
   'auth.changePassword': { access: 'user', fn: auth.changeOwnPassword },
+  'auth.profile': { access: 'user', fn: auth.getProfile },
+  'auth.setAvatar': { access: 'user', fn: auth.setAvatar },
 
   'users.list': { access: 'users', fn: auth.listUsers },
   'users.save': { access: 'users', fn: auth.saveUser },
@@ -58,6 +61,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
   'licence.status': { access: 'user', fn: licence.getLicence },
+  'roles.get': { access: 'user', fn: roles.getRoles },
+  'roles.save': { access: 'users', fn: roles.saveRoles },
   // Aperçu HTML d'un document (droits contrôlés par printable via documents.get)
   'documents.preview': {
     access: 'user',
@@ -241,6 +246,8 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
   try {
     const route = routes[name]
     if (!route) fail(`Action inconnue : ${name}`)
+    // Matrice des droits de la société (rôles personnalisés)
+    await roles.loadRolePermissions(ctx.db)
     if (route.access !== 'public') {
       if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
       let mod: Module | null = null

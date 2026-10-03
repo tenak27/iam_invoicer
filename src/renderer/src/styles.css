@@ -1455,3 +1455,16 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .contrib-table input:not([type=checkbox]), .contrib-table select { min-width: 70px; }
 .contrib-table td:first-child input { min-width: 180px; }
 .table.decl tr.sub td { padding-left: 22px; color: var(--muted); font-size: 13px; }
+
+/* Photo de profil */
+.uavatar-face img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.profile-photo { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.profile-photo .uavatar { flex-shrink: 0; }
+.profile-photo .uavatar-face { font-size: 30px; }
+
+/* Matrice des rôles */
+.role-matrix th.center, .role-matrix td.center { text-align: center; }
+.role-matrix td:first-child { min-width: 260px; }
+.role-check { width: 20px; height: 20px; accent-color: var(--tone-b, var(--c-primary)); cursor: pointer; }
+.role-check.changed { outline: 2px solid var(--c-warning); outline-offset: 2px; border-radius: 4px; }
+.role-check:disabled { cursor: not-allowed; }

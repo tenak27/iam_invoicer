@@ -33,13 +33,13 @@ function usePopover() {
 }
 
 /** Avatar de l'utilisateur : initiales sur anneau dégradé, pastille « en ligne » qui pulse. */
-export function UserAvatar({ name, size = 38, online = true }: { name: string; size?: number; online?: boolean }) {
+export function UserAvatar({ name, size = 38, online = true, photo, ring = true }: { name: string; size?: number; online?: boolean; photo?: string; ring?: boolean }) {
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
   return (
     <span className="uavatar" style={{ width: size, height: size }} aria-hidden="true">
-      <span className="uavatar-ring" />
-      <span className="uavatar-face">{initials}</span>
-      <span className={`uavatar-dot ${online ? 'on' : 'off'}`} />
+      {ring && <span className="uavatar-ring" />}
+      <span className="uavatar-face">{photo ? <img src={photo} alt="" /> : initials}</span>
+      {ring && <span className={`uavatar-dot ${online ? 'on' : 'off'}`} />}
     </span>
   )
 }
@@ -115,12 +115,12 @@ function UserMenu({ online }: { online: boolean }) {
   return (
     <div className="pop" ref={pop.ref}>
       <button className="avatar-btn" onClick={() => pop.setOpen(!pop.open)} aria-expanded={pop.open} aria-label={`Compte de ${user.full_name}`}>
-        <UserAvatar name={user.full_name} online={online} />
+        <UserAvatar name={user.full_name} online={online} photo={user.avatar} />
       </button>
       {pop.open && (
         <div className="pop-panel user-panel" role="menu">
           <div className="user-panel-head">
-            <UserAvatar name={user.full_name} size={44} online={online} />
+            <UserAvatar name={user.full_name} size={44} online={online} photo={user.avatar} />
             <div><strong>{user.full_name}</strong><span>{ROLE_LABELS[user.role]} · {online ? (dbMode === 'remote' ? 'en ligne' : 'connecté') : 'hors connexion'}</span></div>
           </div>
           <button role="menuitem" onClick={() => go('/account')}><User size={20} aria-hidden="true" />Mon compte</button>

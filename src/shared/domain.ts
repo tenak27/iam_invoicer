@@ -41,8 +41,21 @@ export const PERMISSIONS: Record<Role, Module[]> = {
   rh: ['hr']
 }
 
+/** Matrice des droits personnalisée par la société (Administration → Rôles et droits). */
+let roleOverrides: Partial<Record<Role, Module[]>> = {}
+
+export function setRolePermissions(overrides: Partial<Record<Role, Module[]>> | null | undefined) {
+  roleOverrides = overrides ?? {}
+}
+
+/** Modules accessibles à un rôle : matrice de la société, sinon droits par défaut. L'administrateur a toujours tout. */
+export function permissionsOf(role: Role): Module[] {
+  if (role === 'admin') return PERMISSIONS.admin
+  return roleOverrides[role] ?? PERMISSIONS[role] ?? []
+}
+
 export function can(role: Role, module: Module): boolean {
-  return PERMISSIONS[role]?.includes(module) ?? false
+  return permissionsOf(role).includes(module)
 }
 
 export type DocType = 'DEV' | 'BL' | 'FAC' | 'AV' | 'BC' | 'BR' | 'FF'

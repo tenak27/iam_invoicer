@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { api } from './api'
 import { setDefaultCurrency } from '@shared/format'
+import { setRolePermissions } from '@shared/domain'
 import { countryProfile } from '@shared/countries'
 import { ConfirmHost, Loading, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
@@ -10,6 +11,7 @@ import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
 import { ImportPage } from './pages/Import'
 import { LicencePage } from './pages/Licence'
+import { RolesPage } from './pages/Roles'
 import { BalanceSheet, Declarations } from './pages/Statements'
 import { DocumentList } from './pages/DocumentList'
 import { DocumentEditor } from './pages/DocumentEditor'
@@ -42,8 +44,15 @@ export default function App() {
   const [company, setCompany] = useState<Session['company'] | null>(null)
   const [licence, setLicence] = useState<Session['licence']>(null)
 
+  /** Photo de profil de l'utilisateur connecté. */
+  const loadProfile = useCallback(async (u: User) => {
+    const p = await api<any>('auth.profile').catch(() => null)
+    setUser({ ...u, avatar: p?.avatar ?? '' })
+  }, [])
+
   const refreshCompany = useCallback(async () => {
-    const [c, lic] = await Promise.all([api<any>('settings.get'), api<any>('licence.status').catch(() => null)])
+    const [c, lic, perms] = await Promise.all([api<any>('settings.get'), api<any>('licence.status').catch(() => null), api<any>('roles.get').catch(() => null)])
+    if (perms) setRolePermissions(perms.current)
     setDefaultCurrency(c.currency, countryProfile(c.country_code, c.country).currencyWords)
     setCompany(c)
     setLicence(lic)
@@ -64,6 +73,7 @@ export default function App() {
     }
     if (st.user) {
       setUser(st.user)
+      loadProfile(st.user)
       await refreshCompany()
       setPhase('ready')
     } else setPhase('login')
@@ -78,6 +88,7 @@ export default function App() {
 
   const onLogin = async (u: User) => {
     setUser(u)
+    loadProfile(u)
     await refreshCompany()
     setPhase('ready')
   }
@@ -97,7 +108,7 @@ export default function App() {
       {phase === 'setup' && <SetupScreen onDone={onLogin} />}
       {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} />}
       {phase === 'ready' && user && company && (
-        <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence }}>
+        <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence, updateUser: (patch) => setUser((u) => (u ? { ...u, ...patch } : u)) }}>
           <HashRouter>
             <Layout>
               <Routes>
@@ -137,6 +148,7 @@ export default function App() {
                 <Route path="/users" element={<Users />} />
                 <Route path="/import" element={<ImportPage />} />
                 <Route path="/licence" element={<LicencePage />} />
+                <Route path="/roles" element={<RolesPage />} />
                 <Route path="/audit" element={<AuditLog />} />
                 <Route path="/account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/" />} />

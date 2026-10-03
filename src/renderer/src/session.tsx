@@ -7,6 +7,8 @@ export interface User {
   username: string
   full_name: string
   role: Role
+  /** Photo de profil (image encodée), vide sinon. */
+  avatar?: string
 }
 
 export interface Session {
@@ -19,6 +21,8 @@ export interface Session {
   /** Recharge la société et la licence. */
   refreshCompany: () => void
   licence: LicenceStatus | null
+  /** Met à jour l'utilisateur connecté (photo de profil…). */
+  updateUser: (patch: Partial<User>) => void
 }
 
 export const SessionContext = createContext<Session | null>(null)

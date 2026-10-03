@@ -5,6 +5,7 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
 import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
+import { UserAvatar } from '../components/Topbar'
 import { DbConfigForm } from './Auth'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
 import { TaxSettings } from '../components/TaxSettings'
@@ -375,7 +376,7 @@ export function Users() {
             <tbody>
               {data!.map((u) => (
                 <tr key={u.id} className={`clickable ${u.active ? '' : 'inactive'}`} onClick={() => setEditing(u)}>
-                  <td className="strong">{u.full_name}</td><td>{u.username}</td><td>{ROLE_LABELS[u.role as Role]}</td>
+                  <td className="strong"><span className="who"><UserAvatar name={u.full_name} size={32} photo={u.avatar} ring={false} />{u.full_name}</span></td><td>{u.username}</td><td>{ROLE_LABELS[u.role as Role]}</td>
                   <td>{u.active ? 'Actif' : 'Désactivé'}</td>
                   <td className="actions-col">
                     <RowActions actions={[
@@ -464,8 +465,32 @@ export function AuditLog() {
   )
 }
 
+/** Réduit une image à un carré de 256 px (recadrage centré), en JPEG. */
+async function squareImage(dataUrl: string, size = 256): Promise<string> {
+  const img = new Image()
+  img.src = dataUrl
+  await img.decode()
+  const side = Math.min(img.naturalWidth, img.naturalHeight)
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const g = canvas.getContext('2d')!
+  g.fillStyle = '#fff'
+  g.fillRect(0, 0, size, size)
+  g.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size)
+  return canvas.toDataURL('image/jpeg', 0.86)
+}
+
 export function MyAccount() {
-  const { user } = useSession()
+  const { user, updateUser } = useSession()
+  const choosePhoto = async () => {
+    const picked = await run(() => unwrap(window.erp.pickImage()))
+    if (!picked) return
+    const avatar = await squareImage(picked)
+    if (await run(() => api('auth.setAvatar', { avatar }), 'Photo de profil enregistrée.')) updateUser({ avatar })
+  }
+  const removePhoto = async () => {
+    if (await run(() => api('auth.setAvatar', { avatar: '' }), 'Photo retirée.')) updateUser({ avatar: '' })
+  }
   const f = useForm({ current: '', next: '', confirm: '' })
   const submit = async () => {
     if (f.values.next !== f.values.confirm) return notify('Les deux mots de passe ne correspondent pas.', 'error')
@@ -476,6 +501,17 @@ export function MyAccount() {
   return (
     <div className="page">
       <PageHeader title="Mon compte" subtitle={`${user.full_name} · ${user.username} · ${ROLE_LABELS[user.role]}`} />
+      <div className="card narrow profile-card">
+        <h3>Photo de profil</h3>
+        <div className="profile-photo">
+          <UserAvatar name={user.full_name} size={96} photo={user.avatar} ring={false} />
+          <div className="stack">
+            <button className="btn btn-primary" onClick={choosePhoto}>{user.avatar ? 'Changer la photo' : 'Ajouter une photo'}</button>
+            {user.avatar && <button className="btn btn-ghost" onClick={removePhoto}>Retirer la photo</button>}
+            <span className="muted small">PNG ou JPG ; l'image est recadrée et réduite automatiquement.</span>
+          </div>
+        </div>
+      </div>
       <div className="card narrow">
         <h3>Changer mon mot de passe</h3>
         <div className="stack">

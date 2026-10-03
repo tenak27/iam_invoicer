@@ -63,7 +63,26 @@ export async function login(db: Db, username: string, password: string): Promise
 }
 
 export async function listUsers(ctx: Ctx) {
-  return ctx.db.query('SELECT id, username, full_name, role, active, created_at FROM users ORDER BY username')
+  return ctx.db.query('SELECT id, username, full_name, role, active, avatar, created_at FROM users ORDER BY username')
+}
+
+/** Profil de l'utilisateur connecté (photo comprise). */
+export async function getProfile(ctx: Ctx) {
+  if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
+  return ctx.db.one('SELECT id, username, full_name, role, avatar FROM users WHERE id = $1', [ctx.user.id])
+}
+
+const AVATAR_RE = /^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/
+
+/** Photo de profil : chaque utilisateur choisit la sienne (image réduite par l'application). */
+export async function setAvatar(ctx: Ctx, input: { avatar: string }) {
+  if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
+  const avatar = String(input?.avatar ?? '')
+  if (avatar && !AVATAR_RE.test(avatar)) fail('Photo invalide : choisissez une image PNG, JPG ou WebP.')
+  if (avatar.length > 400_000) fail('Photo trop lourde.')
+  await ctx.db.query('UPDATE users SET avatar = $1 WHERE id = $2', [avatar, ctx.user.id])
+  await audit(ctx.db, ctx, 'modification', 'photo_profil', ctx.user.id)
+  return { avatar }
 }
 
 export async function saveUser(
