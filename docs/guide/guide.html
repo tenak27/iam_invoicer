@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>IAM INVOICER — Guide d'installation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm; }
+  @page :first { margin: 0; }
+  :root { --blue: #1550a8; --blue2: #2a70d6; --ink: #1f2433; --muted: #5d6475; --line: #dfe3ec; --soft: #f3f6fb; --green: #0b6b40; --amber: #9a4306; --red: #a1262a; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: 'Public Sans', 'Segoe UI', Arial, sans-serif; font-size: 10.2pt; line-height: 1.5; color: var(--ink); background: #fff; }
+  .weave { height: 6px; background: repeating-linear-gradient(90deg, #0b4f8a 0 12px, #e8a817 12px 17px, #f4f6fa 17px 18px, #178a55 18px 22px, #2f6db3 22px 33px, #f4f6fa 33px 34px, #e8a817 34px 36px, #0b4f8a 36px 46px, #178a55 46px 48px, #f4f6fa 48px 49px, #2f6db3 49px 58px); }
+
+  /* Couverture */
+  .cover { height: 297mm; position: relative; overflow: hidden; color: #fff; background: linear-gradient(150deg, #0b2f63 0%, #1550a8 55%, #2a70d6 100%); page-break-after: always; padding: 34mm 22mm; display: flex; flex-direction: column; }
+  .cover::before { content: ''; position: absolute; right: -60mm; top: -50mm; width: 170mm; height: 170mm; border-radius: 50%; border: 26mm solid rgba(255,255,255,.07); }
+  .cover::after { content: ''; position: absolute; left: -40mm; bottom: -70mm; width: 150mm; height: 150mm; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.12), transparent 70%); }
+  .cover .logo { width: 110mm; background: #fff; border-radius: 6mm; padding: 6mm 8mm; }
+  .cover .kicker { margin-top: 30mm; font-size: 12pt; letter-spacing: .18em; text-transform: uppercase; opacity: .85; font-weight: 600; }
+  .cover h1 { font-size: 36pt; line-height: 1.08; margin: 4mm 0 6mm; font-weight: 800; letter-spacing: -.01em; }
+  .cover .lead { font-size: 13pt; max-width: 140mm; opacity: .92; }
+  .cover .chips { display: flex; flex-wrap: wrap; gap: 3mm; margin-top: 12mm; max-width: 160mm; }
+  .cover .chips span { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); border-radius: 99px; padding: 1.5mm 4mm; font-size: 9.5pt; font-weight: 600; }
+  .cover .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; font-size: 9.5pt; opacity: .9; position: relative; z-index: 1; }
+  .cover .weave { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; }
+
+  /* Corps */
+  h2 { font-size: 17pt; margin: 0 0 4mm; padding: 4mm 5mm; color: #fff; border-radius: 3mm; background: linear-gradient(135deg, var(--tone-a, #1550a8), var(--tone-b, #2a70d6)); page-break-after: avoid; break-after: avoid; }
+  h2 .n { display: inline-block; min-width: 9mm; opacity: .75; }
+  section.chap { page-break-before: always; break-before: page; }
+  h3 { font-size: 12.5pt; margin: 6mm 0 2mm; color: var(--tone-a, var(--blue)); page-break-after: avoid; break-after: avoid; }
+  h4 { font-size: 10.5pt; margin: 4mm 0 1.5mm; page-break-after: avoid; break-after: avoid; }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  code, .mono { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 8.8pt; }
+  p code, li code, td code { background: var(--soft); border: 1px solid var(--line); border-radius: 1mm; padding: 0 1mm; }
+  pre { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 8.6pt; line-height: 1.45; background: #172033; color: #e6ebf5; border-radius: 2.5mm; padding: 3.5mm 4mm; margin: 0 0 3.5mm; white-space: pre-wrap; word-break: break-word; page-break-inside: avoid; break-inside: avoid; border-left: 4px solid var(--tone-b, #2a70d6); }
+  pre .c { color: #8fa3c4; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.2pt; page-break-inside: auto; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  th { text-align: left; background: color-mix(in srgb, var(--tone-a, #1550a8) 10%, #fff); color: var(--tone-a, var(--blue)); font-weight: 700; padding: 2mm 2.5mm; border-bottom: 2px solid color-mix(in srgb, var(--tone-a, #1550a8) 40%, #fff); }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: #fafbfd; }
+  .box { border-radius: 2.5mm; padding: 3mm 4mm; margin: 0 0 4mm; page-break-inside: avoid; break-inside: avoid; border-left: 4px solid; }
+  .box b.t { display: block; margin-bottom: 1mm; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  .warn { background: #fff5e8; border-color: #c46a10; }
+  .warn b.t { color: var(--amber); }
+  .danger { background: #fdecec; border-color: #c43a3d; }
+  .danger b.t { color: var(--red); }
+  .tip { background: #eaf6ef; border-color: #128052; }
+  .tip b.t { color: var(--green); }
+  .info { background: #eaf1fb; border-color: #2a70d6; }
+  .info b.t { color: var(--blue); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .tile { border-radius: 3mm; padding: 4mm; color: #fff; page-break-inside: avoid; break-inside: avoid; }
+  .tile h4 { margin: 0 0 1.5mm; color: #fff; font-size: 11pt; }
+  .tile p { margin: 0; font-size: 9.2pt; opacity: .95; }
+  .t-blue { background: linear-gradient(135deg, #1550a8, #2a70d6); }
+  .t-green { background: linear-gradient(135deg, #0b6b40, #128052); }
+  .t-amber { background: linear-gradient(135deg, #9a4306, #b8590b); }
+  .t-violet { background: linear-gradient(135deg, #4c34b0, #6a4fe0); }
+  .t-teal { background: linear-gradient(135deg, #0b5f6b, #0e7a87); }
+  .t-rose { background: linear-gradient(135deg, #a01f4c, #c02a60); }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps > li { counter-increment: s; position: relative; padding-left: 10mm; margin-bottom: 2.5mm; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: -.2mm; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--tone-a, var(--blue)); color: #fff; font-weight: 700; font-size: 8.5pt; display: grid; place-items: center; }
+  .check { list-style: none; padding: 0; }
+  .check li { padding-left: 7mm; position: relative; }
+  .check li::before { content: ''; position: absolute; left: 0; top: 1mm; width: 3.6mm; height: 3.6mm; border: 1.5px solid var(--tone-a, var(--blue)); border-radius: 1mm; }
+  .toc { columns: 2; column-gap: 10mm; padding: 0; list-style: none; counter-reset: t; }
+  .toc li { break-inside: avoid; padding: 1.6mm 0; border-bottom: 1px dotted var(--line); counter-increment: t; }
+  .toc li::before { content: counter(t) '.'; display: inline-block; width: 8mm; color: var(--blue); font-weight: 700; }
+  .muted { color: var(--muted); }
+  .badge { display: inline-block; font-size: 8pt; font-weight: 700; border-radius: 99px; padding: .3mm 2mm; vertical-align: 1px; }
+  .b-ok { background: #e3f4ea; color: var(--green); }
+  .b-no { background: #fbe5e5; color: var(--red); }
+  .b-opt { background: #fff1de; color: var(--amber); }
+  .tone-blue { --tone-a: #1550a8; --tone-b: #2a70d6; }
+  .tone-green { --tone-a: #0b6b40; --tone-b: #128052; }
+  .tone-amber { --tone-a: #9a4306; --tone-b: #b8590b; }
+  .tone-violet { --tone-a: #4c34b0; --tone-b: #6a4fe0; }
+  .tone-teal { --tone-a: #0b5f6b; --tone-b: #0e7a87; }
+  .tone-rose { --tone-a: #a01f4c; --tone-b: #c02a60; }
+  .tone-slate { --tone-a: #2f3a4f; --tone-b: #4a5a78; }
+  .tone-indigo { --tone-a: #3730a3; --tone-b: #4f46e5; }
+  .tone-cyan { --tone-a: #075a80; --tone-b: #0a719f; }
+  .arch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-bottom: 4mm; }
+  .arch .tile p + p { margin-top: 1.5mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================ COUVERTURE ============================ -->
+<div class="cover">
+  <img class="logo" src="logo.svg" alt="IAM INVOICER">
+  <div class="kicker">Guide d'installation et de mise en service</div>
+  <h1>Installer IAM INVOICER sur tous les postes, tous les systèmes, avec tous les modules</h1>
+  <p class="lead">Serveur sur votre domaine, Windows, macOS, Android, iOS et navigateur. Configuration de chaque module, contraintes à connaître, sauvegardes, sécurité et dépannage.</p>
+  <div class="chips">
+    <span>Windows 10 / 11</span><span>macOS</span><span>Android 7+</span><span>iOS 15+</span><span>Navigateur</span><span>Serveur Linux + Docker</span><span>Burkina Faso · SYSCOHADA</span>
+  </div>
+  <div class="foot">
+    <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
+    <div style="text-align:right">Version du logiciel : <b>0.4.0</b><br>Édition du guide : octobre 2026</div>
+  </div>
+  <div class="weave"></div>
+</div>
+
+<!-- ============================ SOMMAIRE ============================ -->
+<section>
+  <h2>Sommaire</h2>
+  <ol class="toc">
+    <li>Avant de commencer : choisir l'architecture</li>
+    <li>Configuration requise</li>
+    <li>Serveur en ligne sur votre domaine</li>
+    <li>Serveur du bureau (réseau local)</li>
+    <li>Windows</li>
+    <li>macOS</li>
+    <li>Android</li>
+    <li>iOS (iPhone, iPad)</li>
+    <li>Navigateur web</li>
+    <li>Premier démarrage</li>
+    <li>Configuration des modules</li>
+    <li>Mode hors ligne</li>
+    <li>Sauvegardes et restauration</li>
+    <li>Mises à jour</li>
+    <li>Sécurité</li>
+    <li>Fabriquer les applications</li>
+    <li>Dépannage</li>
+    <li>Liste de contrôle de mise en service</li>
+    <li>Licences</li>
+  </ol>
+  <div class="box info">
+    <b class="t">À qui s'adresse ce guide ?</b>
+    <p>Au technicien ou à l'administrateur qui installe IAM INVOICER chez un client ou dans sa propre entreprise. Les chapitres 1 à 10 couvrent l'installation, le chapitre 11 le paramétrage de chaque module, les chapitres 12 à 18 l'exploitation au quotidien.</p>
+  </div>
+  <div class="box warn">
+    <b class="t">Conventions</b>
+    <p>Les commandes à taper sont dans des blocs sombres. Les chemins de menu sont en gras, par exemple <b>Société &amp; paramètres → Messagerie</b>. Les encadrés orange signalent une contrainte, les rouges un risque de perte de données ou de sécurité.</p>
+  </div>
+</section>
+
+<!-- ============================ 1. ARCHITECTURE ============================ -->
+<section class="chap tone-blue">
+  <h2><span class="n">1</span> Avant de commencer : choisir l'architecture</h2>
+  <p>IAM INVOICER range ses données à un seul endroit, que l'on choisit sur l'écran de connexion de l'application de bureau (lien <b>Base de données … — modifier</b>). Trois modes existent :</p>
+  <div class="arch">
+    <div class="tile t-blue"><h4>Ce poste uniquement</h4><p>Base intégrée dans l'ordinateur.</p><p><b>Pour :</b> une petite structure avec un seul ordinateur.</p><p><b>Synchronisation :</b> aucune.</p></div>
+    <div class="tile t-green"><h4>Serveur en ligne (domaine)</h4><p>Serveur sur Internet, ex. <code style="background:rgba(255,255,255,.18);border:0;color:#fff">facturation.iam.bf</code>.</p><p><b>Pour :</b> plusieurs sites, téléphones, tablettes, accès à distance.</p><p><b>Synchronisation :</b> temps réel.</p></div>
+    <div class="tile t-violet"><h4>Serveur du bureau</h4><p>Base PostgreSQL sur une machine du réseau local.</p><p><b>Pour :</b> plusieurs ordinateurs dans les mêmes locaux, sans Internet fiable.</p><p><b>Synchronisation :</b> réseau local.</p></div>
+  </div>
+  <h3>Que permet chaque mode ?</h3>
+  <table>
+    <thead><tr><th>Fonction</th><th>Ce poste</th><th>Serveur en ligne</th><th>Serveur du bureau</th></tr></thead>
+    <tbody>
+      <tr><td>Application Windows / macOS</td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-ok">oui</span></td></tr>
+      <tr><td>Applications Android / iOS</td><td><span class="badge b-no">non</span></td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-no">non</span></td></tr>
+      <tr><td>Version navigateur</td><td><span class="badge b-no">non</span></td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-no">non</span></td></tr>
+      <tr><td>Plusieurs utilisateurs en même temps</td><td><span class="badge b-no">non</span></td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-ok">oui</span></td></tr>
+      <tr><td>Signature électronique à distance (lien envoyé au client)</td><td><span class="badge b-opt">si adresse publique</span></td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-opt">si adresse publique</span></td></tr>
+      <tr><td>Mode hors ligne avec envoi différé</td><td>sans objet</td><td><span class="badge b-ok">ordinateur, web et mobile</span></td><td>sans objet</td></tr>
+      <tr><td>Sauvegarde depuis l'application</td><td><span class="badge b-ok">oui</span></td><td><span class="badge b-no">sur le serveur</span></td><td><span class="badge b-no">sur le serveur</span></td></tr>
+      <tr><td>Facture certifiée SECeF en mode API</td><td colspan="3">Internet indispensable au moment de la validation de chaque facture, quel que soit le mode</td></tr>
+    </tbody>
+  </table>
+  <div class="box warn">
+    <b class="t">Choisir dès le départ</b>
+    <p>Le transfert automatique d'une base « Ce poste » vers un serveur n'existe pas encore. Passer d'un mode à l'autre oblige à ressaisir les fiches ou à demander une reprise de données. Si l'entreprise prévoit d'avoir un jour plusieurs postes ou des téléphones, commencez directement avec le <b>serveur en ligne</b>.</p>
+  </div>
+  <h3>Recommandation</h3>
+  <ul>
+    <li><b>Commerce ou prestataire avec un seul ordinateur :</b> « Ce poste uniquement », avec une sauvegarde hebdomadaire sur clé USB.</li>
+    <li><b>Entreprise avec plusieurs postes, agences ou commerciaux sur le terrain :</b> serveur en ligne sur le domaine de l'entreprise.</li>
+    <li><b>Site isolé avec une connexion Internet instable :</b> serveur du bureau, ou serveur en ligne avec le mode hors ligne sur les postes web et mobiles.</li>
+  </ul>
+</section>
+
+<!-- ============================ 2. CONFIGURATION REQUISE ============================ -->
+<section class="chap tone-teal">
+  <h2><span class="n">2</span> Configuration requise</h2>
+  <h3>Postes utilisateurs</h3>
+  <table>
+    <thead><tr><th style="width:22%">Système</th><th style="width:30%">Version minimale</th><th>Remarques</th></tr></thead>
+    <tbody>
+      <tr><td><b>Windows</b></td><td>Windows 10 ou 11, 64 bits (x64)</td><td>4 Go de mémoire, 500 Mo d'espace libre. Windows 7, 8 et 8.1 ne sont pas pris en charge. Pas de version pour Windows sur processeur ARM : la version x64 y fonctionne en émulation, sans garantie.</td></tr>
+      <tr><td><b>macOS</b></td><td>macOS 12 Monterey ou plus récent</td><td>Deux fichiers : <code>arm64</code> pour les Mac à puce Apple (M1 à M4), <code>x64</code> pour les Mac Intel. La version minimale suit celle du moteur Electron : vérifiez-la à chaque mise à jour.</td></tr>
+      <tr><td><b>Android</b></td><td>Android 7.0 (API 24)</td><td>Téléphone ou tablette. Compilé pour Android 16 (API 36). Connexion au serveur en ligne obligatoire.</td></tr>
+      <tr><td><b>iOS / iPadOS</b></td><td>iOS 15</td><td>Serveur en <b>HTTPS</b> obligatoire. Installation par TestFlight ou l'App Store uniquement (compte Apple Developer).</td></tr>
+      <tr><td><b>Navigateur</b></td><td>Chrome, Edge, Firefox ou Safari récents</td><td>Mises à jour des 2 dernières années. La navigation privée efface les données hors ligne à la fermeture.</td></tr>
+    </tbody>
+  </table>
+  <h3>Serveur en ligne</h3>
+  <table>
+    <thead><tr><th style="width:30%">Élément</th><th>Exigence</th></tr></thead>
+    <tbody>
+      <tr><td>Machine</td><td>Serveur Linux (VPS) 64 bits : 1 vCPU et 1 Go de mémoire au minimum, <b>2 Go conseillés</b> au-delà de 10 utilisateurs ; 20 Go de disque.</td></tr>
+      <tr><td>Logiciels</td><td>Docker Engine et le module Docker Compose v2. Sans Docker : Node.js 20 ou plus récent, et PostgreSQL (la version 17 est celle fournie dans Docker).</td></tr>
+      <tr><td>Nom de domaine</td><td>Un nom dont vous gérez la zone DNS, par exemple <code>facturation.iam.bf</code>.</td></tr>
+      <tr><td>Ports entrants</td><td><b>80</b> et <b>443</b> (TCP) ouverts vers Internet. Le port 80 sert à obtenir le certificat HTTPS.</td></tr>
+      <tr><td>Ports sortants</td><td>443 (certificats, SECeF, API SMS) et <b>587</b> (envoi d'e-mails SMTP). Certains hébergeurs bloquent le SMTP sortant : demandez son ouverture.</td></tr>
+      <tr><td>Heure</td><td>Horloge synchronisée (NTP). Une heure fausse perturbe les certificats, les jetons de connexion et la certification SECeF.</td></tr>
+    </tbody>
+  </table>
+  <h3>Serveur du bureau</h3>
+  <p>Un ordinateur allumé en permanence (Windows, Linux ou macOS) avec PostgreSQL, une adresse IP fixe sur le réseau local et le port <b>5432</b> joignable depuis les postes.</p>
+  <h3>Matériel de caisse</h3>
+  <table>
+    <thead><tr><th style="width:30%">Matériel</th><th>Exigence</th></tr></thead>
+    <tbody>
+      <tr><td>Imprimante de tickets</td><td>Imprimante thermique <b>80 mm</b> installée avec son pilote dans le système. L'impression passe par le système, pas par commandes ESC/POS directes. Le tiroir-caisse doit être ouvert par l'imprimante (réglage du pilote).</td></tr>
+      <tr><td>Lecteur de codes-barres</td><td>Lecteur USB ou Bluetooth en mode <b>clavier</b> (HID), réglé pour envoyer « Entrée » après chaque lecture.</td></tr>
+      <tr><td>Écran tactile</td><td>Facultatif. Le point de vente est conçu pour le doigt (cibles de 44 px au minimum).</td></tr>
+      <tr><td>Factures A4</td><td>Imprimante A4 ordinaire, ou envoi du PDF par e-mail.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 3. SERVEUR EN LIGNE ============================ -->
+<section class="chap tone-green">
+  <h2><span class="n">3</span> Serveur en ligne sur votre domaine</h2>
+  <p>Le serveur fournit à la fois l'API utilisée par toutes les applications et la version navigateur. L'installation recommandée utilise Docker : trois conteneurs, <b>db</b> (PostgreSQL 17), <b>app</b> (IAM INVOICER, port 8080 interne) et <b>caddy</b> (HTTPS automatique, ports 80 et 443).</p>
+  <h3>3.1 Nom de domaine</h3>
+  <ol class="steps">
+    <li>Chez votre registraire ou votre hébergeur DNS, créez un enregistrement <b>A</b> : <code>facturation.iam.bf</code> → adresse IPv4 du serveur. Ajoutez un enregistrement <b>AAAA</b> seulement si le serveur a une adresse IPv6 fonctionnelle.</li>
+    <li>Attendez la propagation (de quelques minutes à quelques heures). Vérifiez avec <code>nslookup facturation.iam.bf</code>.</li>
+  </ol>
+  <div class="box warn"><b class="t">Contrainte HTTPS</b><p>Caddy ne peut obtenir le certificat que si le domaine pointe déjà vers le serveur et que le port 80 est ouvert. Si le certificat échoue, corrigez le DNS ou le pare-feu, puis redémarrez Caddy.</p></div>
+  <h3>3.2 Préparer le serveur (Ubuntu ou Debian)</h3>
+<pre><span class="c"># Docker et Compose (script officiel)</span>
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER      <span class="c"># puis se déconnecter / reconnecter</span>
+
+<span class="c"># Pare-feu : SSH, HTTP et HTTPS uniquement</span>
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable</pre>
+  <div class="box danger"><b class="t">Ne jamais exposer la base</b><p>N'ouvrez pas le port 5432 (PostgreSQL) ni le port 8080 sur Internet. Seul Caddy, en HTTPS, doit être joignable.</p></div>
+  <h3>3.3 Installer IAM INVOICER</h3>
+<pre>git clone https://github.com/tenak27/iam_invoicer.git iam-invoicer
+cd iam-invoicer
+cp deploy/.env.example deploy/.env
+nano deploy/.env</pre>
+  <p>Renseignez les deux variables du fichier <code>deploy/.env</code> :</p>
+  <table>
+    <thead><tr><th style="width:26%">Variable</th><th>Contenu</th></tr></thead>
+    <tbody>
+      <tr><td><code>DOMAIN</code></td><td>Le nom de domaine, sans <code>https://</code> : <code>facturation.iam.bf</code></td></tr>
+      <tr><td><code>DB_PASSWORD</code></td><td>Mot de passe long et aléatoire. Générez-le avec <code>openssl rand -hex 24</code>. Il ne doit pas contenir <code>@ : / #</code>, car il entre dans l'adresse de connexion à la base.</td></tr>
+    </tbody>
+  </table>
+<pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.4.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+  <p>La première construction prend quelques minutes. Ouvrez ensuite <code>https://facturation.iam.bf</code> : l'écran de <b>configuration initiale</b> s'affiche (chapitre 10).</p>
+  <div class="box danger"><b class="t">Configuration initiale à faire immédiatement</b><p>Tant que le compte administrateur n'est pas créé, la première personne qui ouvre l'adresse peut le créer. Faites la configuration initiale juste après la mise en ligne.</p></div>
+  <h3>3.4 Sans Docker</h3>
+<pre><span class="c"># Node.js 20+ et PostgreSQL installés, base et utilisateur créés</span>
+npm ci
+npm run build:all-server
+DATABASE_URL=postgres://iam:MOTDEPASSE@localhost:5432/iam_invoicer PORT=8080 npm run server</pre>
+  <table>
+    <thead><tr><th style="width:26%">Variable</th><th>Rôle</th><th style="width:24%">Défaut</th></tr></thead>
+    <tbody>
+      <tr><td><code>PORT</code></td><td>Port d'écoute</td><td>8080</td></tr>
+      <tr><td><code>HOST</code></td><td>Adresse d'écoute (mettez <code>127.0.0.1</code> derrière un proxy local)</td><td>0.0.0.0</td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>Connexion PostgreSQL (recommandé en production)</td><td>aucune</td></tr>
+      <tr><td><code>DATA_DIR</code></td><td>Sans <code>DATABASE_URL</code> : base intégrée dans ce dossier (petites installations, tests)</td><td>./data</td></tr>
+      <tr><td><code>DB_POOL_SIZE</code></td><td>Connexions simultanées à PostgreSQL</td><td>20</td></tr>
+      <tr><td><code>CORS_ORIGIN</code></td><td>Origines autorisées pour l'API</td><td>* (toutes)</td></tr>
+      <tr><td><code>WEB_ROOT</code></td><td>Dossier de l'application web</td><td>out/web</td></tr>
+    </tbody>
+  </table>
+  <p>Placez un proxy HTTPS (Caddy ou nginx avec Let's Encrypt) devant le port 8080. Faites tourner le service avec systemd ou pm2 pour qu'il redémarre seul.</p>
+  <div class="box warn"><b class="t">Contraintes</b>
+    <ul>
+      <li>La connexion à PostgreSQL se fait <b>sans chiffrement TLS</b> : la base doit être sur la même machine ou sur un réseau privé. Les bases hébergées qui exigent TLS (certains services PostgreSQL managés) ne sont pas prises en charge pour l'instant.</li>
+      <li>Une seule instance du serveur par base. La répartition de charge sur plusieurs instances n'a pas été testée.</li>
+      <li>L'image Docker contrôle la santé du service par <code>/health</code>. Utilisez la même adresse pour une supervision externe.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 4. SERVEUR DU BUREAU ============================ -->
+<section class="chap tone-violet">
+  <h2><span class="n">4</span> Serveur du bureau (réseau local)</h2>
+  <p>Les applications de bureau se connectent directement à une base PostgreSQL du réseau local. Il n'y a pas de serveur IAM INVOICER à installer, seulement PostgreSQL.</p>
+  <h3>4.1 Installer PostgreSQL sur la machine serveur</h3>
+  <ol class="steps">
+    <li>Installez PostgreSQL (version 17 conseillée) : installateur officiel sous Windows, <code>apt install postgresql</code> sous Debian ou Ubuntu.</li>
+    <li>Donnez à la machine une <b>adresse IP fixe</b> (réservation DHCP sur le routeur), par exemple <code>192.168.1.10</code>.</li>
+    <li>Créez l'utilisateur et la base :
+<pre>sudo -u postgres psql
+CREATE USER iam WITH PASSWORD 'mot-de-passe-long';
+CREATE DATABASE iam_invoicer OWNER iam;
+\q</pre></li>
+    <li>Dans <code>postgresql.conf</code>, autorisez l'écoute réseau : <code>listen_addresses = '*'</code>.</li>
+    <li>Dans <code>pg_hba.conf</code>, limitez l'accès au réseau du bureau :
+<pre>host  iam_invoicer  iam  192.168.1.0/24  scram-sha-256</pre></li>
+    <li>Redémarrez PostgreSQL et ouvrez le port <b>5432</b> dans le pare-feu, pour le réseau local seulement.</li>
+  </ol>
+  <h3>4.2 Brancher chaque poste</h3>
+  <p>Sur l'écran de connexion de l'application de bureau : <b>Base de données … — modifier → Serveur du bureau</b>, puis indiquez l'hôte (<code>192.168.1.10</code>), le port (5432), la base, l'utilisateur et le mot de passe. Les tables sont créées automatiquement à la première connexion.</p>
+  <div class="box danger"><b class="t">Contraintes de sécurité</b>
+    <ul>
+      <li>Le trafic vers PostgreSQL n'est <b>pas chiffré</b> : réservez ce mode à un réseau local de confiance (pas de Wi-Fi invité).</li>
+      <li>Ne redirigez jamais le port 5432 du routeur vers Internet. Pour un accès à distance, passez au serveur en ligne.</li>
+      <li>Les mobiles et la version navigateur ne peuvent pas utiliser ce mode.</li>
+      <li>La sauvegarde et la restauration se font sur la machine PostgreSQL (chapitre 13), pas depuis l'application.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 5. WINDOWS ============================ -->
+<section class="chap tone-blue">
+  <h2><span class="n">5</span> Windows</h2>
+  <h3>5.1 Obtenir l'installateur</h3>
+  <ul>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.4.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.4.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+  </ul>
+  <h3>5.2 Installer</h3>
+  <ol class="steps">
+    <li>Double-cliquez sur l'installateur. Choisissez « pour moi » ou « pour tous les utilisateurs » (ce dernier choix demande les droits administrateur), puis le dossier d'installation.</li>
+    <li>Un raccourci <b>IAM INVOICER</b> est créé sur le bureau et dans le menu Démarrer.</li>
+    <li>Au premier lancement, choisissez le mode de données (chapitre 1), puis faites la configuration initiale ou connectez-vous.</li>
+  </ol>
+  <h3>5.3 Avertissements de sécurité de Windows</h3>
+  <table>
+    <thead><tr><th style="width:28%">Message</th><th>Cause et solution</th></tr></thead>
+    <tbody>
+      <tr><td>« Windows a protégé votre ordinateur » (SmartScreen)</td><td>L'installateur n'est pas signé numériquement. Cliquez sur <b>Informations complémentaires → Exécuter quand même</b>. Pour supprimer l'avertissement, il faut signer l'application avec un certificat de signature de code.</td></tr>
+      <tr><td>« Une partie de cette application a été bloquée » (contrôle intelligent des applications, Windows 11)</td><td>Quand le <b>contrôle intelligent des applications</b> est activé, Windows bloque les programmes non signés, et aucun bouton ne permet de passer outre. Solutions : utiliser une version <b>signée</b> (recommandé) ou la version ZIP. Si celle-ci est aussi bloquée, il faut la signature. <b>Ne désactivez pas ce contrôle pour installer le logiciel</b> : une fois désactivé, Windows ne permet pas de le réactiver sans réinstaller le système.</td></tr>
+      <tr><td>Blocage par l'antivirus</td><td>Ajoutez le dossier d'installation aux exclusions, ou signez l'application.</td></tr>
+    </tbody>
+  </table>
+  <div class="box info"><b class="t">Signature de code</b><p>Un certificat de signature de code (OV ou EV) au nom d'IAM Technology supprime ces trois blocages. C'est le prérequis d'un déploiement à grande échelle chez des clients.</p></div>
+  <h3>5.4 Où sont les données ?</h3>
+  <ul>
+    <li>Mode « Ce poste » : <code>%APPDATA%\IAM INVOICER\data</code>. Un ancien dossier « IAM ERP » est repris automatiquement.</li>
+    <li>La désinstallation <b>ne supprime pas</b> ce dossier. Pour repartir de zéro, supprimez-le après avoir fait une sauvegarde.</li>
+    <li>Plusieurs comptes Windows sur la même machine ont chacun leur propre base en mode « Ce poste ».</li>
+  </ul>
+</section>
+
+<!-- ============================ 6. macOS ============================ -->
+<section class="chap tone-slate">
+  <h2><span class="n">6</span> macOS</h2>
+  <h3>6.1 Choisir le bon fichier</h3>
+  <table>
+    <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
+    <tbody>
+      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.4.0-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.4.0-x64.dmg</code></td></tr>
+    </tbody>
+  </table>
+  <p>Pour savoir quel processeur a le Mac : menu  → <b>À propos de ce Mac</b>, ligne « Puce » ou « Processeur ».</p>
+  <h3>6.2 Installer</h3>
+  <ol class="steps">
+    <li>Ouvrez le fichier <code>.dmg</code> et glissez <b>IAM INVOICER</b> dans <b>Applications</b>.</li>
+    <li>Éjectez l'image disque.</li>
+    <li>Premier lancement d'une version non signée :
+      <ul>
+        <li>jusqu'à macOS 14 : <b>clic droit sur l'application → Ouvrir</b>, puis confirmez ;</li>
+        <li>à partir de macOS 15 : lancez l'application une fois (elle est refusée), puis ouvrez <b>Réglages Système → Confidentialité et sécurité</b> et cliquez sur <b>Ouvrir quand même</b>.</li>
+      </ul>
+    </li>
+  </ol>
+  <div class="box warn"><b class="t">Contraintes</b>
+    <ul>
+      <li>Sans compte Apple Developer (99 $ par an), l'application n'est ni signée ni notarisée : l'étape 3 est obligatoire sur chaque Mac.</li>
+      <li>Les versions macOS se fabriquent sur un Mac ou par GitHub Actions (chapitre 16).</li>
+      <li>Si l'application est lancée directement depuis l'image disque, elle ne se met pas à jour correctement : installez-la toujours dans <b>Applications</b>.</li>
+    </ul>
+  </div>
+  <p>Données en mode « Ce poste » : <code>~/Library/Application Support/IAM INVOICER/data</code>.</p>
+</section>
+
+<!-- ============================ 7. ANDROID ============================ -->
+<section class="chap tone-green">
+  <h2><span class="n">7</span> Android</h2>
+  <p>L'application Android affiche l'interface d'IAM INVOICER et se connecte <b>toujours</b> à un serveur en ligne (chapitre 3). Identifiant : <code>com.iamtechnology.invoicer</code>.</p>
+  <h3>7.1 Installation directe (APK)</h3>
+  <ol class="steps">
+    <li>Récupérez l'APK dans GitHub Actions (archive « IAM-INVOICER-Android »), puis copiez-le sur le téléphone (câble, e-mail, WhatsApp, Drive).</li>
+    <li>Ouvrez le fichier. Android demande d'autoriser l'installation depuis cette source (<b>Paramètres → Applications → Accès spécial → Installer des applis inconnues</b>) : autorisez l'application utilisée pour ouvrir le fichier.</li>
+    <li>Au premier lancement, saisissez l'adresse du serveur : <code>facturation.iam.bf</code>.</li>
+    <li>Connectez-vous avec votre compte.</li>
+  </ol>
+  <div class="box warn"><b class="t">Contraintes de l'APK fourni par GitHub</b>
+    <ul>
+      <li>C'est une version de <b>test</b> (« debug ») : elle est signée avec une clé de développement différente à chaque machine de compilation. Pour installer une nouvelle version, il peut être nécessaire de désinstaller l'ancienne. Les données restent sur le serveur, mais les ventes hors ligne non envoyées sont perdues.</li>
+      <li>Play Protect peut afficher un avertissement : choisissez <b>Installer quand même</b>.</li>
+      <li>Certains téléphones d'entreprise (gestion MDM) interdisent les sources inconnues.</li>
+    </ul>
+  </div>
+  <h3>7.2 Publication sur le Play Store</h3>
+  <ol class="steps">
+    <li>Ouvrez un compte développeur Google Play (25 $, paiement unique).</li>
+    <li>Créez une clé de signature et <b>conservez-la en lieu sûr</b> : la perdre empêche toute mise à jour de l'application.
+<pre>keytool -genkey -v -keystore iam-invoicer.jks -keyalg RSA -keysize 2048 -validity 10000 -alias iam</pre></li>
+    <li><code>npm run android</code> ouvre Android Studio (JDK 21 requis). Choisissez <b>Build → Generate Signed Bundle / APK → Android App Bundle</b>.</li>
+    <li>Envoyez le fichier <code>.aab</code> dans la Play Console. Il faut aussi une fiche (captures, description), une politique de confidentialité et le questionnaire sur la sécurité des données.</li>
+  </ol>
+  <div class="box info"><b class="t">HTTP ou HTTPS ?</b><p>Android accepte une adresse en <code>http://</code> (par exemple un serveur de test sur le réseau local). En production, utilisez toujours <code>https://</code> : les mots de passe et les jetons circulent sur le réseau.</p></div>
+</section>
+
+<!-- ============================ 8. iOS ============================ -->
+<section class="chap tone-indigo">
+  <h2><span class="n">8</span> iOS (iPhone, iPad)</h2>
+  <div class="box warn"><b class="t">Prérequis incontournables</b>
+    <ul>
+      <li>Un <b>compte Apple Developer</b> (99 $ par an) et un <b>Mac avec Xcode</b>. Il n'existe pas d'équivalent de l'APK : un iPhone n'installe que des applications de l'App Store, de TestFlight ou d'un appareil enregistré par un développeur.</li>
+      <li>Un serveur en <b>HTTPS</b> avec un certificat valide. iOS refuse les adresses <code>http://</code>.</li>
+      <li>iOS 15 ou plus récent.</li>
+    </ul>
+  </div>
+  <h3>8.1 Publier sur TestFlight ou l'App Store</h3>
+  <ol class="steps">
+    <li>Sur le Mac : <code>npm ci</code> puis <code>npm run ios</code>, qui ouvre Xcode avec <code>ios/App/App.xcodeproj</code>.</li>
+    <li>Cible <b>App → Signing &amp; Capabilities</b> : choisissez votre équipe (<em>Team</em>). L'identifiant est <code>com.iamtechnology.invoicer</code>. Il doit être libre ou enregistré dans votre compte.</li>
+    <li>Choisissez la destination <b>Any iOS Device</b>, puis <b>Product → Archive</b>.</li>
+    <li>Dans l'Organizer : <b>Distribute App → App Store Connect</b>.</li>
+    <li>Dans App Store Connect, ajoutez des testeurs <b>TestFlight</b> (jusqu'à 10 000 par invitation e-mail), ou soumettez l'application à la validation d'Apple pour l'App Store.</li>
+  </ol>
+  <h3>8.2 Sur l'iPhone</h3>
+  <ol class="steps">
+    <li>Installez <b>TestFlight</b> depuis l'App Store, puis ouvrez l'invitation reçue par e-mail. Vous pouvez aussi installer directement depuis l'App Store une fois l'application publiée.</li>
+    <li>Au premier lancement, saisissez l'adresse du serveur, puis connectez-vous.</li>
+  </ol>
+  <div class="box info"><b class="t">Bon à savoir</b><p>Les versions TestFlight expirent après 90 jours : publiez une nouvelle version avant cette échéance. La validation d'Apple peut demander un compte de démonstration : préparez un compte de test sur le serveur.</p></div>
+</section>
+
+<!-- ============================ 9. NAVIGATEUR ============================ -->
+<section class="chap tone-cyan">
+  <h2><span class="n">9</span> Navigateur web</h2>
+  <p>Aucune installation n'est nécessaire : ouvrez <code>https://facturation.iam.bf</code> dans Chrome, Edge, Firefox ou Safari. L'interface s'adapte à chaque écran : barre d'onglets et listes en cartes sur téléphone, menu réduit aux icônes sur tablette et petit portable, contenu centré sur grand écran, boutons de 44 px sur les écrans tactiles.</p>
+  <ul>
+    <li><b>Raccourci sur le téléphone :</b> menu du navigateur → <b>Ajouter à l'écran d'accueil</b>.</li>
+    <li><b>Impression :</b> les tickets et les factures s'ouvrent dans la fenêtre d'impression du navigateur. Choisissez l'imprimante 80 mm, format « Ticket » et marges « Aucune ».</li>
+    <li><b>Fenêtres surgissantes :</b> autorisez-les pour le domaine si l'ouverture des PDF est bloquée.</li>
+  </ul>
+  <div class="box warn"><b class="t">Contraintes</b>
+    <ul>
+      <li>La navigation privée et le nettoyage des données du site effacent le cache hors ligne <b>et les opérations pas encore envoyées</b> (chapitre 12).</li>
+      <li>Fonctions réservées à l'application de bureau : sauvegarde et restauration locales, choix du mode de données, impression directe sans passer par la fenêtre d'impression.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 10. PREMIER DÉMARRAGE ============================ -->
+<section class="chap tone-blue">
+  <h2><span class="n">10</span> Premier démarrage</h2>
+  <p>Au premier lancement sur une base vide (poste, serveur du bureau ou serveur en ligne), l'assistant de <b>configuration initiale</b> demande :</p>
+  <ol class="steps">
+    <li><b>La société :</b> logo, raison sociale, <b>pays</b>, adresse, téléphone, puis les mentions fiscales. Le pays règle automatiquement l'identifiant fiscal (IFU au Burkina Faso et au Bénin, NCC en Côte d'Ivoire, NINEA au Sénégal, NIU au Cameroun et au Congo, NIF ailleurs), les régimes proposés, la devise et la TVA par défaut. Pour un pays autre que le Burkina Faso, faites confirmer ces valeurs par un comptable.</li>
+    <li><b>Le compte administrateur :</b> nom, identifiant et mot de passe. Choisissez un mot de passe fort et notez-le dans un coffre-fort de mots de passe : l'administrateur est le seul à pouvoir créer et réactiver les autres comptes.</li>
+  </ol>
+  <p>Ensuite, dans <b>Société &amp; paramètres</b> :</p>
+  <ul class="check">
+    <li>logo (PNG ou JPG), cachet et signature de la société ;</li>
+    <li>mentions légales, conditions générales, pied de page, modèle de document (moderne ou classique) et couleur ;</li>
+    <li>création des utilisateurs (<b>Utilisateurs</b>), avec un compte par personne et le rôle adapté.</li>
+  </ul>
+  <h3>Rôles</h3>
+  <table>
+    <thead><tr><th style="width:24%">Rôle</th><th>Accès</th></tr></thead>
+    <tbody>
+      <tr><td>Administrateur</td><td>Tout, y compris les paramètres, les utilisateurs, le journal d'activité et les sauvegardes.</td></tr>
+      <tr><td>Commercial</td><td>Ventes, caisse, clients, articles, paiements, CRM, projets, communications.</td></tr>
+      <tr><td>Magasinier</td><td>Achats, stock et dépôts, fournisseurs, articles.</td></tr>
+      <tr><td>Comptable</td><td>Ventes, achats, paiements, tiers, rapports, comptabilité, paie, projets, immobilisations, budgets, communications.</td></tr>
+      <tr><td>Caissier</td><td>Caisse uniquement, sur ses propres sessions.</td></tr>
+      <tr><td>Ressources humaines</td><td>Salariés, paie, congés.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 11. MODULES ============================ -->
+<section class="chap tone-amber">
+  <h2><span class="n">11</span> Configuration des modules</h2>
+  <p>Chaque module est actif dès l'installation. Le tableau ci-dessous indique, pour chacun, ce qu'il faut paramétrer avant l'usage réel et les contraintes à connaître.</p>
+
+  <h3>Ventes (devis, livraisons, factures, avoirs)</h3>
+  <ul>
+    <li>Un document est d'abord un <b>brouillon</b>, sans numéro. À la <b>validation</b>, il reçoit un numéro définitif et continu par type et par année (<code>FAC-2026-0001</code>), le stock est mis à jour et l'écriture comptable est passée.</li>
+    <li>Une facture validée ne s'annule pas : on établit un <b>avoir</b>.</li>
+    <li>Une vente au <b>client comptoir</b> doit être réglée en totalité. Pour une vente à crédit, il faut choisir le client.</li>
+  </ul>
+
+  <h3>Caisse (point de vente)</h3>
+  <ul>
+    <li>Chaque caissier <b>ouvre sa caisse</b> avec un fonds de caisse, encaisse (espèces, Orange Money, Moov Money, Wave, ou paiement mixte), puis <b>clôture</b> en comptant les espèces.</li>
+    <li>Une caisse ne peut être clôturée avec un écart que si l'écart est expliqué. Les règlements d'une caisse clôturée ne peuvent plus être supprimés.</li>
+    <li>Matériel : imprimante 80 mm et lecteur de codes-barres (chapitre 2). Saisissez les codes-barres dans les fiches articles.</li>
+  </ul>
+
+  <h3>Achats</h3>
+  <p>Circuit bon de commande → réception (entrée en stock) → facture fournisseur. Créez d'abord les fournisseurs et les articles avec leur prix d'achat.</p>
+
+  <h3>Stock multi-dépôts, lots et numéros de série</h3>
+  <ul>
+    <li>Créez les dépôts dans <b>Catalogue &amp; stock → Dépôts, transferts, lots</b>. Le « Dépôt principal » (code PRINCIPAL) existe déjà.</li>
+    <li>Dans la fiche article, choisissez le <b>suivi</b> (aucun, par lot ou par numéro de série) <b>avant les premiers mouvements</b>.</li>
+    <li>Les quantités initiales se saisissent par un inventaire par dépôt. La valorisation se fait au coût moyen pondéré (CMUP).</li>
+  </ul>
+
+  <h3>Comptabilité SYSCOHADA</h3>
+  <ul>
+    <li>Le plan comptable SYSCOHADA révisé est fourni et modifiable. Les écritures des ventes, achats, règlements, caisse, paie et immobilisations sont générées automatiquement.</li>
+    <li>Les comptes de trésorerie sont fixés : <b>571</b> caisse, <b>552</b> monnaie électronique (mobile money), <b>521</b> banque.</li>
+    <li>Pour une reprise en cours d'année, les pièces validées avant l'activation de la comptabilité se comptabilisent avec <b>Journaux &amp; écritures → Générer les écritures</b>.</li>
+    <li>Faites saisir les à-nouveaux (soldes d'ouverture) en opérations diverses par le comptable.</li>
+  </ul>
+
+  <h3>RH et paie</h3>
+  <div class="box danger"><b class="t">À faire valider avant la première paie</b><p>Les taux CNSS, le plafond, le barème IUTS, les abattements et les réductions pour charges de famille sont des <b>valeurs par défaut</b>. Faites-les vérifier par votre comptable, ou auprès de la DGI et de la CNSS, puis ajustez-les dans <b>RH → Paramètres de paie</b>. La réglementation évolue : vérifiez-les chaque année.</p></div>
+  <ul>
+    <li>Saisissez les salariés : matricule, catégorie, salaire de base, indemnités, charges de famille, date d'embauche.</li>
+    <li>Paie mensuelle : préparer, ajuster les variables (primes, absences, avances), valider. Les bulletins sont produits en PDF, avec la déclaration CNSS/IUTS et l'écriture de paie.</li>
+    <li>Les soldes de congés se reprennent à la création du salarié.</li>
+  </ul>
+
+  <h3>CRM et projets</h3>
+  <ul>
+    <li>CRM : le pipeline (Nouveau → Qualifié → Proposition → Négociation → Gagné ou Perdu) se gère par glisser-déposer. Un prospect gagné se convertit en client et en devis.</li>
+    <li>Projets : renseignez le taux horaire et le budget en heures pour suivre la rentabilité. Les temps saisis se facturent en un clic.</li>
+  </ul>
+
+  <h3>Immobilisations</h3>
+  <ul>
+    <li>Pour chaque bien : compte d'immobilisation, date d'acquisition, valeur HT, durée. L'amortissement est linéaire, au prorata temporis.</li>
+    <li>Option <b>Comptabiliser l'acquisition</b> : contre le compte 481 (fournisseur d'investissement) ou un compte de trésorerie. Laissez-la vide si la facture d'achat est déjà comptabilisée par ailleurs, pour éviter un doublon.</li>
+    <li>Les dotations annuelles se passent en fin d'exercice (681 / 28xx).</li>
+  </ul>
+
+  <h3>Budgets et trésorerie</h3>
+  <p>Saisissez un budget mensuel par compte (prévu et réalisé). La trésorerie prévisionnelle (8, 13 ou 26 semaines) s'appuie sur les factures à encaisser et à payer, la paie et les prévisions saisies, avec une alerte de découvert.</p>
+
+  <h3>Facture certifiée (SECeF, DGI)</h3>
+  <table>
+    <thead><tr><th style="width:22%">Mode</th><th>Usage et contraintes</th></tr></thead>
+    <tbody>
+      <tr><td>Désactivé</td><td>Aucune certification.</td></tr>
+      <tr><td>Simulation</td><td>Teste le circuit : un code, des compteurs et un QR code fictifs sont imprimés. <b>Sans valeur légale.</b></td></tr>
+      <tr><td>API</td><td>Certification réelle à la validation. Il faut l'adresse et le jeton remis par la DGI. Le connecteur suit le modèle e-MCF et <b>doit être ajusté à la documentation officielle</b> reçue avec vos identifiants. Une facture non certifiée ne peut pas être validée : sans Internet ou si le service de la DGI est indisponible, la validation est bloquée.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Communications : e-mails et SMS</h3>
+  <ul>
+    <li><b>E-mail</b> (<b>Société &amp; paramètres → Messagerie</b>). Avec Gmail : serveur <code>smtp.gmail.com</code>, port <b>587</b>. Il faut activer la validation en deux étapes du compte Google, puis créer un <b>mot de passe d'application</b> : le mot de passe habituel est refusé. Le bouton « Envoyer un e-mail d'essai » vérifie le réglage.</li>
+    <li><b>SMS</b> (<b>Société &amp; paramètres → SMS</b>) : Orange (compte sur developer.orange.com, API « SMS Burkina Faso »), Twilio, ou toute passerelle HTTP du type <code>https://…/send?to={to}&amp;text={message}&amp;key={key}</code>. Les SMS sont facturés par le fournisseur.</li>
+    <li>Les mots de passe et clés sont stockés à part et ne sont jamais réaffichés : pour les changer, ressaisissez-les.</li>
+    <li>Les e-mails partent <b>de la machine qui exécute le logiciel</b> : du serveur en ligne, ou du poste en mode « Ce poste ». Le port 587 sortant doit y être ouvert.</li>
+  </ul>
+
+  <h3>Taxes de facturation</h3>
+  <ul>
+    <li>La TVA se règle ligne par ligne (taux du pays, 0 % pour une exonération).</li>
+    <li><b>Société &amp; paramètres → Taxes → Ajouter les modèles du pays</b> : droit de timbre, taxe spécifique, retenue à la source sur prestations, retenue de TVA. Les modèles sont <b>inactifs</b> : vérifiez les taux avec votre comptable, puis activez-les.</li>
+    <li>Une <b>taxe ajoutée</b> (ex. timbre) s'ajoute au total TTC ; elle peut être automatique sur chaque nouveau document.</li>
+    <li>Une <b>retenue à la source</b> se coche sur la facture du client concerné : elle est déduite du « Net à payer » et, à la validation, enregistrée comme règlement (449/411 sur une vente, 401/447 sur un achat).</li>
+    <li>Les comptes utilisés doivent exister dans le plan comptable.</li>
+  </ul>
+
+  <h3>Import des données existantes</h3>
+  <ul>
+    <li><b>Administration → Importer des données</b> : clients, fournisseurs, articles, stock initial, salariés, plan comptable.</li>
+    <li>Fichier Excel (.xlsx), CSV, ou cellules copiées depuis Excel. Téléchargez le modèle pour partir des bonnes colonnes ; les intitulés usuels sont reconnus et la correspondance reste modifiable.</li>
+    <li>Ordre conseillé : plan comptable, clients et fournisseurs, articles, <b>puis</b> stock initial, et enfin salariés.</li>
+    <li>Une ligne en erreur n'empêche pas les autres : le compte rendu indique chaque ligne refusée et son motif. Une fiche existante (même code ou même référence) est mise à jour, pas dupliquée.</li>
+    <li>Les articles suivis par lot ou numéro de série se reprennent dans <b>Dépôts, transferts, lots</b>, pas par l'import du stock.</li>
+  </ul>
+
+  <h3>États financiers et déclarations</h3>
+  <ul>
+    <li><b>Comptabilité → Bilan</b> : actif et passif à une date, en présentation simplifiée SYSCOHADA, avec contrôle d'équilibre ; impression et export Excel.</li>
+    <li><b>Comptabilité → Déclarations</b> : TVA du mois (collectée par taux, déductible, TVA retenue par les clients, montant à payer ou crédit), retenues à la source à reverser et subies, salaires (cotisations et impôt).</li>
+    <li>Ce sont des <b>états préparatoires</b> : reportez les montants sur les formulaires officiels (télédéclaration, sécurité sociale) après vérification par votre comptable. Passez d'abord les écritures d'inventaire (amortissements, provisions, stocks).</li>
+  </ul>
+
+  <h3>Signatures électroniques</h3>
+  <ul>
+    <li>Le cachet et la signature de la société se chargent dans <b>Documents &amp; signature</b>.</li>
+    <li>Signature du client <b>sur place</b> (doigt, stylet, souris) : fonctionne dans tous les modes.</li>
+    <li>Signature <b>à distance</b> par lien sécurisé : le client ouvre <code>https://votre-domaine/sign/…</code>. Il faut donc le <b>serveur en ligne</b>. En mode « Ce poste », renseignez une adresse publique dans <b>Documents &amp; signature</b>.</li>
+    <li>Preuve conservée : empreinte SHA-256 du document, date, adresse IP et appareil. Si le document est modifié après la signature, l'application l'indique.</li>
+  </ul>
+</section>
+
+<!-- ============================ 12. HORS LIGNE ============================ -->
+<section class="chap tone-cyan">
+  <h2><span class="n">12</span> Mode hors ligne</h2>
+  <p>Sur l'application de bureau reliée au serveur en ligne, la version navigateur et les applications Android et iOS, une coupure de réseau n'arrête pas le travail :</p>
+  <ul>
+    <li>les dernières données consultées restent lisibles ;</li>
+    <li>les ventes, règlements, temps passés et demandes de congés saisis hors connexion sont mis en file d'attente ;</li>
+    <li>au retour du réseau, ils sont envoyés automatiquement, une seule fois et sans doublon. Un bandeau indique le nombre d'opérations en attente et propose un bouton d'envoi.</li>
+  </ul>
+  <div class="box warn"><b class="t">Contraintes</b>
+    <ul>
+      <li>Une vente faite hors ligne reçoit son <b>numéro et sa date définitifs à la synchronisation</b>, pas au moment de la vente.</li>
+      <li>Les opérations en attente sont stockées <b>dans le navigateur ou l'application de cet appareil</b>. Elles sont perdues si l'on efface les données du navigateur, si l'on désinstalle l'application ou si l'on utilise la navigation privée avant la synchronisation.</li>
+      <li>Une facture certifiée SECeF (mode API) ne peut pas être validée hors ligne.</li>
+      <li><b>Ordinateur :</b> une base locale garde les données de travail (articles, clients, documents récents, caisse). On peut démarrer et se connecter sans réseau si l'utilisateur s'est déjà connecté en ligne sur ce poste au cours des 30 derniers jours (mot de passe vérifié sur le poste, jeton chiffré par le système). L'état se suit dans <b>Société &amp; paramètres → Données → Base locale de ce poste</b>.</li>
+      <li>Sur ordinateur, la base locale est un fichier non chiffré dans le profil de l'utilisateur Windows ou macOS : protégez la session par un mot de passe.</li>
+      <li>Les stocks affichés hors ligne datent de la dernière synchronisation : deux appareils peuvent vendre le même dernier article.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 13. SAUVEGARDES ============================ -->
+<section class="chap tone-rose">
+  <h2><span class="n">13</span> Sauvegardes et restauration</h2>
+  <div class="box danger"><b class="t">Règle 3-2-1</b><p>Gardez 3 copies des données, sur 2 supports différents, dont 1 hors des locaux (ou hors du serveur). Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde : faites un essai de restauration chaque trimestre.</p></div>
+  <h3>Mode « Ce poste »</h3>
+  <p><b>Société &amp; paramètres → Données → Créer une sauvegarde</b> produit un fichier <code>iam-invoicer-sauvegarde-AAAAMMJJHHMM.tar.gz</code>. La restauration se fait au même endroit (<b>Restaurer une sauvegarde…</b>) : l'archive est vérifiée avant de remplacer les données. Ces fonctions sont réservées à l'administrateur.</p>
+  <h3>Serveur en ligne (Docker)</h3>
+<pre><span class="c"># Sauvegarde quotidienne à 2 h, conservation 30 jours dans deploy/backups/</span>
+chmod +x deploy/backup.sh
+crontab -e
+0 2 * * * /home/ubuntu/iam-invoicer/deploy/backup.sh >> /var/log/iam-backup.log 2>&amp;1
+
+<span class="c"># Copie hors du serveur (exemple avec rsync vers une autre machine)</span>
+rsync -a deploy/backups/ sauvegarde@autre-serveur:/sauvegardes/iam-invoicer/</pre>
+  <h4>Restaurer</h4>
+<pre>cd iam-invoicer/deploy
+docker compose stop app
+docker compose exec -T db pg_restore -U iam -d iam_invoicer --clean --if-exists \
+    /backups/iam-invoicer-AAAAMMJJ-HHMM.dump
+docker compose start app</pre>
+  <h3>Serveur du bureau</h3>
+<pre><span class="c"># Sauvegarde</span>
+pg_dump -h 192.168.1.10 -U iam -d iam_invoicer -Fc -f iam-invoicer-AAAAMMJJ.dump
+<span class="c"># Restauration (applications fermées sur tous les postes)</span>
+pg_restore -h 192.168.1.10 -U iam -d iam_invoicer --clean --if-exists iam-invoicer-AAAAMMJJ.dump</pre>
+  <p>Sous Windows, planifiez <code>pg_dump</code> avec le <b>Planificateur de tâches</b>, et copiez les fichiers sur un disque externe ou dans un stockage en ligne.</p>
+  <div class="box warn"><b class="t">À sauvegarder aussi</b><p>Le fichier <code>deploy/.env</code> (mot de passe de la base) et, pour Android, la clé de signature <code>.jks</code>. Sans eux, il est impossible de remonter le serveur ou de mettre à jour l'application sur le Play Store.</p></div>
+</section>
+
+<!-- ============================ 14. MISES À JOUR ============================ -->
+<section class="chap tone-teal">
+  <h2><span class="n">14</span> Mises à jour</h2>
+  <ol class="steps">
+    <li><b>Sauvegardez d'abord</b> (chapitre 13).</li>
+    <li><b>Serveur en ligne :</b>
+<pre>cd iam-invoicer
+git pull
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build</pre>
+      La base est mise à niveau automatiquement au démarrage (migrations). La version navigateur est à jour dès le rechargement de la page.</li>
+    <li><b>Windows :</b> lancez le nouvel installateur par-dessus l'ancien. Les données et l'identifiant d'application sont conservés, y compris depuis l'ancien « IAM ERP ».</li>
+    <li><b>macOS :</b> remplacez l'application dans <b>Applications</b>.</li>
+    <li><b>Android et iOS :</b> par le magasin, TestFlight ou un nouvel APK. <b>Synchronisez les opérations hors ligne avant</b> de désinstaller une version.</li>
+  </ol>
+  <div class="box warn"><b class="t">Ordre de mise à jour</b><p>Mettez à jour le <b>serveur en premier</b>, puis les postes. Avec un serveur du bureau, mettez à jour <b>tous les postes en même temps</b> : le premier poste mis à jour fait évoluer la base, ce qui peut gêner les postes restés sur l'ancienne version. Ne revenez jamais à une version antérieure sur une base déjà mise à niveau.</p></div>
+</section>
+
+<!-- ============================ 15. SÉCURITÉ ============================ -->
+<section class="chap tone-slate">
+  <h2><span class="n">15</span> Sécurité</h2>
+  <table>
+    <thead><tr><th style="width:30%">Mesure intégrée</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Mots de passe</td><td>Chiffrés avec scrypt, jamais stockés en clair.</td></tr>
+      <tr><td>Sessions</td><td>Jetons valables 30 jours, révoqués à la déconnexion ou à la désactivation du compte.</td></tr>
+      <tr><td>Tentatives de connexion</td><td>Après 10 mots de passe erronés, nouvel essai possible au bout de 15 minutes (serveur en ligne).</td></tr>
+      <tr><td>Secrets</td><td>Mots de passe SMTP, clés SMS et jeton SECeF stockés à part, jamais renvoyés à l'interface.</td></tr>
+      <tr><td>Impression</td><td>Liens d'impression à usage unique.</td></tr>
+      <tr><td>Droits</td><td>Contrôle par rôle sur le serveur, pas seulement dans l'interface. Journal d'activité.</td></tr>
+    </tbody>
+  </table>
+  <h3>À votre charge</h3>
+  <ul class="check">
+    <li>Exposer le serveur <b>uniquement en HTTPS</b> ; ne jamais ouvrir 5432 ni 8080 sur Internet.</li>
+    <li>Accès SSH par clé, mises à jour de sécurité du système (<code>unattended-upgrades</code>).</li>
+    <li>Un compte par personne, jamais de compte partagé ; désactiver le compte d'un employé qui quitte l'entreprise le jour de son départ.</li>
+    <li>Verrouillage automatique des postes et des téléphones.</li>
+    <li>Sauvegardes chiffrées et stockées hors du serveur.</li>
+    <li>Protection des données personnelles (clients, salariés) : accès limité aux rôles nécessaires. Respectez la loi burkinabè sur la protection des données personnelles et les recommandations de la CIL.</li>
+  </ul>
+</section>
+
+<!-- ============================ 16. FABRICATION ============================ -->
+<section class="chap tone-indigo">
+  <h2><span class="n">16</span> Fabriquer les applications</h2>
+  <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
+  <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, une compilation de contrôle iOS et l'image Docker du serveur.</p>
+  <ul>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.4.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Résultats :</b> onglet <b>Artifacts</b> de l'exécution. Ils sont conservés 90 jours par défaut.</li>
+    <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>
+    <li><b>Signature macOS :</b> secrets <code>CSC_LINK</code>, <code>CSC_KEY_PASSWORD</code>, <code>APPLE_ID</code>, <code>APPLE_APP_SPECIFIC_PASSWORD</code>, <code>APPLE_TEAM_ID</code>, puis retirer <code>identity: null</code> de <code>electron-builder.yml</code>.</li>
+  </ul>
+  <h3>En local</h3>
+  <table>
+    <thead><tr><th style="width:22%">Cible</th><th style="width:34%">Commande</th><th>Machine nécessaire</th></tr></thead>
+    <tbody>
+      <tr><td>Windows</td><td><code>npm run dist:win</code></td><td>Windows, Node.js 22. Avec le contrôle intelligent des applications activé, la création de l'installateur échoue (« spawn UNKNOWN ») : utilisez <code>npx electron-builder --win zip</code> ou GitHub Actions.</td></tr>
+      <tr><td>macOS</td><td><code>npm run dist:mac</code></td><td>Mac, Node.js 22</td></tr>
+      <tr><td>Android</td><td><code>npm run android</code></td><td>Android Studio et JDK 21</td></tr>
+      <tr><td>iOS</td><td><code>npm run ios</code></td><td>Mac avec Xcode, compte Apple Developer</td></tr>
+      <tr><td>Serveur et web</td><td><code>npm run build:all-server</code></td><td>Toute machine avec Node.js 20 ou plus récent</td></tr>
+      <tr><td>Icônes</td><td><code>npm run icons</code></td><td>Après une modification du logo</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 17. DÉPANNAGE ============================ -->
+<section class="chap tone-amber">
+  <h2><span class="n">17</span> Dépannage</h2>
+  <table>
+    <thead><tr><th style="width:32%">Symptôme</th><th>Cause probable et solution</th></tr></thead>
+    <tbody>
+      <tr><td>Le site affiche une erreur de certificat</td><td>DNS pas encore propagé ou port 80 fermé. Vérifiez <code>nslookup</code> et le pare-feu, puis <code>docker compose restart caddy</code> et lisez <code>docker compose logs caddy</code>.</td></tr>
+      <tr><td>« Démarrage impossible » dans les journaux du serveur</td><td>Base injoignable ou mot de passe faux. Vérifiez <code>DB_PASSWORD</code> dans <code>deploy/.env</code>. S'il a été changé après la première installation, l'ancien mot de passe reste en vigueur dans le volume PostgreSQL.</td></tr>
+      <tr><td>L'application mobile ne se connecte pas</td><td>Adresse mal saisie, serveur arrêté, ou adresse <code>http://</code> sur iOS. Testez l'adresse dans le navigateur du téléphone.</td></tr>
+      <tr><td>Poste : « serveur du bureau injoignable »</td><td>Machine PostgreSQL éteinte, adresse IP changée, port 5432 bloqué, ou réseau absent de <code>pg_hba.conf</code>. Le délai de connexion est de 5 secondes.</td></tr>
+      <tr><td>Installateur Windows bloqué sans bouton « Exécuter quand même »</td><td>Contrôle intelligent des applications : utilisez une version signée (chapitre 5.3).</td></tr>
+      <tr><td>macOS : « l'application est endommagée » ou « ne peut être ouverte »</td><td>Application non signée : suivez l'étape 3 du chapitre 6.2. Si le message persiste : <code>xattr -dr com.apple.quarantine "/Applications/IAM INVOICER.app"</code>.</td></tr>
+      <tr><td>E-mail : « authentification refusée »</td><td>Gmail : utilisez un mot de passe d'application. Vérifiez aussi que le port 587 sortant est ouvert.</td></tr>
+      <tr><td>Le ticket sort tronqué ou trop petit</td><td>Pilote de l'imprimante : choisissez le papier 80 mm, mettez les marges à 0 et l'échelle à 100 %.</td></tr>
+      <tr><td>Le lecteur de codes-barres ne fait rien</td><td>Placez le curseur dans le champ de recherche du point de vente. Vérifiez le mode clavier et la disposition (AZERTY ou QWERTY) du lecteur.</td></tr>
+      <tr><td>Facture impossible à valider (SECeF)</td><td>Mode API : vérifiez Internet, le jeton DGI et l'adresse du service, ou passez temporairement en simulation pour un test (pas en production).</td></tr>
+      <tr><td>Opérations hors ligne bloquées « en attente »</td><td>Cliquez sur <b>Synchroniser</b> dans le bandeau en haut de la page. Une opération refusée par le serveur (droits, caisse clôturée) s'affiche avec son motif.</td></tr>
+      <tr><td>« Trop de tentatives de connexion »</td><td>Après 10 échecs, attendez 15 minutes. En cas d'oubli, un administrateur redéfinit le mot de passe dans <b>Utilisateurs</b>.</td></tr>
+      <tr><td>Développement : l'application démarre comme un simple Node</td><td>Supprimez la variable d'environnement <code>ELECTRON_RUN_AS_NODE</code>.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 18. CHECKLIST ============================ -->
+<section class="chap tone-green">
+  <h2><span class="n">18</span> Liste de contrôle de mise en service</h2>
+  <div class="grid2">
+    <div>
+      <h3>Infrastructure</h3>
+      <ul class="check">
+        <li>Architecture choisie et validée avec le client</li>
+        <li>DNS du domaine pointé vers le serveur</li>
+        <li>Pare-feu : 22, 80 et 443 seulement</li>
+        <li>HTTPS fonctionnel (cadenas dans le navigateur)</li>
+        <li><code>deploy/.env</code> rempli et sauvegardé</li>
+        <li>Sauvegarde quotidienne planifiée et copiée hors du serveur</li>
+        <li>Restauration testée une fois</li>
+        <li>Horloge du serveur synchronisée</li>
+      </ul>
+      <h3>Postes et appareils</h3>
+      <ul class="check">
+        <li>Applications installées (Windows, macOS, Android, iOS)</li>
+        <li>Adresse du serveur saisie sur chaque appareil</li>
+        <li>Imprimante 80 mm et lecteur de codes-barres testés</li>
+        <li>Un compte par utilisateur, avec le bon rôle</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Paramétrage</h3>
+      <ul class="check">
+        <li>Société : IFU, RCCM, régime fiscal, service des impôts, logo</li>
+        <li>Modèle de document, cachet et signature</li>
+        <li>Articles, clients, fournisseurs importés ou saisis</li>
+        <li>Dépôts créés, suivi lot ou série choisi, inventaire initial</li>
+        <li>Plan comptable vérifié, à-nouveaux saisis</li>
+        <li><b>Paramètres de paie validés par le comptable</b></li>
+        <li>Immobilisations reprises</li>
+        <li>Messagerie et SMS testés (envoi d'essai)</li>
+        <li>SECeF : simulation testée, puis mode API avec les identifiants DGI</li>
+      </ul>
+      <h3>Recette</h3>
+      <ul class="check">
+        <li>Un devis, une facture, un avoir, un règlement</li>
+        <li>Une ouverture, une vente et une clôture de caisse</li>
+        <li>Une réception fournisseur et un transfert entre dépôts</li>
+        <li>Une paie de test vérifiée par le comptable</li>
+        <li>Une vente hors ligne puis synchronisée (mobile)</li>
+        <li>Une signature à distance</li>
+        <li>Formation des utilisateurs effectuée</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box tip" style="margin-top:6mm"><b class="t">Support</b><p>IAM Technology, Ouagadougou. Pour toute demande, indiquez la version du logiciel, le mode de données, le système de l'appareil et le message d'erreur exact, avec une capture d'écran si possible.</p></div>
+</section>
+
+<!-- ============================ 19. LICENCES ============================ -->
+<section class="chap tone-indigo">
+  <h2><span class="n">19</span> Licences</h2>
+  <p>Sans licence, IAM INVOICER fonctionne en <b>évaluation complète pendant 30 jours</b>. Une licence se colle dans <b>Administration → Licence → Activer</b> (administrateur).</p>
+  <table>
+    <thead><tr><th style="width:20%">Offre</th><th>Modules</th><th style="width:16%">Utilisateurs</th></tr></thead>
+    <tbody>
+      <tr><td><b>Essentiel</b></td><td>Ventes, caisse, clients, articles, stock, paiements, rapports</td><td>2</td></tr>
+      <tr><td><b>Pro</b></td><td>Essentiel + achats, fournisseurs, comptabilité et déclarations, e-mails et SMS</td><td>5</td></tr>
+      <tr><td><b>Entreprise</b></td><td>Tous les modules (RH et paie, CRM, projets, immobilisations, budgets) ; application au nom et au logo de la société</td><td>illimité</td></tr>
+      <tr><td><b>Sur mesure</b></td><td>Modules choisis un par un</td><td>au choix</td></tr>
+    </tbody>
+  </table>
+  <div class="box warn"><b class="t">Contraintes</b>
+    <ul>
+      <li>La licence est établie au nom de la société : la <b>raison sociale</b> configurée doit correspondre (accents, majuscules et forme juridique ne comptent pas). Si un identifiant fiscal figure sur la licence, il doit aussi correspondre.</li>
+      <li>À la fin de l'évaluation ou à l'expiration d'une licence, le logiciel passe en <b>lecture seule</b> : consultation, impression et export restent possibles, les données ne sont jamais bloquées.</li>
+      <li>Le nombre d'utilisateurs <b>actifs</b> est limité selon l'offre : désactivez un compte pour en créer un autre.</li>
+      <li>Un module non inclus reste visible dans le menu, avec un cadenas.</li>
+      <li>Avec un serveur en ligne, la licence s'active une seule fois sur le serveur et vaut pour tous les appareils.</li>
+    </ul>
+  </div>
+</section>
+
+</body>
+</html>

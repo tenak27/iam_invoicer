@@ -22,11 +22,16 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Immobilisations | Registre, amortissement linéaire prorata temporis, dotations annuelles (681/28xx), cession et mise au rebut avec écritures |
 | Budgets et trésorerie | Budget mensuel par compte avec prévu/réalisé, trésorerie prévisionnelle à 8, 13 ou 26 semaines (factures, paie, prévisions) avec alerte de découvert |
 | Facture certifiée | SECeF (DGI) : certification à la validation, code, compteurs et QR code imprimés ; mode simulation et connecteur API |
-| Hors ligne | Ordinateur, web et mobile : consultation des dernières données, ventes, règlements, temps et congés saisis hors connexion puis envoyés au retour du réseau, sans doublon |
+| Hors ligne | Ordinateur (base locale synchronisée avec le serveur), web et mobile : consultation des dernières données, ventes, règlements, temps et congés saisis hors connexion puis envoyés au retour du réseau, sans doublon |
 | Communications | Envoi des documents par e-mail (PDF joint) et par SMS (Orange, Twilio ou passerelle HTTP), relances des factures en retard (une ou toutes), modèles de messages à variables, journal des envois |
 | Signatures | Cachet et signature de la société sur les documents, signature du client sur place (doigt, stylet, souris) ou à distance par lien sécurisé (e-mail/SMS), preuve : empreinte SHA-256, date, IP, appareil |
 | Modèles de documents | Mise en page moderne ou classique, couleur au choix, conditions générales, pied de page |
-| Administration | Société, IFU, RCCM, régime fiscal (RNI, RSI, CME), service des impôts, logo, utilisateurs et rôles, journal d'activité, sauvegarde |
+| Administration | Société, pays (identifiant fiscal, devise, TVA et régimes adaptés : IFU, NCC, NINEA, NIF, NIU…), logo dès la création, utilisateurs et rôles, journal d'activité, sauvegarde |
+| Taxes | TVA par ligne, taxes ajoutées au total (droit de timbre, taxe spécifique), retenues à la source déduites du net à payer et comptabilisées automatiquement ; modèles par pays |
+| États et déclarations | Bilan SYSCOHADA (actif/passif, contrôle d'équilibre), compte de résultat (classes 6, 7 et 8), déclarations du mois : TVA, retenues à la source, salaires ; impression à l'en-tête de la société |
+| Import | Clients, fournisseurs, articles, stock initial, salariés et plan comptable depuis Excel (.xlsx), CSV ou copier-coller, avec reconnaissance des colonnes et compte rendu ligne par ligne |
+| Licences | Paliers Essentiel, Pro, Entreprise ou sur mesure ; évaluation complète de 30 jours ; modules et nombre d'utilisateurs selon la licence ; application au nom de la société (Entreprise) |
+| Écrans | Ordinateur, tablette et téléphone : listes en cartes sur téléphone, menu réduit sur tablette, contenu centré sur grand écran, cibles tactiles de 44 px |
 
 ### Adaptation au Burkina Faso
 
@@ -170,7 +175,11 @@ npm test                 # tests : métier, comptabilité, caisse, serveur HTTP
 npm run e2e              # parcours complet dans l'application de bureau (Playwright)
 node tests/web-e2e.mjs http://127.0.0.1:8080   # parcours web ordinateur et téléphone (Edge ou Chrome), serveur démarré
 npm run typecheck
+node tests/responsive-audit.mjs http://127.0.0.1:8080 sortie   # adaptation aux écrans (7 tailles, toutes les pages)
+node tests/desktop-sync-probe.mjs                              # synchronisation bureau ↔ serveur, coupure comprise
 ```
+
+Licences (éditeur) : voir [tools/licence/README.md](tools/licence/README.md). Guide d'installation complet : [docs/IAM-INVOICER-Guide-installation.pdf](docs/IAM-INVOICER-Guide-installation.pdf).
 
 Si l'application démarre comme un simple Node depuis VS Code, retirez la variable `ELECTRON_RUN_AS_NODE` de l'environnement.
 
