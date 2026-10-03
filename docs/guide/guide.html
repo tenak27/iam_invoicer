@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.5.0</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.5.1</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -190,7 +190,7 @@
       <tr><td><b>Windows</b></td><td>Windows 10 ou 11, 64 bits (x64)</td><td>4 Go de mémoire, 500 Mo d'espace libre. Windows 7, 8 et 8.1 ne sont pas pris en charge. Pas de version pour Windows sur processeur ARM : la version x64 y fonctionne en émulation, sans garantie.</td></tr>
       <tr><td><b>macOS</b></td><td>macOS 12 Monterey ou plus récent</td><td>Deux fichiers : <code>arm64</code> pour les Mac à puce Apple (M1 à M4), <code>x64</code> pour les Mac Intel. La version minimale suit celle du moteur Electron : vérifiez-la à chaque mise à jour.</td></tr>
       <tr><td><b>Android</b></td><td>Android 7.0 (API 24)</td><td>Téléphone ou tablette. Compilé pour Android 16 (API 36). Connexion au serveur en ligne obligatoire.</td></tr>
-      <tr><td><b>iOS / iPadOS</b></td><td>iOS 15</td><td>Serveur en <b>HTTPS</b> obligatoire. Installation par TestFlight ou l'App Store uniquement (compte Apple Developer).</td></tr>
+      <tr><td><b>iOS / iPadOS</b></td><td>iOS 15</td><td>Serveur en <b>HTTPS</b> obligatoire. Installation par TestFlight, l'App Store, un IPA signé ad hoc, ou un IPA non signé via Sideloadly / AltStore.</td></tr>
       <tr><td><b>Navigateur</b></td><td>Chrome, Edge, Firefox ou Safari récents</td><td>Mises à jour des 2 dernières années. La navigation privée efface les données hors ligne à la fermeture.</td></tr>
     </tbody>
   </table>
@@ -256,7 +256,7 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.5.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.5.1 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
   <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
   <table>
     <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
@@ -267,7 +267,9 @@ docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM
     </tbody>
   </table>
   <h4>Proposer les installateurs au téléchargement</h4>
-  <p>Déposez les fichiers <code>.exe</code>, <code>.dmg</code> et <code>.apk</code> (récupérés dans GitHub Actions) dans le dossier <code>deploy/telechargements/</code> du serveur. Le site affiche automatiquement les boutons de téléchargement correspondants, avec leur taille.</p>
+  <p>Chaque étiquette de version publie une <b>Release GitHub</b> contenant l'installateur Windows (<code>.exe</code>), les fichiers macOS (<code>-arm64.dmg</code> pour les puces Apple, <code>-x64.dmg</code> pour Intel), l'APK Android et l'IPA iPhone. Une commande les copie dans le dossier du site :</p>
+  <pre>node tools/site/fetch-release.mjs deploy/telechargements --clean</pre>
+  <p>Le site affiche alors, pour chaque plateforme, un bouton par fichier avec sa taille, met en avant l'appareil du visiteur, propose un code QR pour télécharger l'APK depuis un téléphone et publie l'empreinte SHA-256 de chaque fichier. Des fichiers déposés à la main dans <code>deploy/telechargements/</code> sont pris en compte de la même façon.</p>
   <h4>Coordonnées du site</h4>
   <p>Renseignez téléphone, WhatsApp, e-mail et adresse dans <code>site/config.js</code> avant la construction (ou directement dans <code>out/site/config.js</code> sur un serveur sans Docker).</p>
   <div class="box danger"><b class="t">Configuration initiale à faire immédiatement</b><p>Tant que le compte administrateur n'est pas créé, la première personne qui ouvre l'adresse peut le créer. Faites la configuration initiale juste après la mise en ligne.</p></div>
@@ -333,8 +335,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.5.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.5.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.5.1.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.5.1.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -367,8 +369,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.5.0-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.5.0-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.5.1-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.5.1-x64.dmg</code></td></tr>
     </tbody>
   </table>
   <p>Pour savoir quel processeur a le Mac : menu  → <b>À propos de ce Mac</b>, ligne « Puce » ou « Processeur ».</p>
@@ -445,6 +447,12 @@ CREATE DATABASE iam_invoicer OWNER iam;
     <li>Installez <b>TestFlight</b> depuis l'App Store, puis ouvrez l'invitation reçue par e-mail. Vous pouvez aussi installer directement depuis l'App Store une fois l'application publiée.</li>
     <li>Au premier lancement, saisissez l'adresse du serveur, puis connectez-vous.</li>
   </ol>
+  <h3>8.3 Fichier IPA proposé sur le site</h3>
+  <ul>
+    <li><b>IPA signé</b> (<code>…-ios.ipa</code>) : fabriqué par GitHub Actions quand les secrets <code>IOS_CERT_P12_BASE64</code>, <code>IOS_CERT_PASSWORD</code>, <code>IOS_PROFILE_BASE64</code>, <code>IOS_TEAM_ID</code> (et <code>IOS_EXPORT_METHOD</code> : <code>release-testing</code> ou <code>enterprise</code>) sont renseignés. Sur un iPhone dont l'identifiant est inscrit dans le profil ad hoc, le bouton <b>Installer</b> du site (Safari, HTTPS) installe directement l'application.</li>
+    <li><b>IPA non signé</b> (<code>…-ios-unsigned.ipa</code>) : fabriqué sans compte Apple. Il s'installe depuis un ordinateur avec <b>Sideloadly</b> ou <b>AltStore</b> et l'identifiant Apple de l'utilisateur ; avec un compte gratuit, l'application doit être réinstallée tous les 7 jours. À réserver aux essais.</li>
+    <li>Pour une diffusion à des clients, préférez <b>TestFlight</b> ou l'App Store : renseignez le lien dans <code>iosUrl</code> de <code>site/config.js</code>, le site affiche alors le bouton TestFlight et son code QR.</li>
+  </ul>
   <div class="box info"><b class="t">Bon à savoir</b><p>Les versions TestFlight expirent après 90 jours : publiez une nouvelle version avant cette échéance. La validation d'Apple peut demander un compte de démonstration : préparez un compte de test sur le serveur.</p></div>
 </section>
 
@@ -706,10 +714,11 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 <section class="chap tone-indigo">
   <h2><span class="n">16</span> Fabriquer les applications</h2>
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
-  <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, une compilation de contrôle iOS et l'image Docker du serveur.</p>
+  <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, l'IPA iOS et l'image Docker du serveur. Sur une étiquette de version, tous les installateurs sont publiés dans une Release GitHub, avec le fichier d'empreintes <code>SHA256SUMS.txt</code>.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.5.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
-    <li><b>Résultats :</b> onglet <b>Artifacts</b> de l'exécution. Ils sont conservés 90 jours par défaut.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.5.1 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Résultats :</b> page <b>Releases</b> du dépôt (permanente), ou onglet <b>Artifacts</b> de l'exécution (90 jours).</li>
+    <li><b>APK signé (publication) :</b> secrets <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>. Sans eux, l'APK est signé avec la clé de test : installable, mais une version signée autrement ne pourra pas le mettre à jour sans désinstallation.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>
     <li><b>Signature macOS :</b> secrets <code>CSC_LINK</code>, <code>CSC_KEY_PASSWORD</code>, <code>APPLE_ID</code>, <code>APPLE_APP_SPECIFIC_PASSWORD</code>, <code>APPLE_TEAM_ID</code>, puis retirer <code>identity: null</code> de <code>electron-builder.yml</code>.</li>
   </ul>
