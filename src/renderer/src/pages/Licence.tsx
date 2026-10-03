@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { CheckCircle, Crown, Key, LockSimple, Phone, Rocket, Storefront, XCircle } from '@phosphor-icons/react'
 import type { Module } from '@shared/domain'
 import { formatDate } from '@shared/format'
-import { MODULE_NAMES, TIERS, VENDOR, type Tier } from '@shared/licence'
+import { MODULE_NAMES, TIERS, TRIAL_DAYS, VENDOR, type Tier } from '@shared/licence'
 import { api, run, useQuery } from '../api'
 import { Field, PageHeader, notify } from '../components/ui'
 import { useSession } from '../session'
@@ -48,6 +48,23 @@ export function LicencePage() {
         </div>
       )}
       {licence && <p className={`licence-msg ${licence.canWrite ? '' : 'blocked'}`}>{licence.message}{licence.licenceId ? ` Licence n° ${licence.licenceId}, au nom de ${licence.company}.` : ''}</p>}
+      {licence?.usage && (
+        <div className="card">
+          <h3>Limites de la version d'évaluation</h3>
+          <p className="muted">Pendant {TRIAL_DAYS} jours, tous les modules sont ouverts pour découvrir le logiciel, en quantités limitées. Les documents imprimés portent la mention « évaluation ». Une licence lève toutes les limites et conserve vos données.</p>
+          <div className="quota-list">
+            {licence.usage.map((u) => {
+              const pct = Math.min(100, Math.round((u.used / u.limit) * 100))
+              return (
+                <div key={u.key} className={`quota ${u.used >= u.limit ? 'full' : pct >= 75 ? 'warn' : ''}`}>
+                  <div className="row"><span>{u.label.replace(/ (.*)$/, '').replace(/^./, (c) => c.toUpperCase())}</span><strong>{u.used} / {u.limit}</strong></div>
+                  <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={u.limit} aria-valuenow={u.used} aria-label={u.label}><i style={{ width: `${pct}%` }} /></div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="dash-grid two">
         <div className="card">

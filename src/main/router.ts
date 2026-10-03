@@ -25,6 +25,7 @@ import * as taxes from './services/taxes'
 import * as imports from './services/imports'
 import * as statements from './services/statements'
 import * as licence from './services/licence'
+import * as licensing from './services/licensing'
 import * as roles from './services/roles'
 import * as recurring from './services/recurring'
 import { isReadAction } from '@shared/licence'
@@ -80,6 +81,11 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
     }
   },
   'licence.activate': { access: 'settings', fn: licence.activateLicence },
+  'licensing.status': { access: 'licensing', fn: licensing.vendorStatus },
+  'licensing.list': { access: 'licensing', fn: licensing.listIssued },
+  'licensing.issue': { access: 'licensing', fn: licensing.issueLicence },
+  'licensing.revoke': { access: 'licensing', fn: licensing.revokeIssued },
+  'licensing.importRegistry': { access: 'licensing', fn: licensing.importRegistry },
   'taxes.list': { access: 'user', fn: taxes.listTaxes },
   'taxes.save': { access: 'settings', fn: taxes.saveTax },
   'taxes.delete': { access: 'settings', fn: taxes.deleteTax },
@@ -270,7 +276,10 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
         if (!can(ctx.user.role, mod)) fail("Vous n'avez pas les droits pour cette action.")
       }
       // Licence : module inclus, et écriture seulement si la licence (ou l'évaluation) est valide.
-      if (!LICENCE_FREE.has(name)) await licence.enforceLicence(ctx.db, name, mod, isReadAction(name))
+      if (!LICENCE_FREE.has(name)) {
+        await licence.enforceLicence(ctx.db, name, mod, isReadAction(name))
+        await licence.enforceTrialQuota(ctx.db, name, args)
+      }
     }
     return { ok: true, data: await route.fn(ctx, args ?? {}) }
   } catch (e) {

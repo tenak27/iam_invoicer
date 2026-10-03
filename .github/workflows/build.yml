@@ -43,10 +43,31 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      # Signature Apple facultative : ajoutez les secrets CSC_LINK, CSC_KEY_PASSWORD,
-      # APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD et APPLE_TEAM_ID, et retirez « identity: null »
-      # dans electron-builder.yml.
+      # Signature ad hoc (electron-builder.yml). Signature Apple Developer ID facultative : secrets
+      # CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, et
+      # « identity » dans electron-builder.yml.
       - run: npm run dist:mac -- --publish never
+      # Contrôle des DMG : signature valide (sinon « application endommagée ») et démarrage réel
+      - name: Vérification des DMG
+        run: |
+          set -e
+          for dmg in dist/*.dmg; do
+            echo "== $dmg"
+            MNT=$(hdiutil attach -nobrowse -readonly "$dmg" | grep -o '/Volumes/.*' | head -1)
+            APP="$MNT/IAM INVOICER.app"
+            codesign --verify --deep --strict --verbose=2 "$APP"
+            lipo -archs "$APP/Contents/MacOS/IAM INVOICER"
+            case "$dmg" in
+              *"$(uname -m)"*)
+                rm -rf "$RUNNER_TEMP/app" && mkdir -p "$RUNNER_TEMP/app" && cp -R "$APP" "$RUNNER_TEMP/app/"
+                "$RUNNER_TEMP/app/IAM INVOICER.app/Contents/MacOS/IAM INVOICER" > "$RUNNER_TEMP/app.log" 2>&1 &
+                PID=$!
+                sleep 25
+                if kill -0 $PID 2>/dev/null; then echo "Démarrage OK"; kill $PID || true; else echo "L'application s'est arrêtée :"; cat "$RUNNER_TEMP/app.log"; exit 1; fi
+                ;;
+            esac
+            hdiutil detach "$MNT"
+          done
       - uses: actions/upload-artifact@v4
         with: { name: IAM-INVOICER-macOS, path: dist/*.dmg, if-no-files-found: error }
 

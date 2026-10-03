@@ -9,17 +9,20 @@
 //   SITE_ROOT       site de présentation servi à la racine (out/site) ; l'application passe sous /app/
 //   DOWNLOADS_DIR   installateurs proposés au téléchargement (DATA_DIR/telechargements par défaut)
 //   CORS_ORIGIN     origines autorisées pour l'API (* par défaut)
+//   LICENCE_PRIVATE_KEY_FILE  serveur de l'éditeur uniquement : clé privée pour émettre les licences
 
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { openDb } from '../main/db'
 import { createHandler } from './app'
 import { dbConfigFromEnv } from './config'
+import { configureVendorKey } from '../main/services/licensing'
 
 declare const __APP_VERSION__: string
 
 async function main() {
   const cfg = dbConfigFromEnv(process.env)
+  configureVendorKey(process.env.LICENCE_PRIVATE_KEY_FILE)
   const db = await openDb(cfg)
   const handler = createHandler({
     db,

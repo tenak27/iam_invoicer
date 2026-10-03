@@ -49,10 +49,30 @@ export const MODULE_NAMES: Record<Module, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité et déclarations',
   messages: 'E-mails et SMS', hr: 'RH et paie', crm: 'CRM', projects: 'Projets', assets: 'Immobilisations', budget: 'Budgets et trésorerie',
-  settings: 'Paramètres', users: 'Utilisateurs'
+  settings: 'Paramètres', users: 'Utilisateurs', licensing: 'Émission de licences'
 }
 
 export const TRIAL_DAYS = 30
+
+/** Version d'évaluation (sans licence) : tous les modules pour découvrir, mais en quantités limitées. */
+export const TRIAL_LIMITS = {
+  documents: 30,
+  clients: 25,
+  suppliers: 10,
+  products: 50,
+  employees: 3,
+  users: 2
+} as const
+export type TrialQuota = keyof typeof TRIAL_LIMITS
+export const TRIAL_QUOTA_LABELS: Record<TrialQuota, string> = {
+  documents: 'documents (devis, factures, ventes en caisse, achats)',
+  clients: 'clients',
+  suppliers: 'fournisseurs',
+  products: 'articles et prestations',
+  employees: 'salariés',
+  users: 'utilisateurs actifs'
+}
+export interface TrialUsage { key: TrialQuota; label: string; used: number; limit: number }
 
 export interface LicencePayload {
   v: 1
@@ -88,6 +108,16 @@ export interface LicenceStatus {
   /** Création et modification autorisées (sinon lecture seule). */
   canWrite: boolean
   message: string
+  /** Évaluation : consommation des quotas. */
+  usage?: TrialUsage[]
+  /** Poste ou serveur de l'éditeur : émission de licences possible. */
+  vendor?: boolean
+}
+
+/** Module accessible au regard de la licence (état inconnu, hors connexion : oui). */
+export function moduleLicensed(st: LicenceStatus | null | undefined, m: Module): boolean {
+  if (m === 'licensing') return !!st?.vendor
+  return !st || st.modules.includes(m)
 }
 
 /** Clé publique de vérification des licences (Ed25519, SPKI). */

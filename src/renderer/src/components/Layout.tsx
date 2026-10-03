@@ -5,10 +5,11 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, Key, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
+import { moduleLicensed } from '@shared/licence'
 import { Navbar } from './Topbar'
 import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
@@ -109,6 +110,7 @@ const NAV: Section[] = [
       { to: '/roles', label: 'Rôles et droits', module: 'users', icon: ShieldCheck },
       { to: '/import', label: 'Importer des données', short: 'Import', module: 'clients', icon: FileArrowUp },
       { to: '/licence', label: 'Licence', module: 'settings', icon: Certificate },
+      { to: '/licences-emises', label: 'Émission de licences', short: 'Licences', module: 'licensing', icon: Key },
       { to: '/audit', label: "Journal d'activité", module: 'users', icon: ListChecks }
     ]
   }
@@ -199,7 +201,7 @@ function LicenceBar() {
     <div className={`licence-bar ${readOnly ? 'blocked' : soon ? 'soon' : 'trial'}`} role="status">
       {readOnly ? <LockSimple size={18} weight="fill" aria-hidden="true" /> : <Hourglass size={18} aria-hidden="true" />}
       <span className="grow">
-        {licence.state === 'trial' ? `Version d'évaluation complète : ${licence.daysLeft} jour(s) restant(s).` : licence.message}
+        {licence.state === 'trial' ? `Version d'évaluation : ${licence.daysLeft} jour(s) restant(s)${(() => { const full = (licence.usage ?? []).filter((u) => u.used >= u.limit); return full.length ? `, limite atteinte : ${full.map((u) => u.label.replace(/ (.*)$/, '')).join(', ')}` : ', quantités limitées' })()}.` : licence.message}
       </span>
       {user.role === 'admin' && <NavLink className="btn btn-sm" to="/licence">{readOnly ? 'Activer une licence' : 'Voir les offres'}</NavLink>}
     </div>
@@ -254,7 +256,7 @@ export function Layout({ children }: { children: ReactNode }) {
   useCountUpEnhancer(mainRef, location.pathname)
   useResponsiveTables(mainRef, location.pathname)
   const online = useOnline()
-  const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && (!licence || licence.modules.includes(it.module)))
+  const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && moduleLicensed(licence, it.module))
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
 
   useEffect(() => {
@@ -297,14 +299,15 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
         <nav>
           {NAV.map((section, i) => {
-            const items = section.items.filter((it) => can(user.role, it.module))
+            // Émission de licences : seulement sur le poste ou le serveur de l'éditeur
+            const items = section.items.filter((it) => can(user.role, it.module) && (it.module !== 'licensing' || !!licence?.vendor))
             if (items.length === 0) return null
             return (
               <div key={i} className="nav-section">
                 {section.title && <div className="nav-title"><span>{section.title}</span></div>}
                 {items.map((it) => {
                   // Module hors licence : visible, cadenassé, mène à la page Licence.
-                  const locked = !!licence && !licence.modules.includes(it.module)
+                  const locked = !!licence && !moduleLicensed(licence, it.module)
                   return (
                     <NavLink
                       key={it.to}

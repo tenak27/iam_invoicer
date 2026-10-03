@@ -1,6 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell } from 'electron'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { configureVendorKey } from './services/licensing'
 import { openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
 import { openDb, restoreLocal } from './db'
 import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig } from './autoBackup'
@@ -439,6 +441,8 @@ function startSyncLoop() {
 }
 
 app.whenReady().then(async () => {
+  // Poste de l'éditeur : clé privée de licence présente → profil « Gestionnaire de licences » utilisable
+  configureVendorKey(process.env.IAM_LICENCE_KEY ?? join(homedir(), '.iam-invoicer', 'licence-private.pem'))
   if (app.isPackaged && process.platform !== 'darwin') Menu.setApplicationMenu(null)
   registerIpc()
   await connect()

@@ -1,6 +1,6 @@
 // Règles métier partagées entre le processus principal et l'interface.
 
-export type Role = 'admin' | 'commercial' | 'magasinier' | 'comptable' | 'caissier' | 'rh'
+export type Role = 'admin' | 'commercial' | 'magasinier' | 'comptable' | 'caissier' | 'rh' | 'licences'
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrateur',
@@ -8,7 +8,8 @@ export const ROLE_LABELS: Record<Role, string> = {
   magasinier: 'Magasinier',
   comptable: 'Comptable',
   caissier: 'Caissier',
-  rh: 'Ressources humaines'
+  rh: 'Ressources humaines',
+  licences: 'Gestionnaire de licences'
 }
 
 export type Module =
@@ -31,14 +32,17 @@ export type Module =
   | 'budget'
   | 'settings'
   | 'users'
+  /** Émission des licences clients : uniquement sur le poste ou le serveur de l'éditeur (clé privée). */
+  | 'licensing'
 
 export const PERMISSIONS: Record<Role, Module[]> = {
-  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'settings', 'users'],
+  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'settings', 'users', 'licensing'],
   commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages', 'crm', 'projects'],
   magasinier: ['dashboard', 'purchases', 'stock', 'suppliers', 'products'],
   comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages', 'hr', 'projects', 'assets', 'budget'],
   caissier: ['cash'],
-  rh: ['hr']
+  rh: ['hr'],
+  licences: ['licensing']
 }
 
 /** Matrice des droits personnalisée par la société (Administration → Rôles et droits). */

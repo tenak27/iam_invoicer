@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.5.1</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.5.3</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -256,7 +256,7 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.5.1 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.5.3 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
   <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
   <table>
     <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
@@ -335,8 +335,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.5.1.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.5.1.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.5.3.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.5.3.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -369,8 +369,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.5.1-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.5.1-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.5.3-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.5.3-x64.dmg</code></td></tr>
     </tbody>
   </table>
   <p>Pour savoir quel processeur a le Mac : menu  → <b>À propos de ce Mac</b>, ligne « Puce » ou « Processeur ».</p>
@@ -378,10 +378,11 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <ol class="steps">
     <li>Ouvrez le fichier <code>.dmg</code> et glissez <b>IAM INVOICER</b> dans <b>Applications</b>.</li>
     <li>Éjectez l'image disque.</li>
-    <li>Premier lancement d'une version non signée :
+    <li>Premier lancement (application signée « ad hoc », sans certificat Apple) :
       <ul>
         <li>jusqu'à macOS 14 : <b>clic droit sur l'application → Ouvrir</b>, puis confirmez ;</li>
-        <li>à partir de macOS 15 : lancez l'application une fois (elle est refusée), puis ouvrez <b>Réglages Système → Confidentialité et sécurité</b> et cliquez sur <b>Ouvrir quand même</b>.</li>
+        <li>à partir de macOS 15 : lancez l'application une fois (elle est refusée, cliquez sur <b>Terminé</b>), puis ouvrez <b>Réglages Système → Confidentialité et sécurité</b> et cliquez sur <b>Ouvrir quand même</b> ;</li>
+        <li>toujours bloquée : dans le Terminal, <code>xattr -cr "/Applications/IAM INVOICER.app"</code>, puis relancez.</li>
       </ul>
     </li>
   </ol>
@@ -716,11 +717,12 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
   <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, l'IPA iOS et l'image Docker du serveur. Sur une étiquette de version, tous les installateurs sont publiés dans une Release GitHub, avec le fichier d'empreintes <code>SHA256SUMS.txt</code>.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.5.1 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.5.3 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
     <li><b>Résultats :</b> page <b>Releases</b> du dépôt (permanente), ou onglet <b>Artifacts</b> de l'exécution (90 jours).</li>
     <li><b>APK signé (publication) :</b> secrets <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>. Sans eux, l'APK est signé avec la clé de test : installable, mais une version signée autrement ne pourra pas le mettre à jour sans désinstallation.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>
-    <li><b>Signature macOS :</b> secrets <code>CSC_LINK</code>, <code>CSC_KEY_PASSWORD</code>, <code>APPLE_ID</code>, <code>APPLE_APP_SPECIFIC_PASSWORD</code>, <code>APPLE_TEAM_ID</code>, puis retirer <code>identity: null</code> de <code>electron-builder.yml</code>.</li>
+    <li><b>Signature macOS :</b> secrets <code>CSC_LINK</code>, <code>CSC_KEY_PASSWORD</code>, <code>APPLE_ID</code>, <code>APPLE_APP_SPECIFIC_PASSWORD</code>, <code>APPLE_TEAM_ID</code>, puis remplacer <code>identity: '-'</code> (signature ad hoc) par le nom du certificat dans <code>electron-builder.yml</code> et activer <code>hardenedRuntime</code>.</li>
+    <li><b>Contrôle des DMG :</b> à chaque fabrication, la signature de l'application est vérifiée et la version pour puce Apple est réellement démarrée sur un Mac de GitHub.</li>
   </ul>
   <h3>En local</h3>
   <table>
@@ -815,7 +817,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 <!-- ============================ 19. LICENCES ============================ -->
 <section class="chap tone-indigo">
   <h2><span class="n">19</span> Licences</h2>
-  <p>Sans licence, IAM INVOICER fonctionne en <b>évaluation complète pendant 30 jours</b>. Une licence se colle dans <b>Administration → Licence → Activer</b> (administrateur).</p>
+  <p>Sans licence, IAM INVOICER fonctionne en <b>évaluation pendant 30 jours</b>. Pendant 30 jours, tous les modules sont ouverts mais en quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés, 2 utilisateurs actifs ; les documents imprimés portent le filigrane « VERSION D’ÉVALUATION ». La consommation s'affiche dans <b>Administration → Licence</b>. Une licence se colle dans <b>Administration → Licence → Activer</b> (administrateur).</p>
   <table>
     <thead><tr><th style="width:20%">Offre</th><th>Modules</th><th style="width:16%">Utilisateurs</th></tr></thead>
     <tbody>
@@ -825,12 +827,15 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
       <tr><td><b>Sur mesure</b></td><td>Modules choisis un par un</td><td>au choix</td></tr>
     </tbody>
   </table>
+  <h3>Émettre les licences (IAM Technology)</h3>
+  <p>Sur le poste ou le serveur de l'éditeur, qui détient la clé privée, le menu <b>Administration → Émission de licences</b> permet d'émettre, renouveler et suivre les licences. Un utilisateur au rôle <b>Gestionnaire de licences</b> n'accède qu'à ce module. Voir <code>tools/licence/README.md</code>.</p>
   <div class="box warn"><b class="t">Contraintes</b>
     <ul>
       <li>La licence est établie au nom de la société : la <b>raison sociale</b> configurée doit correspondre (accents, majuscules et forme juridique ne comptent pas). Si un identifiant fiscal figure sur la licence, il doit aussi correspondre.</li>
       <li>À la fin de l'évaluation ou à l'expiration d'une licence, le logiciel passe en <b>lecture seule</b> : consultation, impression et export restent possibles, les données ne sont jamais bloquées.</li>
       <li>Le nombre d'utilisateurs <b>actifs</b> est limité selon l'offre : désactivez un compte pour en créer un autre.</li>
       <li>Un module non inclus reste visible dans le menu, avec un cadenas.</li>
+      <li>Pendant l'évaluation, une création au-delà d'une limite est refusée avec un message ; les modifications restent possibles.</li>
       <li>Avec un serveur en ligne, la licence s'active une seule fois sur le serveur et vaut pour tous les appareils.</li>
     </ul>
   </div>

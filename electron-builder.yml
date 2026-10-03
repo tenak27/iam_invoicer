@@ -32,7 +32,13 @@ mac:
     - target: dmg
       arch: [arm64, x64]
   artifactName: IAM-INVOICER-${version}-${arch}.${ext}
-  # Sans certificat Apple Developer, l'application n'est pas signée : voir README.
-  identity: null
+  # Signature « ad hoc » (sans certificat Apple) : indispensable sur les Mac à puce Apple,
+  # qui refusent une application non signée (« IAM INVOICER est endommagé »). Au premier
+  # lancement, macOS demande une confirmation (Réglages Système → Confidentialité et
+  # sécurité → Ouvrir quand même). Avec un certificat Developer ID : remplacer « - » par
+  # le nom du certificat, mettre hardenedRuntime à true et ajouter la notarisation.
+  identity: '-'
+  hardenedRuntime: false
+  gatekeeperAssess: false
 dmg:
   title: IAM INVOICER ${version}

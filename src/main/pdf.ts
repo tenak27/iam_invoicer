@@ -166,10 +166,12 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .secef.sim .t { color: #b8321f; }
   .terms { margin-top: 16px; font-size: 7.5pt; color: #5f6b7a; border-top: 1px solid #e4e9ef; padding-top: 6px; white-space: pre-line; page-break-inside: avoid; }
   .stamp { position: fixed; top: 40%; left: 15%; font-size: 64pt; color: rgba(200, 30, 30, .13); transform: rotate(-25deg); font-weight: 800; }
+  .eval-mark { position: fixed; top: 58%; left: 8%; font-size: 40pt; color: rgba(29, 111, 214, .11); transform: rotate(-25deg); font-weight: 800; letter-spacing: 2px; white-space: nowrap; pointer-events: none; }
 </style></head>
 <body>
   ${modern ? '<div class="band"></div>' : ''}
   ${isDraft ? '<div class="stamp">BROUILLON</div>' : isCancelled ? '<div class="stamp">ANNULÉ</div>' : ''}
+  ${evaluation ? '<div class="eval-mark" aria-hidden="true">VERSION D’ÉVALUATION</div>' : ''}
   <div class="head">
     <div>
       ${company.logo ? `<img class="logo" src="${company.logo}">` : ''}

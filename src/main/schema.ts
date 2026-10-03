@@ -697,5 +697,31 @@ export const MIGRATIONS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
   CREATE INDEX recurring_due_idx ON recurring_invoices(active, next_date)
+  `,
+  // v9 : profil « Gestionnaire de licences » et registre des licences émises (poste de l'éditeur)
+  `
+  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+  ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','commercial','magasinier','comptable','caissier','rh','licences'));
+  CREATE TABLE licences_issued (
+    id SERIAL PRIMARY KEY,
+    number TEXT NOT NULL UNIQUE,
+    company TEXT NOT NULL,
+    tax_id TEXT,
+    tier TEXT NOT NULL,
+    modules JSONB NOT NULL DEFAULT '[]',
+    users INT NOT NULL DEFAULT 0,
+    issued TEXT NOT NULL,
+    expires TEXT,
+    white_label BOOLEAN NOT NULL DEFAULT FALSE,
+    licence_key TEXT NOT NULL,
+    contact TEXT,
+    notes TEXT,
+    renews_id INT REFERENCES licences_issued(id) ON DELETE SET NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    revoked_reason TEXT,
+    issued_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX licences_issued_company_idx ON licences_issued(company)
   `
 ]

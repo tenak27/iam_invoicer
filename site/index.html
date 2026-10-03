@@ -297,7 +297,7 @@
     <div class="wrap grid">
       <div class="stat reveal"><b data-count="17">17</b>modules métier</div>
       <div class="stat reveal"><b data-count="18">18</b>pays OHADA pris en charge</div>
-      <div class="stat reveal"><b data-count="30">30</b>jours d'essai complet</div>
+      <div class="stat reveal"><b data-count="30">30</b>jours d'essai gratuit</div>
       <div class="stat reveal"><b data-count="5">5</b>plateformes, une seule base</div>
     </div>
   </div>
@@ -415,7 +415,7 @@
       <div class="section-head reveal">
         <div class="kicker">Offres</div>
         <h2>Une offre pour chaque taille d'entreprise</h2>
-        <p>Essai complet de 30 jours, sans engagement. Vos données restent toujours consultables.</p>
+        <p>Essai gratuit de 30 jours, sans engagement, avec tous les modules. Vos données restent toujours consultables.</p>
       </div>
       <div class="tiers">
         <div class="tier reveal">
@@ -485,8 +485,9 @@
           <p class="dl-note">Mac de 2020 et après (M1 à M4) : choisissez <b>Puce Apple</b>. Le menu Pomme → <b>À propos de ce Mac</b> indique votre puce.</p>
           <details class="dl-how"><summary>Comment installer</summary><ol>
             <li>Ouvrez le fichier <b>.dmg</b> et glissez IAM INVOICER dans <b>Applications</b>.</li>
-            <li>Au premier lancement, faites un clic droit sur l'application → <b>Ouvrir</b>.</li>
-            <li>Si macOS bloque l'ouverture : <b>Réglages Système → Confidentialité et sécurité → Ouvrir quand même</b>.</li>
+            <li>Ouvrez IAM INVOICER. Si macOS indique qu'il ne peut pas vérifier l'application, cliquez sur <b>Terminé</b>.</li>
+            <li>Ouvrez <b>Réglages Système → Confidentialité et sécurité</b>, descendez et cliquez sur <b>Ouvrir quand même</b>, puis confirmez. Cette étape n'est demandée qu'une fois.</li>
+            <li>Toujours bloqué ? Dans le Terminal : <code>xattr -cr "/Applications/IAM INVOICER.app"</code>, puis relancez.</li>
           </ol></details>
         </article>
         <article class="dl reveal" data-platform="android">
@@ -553,6 +554,7 @@
         <details class="reveal"><summary>Faut-il une connexion Internet ?</summary><p>Non pour l'utilisation courante : sur ordinateur, vous pouvez même travailler seul sur votre poste. Avec un serveur en ligne, chaque appareil continue de fonctionner sans réseau et envoie ses ventes au retour de la connexion.</p></details>
         <details class="reveal"><summary>Le logiciel est-il adapté à mon pays ?</summary><p>IAM INVOICER suit le plan comptable SYSCOHADA révisé et s'adapte au pays choisi (identifiant fiscal, devise, TVA, régimes). Les paramètres de taxes et de paie restent modifiables avec votre comptable.</p></details>
         <details class="reveal"><summary>Puis-je reprendre mes données existantes ?</summary><p>Oui : clients, fournisseurs, articles, stock, salariés et plan comptable s'importent depuis Excel ou un fichier CSV, avec un compte rendu ligne par ligne.</p></details>
+        <details class="reveal"><summary>Que comprend la version d'essai ?</summary><p>Pendant 30 jours, tous les modules sont ouverts pour découvrir le logiciel, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Les documents imprimés portent la mention « version d'évaluation ». Une licence lève toutes les limites en conservant ce que vous avez saisi.</p></details>
         <details class="reveal"><summary>Que se passe-t-il à la fin de l'essai ?</summary><p>Vos données restent consultables, imprimables et exportables. Pour continuer à saisir, il suffit d'activer une licence.</p></details>
         <details class="reveal"><summary>Mes données sont-elles en sécurité ?</summary><p>Les mots de passe sont chiffrés, les échanges passent en HTTPS, chaque utilisateur a des droits selon son rôle et toutes les actions sont tracées. Des sauvegardes automatiques sont prévues sur le serveur.</p></details>
       </div>
@@ -711,7 +713,7 @@
       if (device && primary[device]) {
         document.getElementById('dl-reco-ic').innerHTML = card(device).querySelector('.ic').innerHTML
         document.getElementById('dl-reco-title').textContent = 'IAM INVOICER pour ' + NAMES[device]
-        document.getElementById('dl-reco-sub').textContent = 'Version ' + ((latest[device] && latest[device][0].version) || r.data.version) + ', conseillée pour votre appareil. Essai complet de 30 jours.'
+        document.getElementById('dl-reco-sub').textContent = 'Version ' + ((latest[device] && latest[device][0].version) || r.data.version) + ', conseillée pour votre appareil. Essai gratuit de 30 jours.'
         document.getElementById('dl-reco-acts').innerHTML = primary[device].slice(0, 2).join('').replace(/btn-primary|btn-ghost/g, 'btn-light')
         document.getElementById('dl-reco').hidden = false
         document.querySelector('#hero-dl span').textContent = 'Télécharger pour ' + NAMES[device]
@@ -726,7 +728,7 @@
         }).join('')
         document.getElementById('all-files').hidden = false
       }
-      document.getElementById('dl-version').textContent = 'Version ' + r.data.version + ' — essai complet de 30 jours inclus.'
+      document.getElementById('dl-version').textContent = 'Version ' + r.data.version + ' — essai gratuit de 30 jours inclus.'
     }).catch(function () {})
     document.getElementById('all-files-body').addEventListener('click', function (e) {
       var b = e.target.closest('[data-sha]')

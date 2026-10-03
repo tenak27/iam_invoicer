@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 import { can, type Module, type Role } from '@shared/domain'
-import type { LicenceStatus } from '@shared/licence'
+import { moduleLicensed, type LicenceStatus } from '@shared/licence'
 
 export interface User {
   id: number
@@ -35,8 +35,7 @@ export function useSession(): Session {
 
 /** Module licencié (toujours vrai si l'état de licence est inconnu, hors connexion par exemple). */
 export function useLicensed(module: Module): boolean {
-  const l = useSession().licence
-  return !l || l.modules.includes(module)
+  return moduleLicensed(useSession().licence, module)
 }
 
 export function useCan(module: Module): boolean {

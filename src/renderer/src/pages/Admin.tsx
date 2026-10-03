@@ -16,7 +16,7 @@ const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité',
   messages: 'Communications', hr: 'RH et paie', crm: 'CRM', projects: 'Projets', assets: 'Immobilisations', budget: 'Budgets et trésorerie',
-  settings: 'Paramètres', users: 'Utilisateurs'
+  settings: 'Paramètres', users: 'Utilisateurs', licensing: 'Émission de licences'
 }
 
 const DATA_TEXT: Record<DataMode, string> = {
@@ -359,6 +359,7 @@ export function SignatureModal({ title, name, onClose, onDone, askName = false }
 }
 
 export function Users() {
+  const { licence } = useSession()
   const { data, error, loading, reload } = useQuery<any[]>('users.list')
   const [editing, setEditing] = useState<any | null>(null)
   return (
@@ -404,7 +405,7 @@ export function Users() {
         <table className="table compact">
           <thead><tr><th>Rôle</th><th>Accès</th></tr></thead>
           <tbody>
-            {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+            {(Object.keys(ROLE_LABELS) as Role[]).filter((r) => r !== 'licences' || !!licence?.vendor).map((r) => (
               <tr key={r}><td className="strong">{ROLE_LABELS[r]}</td><td>{PERMISSIONS[r].map((m) => MODULE_LABELS[m]).join(', ')}</td></tr>
             ))}
           </tbody>
@@ -416,6 +417,7 @@ export function Users() {
 }
 
 function UserForm({ user, onClose, onSaved }: { user: any; onClose: () => void; onSaved: () => void }) {
+  const { licence } = useSession()
   const f = useForm<any>({ username: '', full_name: '', active: true, ...user, password: '' })
   const submit = async () => {
     const r = await run(() => api('users.save', { ...f.values, password: f.values.password || undefined }), 'Utilisateur enregistré.')
@@ -428,7 +430,7 @@ function UserForm({ user, onClose, onSaved }: { user: any; onClose: () => void; 
         <Field label="Nom complet"><input autoFocus {...f.bind('full_name')} /></Field>
         <Field label="Identifiant de connexion"><input {...f.bind('username')} /></Field>
         <Field label="Rôle">
-          <select {...f.bind('role')}>{(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
+          <select {...f.bind('role')}>{(Object.keys(ROLE_LABELS) as Role[]).filter((r) => r !== 'licences' || !!licence?.vendor || f.values.role === r).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
         </Field>
         <Field label={user.id ? 'Nouveau mot de passe (facultatif)' : 'Mot de passe'}><input type="password" {...f.bind('password')} /></Field>
       </div>

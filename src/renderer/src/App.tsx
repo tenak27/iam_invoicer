@@ -33,6 +33,7 @@ import { ProjectDetail, ProjectsPage } from './pages/Projects'
 import { AssetsPage } from './pages/Assets'
 import { BudgetPage } from './pages/Budget'
 import { homeFor } from './components/Layout'
+import { LicensingPage } from './pages/Licensing'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
 
@@ -159,6 +160,7 @@ export default function App() {
                 <Route path="/import" element={<ImportPage />} />
                 <Route path="/licence" element={<LicencePage />} />
                 <Route path="/roles" element={<RolesPage />} />
+                <Route path="/licences-emises" element={<LicensingPage />} />
                 <Route path="/recurrentes" element={<RecurringPage />} />
                 <Route path="/audit" element={<AuditLog />} />
                 <Route path="/account" element={<MyAccount />} />

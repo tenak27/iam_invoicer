@@ -1,17 +1,20 @@
-// Vérification et activation des licences. Sans licence : évaluation complète de
-// 30 jours, puis lecture seule (consultation, impression et export restent possibles).
+// Vérification et activation des licences. Sans licence : évaluation de 30 jours,
+// tous modules mais en quantités limitées (TRIAL_LIMITS) et documents marqués
+// « évaluation », puis lecture seule (consultation, impression et export restent possibles).
 
 import { createPublicKey, verify } from 'node:crypto'
 import { PERMISSIONS, type Module } from '@shared/domain'
 import {
-  BASE_MODULES, LICENCE_PUBLIC_KEY, MODULE_NAMES, normalizeCompany, TIERS, TRIAL_DAYS, VENDOR,
-  type LicencePayload, type LicenceStatus
+  BASE_MODULES, LICENCE_PUBLIC_KEY, MODULE_NAMES, normalizeCompany, TIERS, TRIAL_DAYS, TRIAL_LIMITS, TRIAL_QUOTA_LABELS, VENDOR,
+  type LicencePayload, type LicenceStatus, type TrialQuota, type TrialUsage
 } from '@shared/licence'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
+import { vendorKeyAvailable } from './licensing'
 
-const ALL_MODULES = PERMISSIONS.admin as Module[]
+// Émission de licences : hors licence client, réservée au poste de l'éditeur
+const ALL_MODULES: Module[] = PERMISSIONS.admin.filter((m) => m !== 'licensing')
 let publicKey = createPublicKey(LICENCE_PUBLIC_KEY)
 const decoded = new Map<string, LicencePayload | null>()
 
@@ -78,10 +81,13 @@ async function computeStatus(db: Db): Promise<LicenceStatus> {
   const trialLeft = TRIAL_DAYS - daysBetween(trialStart, today)
   const trial = (message: string): LicenceStatus =>
     trialLeft > 0
-      ? { state: 'trial', label: 'Évaluation', tier: 'trial', modules: ALL_MODULES, users: 0, expires: null, daysLeft: trialLeft, company, licenceId: null, whiteLabel: false, canWrite: true, message }
+      ? { state: 'trial', label: 'Évaluation', tier: 'trial', modules: ALL_MODULES, users: TRIAL_LIMITS.users, expires: null, daysLeft: trialLeft, company, licenceId: null, whiteLabel: false, canWrite: true, message }
       : { state: 'trial_over', label: 'Évaluation terminée', tier: 'trial', modules: ALL_MODULES, users: 0, expires: null, daysLeft: 0, company, licenceId: null, whiteLabel: false, canWrite: false, message: `Période d'évaluation terminée : vos données restent consultables. Activez une licence pour continuer (${contact}).` }
 
-  if (!key) return trial(`Évaluation complète : ${Math.max(trialLeft, 0)} jour(s) restant(s). Contact : ${contact}.`)
+  if (!key) {
+    const st = trial(`Évaluation : ${Math.max(trialLeft, 0)} jour(s) restant(s), quantités limitées. Contact : ${contact}.`)
+    return st.state === 'trial' ? { ...st, usage: await trialUsage(db) } : st
+  }
   const lic = decodeLicence(key)
   if (!lic) return { ...trial('La licence enregistrée est invalide.'), state: trialLeft > 0 ? 'trial' : 'invalid' }
   if (normalizeCompany(lic.company) !== normalizeCompany(company) || (lic.taxId && taxId && lic.taxId.replace(/\s/g, '') !== taxId.replace(/\s/g, '')))
@@ -101,8 +107,61 @@ async function computeStatus(db: Db): Promise<LicenceStatus> {
   }
 }
 
+const QUOTA_SQL: Record<Exclude<TrialQuota, 'users'>, string> = {
+  documents: 'SELECT COUNT(*)::int AS n FROM documents',
+  clients: "SELECT COUNT(*)::int AS n FROM parties WHERE kind = 'client'",
+  suppliers: "SELECT COUNT(*)::int AS n FROM parties WHERE kind = 'supplier'",
+  products: 'SELECT COUNT(*)::int AS n FROM products',
+  employees: 'SELECT COUNT(*)::int AS n FROM employees'
+}
+async function countOf(db: Db, q: TrialQuota): Promise<number> {
+  const sql = q === 'users' ? 'SELECT COUNT(*)::int AS n FROM users WHERE active' : QUOTA_SQL[q]
+  return (await db.one<{ n: number }>(sql))!.n
+}
+async function trialUsage(db: Db): Promise<TrialUsage[]> {
+  const keys = Object.keys(TRIAL_LIMITS) as TrialQuota[]
+  const used = await Promise.all(keys.map((k) => countOf(db, k)))
+  return keys.map((k, i) => ({ key: k, label: TRIAL_QUOTA_LABELS[k], used: used[i], limit: TRIAL_LIMITS[k] }))
+}
+
+/** Création demandée par un appel, au regard des quotas d'évaluation (null : rien de créé). */
+export function trialDemand(name: string, args: any): { quota: TrialQuota; add: number } | null {
+  const isNew = !args?.id
+  switch (name) {
+    case 'documents.save': return isNew ? { quota: 'documents', add: 1 } : null
+    case 'documents.convert':
+    case 'documents.duplicate':
+    case 'cash.sale':
+    case 'recurring.runDue': return { quota: 'documents', add: 1 }
+    case 'parties.save': return isNew ? { quota: args?.kind === 'supplier' ? 'suppliers' : 'clients', add: 1 } : null
+    case 'products.save': return isNew ? { quota: 'products', add: 1 } : null
+    case 'hr.saveEmployee': return isNew ? { quota: 'employees', add: 1 } : null
+    case 'imports.run': {
+      const q = ({ clients: 'clients', suppliers: 'suppliers', products: 'products', employees: 'employees' } as Record<string, TrialQuota>)[args?.kind]
+      return q ? { quota: q, add: Array.isArray(args?.rows) ? args.rows.length : 1 } : null
+    }
+    default: return null
+  }
+}
+
+/** Évaluation : refuse une création au-delà des quantités autorisées. */
+export async function enforceTrialQuota(db: Db, name: string, args: unknown) {
+  const d = trialDemand(name, args)
+  if (!d) return
+  const st = await licenceStatus(db)
+  if (st.state !== 'trial') return
+  const limit = TRIAL_LIMITS[d.quota]
+  const used = await countOf(db, d.quota)
+  if (used + d.add > limit) {
+    const contact = [VENDOR.name, VENDOR.phone, VENDOR.email].filter(Boolean).join(' · ')
+    fail(`Version d'évaluation limitée à ${limit} ${TRIAL_QUOTA_LABELS[d.quota]} (${used} déjà utilisé${used > 1 ? 's' : ''}). Activez une licence pour continuer sans limite : ${contact}.`)
+  }
+}
+
 /** Contrôle d'un appel : module inclus dans la licence, écriture autorisée. */
 export async function enforceLicence(db: Db, name: string, module: Module | null, readOnly: boolean) {
+  // Émission de licences : hors licence client ; l'émission elle-même exige la clé privée (licensing.ts)
+  if (module === 'licensing') return
   const st = await licenceStatus(db)
   if (module && !st.modules.includes(module))
     fail(`Le module « ${MODULE_NAMES[module]} » n'est pas inclus dans votre licence ${st.label}. Contactez ${VENDOR.name} pour l'ajouter.`)
@@ -117,8 +176,8 @@ export async function checkUserQuota(db: Db, excludeUserId?: number) {
   if (row!.n >= st.users) fail(`Votre licence ${st.label} est limitée à ${st.users} utilisateur(s) actif(s). Désactivez un compte ou passez au palier supérieur.`)
 }
 
-export async function getLicence(ctx: Ctx) {
-  return licenceStatus(ctx.db)
+export async function getLicence(ctx: Ctx): Promise<LicenceStatus> {
+  return { ...(await licenceStatus(ctx.db)), vendor: vendorKeyAvailable() }
 }
 
 export async function activateLicence(ctx: Ctx, args: { key: string }) {

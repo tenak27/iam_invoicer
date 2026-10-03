@@ -6,8 +6,8 @@ Réservé à IAM Technology. Ce dossier sert à émettre les licences vendues au
 
 - Une licence est un texte signé avec la **clé privée** de l'éditeur (Ed25519). Le logiciel contient seulement la **clé publique** (`src/shared/licence.ts`) : il vérifie la licence hors connexion mais ne peut pas en fabriquer.
 - La licence porte la raison sociale du client (et, en option, son identifiant fiscal). Le client ne peut pas la réutiliser pour une autre société.
-- Sans licence, le logiciel fonctionne en **évaluation complète pendant 30 jours**. Ensuite, et à l'expiration d'une licence, il passe en **lecture seule** : consultation, impression et export restent possibles, mais plus aucune création ni modification. Les données ne sont jamais bloquées.
-- Tant qu'aucune licence n'est active, les documents portent une petite mention « version d'évaluation ».
+- Sans licence, le logiciel fonctionne en **évaluation limitée pendant 30 jours** : tous les modules, mais au plus 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs actifs (`TRIAL_LIMITS` dans `src/shared/licence.ts`). Ensuite, et à l'expiration d'une licence, il passe en **lecture seule** : consultation, impression et export restent possibles, mais plus aucune création ni modification. Les données ne sont jamais bloquées.
+- Tant qu'aucune licence n'est active, les documents portent le filigrane « VERSION D'ÉVALUATION » et une mention en pied de page.
 
 ## Paliers
 
@@ -20,7 +20,18 @@ Réservé à IAM Technology. Ce dossier sert à émettre les licences vendues au
 
 Les modules de chaque palier se règlent dans `TIERS` (`src/shared/licence.ts`). Les coordonnées affichées aux clients sont dans `VENDOR`, dans le même fichier : **complétez le téléphone, l'e-mail et le site** avant de diffuser une version.
 
-## Émettre une licence
+## Émettre une licence depuis l'application (recommandé)
+
+Sur le poste de l'éditeur (là où se trouve `%USERPROFILE%.iam-invoicerlicence-private.pem`), ou sur un serveur lancé avec `LICENCE_PRIVATE_KEY_FILE`, le menu **Administration → Émission de licences** apparaît :
+
+- Créez un utilisateur avec le rôle **Gestionnaire de licences** : il ne voit que ce module (aucune donnée commerciale ou comptable). L'administrateur y a aussi accès.
+- **Nouvelle licence** : raison sociale, IFU, palier ou modules sur mesure, utilisateurs, durée (1 mois à 3 ans, perpétuelle, ou date précise), marque blanche, contact et note interne.
+- La clé se copie en un clic ou s'enregistre en `.txt` avec les instructions d'activation pour le client.
+- Le **registre** liste toutes les licences (actives, à renouveler sous 30 jours, expirées, révoquées). **Renouveler** reprend la licence avec un an de plus ; **Révoquer** la signale dans le registre (une licence déjà activée hors ligne reste valable jusqu'à sa fin : préférez des licences annuelles).
+- Chaque licence est aussi ajoutée au registre CSV `licences.csv` à côté de la clé ; **Reprendre le registre CSV** importe les licences émises avec l'outil ci-dessous.
+- Sur les installations des clients, la clé privée est absente : le menu et le rôle n'apparaissent pas.
+
+## Émettre une licence en ligne de commande
 
 **Le plus simple :** double-cliquez sur **Emettre une licence.cmd** dans ce dossier. Les questions s'enchaînent (client, offre, utilisateurs, durée) et la clé est copiée dans le presse-papiers, prête à envoyer.
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowCounterClockwise, Check, FloppyDisk, ShieldCheck } from '@phosphor-icons/react'
 import { ROLE_LABELS, setRolePermissions, type Module, type Role } from '@shared/domain'
-import { MODULE_NAMES } from '@shared/licence'
+import { MODULE_NAMES, moduleLicensed } from '@shared/licence'
 import { api, run, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Loading, PageHeader } from '../components/ui'
 import { KpiStrip } from '../components/KpiStrip'
@@ -29,10 +29,11 @@ const FEATURES: Record<Module, string> = {
   assets: 'Immobilisations, amortissements, cessions',
   budget: 'Budgets, trésorerie prévisionnelle',
   settings: 'Société, taxes, documents, messagerie, licence',
-  users: 'Comptes utilisateurs, rôles et droits, journal d’activité'
+  users: 'Comptes utilisateurs, rôles et droits, journal d’activité',
+  licensing: 'Émission des licences clients, registre, renouvellements (poste de l’éditeur)'
 }
 
-const ROLES = Object.keys(ROLE_LABELS) as Role[]
+const ALL_ROLES = Object.keys(ROLE_LABELS) as Role[]
 
 export function RolesPage() {
   const { user, licence } = useSession()
@@ -45,7 +46,10 @@ export function RolesPage() {
   if (loading || !data || !matrix) return <Loading />
 
   const editable = user.role === 'admin'
-  const modules = data.defaults.admin
+  // Profil « Gestionnaire de licences » : uniquement chez l'éditeur
+  const vendor = !!licence?.vendor
+  const ROLES = ALL_ROLES.filter((r) => r !== 'licences' || vendor)
+  const modules = data.defaults.admin.filter((m) => m !== 'licensing' || vendor)
   const dirty = JSON.stringify(matrix) !== JSON.stringify(data.current)
   const toggle = (role: Role, m: Module) =>
     setMatrix({ ...matrix, [role]: matrix[role].includes(m) ? matrix[role].filter((x) => x !== m) : [...matrix[role], m] })
@@ -84,7 +88,7 @@ export function RolesPage() {
           </thead>
           <tbody>
             {modules.map((m) => {
-              const outOfLicence = licence && !licence.modules.includes(m)
+              const outOfLicence = licence && !moduleLicensed(licence, m)
               return (
                 <tr key={m} className={outOfLicence ? 'inactive' : ''}>
                   <td>

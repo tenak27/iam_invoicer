@@ -1,7 +1,7 @@
 {
   "name": "iam-erp",
   "productName": "IAM INVOICER",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "IAM INVOICER — facturation, caisse, stock et comptabilité SYSCOHADA d'IAM Technology (Burkina Faso)",
   "author": "IAM Technology",
   "private": true,
