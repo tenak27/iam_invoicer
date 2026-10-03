@@ -5,7 +5,7 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
@@ -93,6 +93,8 @@ const NAV: Section[] = [
       { to: '/compta/grand-livre', label: 'Grand livre', module: 'accounting', icon: ListNumbers },
       { to: '/compta/balance', label: 'Balance', module: 'accounting', icon: Scales },
       { to: '/compta/resultat', label: 'Compte de résultat', module: 'accounting', icon: ChartLineUp },
+      { to: '/compta/bilan', label: 'Bilan', module: 'accounting', icon: Vault },
+      { to: '/declarations', label: 'Déclarations', module: 'accounting', icon: Stamp },
       { to: '/compta/comptes', label: 'Plan comptable', module: 'accounting', icon: ListChecks }
     ]
   },

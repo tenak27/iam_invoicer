@@ -320,6 +320,14 @@ await shot(page, 'import-compte-rendu')
 await page.locator('.sidebar').getByRole('link', { name: 'Clients', exact: true }).click()
 await page.locator('tr', { hasText: 'Pharmacie du Progrès' }).waitFor()
 
+// États financiers et déclarations
+await navTo('Bilan')
+await page.locator('.bs-total').first().waitFor()
+await shot(page, 'bilan')
+await navTo('Déclarations')
+await page.getByRole('heading', { name: /^TVA/ }).waitFor()
+await shot(page, 'declarations')
+
 // Thème sombre (préférence du système)
 await page.emulateMedia({ colorScheme: 'dark' })
 await page.locator('.nav-link', { hasText: 'Tableau de bord' }).click()

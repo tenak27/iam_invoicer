@@ -23,6 +23,7 @@ import * as assets from './services/assets'
 import * as budget from './services/budget'
 import * as taxes from './services/taxes'
 import * as imports from './services/imports'
+import * as statements from './services/statements'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -119,6 +120,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'accounting.accounts': { access: 'accounting', fn: accounting.listAccounts },
   'accounting.saveAccount': { access: 'accounting', fn: accounting.saveAccount },
+  'accounting.balanceSheet': { access: 'accounting', fn: statements.balanceSheet },
+  'declarations.month': { access: 'accounting', fn: statements.monthlyDeclarations },
   'accounting.entries': { access: 'accounting', fn: accounting.listEntries },
   'accounting.ledger': { access: 'accounting', fn: accounting.ledger },
   'accounting.balance': { access: 'accounting', fn: accounting.trialBalance },

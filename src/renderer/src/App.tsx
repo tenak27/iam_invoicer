@@ -9,6 +9,7 @@ import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
 import { ImportPage } from './pages/Import'
+import { BalanceSheet, Declarations } from './pages/Statements'
 import { DocumentList } from './pages/DocumentList'
 import { DocumentEditor } from './pages/DocumentEditor'
 import { PartyDetail, PartyList } from './pages/Parties'
@@ -118,6 +119,8 @@ export default function App() {
                 <Route path="/compta/balance" element={<Balance />} />
                 <Route path="/compta/resultat" element={<IncomeStatement />} />
                 <Route path="/compta/comptes" element={<Accounts />} />
+                <Route path="/compta/bilan" element={<BalanceSheet />} />
+                <Route path="/declarations" element={<Declarations />} />
                 <Route path="/messages" element={<MessagesLog />} />
                 <Route path="/stock/depots" element={<StockAdvanced />} />
                 <Route path="/rh" element={<HrPage />} />

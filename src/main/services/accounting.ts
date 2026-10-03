@@ -7,6 +7,7 @@
 
 import { JOURNALS, treasuryFor, type DocType } from '@shared/domain'
 import { WITHHOLDING_METHOD } from '@shared/taxes'
+import { isCharge, isProduct } from './statements'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, num, str, type Ctx } from './context'
@@ -264,19 +265,18 @@ export async function trialBalance(ctx: Ctx, args: { from?: string; to?: string 
   )
 }
 
-/** Compte de résultat simplifié : produits (classe 7) moins charges (classe 6). */
+/** Compte de résultat : charges (classe 6 et HAO 81, 83, 85, 87, 89) et produits (classe 7 et HAO 82, 84, 86, 88). */
 export async function incomeStatement(ctx: Ctx, args: { from?: string; to?: string } = {}) {
-  const rows = await ctx.db.query<{ number: string; label: string; amount: number }>(
-    `SELECT a.number, a.label,
-            SUM(CASE WHEN a.number LIKE '6%' THEN l.debit - l.credit ELSE l.credit - l.debit END) AS amount
+  const rows = await ctx.db.query<{ number: string; label: string; balance: number }>(
+    `SELECT a.number, a.label, SUM(l.debit - l.credit) AS balance
      FROM journal_lines l JOIN journal_entries e ON e.id = l.entry_id JOIN accounts a ON a.number = l.account
-     WHERE (a.number LIKE '6%' OR a.number LIKE '7%') AND ($1 = '' OR e.date >= $1) AND ($2 = '' OR e.date <= $2)
+     WHERE (a.number LIKE '6%' OR a.number LIKE '7%' OR a.number LIKE '8%') AND ($1 = '' OR e.date >= $1) AND ($2 = '' OR e.date <= $2)
      GROUP BY a.number, a.label HAVING SUM(l.debit - l.credit) <> 0
      ORDER BY a.number`,
     [str(args.from), str(args.to)]
   )
-  const charges = rows.filter((r) => r.number.startsWith('6'))
-  const produits = rows.filter((r) => r.number.startsWith('7'))
+  const charges = rows.filter((r) => isCharge(r.number)).map((r) => ({ number: r.number, label: r.label, amount: r.balance }))
+  const produits = rows.filter((r) => isProduct(r.number)).map((r) => ({ number: r.number, label: r.label, amount: -r.balance }))
   const totalCharges = round(charges.reduce((s, r) => s + r.amount, 0))
   const totalProduits = round(produits.reduce((s, r) => s + r.amount, 0))
   return { charges, produits, totalCharges, totalProduits, result: round(totalProduits - totalCharges) }

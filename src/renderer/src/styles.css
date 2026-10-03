@@ -1300,3 +1300,12 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .import-preview th select { margin-top: 4px; font-size: 13px; }
 .info-box.warn-box { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r-md); }
 @media (max-width: 900px) { .import-steps { grid-template-columns: 1fr; } }
+
+/* Bilan et déclarations */
+.bs-section { margin-bottom: 14px; }
+.bs-head { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--tone-soft, var(--surface-2)); color: var(--tone-ink, var(--text)); font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: .02em; }
+.bs-empty { padding: 6px 12px; }
+.bs-total { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; padding: 12px 14px; border-radius: var(--r-md); background: var(--tone-grad, var(--c-primary)); color: #fff; font-weight: 700; }
+.table.decl tr.sep td { border-top: 2px solid var(--line-strong); font-weight: 600; }
+.table.decl tfoot td { font-weight: 800; color: var(--tone-ink, var(--text)); background: var(--tone-soft, var(--surface-2)); }
+.bs-total span, .bs-total strong { color: #fff; }

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { JOURNALS } from '@shared/domain'
 import { formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
-import { api, exportCsv, run, useQuery } from '../api'
+import { api, exportCsv, run, unwrap, useQuery } from '../api'
+import { reportHtml, type ReportTable } from '../components/reportPrint'
+import { useSession } from '../session'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
-import { PencilSimple, Trash } from '@phosphor-icons/react'
+import { PencilSimple, Printer, Trash } from '@phosphor-icons/react'
 
 const amount = (n: number) => (n ? formatNumber(n, n % 1 ? 2 : 0) : '')
 const firstOfYear = () => `${todayISO().slice(0, 4)}-01-01`
@@ -248,6 +250,12 @@ export function IncomeStatement() {
   const [from, setFrom] = useState(firstOfYear())
   const [to, setTo] = useState('')
   const { data, error, loading, reload } = useQuery<any>('accounting.income', { from, to })
+  const { company } = useSession()
+  const print = () => {
+    const t = (title: string, rows: any[], total: number): ReportTable => ({ title, head: ['Compte', 'Intitulé', 'Montant'], numeric: [2], rows: rows.map((r) => [r.number, r.label, r.amount]), foot: ['', 'Total', total] })
+    const period = `Du ${formatDate(from) || 'début'} au ${formatDate(to) || formatDate(todayISO())}`
+    return run(() => unwrap(window.erp.printHtml(reportHtml(company, 'Compte de résultat', period, [t('Produits', data.produits, data.totalProduits), t('Charges', data.charges, data.totalCharges), { head: ['Résultat', ''], numeric: [1], rows: [], foot: [data.result >= 0 ? 'Bénéfice' : 'Perte', data.result] }]), 'Compte de résultat')))
+  }
   const block = (title: string, rows: any[], total: number) => (
     <div className="card">
       <h3>{title}</h3>
@@ -260,7 +268,11 @@ export function IncomeStatement() {
   )
   return (
     <div className="page">
-      <PageHeader title="Compte de résultat" subtitle="Produits (classe 7) moins charges (classe 6). Estimation de gestion : les écritures d'inventaire et d'amortissement sont à passer en opérations diverses." />
+      <PageHeader
+        title="Compte de résultat"
+        subtitle="Produits (classe 7 et HAO) moins charges (classe 6, HAO et impôt sur le résultat). Les écritures d'inventaire et d'amortissement sont à passer en opérations diverses."
+        actions={data && <button className="btn btn-primary" onClick={print}><Printer size={18} aria-hidden="true" />Imprimer</button>}
+      />
       <div className="toolbar"><Period from={from} to={to} setFrom={setFrom} setTo={setTo} /></div>
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : (
         <>
