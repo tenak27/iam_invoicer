@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.4.0</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.5.0</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -256,8 +256,20 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.4.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
-  <p>La première construction prend quelques minutes. Ouvrez ensuite <code>https://facturation.iam.bf</code> : l'écran de <b>configuration initiale</b> s'affiche (chapitre 10).</p>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.5.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+  <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
+  <table>
+    <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
+    <tbody>
+      <tr><td><code>https://facturation.iam.bf/</code></td><td>Le <b>site de présentation</b> (IAM Technology, IAM INVOICER, offres, téléchargements, contact).</td></tr>
+      <tr><td><code>https://facturation.iam.bf/app/</code></td><td>L'<b>application</b> dans le navigateur (lien « Se connecter » du site). À la première visite : la <b>configuration initiale</b> (chapitre 10).</td></tr>
+      <tr><td><code>https://facturation.iam.bf/telechargements/</code></td><td>Les installateurs proposés sur le site.</td></tr>
+    </tbody>
+  </table>
+  <h4>Proposer les installateurs au téléchargement</h4>
+  <p>Déposez les fichiers <code>.exe</code>, <code>.dmg</code> et <code>.apk</code> (récupérés dans GitHub Actions) dans le dossier <code>deploy/telechargements/</code> du serveur. Le site affiche automatiquement les boutons de téléchargement correspondants, avec leur taille.</p>
+  <h4>Coordonnées du site</h4>
+  <p>Renseignez téléphone, WhatsApp, e-mail et adresse dans <code>site/config.js</code> avant la construction (ou directement dans <code>out/site/config.js</code> sur un serveur sans Docker).</p>
   <div class="box danger"><b class="t">Configuration initiale à faire immédiatement</b><p>Tant que le compte administrateur n'est pas créé, la première personne qui ouvre l'adresse peut le créer. Faites la configuration initiale juste après la mise en ligne.</p></div>
   <h3>3.4 Sans Docker</h3>
 <pre><span class="c"># Node.js 20+ et PostgreSQL installés, base et utilisateur créés</span>
@@ -321,8 +333,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.4.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.4.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.5.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.5.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -355,8 +367,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.4.0-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.4.0-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1, M2, M3, M4)</td><td><code>IAM-INVOICER-0.5.0-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel</td><td><code>IAM-INVOICER-0.5.0-x64.dmg</code></td></tr>
     </tbody>
   </table>
   <p>Pour savoir quel processeur a le Mac : menu  → <b>À propos de ce Mac</b>, ligne « Puce » ou « Processeur ».</p>
@@ -439,7 +451,7 @@ CREATE DATABASE iam_invoicer OWNER iam;
 <!-- ============================ 9. NAVIGATEUR ============================ -->
 <section class="chap tone-cyan">
   <h2><span class="n">9</span> Navigateur web</h2>
-  <p>Aucune installation n'est nécessaire : ouvrez <code>https://facturation.iam.bf</code> dans Chrome, Edge, Firefox ou Safari. L'interface s'adapte à chaque écran : barre d'onglets et listes en cartes sur téléphone, menu réduit aux icônes sur tablette et petit portable, contenu centré sur grand écran, boutons de 44 px sur les écrans tactiles.</p>
+  <p>Aucune installation n'est nécessaire : ouvrez <code>https://facturation.iam.bf/app/</code> (ou le lien <b>Se connecter</b> du site) dans Chrome, Edge, Firefox ou Safari. L'interface s'adapte à chaque écran : barre d'onglets et listes en cartes sur téléphone, menu réduit aux icônes sur tablette et petit portable, contenu centré sur grand écran, boutons de 44 px sur les écrans tactiles.</p>
   <ul>
     <li><b>Raccourci sur le téléphone :</b> menu du navigateur → <b>Ajouter à l'écran d'accueil</b>.</li>
     <li><b>Impression :</b> les tickets et les factures s'ouvrent dans la fenêtre d'impression du navigateur. Choisissez l'imprimante 80 mm, format « Ticket » et marges « Aucune ».</li>
@@ -479,6 +491,7 @@ CREATE DATABASE iam_invoicer OWNER iam;
       <tr><td>Ressources humaines</td><td>Salariés, paie, congés.</td></tr>
     </tbody>
   </table>
+  <p>Ces droits se modifient dans <b>Administration → Rôles et droits</b> : une matrice rôles × modules, avec la liste des fonctionnalités de chaque module. L'administrateur garde toujours tous les droits.</p>
 </section>
 
 <!-- ============================ 11. MODULES ============================ -->
@@ -522,6 +535,7 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <div class="box danger"><b class="t">À faire valider avant la première paie</b><p>Les taux CNSS, le plafond, le barème IUTS, les abattements et les réductions pour charges de famille sont des <b>valeurs par défaut</b>. Faites-les vérifier par votre comptable, ou auprès de la DGI et de la CNSS, puis ajustez-les dans <b>RH → Paramètres de paie</b>. La réglementation évolue : vérifiez-les chaque année.</p></div>
   <ul>
     <li>Saisissez les salariés : matricule, catégorie, salaire de base, indemnités, charges de famille, date d'embauche.</li>
+    <li>Part patronale CNSS détaillée (prestations familiales, risques professionnels selon l'activité, pension), taxe patronale d'apprentissage et autres cotisations (assurance maladie, mutuelle, retraite) se règlent dans <b>RH → Paramètres de paie</b>.</li>
     <li>Paie mensuelle : préparer, ajuster les variables (primes, absences, avances), valider. Les bulletins sont produits en PDF, avec la déclaration CNSS/IUTS et l'écriture de paie.</li>
     <li>Les soldes de congés se reprennent à la création du salarié.</li>
   </ul>
@@ -529,7 +543,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h3>CRM et projets</h3>
   <ul>
     <li>CRM : le pipeline (Nouveau → Qualifié → Proposition → Négociation → Gagné ou Perdu) se gère par glisser-déposer. Un prospect gagné se convertit en client et en devis.</li>
-    <li>Projets : renseignez le taux horaire et le budget en heures pour suivre la rentabilité. Les temps saisis se facturent en un clic.</li>
+    <li>Projets : renseignez le taux horaire (facturation), le coût horaire interne et le budget, global et par poste. Tâches et jalons, temps passés, dépenses avec justificatif (comptabilisées automatiquement) et refacturation avec marge permettent de suivre la marge réelle.</li>
+    <li>Factures récurrentes (contrats de maintenance, abonnements, loyers) : <b>Ventes → Factures récurrentes</b>. Les factures dues sont créées automatiquement à la connexion d'un commercial ou d'un administrateur.</li>
   </ul>
 
   <h3>Immobilisations</h3>
@@ -620,7 +635,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">13</span> Sauvegardes et restauration</h2>
   <div class="box danger"><b class="t">Règle 3-2-1</b><p>Gardez 3 copies des données, sur 2 supports différents, dont 1 hors des locaux (ou hors du serveur). Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde : faites un essai de restauration chaque trimestre.</p></div>
   <h3>Mode « Ce poste »</h3>
-  <p><b>Société &amp; paramètres → Données → Créer une sauvegarde</b> produit un fichier <code>iam-invoicer-sauvegarde-AAAAMMJJHHMM.tar.gz</code>. La restauration se fait au même endroit (<b>Restaurer une sauvegarde…</b>) : l'archive est vérifiée avant de remplacer les données. Ces fonctions sont réservées à l'administrateur.</p>
+  <p><b>Sauvegardes automatiques</b> (<b>Société &amp; paramètres → Données</b>) : une sauvegarde complète chaque jour et au démarrage si la dernière date de plus de 24 h, dans <code>Documents\IAM INVOICER\Sauvegardes</code> par défaut, avec 14 copies conservées. Choisissez de préférence un dossier <b>Google Drive, OneDrive ou Dropbox</b> : la copie part alors hors de l'ordinateur. Seules des copies y sont déposées ; la base de travail reste sur le poste (une base ouverte dans un dossier synchronisé risquerait d'être corrompue).</p>
+  <p>À tout moment, <b>Créer une sauvegarde</b> produit un fichier <code>iam-invoicer-sauvegarde-AAAAMMJJHHMM.tar.gz</code>. La restauration se fait au même endroit (<b>Restaurer une sauvegarde…</b>) : l'archive est vérifiée avant de remplacer les données. Ces fonctions sont réservées à l'administrateur.</p>
   <h3>Serveur en ligne (Docker)</h3>
 <pre><span class="c"># Sauvegarde quotidienne à 2 h, conservation 30 jours dans deploy/backups/</span>
 chmod +x deploy/backup.sh
@@ -692,7 +708,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
   <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, une compilation de contrôle iOS et l'image Docker du serveur.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.4.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.5.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
     <li><b>Résultats :</b> onglet <b>Artifacts</b> de l'exécution. Ils sont conservés 90 jours par défaut.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>
     <li><b>Signature macOS :</b> secrets <code>CSC_LINK</code>, <code>CSC_KEY_PASSWORD</code>, <code>APPLE_ID</code>, <code>APPLE_APP_SPECIFIC_PASSWORD</code>, <code>APPLE_TEAM_ID</code>, puis retirer <code>identity: null</code> de <code>electron-builder.yml</code>.</li>
@@ -783,7 +799,8 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
       </ul>
     </div>
   </div>
-  <div class="box tip" style="margin-top:6mm"><b class="t">Support</b><p>IAM Technology, Ouagadougou. Pour toute demande, indiquez la version du logiciel, le mode de données, le système de l'appareil et le message d'erreur exact, avec une capture d'écran si possible.</p></div>
+  <div class="box info" style="margin-top:6mm"><b class="t">Former les utilisateurs</b><p>Le <b>manuel de formation</b> (<code>docs/IAM-INVOICER-Manuel-de-formation.pdf</code>) propose un parcours par rôle, avec captures d'écran et exercices.</p></div>
+  <div class="box tip"><b class="t">Support</b><p>IAM Technology, Ouagadougou. Pour toute demande, indiquez la version du logiciel, le mode de données, le système de l'appareil et le message d'erreur exact, avec une capture d'écran si possible.</p></div>
 </section>
 
 <!-- ============================ 19. LICENCES ============================ -->

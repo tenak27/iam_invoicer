@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>IAM INVOICER — Manuel de formation</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm; }
+  @page :first { margin: 0; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: 'Public Sans', 'Segoe UI', Arial, sans-serif; font-size: 10.3pt; line-height: 1.55; color: #1f2433; }
+  .weave { height: 8px; background: repeating-linear-gradient(90deg, #0b4f8a 0 12px, #e8a817 12px 17px, #f4f6fa 17px 18px, #178a55 18px 22px, #2f6db3 22px 33px, #f4f6fa 33px 34px, #e8a817 34px 36px, #0b4f8a 36px 46px, #178a55 46px 48px, #f4f6fa 48px 49px, #2f6db3 49px 58px); }
+  .cover { height: 297mm; position: relative; overflow: hidden; color: #fff; background: linear-gradient(150deg, #0b2f63, #1550a8 55%, #2a70d6); padding: 32mm 22mm; display: flex; flex-direction: column; page-break-after: always; }
+  .cover::before { content: ''; position: absolute; right: -60mm; top: -50mm; width: 170mm; height: 170mm; border-radius: 50%; border: 26mm solid rgba(255,255,255,.07); }
+  .cover .logo { width: 105mm; background: #fff; border-radius: 6mm; padding: 6mm 8mm; }
+  .cover .kicker { margin-top: 26mm; font-size: 12pt; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; opacity: .9; }
+  .cover h1 { font-size: 38pt; line-height: 1.06; margin: 4mm 0 6mm; font-weight: 800; }
+  .cover .lead { font-size: 13pt; max-width: 145mm; opacity: .93; }
+  .roles-cover { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 12mm; max-width: 165mm; }
+  .roles-cover span { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); border-radius: 3mm; padding: 2.5mm; font-size: 9.5pt; font-weight: 700; text-align: center; }
+  .cover .foot { margin-top: auto; display: flex; justify-content: space-between; font-size: 9.5pt; position: relative; z-index: 1; }
+  .cover .weave { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; }
+
+  section.chap { page-break-before: always; break-before: page; }
+  h2 { font-size: 18pt; margin: 0 0 4mm; padding: 4mm 5mm; color: #fff; border-radius: 3mm; background: linear-gradient(135deg, var(--a, #1550a8), var(--b, #2a70d6)); page-break-after: avoid; }
+  h2 small { display: block; font-size: 10pt; font-weight: 600; opacity: .9; margin-top: 1mm; }
+  h3 { font-size: 13pt; margin: 6mm 0 2mm; color: var(--a, #1550a8); page-break-after: avoid; }
+  h4 { font-size: 10.8pt; margin: 4mm 0 1.5mm; page-break-after: avoid; }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  b.ui { background: #eef3fb; border: 1px solid #d3deef; border-radius: 1.2mm; padding: 0 1.2mm; font-weight: 700; color: #123a73; white-space: nowrap; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps > li { counter-increment: s; position: relative; padding-left: 10mm; margin-bottom: 2.4mm; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: -.3mm; width: 6.6mm; height: 6.6mm; border-radius: 50%; background: var(--a, #1550a8); color: #fff; font-weight: 800; font-size: 8.5pt; display: grid; place-items: center; }
+  figure { margin: 3mm 0 5mm; page-break-inside: avoid; break-inside: avoid; }
+  figure img { width: 100%; border-radius: 2.5mm; border: 1px solid #dfe3ec; box-shadow: 0 6px 16px -10px rgba(15, 30, 70, .5); display: block; }
+  figure.half img { width: 62%; margin: 0 auto; }
+  figure.phone img { width: 34%; margin: 0 auto; }
+  figcaption { font-size: 8.8pt; color: #5d6475; margin-top: 1.5mm; text-align: center; }
+  .box { border-radius: 2.5mm; padding: 3mm 4mm; margin: 0 0 4mm; page-break-inside: avoid; border-left: 4px solid; }
+  .box b.t { display: block; margin-bottom: 1mm; }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+  .tip { background: #eaf6ef; border-color: #128052; } .tip b.t { color: #0b6b40; }
+  .warn { background: #fff5e8; border-color: #c46a10; } .warn b.t { color: #9a4306; }
+  .exo { background: #f1edff; border-color: #6a4fe0; } .exo b.t { color: #4c34b0; }
+  .info { background: #eaf1fb; border-color: #2a70d6; } .info b.t { color: #1550a8; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.3pt; }
+  th { text-align: left; background: #eef3fb; color: #1550a8; padding: 2mm 2.5mm; border-bottom: 2px solid #b9cbe8; }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid #e3e7ef; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  .toc { columns: 2; column-gap: 10mm; list-style: none; padding: 0; counter-reset: t; }
+  .toc li { break-inside: avoid; padding: 1.6mm 0; border-bottom: 1px dotted #d6dbe6; counter-increment: t; }
+  .toc li::before { content: counter(t) '.'; display: inline-block; width: 8mm; color: #1550a8; font-weight: 800; }
+  .t-blue { --a: #1550a8; --b: #2a70d6; } .t-green { --a: #0b6b40; --b: #128052; } .t-amber { --a: #9a4306; --b: #b8590b; }
+  .t-teal { --a: #0b5f6b; --b: #0e7a87; } .t-violet { --a: #4c34b0; --b: #6a4fe0; } .t-rose { --a: #a01f4c; --b: #c02a60; }
+  .t-indigo { --a: #3730a3; --b: #4f46e5; } .t-slate { --a: #2f3a4f; --b: #4a5a78; }
+  .kbd { font-family: Consolas, monospace; font-size: 8.8pt; border: 1px solid #c9d0dd; border-bottom-width: 2px; border-radius: 1.2mm; padding: 0 1.2mm; background: #fafbfd; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <img class="logo" src="../../resources/logo.svg" alt="IAM INVOICER">
+  <div class="kicker">Manuel de formation</div>
+  <h1>Bien utiliser IAM INVOICER, au quotidien</h1>
+  <p class="lead">Un parcours pour chaque utilisateur : commercial, caissier, magasinier, comptable, ressources humaines, chef de projet et administrateur. Des procédures pas à pas, des captures d'écran et des exercices pour s'entraîner.</p>
+  <div class="roles-cover"><span>Commercial</span><span>Caissier</span><span>Magasinier</span><span>Comptable</span><span>RH et paie</span><span>Chef de projet</span><span>Administrateur</span><span>Tous</span></div>
+  <div class="foot"><div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div><div style="text-align:right">IAM INVOICER <b>0.5.0</b><br>Octobre 2026</div></div>
+  <div class="weave"></div>
+</div>
+
+<section class="t-blue">
+  <h2>Sommaire</h2>
+  <ol class="toc">
+    <li>Prise en main (tous)</li>
+    <li>Quel parcours suivre ?</li>
+    <li>Commercial : clients, devis, factures</li>
+    <li>Imprimer, envoyer, encaisser</li>
+    <li>CRM et factures récurrentes</li>
+    <li>Caissier : le point de vente</li>
+    <li>Magasinier : articles, achats, stock</li>
+    <li>Comptable : écritures et états</li>
+    <li>Comptable : taxes et déclarations</li>
+    <li>RH : salariés, paie, congés</li>
+    <li>Chef de projet</li>
+    <li>Administrateur : société et documents</li>
+    <li>Administrateur : utilisateurs et droits</li>
+    <li>Administrateur : import, licence, sauvegardes</li>
+    <li>Travailler sans Internet</li>
+    <li>Bonnes pratiques et questions fréquentes</li>
+  </ol>
+  <div class="box info"><b class="t">Comment utiliser ce manuel</b><p>Lisez d'abord le chapitre 1, puis votre parcours (chapitre 2). Les noms en <b class="ui">gras encadré</b> sont ceux des menus et des boutons, tels qu'ils apparaissent à l'écran. Chaque chapitre se termine par un exercice à faire sur une base d'essai.</p></div>
+  <div class="box tip"><b class="t">Base d'essai</b><p>Pour vous former sans risque, demandez à votre administrateur une base d'entraînement (ou installez l'application sur un poste en mode « Ce poste uniquement »). Les numéros de factures d'une vraie base ne se suppriment pas.</p></div>
+</section>
+
+<section class="chap t-blue">
+  <h2>1. Prise en main <small>Pour tous les utilisateurs</small></h2>
+  <h3>Se connecter</h3>
+  <div class="two">
+    <div>
+      <ol class="steps">
+        <li>Ouvrez IAM INVOICER : l'icône sur le bureau, l'application sur le téléphone ou l'adresse de votre société dans le navigateur (lien <b class="ui">Se connecter</b> du site).</li>
+        <li>Saisissez votre <b class="ui">Nom d'utilisateur</b> et votre <b class="ui">Mot de passe</b>, puis <b class="ui">Se connecter</b>.</li>
+        <li>Après 10 essais erronés, attendez 15 minutes ; en cas d'oubli, demandez à l'administrateur de redéfinir votre mot de passe.</li>
+      </ol>
+    </div>
+    <figure><img src="captures/connexion.jpg" alt=""><figcaption>Écran de connexion</figcaption></figure>
+  </div>
+  <h3>L'écran principal</h3>
+  <figure><img src="captures/tableau-de-bord.jpg" alt=""><figcaption>Tableau de bord : indicateurs du mois, chiffre d'affaires, encaissements, créances</figcaption></figure>
+  <ul>
+    <li><b>À gauche, le menu</b>, classé par domaine (Caisse, Ventes, Achats, Stock, Finance, Gestion, Comptabilité, Administration). Chaque domaine a sa couleur. Un cadenas signale un module non inclus dans votre licence.</li>
+    <li><b>En haut</b> : la recherche, les notifications et votre compte. Le bouton <b class="ui">‹ ›</b> réduit le menu pour gagner de la place.</li>
+    <li><b>Les tuiles colorées</b> en tête de chaque page résument la situation : montants, retards, alertes.</li>
+    <li>Sur téléphone, le menu est en bas de l'écran ; les listes s'affichent en cartes.</li>
+  </ul>
+  <h3>Trouver n'importe quoi en un instant</h3>
+  <p>Appuyez sur <span class="kbd">Ctrl</span> + <span class="kbd">K</span> (ou cliquez sur <b class="ui">Rechercher</b>) et tapez quelques lettres : une page, un client, une action comme « nouvelle facture ». Validez avec <span class="kbd">Entrée</span>.</p>
+  <figure class="half"><img src="captures/recherche.jpg" alt=""><figcaption>Recherche rapide</figcaption></figure>
+  <h3>Mon compte</h3>
+  <p>Menu de votre photo (en haut à droite) → <b class="ui">Mon compte</b> : changez votre mot de passe et ajoutez votre <b>photo de profil</b> (elle est recadrée automatiquement). Le même menu permet de choisir le thème clair, sombre ou automatique, et de se déconnecter.</p>
+  <h3>Les listes et leurs actions</h3>
+  <p>Chaque ligne d'une liste porte ses boutons d'action à droite (survolez-les pour lire leur nom) : <b>aperçu</b>, <b>PDF</b>, <b>imprimer</b>, <b>dupliquer</b>, <b>modifier</b>, <b>désactiver</b>, <b>supprimer</b>. Cliquer sur la ligne ouvre la fiche. <b class="ui">Exporter (Excel)</b> enregistre la liste affichée.</p>
+  <div class="box exo"><b class="t">Exercice</b><ol><li>Connectez-vous, ajoutez votre photo de profil.</li><li>Avec <span class="kbd">Ctrl</span>+<span class="kbd">K</span>, ouvrez la liste des clients sans utiliser le menu.</li><li>Passez en thème sombre puis revenez en automatique.</li></ol></div>
+</section>
+
+<section class="chap t-slate">
+  <h2>2. Quel parcours suivre ?</h2>
+  <p>Chaque utilisateur a un <b>rôle</b> qui détermine les menus visibles. L'administrateur peut adapter ces droits (chapitre 13).</p>
+  <table>
+    <thead><tr><th style="width:24%">Votre rôle</th><th>Chapitres à suivre</th><th style="width:22%">Durée conseillée</th></tr></thead>
+    <tbody>
+      <tr><td><b>Commercial</b></td><td>1, 3, 4, 5, 15, 16</td><td>2 heures</td></tr>
+      <tr><td><b>Caissier</b></td><td>1, 6, 15, 16</td><td>1 heure</td></tr>
+      <tr><td><b>Magasinier</b></td><td>1, 7, 16</td><td>1 h 30</td></tr>
+      <tr><td><b>Comptable</b></td><td>1, 3, 4, 8, 9, 10 (paie), 16</td><td>3 heures</td></tr>
+      <tr><td><b>Ressources humaines</b></td><td>1, 10, 16</td><td>1 h 30</td></tr>
+      <tr><td><b>Chef de projet</b></td><td>1, 11, 4, 16</td><td>1 h 30</td></tr>
+      <tr><td><b>Administrateur</b></td><td>tout le manuel, en particulier 12, 13 et 14</td><td>une journée</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="chap t-blue">
+  <h2>3. Commercial : clients, devis, factures</h2>
+  <h3>Créer un client</h3>
+  <ol class="steps">
+    <li><b class="ui">Ventes → Clients</b>, puis <b class="ui">Nouveau client</b>.</li>
+    <li>Renseignez au moins <b class="ui">Nom / raison sociale</b>. Ajoutez téléphone, e-mail (pour l'envoi des factures), identifiant fiscal (IFU, NIF…) et délai de paiement.</li>
+    <li><b class="ui">Enregistrer</b>. Le code client est attribué automatiquement.</li>
+  </ol>
+  <figure><img src="captures/clients.jpg" alt=""><figcaption>Liste des clients : soldes dus et actions</figcaption></figure>
+  <p>Un client qui ne travaille plus avec vous se <b>désactive</b> (bouton barré) : il disparaît des nouveaux documents mais son historique reste.</p>
+  <h3>Du devis à la facture</h3>
+  <ol class="steps">
+    <li><b class="ui">Ventes → Devis → Nouveau devis</b>. Choisissez le client, ajoutez les lignes : un article du catalogue (le prix et la TVA se remplissent) ou une ligne libre.</li>
+    <li><b class="ui">Enregistrer</b> garde un brouillon modifiable. <b class="ui">Valider</b> attribue le numéro définitif.</li>
+    <li>Quand le client accepte : bouton <b class="ui">→ Bon de livraison</b> ou <b class="ui">→ Facture</b>. Les lignes sont reprises.</li>
+    <li>Vérifiez la facture puis <b class="ui">Valider</b> : le stock et la comptabilité sont mis à jour automatiquement.</li>
+  </ol>
+  <figure><img src="captures/facture-nouvelle.jpg" alt=""><figcaption>Saisie d'une facture : client, lignes, taxes et totaux</figcaption></figure>
+  <div class="box warn"><b class="t">Règles à connaître</b><ul><li>Une facture validée ne s'annule pas et ne se supprime pas : on établit un <b>avoir</b> (bouton <b class="ui">→ Avoir</b>).</li><li>Seul un brouillon peut être supprimé.</li><li>Une vente au client « comptoir » doit être payée en totalité ; pour une vente à crédit, choisissez le vrai client.</li></ul></div>
+  <h3>Taxes et retenues sur une facture</h3>
+  <p>Sous les lignes, la zone <b class="ui">Taxes et retenues</b> montre les taxes paramétrées par l'administrateur : cliquez pour les appliquer. Une <b>retenue à la source</b> (par exemple pour un ministère) est déduite du <b>Net à payer</b> et enregistrée automatiquement comme règlement à la validation.</p>
+  <div class="box exo"><b class="t">Exercice</b><ol><li>Créez le client « Pharmacie de l'Espoir ».</li><li>Faites-lui un devis de deux articles, validez-le, transformez-le en facture et validez.</li><li>Créez un avoir pour un article retourné.</li></ol></div>
+</section>
+
+<section class="chap t-blue">
+  <h2>4. Imprimer, envoyer, encaisser</h2>
+  <h3>Aperçu et impression</h3>
+  <figure><img src="captures/facture.jpg" alt=""><figcaption>Facture validée : envoi, duplication, aperçu, impression, PDF</figcaption></figure>
+  <ul>
+    <li><b class="ui">Aperçu</b> (ou <b class="ui">Imprimer</b>) ouvre l'aperçu avant impression : toutes les pages telles qu'elles sortiront, avec les numéros « Page 1 / 2 ». Choisissez <b class="ui">A4</b> ou <b class="ui">Ticket</b>, puis <b class="ui">Imprimer</b> ou <b class="ui">Enregistrer PDF</b>.</li>
+    <li>Sur une longue facture, l'en-tête du tableau se répète sur chaque page ; les totaux et les signatures ne sont jamais coupés.</li>
+  </ul>
+  <h3>Envoyer par e-mail ou SMS</h3>
+  <p>Boutons <b class="ui">E-mail</b> et <b class="ui">SMS</b> de la facture : le message est prérempli à partir d'un modèle, le PDF est joint. L'historique des envois est dans <b class="ui">Communications → E-mails et SMS</b>.</p>
+  <h3>Enregistrer un règlement</h3>
+  <ol class="steps">
+    <li>Sur la facture validée, bouton <b class="ui">Encaisser</b> (ou <b class="ui">Finance → Paiements</b>).</li>
+    <li>Montant, date et <b>mode</b> : espèces, Orange Money, Moov Money, Wave, virement, chèque, carte.</li>
+    <li>Le badge passe à <b>Partielle</b> puis <b>Payée</b>. La liste des factures montre le reste à régler et les retards.</li>
+  </ol>
+  <figure><img src="captures/factures.jpg" alt=""><figcaption>Liste des factures : indicateurs (total, reste à régler, retards, brouillons)</figcaption></figure>
+  <h3>Relancer les retards</h3>
+  <p>Dans <b class="ui">E-mails et SMS</b>, <b class="ui">Relancer</b> une facture ou toutes les factures en retard en une fois.</p>
+  <div class="box exo"><b class="t">Exercice</b><p>Ouvrez l'aperçu de votre facture, enregistrez le PDF, puis encaissez la moitié en Orange Money et le reste en espèces.</p></div>
+</section>
+
+<section class="chap t-amber">
+  <h2>5. CRM et factures récurrentes</h2>
+  <h3>Suivre ses opportunités</h3>
+  <figure><img src="captures/crm.jpg" alt=""><figcaption>Pipeline commercial : glissez une carte pour la faire avancer</figcaption></figure>
+  <ol class="steps">
+    <li><b class="ui">Ventes → CRM et opportunités → Nouvelle opportunité</b> : intitulé, prospect ou client, montant estimé, probabilité.</li>
+    <li>Faites glisser la carte d'une colonne à l'autre (Nouveau, Qualifié, Proposition, Négociation, Gagné, Perdu) ou utilisez sa flèche.</li>
+    <li>Notez appels et rendez-vous dans les <b>activités</b> ; l'agenda les rappelle.</li>
+    <li>Gagnée : convertissez le prospect en client et créez le devis en un clic.</li>
+  </ol>
+  <h3>Factures récurrentes</h3>
+  <p>Pour un contrat de maintenance, un abonnement ou un loyer : <b class="ui">Ventes → Factures récurrentes → Nouveau contrat</b>, ou bouton <b class="ui">Rendre récurrente</b> sur une facture validée.</p>
+  <figure><img src="captures/recurrentes.jpg" alt=""><figcaption>Contrats récurrents : revenu mensuel, échéances à traiter</figcaption></figure>
+  <ul>
+    <li>Fréquence : mensuelle, trimestrielle, semestrielle, annuelle ; date de la prochaine facture ; date de fin éventuelle.</li>
+    <li><b>Brouillon à vérifier</b> (conseillé au début) ou <b>Validée d'office</b>.</li>
+    <li>Les factures arrivées à échéance sont créées automatiquement à la connexion, rattrapage compris après une absence.</li>
+  </ul>
+</section>
+
+<section class="chap t-green">
+  <h2>6. Caissier : le point de vente</h2>
+  <h3>Ouvrir la caisse</h3>
+  <ol class="steps"><li><b class="ui">Caisse → Point de vente</b>.</li><li>Comptez le fonds de caisse et saisissez-le, puis <b class="ui">Ouvrir la caisse</b>.</li></ol>
+  <h3>Vendre</h3>
+  <figure><img src="captures/caisse.jpg" alt=""><figcaption>Point de vente : articles à gauche, panier et total à droite</figcaption></figure>
+  <ol class="steps">
+    <li>Touchez les articles, ou scannez leur code-barres (le curseur doit être dans la zone de recherche).</li>
+    <li>Ajustez les quantités avec <b class="ui">+</b> et <b class="ui">−</b>. Pour une vente à crédit, choisissez le client (sinon « client comptoir »).</li>
+    <li><b class="ui">Encaisser</b> : choisissez le ou les modes (espèces, mobile money…). Pour les espèces, saisissez la somme reçue : la monnaie à rendre s'affiche.</li>
+    <li>Imprimez le <b>ticket</b> si le client le souhaite.</li>
+  </ol>
+  <h3>Entrées et sorties d'espèces</h3>
+  <p><b class="ui">Entrée d'espèces</b> (apport) et <b class="ui">Sortie / dépense</b> (taxi, petit achat) : indiquez toujours le motif.</p>
+  <h3>Clôturer</h3>
+  <ol class="steps"><li><b class="ui">Clôturer la caisse</b> en fin de journée.</li><li>Comptez les espèces et saisissez le montant : l'écart s'affiche. Un écart doit être expliqué.</li><li>Une caisse clôturée ne se modifie plus. L'historique est dans <b class="ui">Sessions de caisse</b>.</li></ol>
+  <figure><img src="captures/caisse-sessions.jpg" alt=""><figcaption>Sessions de caisse : ventes, caisses ouvertes, écarts</figcaption></figure>
+  <div class="box tip"><b class="t">Sans Internet</b><p>La caisse continue de fonctionner : les ventes sont gardées sur l'appareil et envoyées au retour du réseau (chapitre 15). Le numéro définitif de la facture est attribué à ce moment-là.</p></div>
+  <div class="box exo"><b class="t">Exercice</b><p>Ouvrez la caisse avec 10 000 FCFA, faites deux ventes (l'une en espèces avec rendu de monnaie, l'autre en paiement mixte espèces + Wave), une sortie de 2 000 FCFA, puis clôturez sans écart.</p></div>
+</section>
+
+<section class="chap t-teal">
+  <h2>7. Magasinier : articles, achats, stock</h2>
+  <h3>Articles et prestations</h3>
+  <figure><img src="captures/articles.jpg" alt=""><figcaption>Catalogue : prix, TVA, stock, articles sous le seuil</figcaption></figure>
+  <p><b class="ui">Nouveau produit</b> ou <b class="ui">Nouvelle prestation</b> : désignation, catégorie, unité, prix de vente et d'achat HT, TVA, stock minimum (alerte). Choisissez le <b>suivi par lot ou numéro de série</b> avant les premiers mouvements.</p>
+  <h3>Achats</h3>
+  <ol class="steps">
+    <li><b class="ui">Achats → Bons de commande → Nouveau</b>, puis <b class="ui">Valider</b>.</li>
+    <li>À la livraison : <b class="ui">→ Bon de réception</b>, ajustez les quantités reçues, validez : le stock augmente au coût d'achat.</li>
+    <li>À réception de la facture : <b class="ui">→ Facture fournisseur</b>, puis règlement dans <b class="ui">Paiements</b>.</li>
+  </ol>
+  <figure><img src="captures/commandes.jpg" alt=""><figcaption>Bons de commande</figcaption></figure>
+  <h3>Stock, dépôts et inventaire</h3>
+  <ul>
+    <li><b class="ui">État du stock</b> : quantités, valeur au coût moyen, articles sous le seuil.</li>
+    <li><b class="ui">Dépôts, transferts, lots</b> : stock par magasin, transferts entre dépôts, traçabilité des lots et numéros de série.</li>
+    <li><b class="ui">Inventaire</b> : saisissez les quantités comptées ; seuls les écarts sont enregistrés.</li>
+  </ul>
+  <figure><img src="captures/depots.jpg" alt=""><figcaption>Stock par dépôt et transferts</figcaption></figure>
+  <div class="box exo"><b class="t">Exercice</b><p>Commandez 10 câbles à un fournisseur, réceptionnez-en 8, transférez-en 3 vers le dépôt de Bobo-Dioulasso, puis faites un inventaire qui constate 1 câble manquant.</p></div>
+</section>
+
+<section class="chap t-teal">
+  <h2>8. Comptable : écritures et états</h2>
+  <h3>Ce qui est automatique</h3>
+  <p>Factures, avoirs, factures fournisseurs, règlements, caisse, retenues, paie, dépenses de projet et immobilisations passent leurs écritures SYSCOHADA à la validation. Vous n'avez à saisir que les <b>opérations diverses</b> (à-nouveaux, régularisations, inventaire).</p>
+  <figure><img src="captures/journaux.jpg" alt=""><figcaption>Journaux et écritures</figcaption></figure>
+  <h3>Consulter</h3>
+  <ul>
+    <li><b class="ui">Grand livre</b> : le détail d'un compte (par exemple 411 pour un client).</li>
+    <li><b class="ui">Balance</b> : tous les comptes, mouvements et soldes, exportable.</li>
+    <li><b class="ui">Compte de résultat</b> : produits, charges et résultat (classes 6, 7 et 8).</li>
+    <li><b class="ui">Bilan</b> : actif et passif à une date, avec contrôle d'équilibre ; imprimable.</li>
+  </ul>
+  <figure><img src="captures/bilan.jpg" alt=""><figcaption>Bilan SYSCOHADA</figcaption></figure>
+  <h3>Immobilisations et trésorerie</h3>
+  <p><b class="ui">Immobilisations</b> : registre des biens, plan d'amortissement, dotations annuelles, cessions. <b class="ui">Budgets et trésorerie</b> : budget prévu / réalisé et trésorerie prévisionnelle avec alerte de découvert.</p>
+  <div class="box warn"><b class="t">À faire en fin d'exercice</b><p>Dotations aux amortissements, provisions, inventaire du stock et régularisations, avant d'imprimer le bilan définitif.</p></div>
+</section>
+
+<section class="chap t-teal">
+  <h2>9. Comptable : taxes et déclarations</h2>
+  <figure><img src="captures/declarations.jpg" alt=""><figcaption>Déclarations du mois : TVA, salaires, retenues, impôt sur les bénéfices</figcaption></figure>
+  <ol class="steps">
+    <li><b class="ui">Comptabilité → Déclarations</b>, choisissez le mois.</li>
+    <li><b>TVA</b> : collectée par taux, déductible, TVA retenue par vos clients, montant à payer ou crédit à reporter.</li>
+    <li><b>Retenues à la source</b> : celles que vous devez reverser (opérées sur vos fournisseurs) et celles que vos clients ont retenues (à imputer).</li>
+    <li><b>Salaires</b> : cotisations sociales détaillées, taxe patronale, impôt sur les salaires.</li>
+    <li><b>Impôt sur les bénéfices (BIC / IS)</b> : estimation sur le résultat de l'année, moins les acomptes payés.</li>
+    <li><b class="ui">Imprimer</b> chaque état ou <b class="ui">Tout imprimer</b>, puis reportez les montants sur les formulaires officiels.</li>
+  </ol>
+  <div class="box warn"><b class="t">États préparatoires</b><p>Ces montants sont calculés à partir de vos pièces validées. Vérifiez-les avant de déclarer, en particulier les taux propres à votre pays.</p></div>
+</section>
+
+<section class="chap t-rose">
+  <h2>10. Ressources humaines : salariés, paie, congés</h2>
+  <figure><img src="captures/rh.jpg" alt=""><figcaption>Salariés</figcaption></figure>
+  <h3>La paie du mois</h3>
+  <ol class="steps">
+    <li><b class="ui">Gestion → Ressources humaines → Salariés</b> : créez chaque salarié (salaire de base, indemnités, catégorie, charges de famille, n° CNSS). Le net s'affiche pendant la saisie.</li>
+    <li>Onglet <b class="ui">Paie → Préparer la paie</b> du mois.</li>
+    <li><b class="ui">Variables</b> de chaque salarié : primes, heures supplémentaires, absences, avances.</li>
+    <li>Vérifiez, puis <b class="ui">Valider la paie</b> : bulletins définitifs et écriture comptable.</li>
+    <li><b class="ui">Bulletins</b> (impression ou PDF) et <b class="ui">Déclaration CNSS / IUTS</b>.</li>
+  </ol>
+  <figure><img src="captures/rh-paie.jpg" alt=""><figcaption>Paie du mois : brut, cotisations, impôt, net, coût employeur</figcaption></figure>
+  <h3>Paramètres de paie</h3>
+  <p>Onglet <b class="ui">Paramètres de paie</b> : taux CNSS salarié et patronal (prestations familiales, risques professionnels, pension), plafond, taxe patronale d'apprentissage, barème de l'IUTS, abattements, réductions pour charges de famille, et <b>autres cotisations</b> (assurance maladie, mutuelle, retraite…). Faites-les valider par votre comptable.</p>
+  <h3>Congés</h3>
+  <p>Onglet <b class="ui">Congés</b> : demandes, approbation ou refus, soldes calculés automatiquement.</p>
+  <div class="box exo"><b class="t">Exercice</b><p>Créez un salarié, préparez la paie du mois avec une prime de 25 000 FCFA, validez et imprimez son bulletin.</p></div>
+</section>
+
+<section class="chap t-indigo">
+  <h2>11. Chef de projet</h2>
+  <figure><img src="captures/projets.jpg" alt=""><figcaption>Projets : avancement, budget consommé, retards</figcaption></figure>
+  <h3>Créer et organiser un projet</h3>
+  <ol class="steps">
+    <li><b class="ui">Gestion → Projets et chantiers → Nouveau projet</b> : client, dates, taux horaire (facturation), coût horaire interne, budget en heures et en montant, <b>budget par poste</b> (matériel, transport, sous-traitance…).</li>
+    <li><b class="ui">Nouvelle tâche</b> : intitulé, responsable, échéance, heures estimées. Cochez <b>Jalon</b> pour une étape clé.</li>
+    <li>Onglet <b class="ui">Tâches</b> : faites glisser les cartes de « À faire » à « Terminé ». Une tâche en retard est soulignée en rouge.</li>
+  </ol>
+  <figure><img src="captures/projet-taches.jpg" alt=""><figcaption>Tableau des tâches</figcaption></figure>
+  <h3>Temps, dépenses et facturation</h3>
+  <ul>
+    <li><b class="ui">Saisir du temps</b> : heures, travail effectué, tâche concernée, facturable ou non.</li>
+    <li><b class="ui">Nouvelle dépense</b> : poste, fournisseur, montant, TVA, payée ou à payer, <b>photo du justificatif</b>. Cochez <b>Refacturable</b> (avec une marge) pour la facturer au client.</li>
+    <li><b class="ui">Facturer</b> les heures et <b class="ui">Refacturer</b> les dépenses : une facture brouillon est préparée.</li>
+  </ul>
+  <figure><img src="captures/projet.jpg" alt=""><figcaption>Vue d'ensemble : rentabilité, budget par poste, alertes</figcaption></figure>
+  <p>La <b>vue d'ensemble</b> calcule la marge réelle (facturé − main-d'œuvre − dépenses − achats), le budget consommé et l'avancement, et affiche les alertes : budget dépassé, poste dépassé, tâches en retard, date de fin dépassée.</p>
+</section>
+
+<section class="chap t-slate">
+  <h2>12. Administrateur : société et documents</h2>
+  <figure><img src="captures/parametres.jpg" alt=""><figcaption>Société & paramètres</figcaption></figure>
+  <ul>
+    <li><b class="ui">Société</b> : logo, raison sociale, <b>pays</b> (il règle l'identifiant fiscal, la devise, la TVA et les régimes), mentions légales, banque, taux d'impôt sur les bénéfices.</li>
+    <li><b class="ui">Taxes</b> : <b class="ui">Ajouter les modèles du pays</b>, puis vérifiez les taux et activez les taxes utiles (timbre, retenues, prélèvement BIC…).</li>
+    <li><b class="ui">Documents & signature</b> : modèle (moderne ou classique), couleur, conditions générales, cachet et signature, <b>marges</b> et numérotation des lignes.</li>
+    <li><b class="ui">Messagerie</b> et <b class="ui">SMS</b> : réglages d'envoi, avec bouton d'essai.</li>
+    <li><b class="ui">Facture certifiée</b> : SECeF en simulation ou en production.</li>
+  </ul>
+  <figure><img src="captures/taxes.jpg" alt=""><figcaption>Taxes et retenues</figcaption></figure>
+  <figure class="half"><img src="captures/mise-en-page.jpg" alt=""><figcaption>Mise en page et impression des documents</figcaption></figure>
+</section>
+
+<section class="chap t-slate">
+  <h2>13. Administrateur : utilisateurs et droits</h2>
+  <h3>Utilisateurs</h3>
+  <p><b class="ui">Administration → Utilisateurs → Nouvel utilisateur</b> : nom, identifiant, rôle, mot de passe provisoire. Un départ se traite en <b>désactivant</b> le compte (ses connexions sont fermées immédiatement, l'historique reste). Le nombre d'utilisateurs actifs dépend de la licence.</p>
+  <figure><img src="captures/utilisateurs.jpg" alt=""><figcaption>Utilisateurs et photos de profil</figcaption></figure>
+  <h3>Rôles et droits</h3>
+  <p><b class="ui">Administration → Rôles et droits</b> : la matrice montre, pour chaque module, les rôles qui y ont accès et les fonctionnalités concernées. Cochez ou décochez, puis <b class="ui">Enregistrer</b>. <b class="ui">Droits par défaut</b> revient à la configuration d'origine. L'administrateur garde toujours tous les droits.</p>
+  <figure><img src="captures/roles.jpg" alt=""><figcaption>Matrice des rôles et des fonctionnalités</figcaption></figure>
+  <p><b class="ui">Journal d'activité</b> : qui a fait quoi, et quand (créations, validations, suppressions, connexions).</p>
+</section>
+
+<section class="chap t-slate">
+  <h2>14. Administrateur : import, licence, sauvegardes</h2>
+  <h3>Importer des données existantes</h3>
+  <figure class="half"><img src="captures/import.jpg" alt=""><figcaption>Importer des données</figcaption></figure>
+  <ol class="steps">
+    <li><b class="ui">Administration → Importer des données</b>, choisissez le type : clients, fournisseurs, articles, stock initial, salariés, plan comptable.</li>
+    <li><b class="ui">Télécharger le modèle</b> si besoin, ou utilisez votre propre fichier Excel ou CSV.</li>
+    <li>Glissez le fichier : les colonnes sont reconnues ; corrigez la correspondance si nécessaire.</li>
+    <li><b class="ui">Importer</b>, puis lisez le compte rendu : créés, mis à jour, refusés avec le motif de chaque ligne.</li>
+  </ol>
+  <p>Ordre conseillé : plan comptable, clients et fournisseurs, articles, puis stock initial, puis salariés.</p>
+  <h3>Licence</h3>
+  <p><b class="ui">Administration → Licence</b> : offre, modules inclus, utilisateurs, échéance. Collez la clé reçue d'IAM Technology et <b class="ui">Activer</b>. Pendant l'essai de 30 jours tout est ouvert ; ensuite, sans licence, le logiciel passe en lecture seule (consultation, impression et export restent possibles).</p>
+  <figure><img src="captures/licence.jpg" alt=""><figcaption>Licence et offres</figcaption></figure>
+  <h3>Sauvegardes</h3>
+  <ul>
+    <li><b>Base de ce poste</b> : <b class="ui">Société & paramètres → Données → Sauvegardes automatiques</b>. Une copie chaque jour dans le dossier choisi ; choisissez un dossier Google Drive, OneDrive ou Dropbox pour avoir une copie hors de l'ordinateur. <b class="ui">Restaurer une sauvegarde…</b> en cas de besoin.</li>
+    <li><b>Serveur en ligne</b> : les sauvegardes se font sur le serveur (voir le guide d'installation).</li>
+  </ul>
+  <div class="box warn"><b class="t">Testez vos sauvegardes</b><p>Une fois par trimestre, restaurez une sauvegarde sur un poste d'essai pour vérifier qu'elle est complète.</p></div>
+</section>
+
+<section class="chap t-blue">
+  <h2>15. Travailler sans Internet</h2>
+  <ul>
+    <li>Sur un ordinateur relié au serveur, sur téléphone ou dans le navigateur, une coupure ne bloque pas le travail : les dernières données restent consultables.</li>
+    <li>Ventes en caisse, règlements, fiches clients, temps passés et demandes de congé sont <b>mis en attente</b> ; un bandeau indique leur nombre.</li>
+    <li>Au retour du réseau, tout part <b>automatiquement</b>, une seule fois. Le bouton <b class="ui">Synchroniser</b> force l'envoi.</li>
+    <li>Sur ordinateur, on peut même démarrer et se connecter sans réseau si l'on s'est déjà connecté en ligne sur ce poste dans les 30 derniers jours.</li>
+  </ul>
+  <figure class="phone"><img src="captures/mobile-factures.jpg" alt=""><figcaption>Sur téléphone : listes en cartes, menu en bas</figcaption></figure>
+  <div class="box warn"><b class="t">Ne videz pas les données du navigateur</b><p>Tant que des saisies sont en attente, n'effacez pas les données du navigateur, ne désinstallez pas l'application et n'utilisez pas la navigation privée.</p></div>
+</section>
+
+<section class="chap t-green">
+  <h2>16. Bonnes pratiques et questions fréquentes</h2>
+  <h3>Les 10 réflexes</h3>
+  <ol>
+    <li>Un compte par personne ; ne prêtez jamais votre mot de passe.</li>
+    <li>Vérifiez un document avant de le valider : la validation est définitive.</li>
+    <li>Corrigez une facture validée par un avoir, jamais en la recréant.</li>
+    <li>Encaissez les règlements le jour même, avec le bon mode de paiement.</li>
+    <li>Clôturez la caisse chaque soir et expliquez tout écart.</li>
+    <li>Rattachez achats, temps et dépenses au bon projet.</li>
+    <li>Faites l'inventaire au moins une fois par an.</li>
+    <li>Contrôlez les déclarations avant de les déposer.</li>
+    <li>Vérifiez que les sauvegardes se font (date de la dernière sauvegarde).</li>
+    <li>Signalez à l'administrateur tout message d'erreur, avec une capture d'écran.</li>
+  </ol>
+  <h3>Questions fréquentes</h3>
+  <table>
+    <thead><tr><th style="width:38%">Question</th><th>Réponse</th></tr></thead>
+    <tbody>
+      <tr><td>Je ne vois pas un menu.</td><td>Il n'est pas autorisé pour votre rôle (voir l'administrateur), ou il est hors licence (cadenas).</td></tr>
+      <tr><td>Je me suis trompé sur une facture validée.</td><td>Faites un avoir depuis la facture, puis une nouvelle facture correcte.</td></tr>
+      <tr><td>Le client a payé une partie.</td><td>Encaissez le montant reçu : la facture passe en « Partielle » avec le reste à payer.</td></tr>
+      <tr><td>Le ticket sort mal.</td><td>Dans l'aperçu, choisissez « Ticket » ; dans le pilote de l'imprimante, papier 80 mm et marges à 0.</td></tr>
+      <tr><td>Un article n'apparaît pas à la caisse.</td><td>Il est peut-être désactivé, ou c'est une prestation non proposée : vérifiez dans Articles & prestations.</td></tr>
+      <tr><td>Une saisie hors ligne est « refusée ».</td><td>Le bandeau en donne le motif (caisse clôturée, droits…) ; corrigez puis ressaisissez.</td></tr>
+      <tr><td>Le logiciel est en lecture seule.</td><td>L'évaluation ou la licence est terminée : l'administrateur active une licence dans Administration → Licence.</td></tr>
+    </tbody>
+  </table>
+  <h3>Petit glossaire</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:28%"><b>Avoir</b></td><td>Document qui annule tout ou partie d'une facture.</td></tr>
+      <tr><td><b>Brouillon</b></td><td>Document non validé, modifiable et sans numéro définitif.</td></tr>
+      <tr><td><b>CMUP</b></td><td>Coût moyen unitaire pondéré : valeur moyenne d'un article en stock.</td></tr>
+      <tr><td><b>Retenue à la source</b></td><td>Impôt retenu par le client sur le montant payé et reversé directement à l'État.</td></tr>
+      <tr><td><b>SYSCOHADA</b></td><td>Système comptable des pays de l'OHADA, appliqué par IAM INVOICER.</td></tr>
+      <tr><td><b>Jalon</b></td><td>Étape clé d'un projet (réception, livraison…).</td></tr>
+    </tbody>
+  </table>
+  <div class="box info"><b class="t">Besoin d'aide ?</b><p>Contactez IAM Technology avec la version du logiciel, votre rôle, la page concernée et une capture d'écran du message.</p></div>
+</section>
+
+</body>
+</html>

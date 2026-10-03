@@ -17,8 +17,9 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Comptabilité | SYSCOHADA révisé : écritures générées automatiquement (ventes, achats, règlements, caisse), opérations diverses, journaux, grand livre, balance, compte de résultat, plan comptable modifiable, exports Excel |
 | Rapports | CA par mois, client et article avec marges, TVA collectée et déductible |
 | CRM | Pipeline d'opportunités par glisser-déposer, prévision pondérée, activités et agenda commercial, conversion d'un prospect en client et en devis |
-| Projets | Chantiers par client, budget en heures et en montant, saisie des temps, facturation des heures en un clic, rentabilité (facturé, achats imputés) |
-| RH et paie | Salariés, paie mensuelle (CNSS, IUTS progressif, abattements, charges de famille), primes, absences, avances, bulletins PDF, déclaration CNSS/IUTS, congés avec soldes, écritures de paie |
+| Projets | Chantiers par client, tâches et jalons (tableau par glisser-déposer, retards), temps passés, dépenses par poste avec justificatif et écriture automatique, refacturation avec marge, budget global et par poste, coût horaire interne, marge réelle et alertes |
+| Factures récurrentes | Contrats mensuels, trimestriels, semestriels ou annuels (maintenance, abonnements, loyers), factures créées automatiquement à échéance |
+| RH et paie | Salariés, paie mensuelle (CNSS détaillée : prestations familiales, risques professionnels, pension ; IUTS progressif, TPA, cotisations supplémentaires paramétrables), primes, absences, avances, bulletins PDF, déclarations, congés, écritures de paie |
 | Immobilisations | Registre, amortissement linéaire prorata temporis, dotations annuelles (681/28xx), cession et mise au rebut avec écritures |
 | Budgets et trésorerie | Budget mensuel par compte avec prévu/réalisé, trésorerie prévisionnelle à 8, 13 ou 26 semaines (factures, paie, prévisions) avec alerte de découvert |
 | Facture certifiée | SECeF (DGI) : certification à la validation, code, compteurs et QR code imprimés ; mode simulation et connecteur API |
@@ -30,6 +31,9 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Taxes | TVA par ligne, taxes ajoutées au total (droit de timbre, taxe spécifique), retenues à la source déduites du net à payer et comptabilisées automatiquement ; modèles par pays |
 | États et déclarations | Bilan SYSCOHADA (actif/passif, contrôle d'équilibre), compte de résultat (classes 6, 7 et 8), déclarations du mois : TVA, retenues à la source, salaires ; impression à l'en-tête de la société |
 | Import | Clients, fournisseurs, articles, stock initial, salariés et plan comptable depuis Excel (.xlsx), CSV ou copier-coller, avec reconnaissance des colonnes et compte rendu ligne par ligne |
+| Utilisateurs | Rôles, matrice des droits modifiable (rôles × modules), photo de profil |
+| Sauvegardes | Sauvegarde automatique quotidienne de la base du poste, dans un dossier au choix (Google Drive, OneDrive, Dropbox) |
+| Site web | Site de présentation à la racine du domaine (offres, téléchargements, contact), application sous /app/ |
 | Licences | Paliers Essentiel, Pro, Entreprise ou sur mesure ; évaluation complète de 30 jours ; modules et nombre d'utilisateurs selon la licence ; application au nom de la société (Entreprise) |
 | Écrans | Ordinateur, tablette et téléphone : listes en cartes sur téléphone, menu réduit sur tablette, contenu centré sur grand écran, cibles tactiles de 44 px |
 
