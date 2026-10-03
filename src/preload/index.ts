@@ -28,6 +28,12 @@ const bridge = {
   pickImage: () => ipcRenderer.invoke('file.pickImage'),
   backup: () => ipcRenderer.invoke('backup.create'),
   restore: () => ipcRenderer.invoke('backup.restore'),
+  backupAuto: {
+    get: () => ipcRenderer.invoke('backup.auto.get'),
+    set: (input: { enabled?: boolean; keep?: number }) => ipcRenderer.invoke('backup.auto.set', input),
+    chooseDir: () => ipcRenderer.invoke('backup.auto.chooseDir'),
+    now: () => ipcRenderer.invoke('backup.auto.now')
+  },
   offline: {
     pending: () => syncState?.pending ?? 0,
     failed: () => syncState?.failed ?? [],

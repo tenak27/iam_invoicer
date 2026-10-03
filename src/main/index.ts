@@ -3,11 +3,32 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { join } from 'node:path'
 import { openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
 import { openDb, restoreLocal } from './db'
+import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig } from './autoBackup'
 import type { PrintFormat } from './printing'
 import { AppError, type SessionUser } from './services/context'
 
 const configPath = () => join(app.getPath('userData'), 'config.json')
 const localDataDir = () => join(app.getPath('userData'), 'data')
+const backupConfigPath = () => join(app.getPath('userData'), 'sauvegardes.json')
+const defaultBackupDir = () => join(app.getPath('documents'), 'IAM INVOICER', 'Sauvegardes')
+
+/** Sauvegarde automatique de la base de ce poste si elle est due. */
+async function autoBackupIfDue(force = false) {
+  const db = backend?.db
+  if (!db?.dump || readConfig().mode !== 'local') return null
+  const cfg = readBackupConfig(backupConfigPath(), defaultBackupDir())
+  if (!force && !backupDue(cfg)) return null
+  try {
+    const r = await runBackup(db, cfg)
+    writeBackupConfig(backupConfigPath(), { ...cfg, last: new Date().toISOString(), lastError: null })
+    return r
+  } catch (e) {
+    writeBackupConfig(backupConfigPath(), { ...cfg, lastError: e instanceof Error ? e.message : String(e) })
+    if (force) throw e
+    return null
+  }
+}
+
 /** Base locale de travail du mode « serveur en ligne » (données consultées, saisies en attente). */
 const syncDir = () => join(app.getPath('userData'), 'sync')
 
@@ -269,6 +290,40 @@ function registerIpc(): void {
     })
   )
 
+  // Sauvegardes automatiques (base de ce poste)
+  ipcMain.handle('backup.auto.get', () =>
+    guard(async () => {
+      requireSession()
+      const cfg = readBackupConfig(backupConfigPath(), defaultBackupDir())
+      return { ...cfg, available: readConfig().mode === 'local', files: listBackups(cfg.dir).slice(0, 30) }
+    })
+  )
+  ipcMain.handle('backup.auto.set', (_e, input: { enabled?: boolean; keep?: number }) =>
+    guard(async () => {
+      if (requireSession().role !== 'admin') throw new AppError('Réservé aux administrateurs.')
+      const cfg = readBackupConfig(backupConfigPath(), defaultBackupDir())
+      const keep = Math.min(365, Math.max(1, Math.round(Number(input.keep ?? cfg.keep)) || 14))
+      writeBackupConfig(backupConfigPath(), { ...cfg, enabled: input.enabled ?? cfg.enabled, keep })
+      return true
+    })
+  )
+  ipcMain.handle('backup.auto.chooseDir', () =>
+    guard(async () => {
+      if (requireSession().role !== 'admin') throw new AppError('Réservé aux administrateurs.')
+      const cfg = readBackupConfig(backupConfigPath(), defaultBackupDir())
+      const r = await dialog.showOpenDialog(mainWindow!, { title: 'Dossier des sauvegardes automatiques', defaultPath: cfg.dir, properties: ['openDirectory', 'createDirectory'] })
+      if (r.canceled || !r.filePaths[0]) return null
+      writeBackupConfig(backupConfigPath(), { ...cfg, dir: r.filePaths[0] })
+      return r.filePaths[0]
+    })
+  )
+  ipcMain.handle('backup.auto.now', () =>
+    guard(async () => {
+      if (requireSession().role !== 'admin') throw new AppError('Réservé aux administrateurs.')
+      return (await autoBackupIfDue(true))?.file ?? null
+    })
+  )
+
   ipcMain.handle('backup.create', () =>
     guard(async () => {
       if (requireSession().role !== 'admin') throw new AppError('Réservé aux administrateurs.')
@@ -361,6 +416,12 @@ else {
  * Toutes les 30 s : retente le serveur s'il était injoignable et envoie les saisies en attente.
  * Toutes les 10 min : rafraîchit la base locale avec les données des autres postes.
  */
+function startBackupLoop() {
+  // Premier contrôle une minute après le démarrage (sans ralentir l'ouverture), puis toutes les heures.
+  setTimeout(() => void autoBackupIfDue(), 60_000).unref()
+  setInterval(() => void autoBackupIfDue(), 3600_000).unref()
+}
+
 function startSyncLoop() {
   let ticks = 0
   setInterval(async () => {
@@ -383,6 +444,7 @@ app.whenReady().then(async () => {
   await connect()
   createWindow()
   startSyncLoop()
+  startBackupLoop()
   // macOS : rouvrir la fenêtre quand on clique sur l'icône du Dock.
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

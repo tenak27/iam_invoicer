@@ -324,6 +324,7 @@ export function CompanySettingsPage() {
             </p>
           </div>
           {desktop && dbMode === 'remote' && <LocalSyncCard />}
+          {desktop && dbMode === 'local' && window.erp.backupAuto && <AutoBackupCard />}
         </div>
       )}
       {showDb && <Modal title={desktop ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide><DbConfigForm /></Modal>}
@@ -591,6 +592,49 @@ function LocalSyncCard() {
           }}
         ><Trash size={18} aria-hidden="true" />Vider les données locales</button>
       </div>
+    </div>
+  )
+}
+
+/** Base de ce poste : sauvegardes automatiques quotidiennes dans un dossier au choix. */
+function AutoBackupCard() {
+  const api2 = window.erp.backupAuto!
+  const [st, setSt] = useState<any | null>(null)
+  const [busy, setBusy] = useState(false)
+  const load = () => api2.get().then((r) => r.ok && setSt(r.data))
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  if (!st) return null
+  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : 'jamais')
+  const size = (b: number) => (b > 1_048_576 ? `${(b / 1_048_576).toFixed(1)} Mo` : `${Math.max(1, Math.round(b / 1024))} Ko`)
+  return (
+    <div className="card">
+      <h3>Sauvegardes automatiques</h3>
+      <p className="muted">
+        Une sauvegarde complète chaque jour (et au démarrage si la dernière date de plus de 24 h). Choisissez de préférence un dossier
+        <strong> Google Drive, OneDrive ou Dropbox</strong> : vous aurez ainsi une copie hors de cet ordinateur. Seules des copies y sont déposées ; la base de travail reste sur le poste.
+      </p>
+      <div className="grid grid-4">
+        <Field label="Dossier" span={2}><div className="readonly mono" style={{ overflowWrap: 'anywhere' }}>{st.dir}</div></Field>
+        <Field label="Sauvegardes conservées"><input type="number" min={1} max={365} defaultValue={st.keep} onBlur={async (e) => { await run(() => unwrap(api2.set({ keep: Number(e.target.value) }))); load() }} /></Field>
+        <label className="inline check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={st.enabled} onChange={async (e) => { await run(() => unwrap(api2.set({ enabled: e.target.checked }))); load() }} /> Activées</label>
+      </div>
+      <p className="muted small">Dernière sauvegarde : {when(st.last)}.{st.lastError ? ` Dernière erreur : ${st.lastError}` : ''}</p>
+      <div className="row gap wrap">
+        <button className="btn" onClick={async () => { if (await run(() => unwrap(api2.chooseDir()))) load() }}>Choisir le dossier…</button>
+        <button className="btn btn-primary" disabled={busy} onClick={async () => { setBusy(true); const f = await run(() => unwrap(api2.now()), 'Sauvegarde effectuée.'); setBusy(false); if (f !== undefined) load() }}>{busy ? 'Sauvegarde…' : 'Sauvegarder maintenant'}</button>
+      </div>
+      {st.files.length > 0 && (
+        <div className="table-wrap" style={{ marginTop: 14 }}>
+          <table className="table compact">
+            <thead><tr><th>Sauvegarde</th><th>Date</th><th className="num">Taille</th></tr></thead>
+            <tbody>{st.files.slice(0, 8).map((f: any) => <tr key={f.name}><td className="mono">{f.name}</td><td>{when(f.date)}</td><td className="num">{size(f.size)}</td></tr>)}</tbody>
+          </table>
+        </div>
+      )}
+      <p className="muted small">Pour restaurer : bouton « Restaurer une sauvegarde… » ci-dessus, puis choisir un de ces fichiers.</p>
     </div>
   )
 }

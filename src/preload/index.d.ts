@@ -47,6 +47,13 @@ interface ErpBridge {
   pickImage(): Promise<Result<string | null>>
   backup(): Promise<Result>
   restore(): Promise<Result>
+  /** Ordinateur, base de ce poste : sauvegardes automatiques. */
+  backupAuto?: {
+    get(): Promise<Result<{ enabled: boolean; dir: string; keep: number; last: string | null; lastError: string | null; available: boolean; files: { name: string; size: number; date: string }[] }>>
+    set(input: { enabled?: boolean; keep?: number }): Promise<Result>
+    chooseDir(): Promise<Result<string | null>>
+    now(): Promise<Result<string | null>>
+  }
   /** Mode hors ligne : web, mobile, et ordinateur relié à un serveur en ligne. */
   offline?: {
     pending(): number
