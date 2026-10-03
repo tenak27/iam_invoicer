@@ -746,7 +746,7 @@ td.indent { padding-left: 38px !important; }
   .totals { min-width: 0; width: 100%; }
   .choice-row, .choice-row.three { grid-template-columns: 1fr; }
   .search { max-width: none; flex: 1 1 100%; }
-  .toolbar .tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .tab { white-space: nowrap; min-height: 38px; }
   .modal-backdrop { padding: 0; place-items: end stretch; }
   .palette-backdrop { place-items: start stretch; padding: 12px; }
@@ -939,4 +939,135 @@ td.indent { padding-left: 38px !important; }
   .area-line.draw { stroke-dashoffset: 0; }
   .area-fill, .area-peak-label { opacity: 1; }
   .kpi-tile:hover, .dcard:hover { transform: none; }
+}
+
+/* =====================================================================
+   Modules ERP : stock avancé, RH, CRM, projets, immobilisations, budgets
+   ===================================================================== */
+
+/* Indicateurs compacts en ligne */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.mini-kpi { background: var(--surface); border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--lift); display: flex; flex-direction: column; gap: 4px; border-top: 3px solid var(--c-primary); animation: card-in .45s var(--ease-out) both; }
+.mini-kpi:nth-child(2) { border-top-color: var(--c-success); animation-delay: .05s; }
+.mini-kpi:nth-child(3) { border-top-color: var(--c-warning); animation-delay: .1s; }
+.mini-kpi:nth-child(4) { border-top-color: var(--c-info); animation-delay: .15s; }
+.mini-kpi:nth-child(5) { border-top-color: #7357e8; animation-delay: .2s; }
+.mini-kpi > span:first-child { font-size: 13px; color: var(--muted); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+.mini-kpi strong { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mini-kpi.good strong { color: var(--green); }
+.mini-kpi.bad strong { color: var(--red); }
+
+/* Grilles de cartes cliquables */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.pick-card { flex-direction: row; align-items: center; gap: 14px; text-align: left; font: inherit; color: inherit; border: none; cursor: pointer; }
+.pick-card strong { display: block; color: var(--text); }
+.pick-card .num { text-align: right; display: flex; flex-direction: column; }
+.pick-card.inactive { opacity: .6; }
+.dcard:focus-visible, .kanban-open:focus-visible { box-shadow: var(--focus), var(--lift); }
+
+/* Traçabilité */
+.trace-card { margin-bottom: 18px; }
+.trace-card form input { width: 200px; }
+.timeline { list-style: none; margin: 4px 0 0; padding: 0 0 0 4px; display: flex; flex-direction: column; }
+.timeline li { position: relative; display: flex; gap: 12px; padding: 0 0 16px 18px; border-left: 2px solid var(--line); }
+.timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.tl-dot { position: absolute; left: -7px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c-primary); }
+.tl-dot.now { border-color: var(--c-success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-success) 20%, transparent); }
+.timeline li.done > div { opacity: .65; }
+.tl-check { position: absolute; left: -11px; top: -1px; border: none; background: var(--surface); color: var(--c-primary); padding: 0; display: grid; place-items: center; border-radius: 50%; }
+.timeline li.done .tl-check { color: var(--c-success); }
+
+/* RH : aperçu du bulletin */
+.pay-preview { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 18px; padding: 14px; border-radius: var(--r-md); background: var(--surface-2); }
+.pay-preview div { display: flex; flex-direction: column; gap: 2px; }
+.pay-preview span { font-size: 12.5px; color: var(--muted); }
+.pay-preview strong { font-variant-numeric: tabular-nums; }
+.pay-preview .net { padding: 6px 10px; margin: -6px 0; border-radius: var(--r-sm); background: var(--c-primary); }
+.pay-preview .net span, .pay-preview .net strong { color: var(--on-blue); }
+
+/* CRM : tableau du pipeline */
+.kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr); gap: 14px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 18px; scroll-snap-type: x proximity; }
+.kanban-col { background: var(--surface-2); border-radius: var(--r-lg); padding: 10px; display: flex; flex-direction: column; gap: 10px; min-height: 260px; scroll-snap-align: start; transition: background var(--t-fast), box-shadow var(--t-fast); }
+.kanban-col.drop { background: color-mix(in srgb, var(--c-primary) 10%, var(--surface-2)); box-shadow: inset 0 0 0 2px var(--c-primary); }
+.kanban-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 6px 8px; border-bottom: 3px solid var(--c-secondary); }
+.kanban-head .muted { width: 100%; }
+.kanban-head.tone-info { border-color: var(--c-info); }
+.kanban-head.tone-primary { border-color: var(--c-primary); }
+.kanban-head.tone-warning { border-color: var(--c-warning); }
+.kanban-head.tone-success { border-color: var(--c-success); }
+.kanban-head.tone-danger { border-color: var(--c-danger); }
+.kanban-list { display: flex; flex-direction: column; gap: 10px; }
+.kanban-card { position: relative; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--lift); cursor: grab; transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), opacity var(--t-fast); animation: card-in .35s var(--ease-out) both; }
+.kanban-card:hover { transform: translateY(-2px); box-shadow: var(--lift-hover); }
+.kanban-card.dragging { opacity: .45; transform: rotate(2deg); }
+.kanban-open { display: flex; flex-direction: column; gap: 3px; width: 100%; text-align: left; padding: 12px 40px 12px 14px; border: none; background: none; font: inherit; color: inherit; border-radius: var(--r-md); cursor: pointer; }
+.kanban-open strong { color: var(--text); line-height: 1.3; }
+.kanban-amount { font-weight: 700; color: var(--link); margin-top: 4px; }
+.kanban-due { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.kanban-due.late { color: var(--red); }
+.kanban-next { position: absolute; right: 6px; top: 8px; width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--surface-3); color: var(--text-2); display: grid; place-items: center; cursor: pointer; transition: background var(--t-fast), transform var(--t-fast) var(--ease-spring); }
+.kanban-next:hover { background: var(--c-primary); color: var(--on-blue); transform: translateX(2px); }
+.kanban-empty { margin: 0; padding: 18px 8px; text-align: center; font-size: 13px; color: var(--muted); border: 2px dashed var(--line-strong); border-radius: var(--r-md); }
+.activity-add { display: grid; grid-template-columns: 130px minmax(0, 1fr) 160px auto; gap: 8px; margin-bottom: 14px; }
+
+/* Projets */
+.project-card { text-align: left; font: inherit; color: inherit; border: none; cursor: pointer; gap: 14px; }
+.project-card strong { color: var(--text); display: block; }
+.project-figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.project-figs div { display: flex; flex-direction: column; gap: 2px; }
+.project-figs span { font-size: 12.5px; color: var(--muted); }
+
+/* Budgets */
+.budget-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.budget-card { text-align: left; font: inherit; color: inherit; border: none; cursor: pointer; gap: 12px; }
+.budget-card strong { color: var(--text); display: block; }
+.spark-bars { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; height: 90px; align-items: end; }
+.sb { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 1px; padding-bottom: 14px; }
+.sb i { display: block; width: 45%; border-radius: 2px 2px 0 0; animation: bar-up .7s var(--ease-out) both; transform-origin: bottom; }
+.sb-plan { background: var(--surface-3); }
+.sb-real { background: var(--c-success); }
+.sb-real.over { background: var(--c-danger); }
+.sb em { position: absolute; bottom: 0; font-style: normal; font-size: 10px; color: var(--muted); }
+@keyframes bar-up { from { transform: scaleY(0); } }
+.budget-figs { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.budget-figs b { color: var(--text); }
+.months-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px 12px; margin-top: 14px; }
+
+/* Trésorerie */
+.cash-chart { margin-top: 12px; }
+.bar-in { fill: var(--c-success); opacity: .85; }
+.bar-out { fill: var(--c-danger); opacity: .8; }
+.bal-dot { fill: var(--surface); stroke: var(--c-primary); stroke-width: 2.5; }
+.bal-dot.neg { stroke: var(--c-danger); fill: var(--c-danger); }
+.inline-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 6px; }
+.inline-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.inline-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.lg-in { background: var(--c-success); }
+.lg-out { background: var(--c-danger); }
+.lg-bal { background: var(--c-primary); border-radius: 50% !important; }
+.scroll-list { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+
+/* Documents : lots, certification */
+.lot-input { margin-top: 6px; font-size: 13px; border-style: dashed; }
+.secef-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 12px 16px; margin-bottom: 16px; border-radius: var(--r-md); background: var(--green-soft); color: var(--green); border-left: 4px solid var(--c-success); }
+.secef-banner.sim { background: var(--amber-soft); color: var(--amber); border-left-color: var(--c-warning); }
+.secef-banner span { font-size: 13px; overflow-wrap: anywhere; }
+
+/* Hors ligne */
+.offline-bar.pending { background: rgba(var(--primary-rgb), .1); color: var(--link); }
+.offline-bar .btn { flex-shrink: 0; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .pay-preview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .activity-add { grid-template-columns: 1fr 1fr; }
+  .activity-add input:nth-child(2) { grid-column: span 2; }
+  .months-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kanban { grid-auto-columns: minmax(240px, 82vw); }
+  .trace-card form { width: 100%; }
+  .trace-card form input { flex: 1; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mini-kpi, .kanban-card, .sb i { animation: none !important; }
 }

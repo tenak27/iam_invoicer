@@ -73,6 +73,17 @@ describe('Serveur web (synchronisation via un domaine)', () => {
     expect(v.total_ttc).toBe(236000)
   })
 
+  it('hors ligne : une opération rejouée n’est exécutée qu’une fois', async () => {
+    const body = { name: 'parties.save', args: { kind: 'client', name: 'Client hors ligne' }, opId: 'op_test_12345678' }
+    const send = () => fetch(base + '/api/call', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) }).then((r) => r.json())
+    const first = await send()
+    const second = await send()
+    expect(first.ok).toBe(true)
+    expect(second).toMatchObject({ ok: true, replayed: true, data: first.data })
+    const list = await rpc('parties.list', { kind: 'client', search: 'hors ligne' })
+    expect(list).toHaveLength(1)
+  })
+
   it('en-têtes CORS pour les applications mobiles', async () => {
     const res = await fetch(base + '/api/call', { method: 'OPTIONS' })
     expect(res.status).toBe(204)

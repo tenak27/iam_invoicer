@@ -331,5 +331,263 @@ export const MIGRATIONS: string[] = [
     created_by INT REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )
+  `,
+  // v4 — ERP complet : stock multi-dépôts, lots et séries, paie et RH, CRM, projets,
+  // immobilisations, budgets et trésorerie prévisionnelle, facture certifiée, hors ligne.
+  `
+  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+  ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','commercial','magasinier','comptable','caissier','rh'));
+
+  CREATE TABLE warehouses (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL DEFAULT '',
+    active BOOLEAN NOT NULL DEFAULT TRUE
+  );
+  INSERT INTO warehouses (code, name) VALUES ('PRINCIPAL', 'Dépôt principal');
+
+  CREATE TABLE product_stock (
+    product_id INT NOT NULL REFERENCES products(id),
+    warehouse_id INT NOT NULL REFERENCES warehouses(id),
+    qty DOUBLE PRECISION NOT NULL DEFAULT 0,
+    PRIMARY KEY (product_id, warehouse_id)
+  );
+  INSERT INTO product_stock (product_id, warehouse_id, qty) SELECT id, 1, stock_qty FROM products WHERE kind = 'produit';
+
+  ALTER TABLE stock_movements ADD COLUMN warehouse_id INT NOT NULL DEFAULT 1 REFERENCES warehouses(id);
+  ALTER TABLE products ADD COLUMN tracking TEXT NOT NULL DEFAULT 'aucun' CHECK (tracking IN ('aucun','lot','serie'));
+  ALTER TABLE document_lines ADD COLUMN lot_refs TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN warehouse_id INT NOT NULL DEFAULT 1 REFERENCES warehouses(id);
+
+  CREATE TABLE stock_lots (
+    id SERIAL PRIMARY KEY,
+    product_id INT NOT NULL REFERENCES products(id),
+    warehouse_id INT NOT NULL REFERENCES warehouses(id),
+    lot TEXT NOT NULL,
+    expiry TEXT,
+    qty DOUBLE PRECISION NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (product_id, warehouse_id, lot)
+  );
+
+  CREATE TABLE stock_transfers (
+    id SERIAL PRIMARY KEY,
+    number TEXT NOT NULL UNIQUE,
+    date TEXT NOT NULL,
+    from_warehouse INT NOT NULL REFERENCES warehouses(id),
+    to_warehouse INT NOT NULL REFERENCES warehouses(id),
+    note TEXT NOT NULL DEFAULT '',
+    user_id INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE TABLE stock_transfer_lines (
+    id SERIAL PRIMARY KEY,
+    transfer_id INT NOT NULL REFERENCES stock_transfers(id) ON DELETE CASCADE,
+    product_id INT NOT NULL REFERENCES products(id),
+    quantity DOUBLE PRECISION NOT NULL CHECK (quantity > 0),
+    lot TEXT NOT NULL DEFAULT ''
+  );
+
+  CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    matricule TEXT NOT NULL UNIQUE,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    job TEXT NOT NULL DEFAULT '',
+    department TEXT NOT NULL DEFAULT '',
+    category TEXT NOT NULL DEFAULT 'non_cadre' CHECK (category IN ('cadre','non_cadre')),
+    hire_date TEXT NOT NULL,
+    exit_date TEXT,
+    base_salary DOUBLE PRECISION NOT NULL DEFAULT 0,
+    housing DOUBLE PRECISION NOT NULL DEFAULT 0,
+    transport DOUBLE PRECISION NOT NULL DEFAULT 0,
+    function_allowance DOUBLE PRECISION NOT NULL DEFAULT 0,
+    other_allowances DOUBLE PRECISION NOT NULL DEFAULT 0,
+    family_charges INT NOT NULL DEFAULT 0,
+    cnss_number TEXT NOT NULL DEFAULT '',
+    payment_method TEXT NOT NULL DEFAULT 'Virement',
+    bank_account TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    leave_adjust DOUBLE PRECISION NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE payroll_runs (
+    id SERIAL PRIMARY KEY,
+    period TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'brouillon' CHECK (status IN ('brouillon','valide')),
+    gross DOUBLE PRECISION NOT NULL DEFAULT 0,
+    net DOUBLE PRECISION NOT NULL DEFAULT 0,
+    employer_cost DOUBLE PRECISION NOT NULL DEFAULT 0,
+    validated_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE TABLE payslips (
+    id SERIAL PRIMARY KEY,
+    run_id INT NOT NULL REFERENCES payroll_runs(id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employees(id),
+    detail TEXT NOT NULL,
+    gross DOUBLE PRECISION NOT NULL,
+    taxable DOUBLE PRECISION NOT NULL,
+    cnss_employee DOUBLE PRECISION NOT NULL,
+    iuts DOUBLE PRECISION NOT NULL,
+    other_deductions DOUBLE PRECISION NOT NULL DEFAULT 0,
+    net DOUBLE PRECISION NOT NULL,
+    cnss_employer DOUBLE PRECISION NOT NULL,
+    UNIQUE (run_id, employee_id)
+  );
+
+  CREATE TABLE leaves (
+    id SERIAL PRIMARY KEY,
+    employee_id INT NOT NULL REFERENCES employees(id),
+    kind TEXT NOT NULL CHECK (kind IN ('conge_paye','maladie','sans_solde','autre')),
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
+    days DOUBLE PRECISION NOT NULL,
+    status TEXT NOT NULL DEFAULT 'demande' CHECK (status IN ('demande','approuve','refuse')),
+    note TEXT NOT NULL DEFAULT '',
+    decided_by INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE opportunities (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    party_id INT REFERENCES parties(id),
+    prospect_name TEXT NOT NULL DEFAULT '',
+    contact TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+    probability INT NOT NULL DEFAULT 20,
+    stage TEXT NOT NULL DEFAULT 'nouveau' CHECK (stage IN ('nouveau','qualifie','proposition','negociation','gagne','perdu')),
+    expected_date TEXT,
+    source TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    lost_reason TEXT NOT NULL DEFAULT '',
+    owner_id INT REFERENCES users(id),
+    quote_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE TABLE crm_activities (
+    id SERIAL PRIMARY KEY,
+    opportunity_id INT NOT NULL REFERENCES opportunities(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('appel','reunion','email','visite','note','tache')),
+    subject TEXT NOT NULL,
+    due_date TEXT,
+    done BOOLEAN NOT NULL DEFAULT FALSE,
+    user_id INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    party_id INT REFERENCES parties(id),
+    status TEXT NOT NULL DEFAULT 'en_cours' CHECK (status IN ('prospect','en_cours','suspendu','termine','annule')),
+    start_date TEXT,
+    end_date TEXT,
+    budget_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+    budget_hours DOUBLE PRECISION NOT NULL DEFAULT 0,
+    hourly_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+    manager_id INT REFERENCES users(id),
+    description TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  ALTER TABLE documents ADD COLUMN project_id INT REFERENCES projects(id);
+  CREATE TABLE time_entries (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id),
+    date TEXT NOT NULL,
+    hours DOUBLE PRECISION NOT NULL CHECK (hours > 0),
+    description TEXT NOT NULL,
+    billable BOOLEAN NOT NULL DEFAULT TRUE,
+    rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+    invoice_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX time_entries_project_idx ON time_entries(project_id, date);
+
+  CREATE TABLE assets (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    account TEXT NOT NULL REFERENCES accounts(number),
+    acquisition_date TEXT NOT NULL,
+    value DOUBLE PRECISION NOT NULL CHECK (value > 0),
+    residual DOUBLE PRECISION NOT NULL DEFAULT 0,
+    duration_years INT NOT NULL CHECK (duration_years > 0),
+    supplier TEXT NOT NULL DEFAULT '',
+    location TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'actif' CHECK (status IN ('actif','cede','rebut')),
+    disposal_date TEXT,
+    disposal_value DOUBLE PRECISION,
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE TABLE asset_postings (
+    asset_id INT NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+    year INT NOT NULL,
+    amount DOUBLE PRECISION NOT NULL,
+    entry_id INT REFERENCES journal_entries(id) ON DELETE SET NULL,
+    PRIMARY KEY (asset_id, year)
+  );
+
+  CREATE TABLE budget_lines (
+    id SERIAL PRIMARY KEY,
+    year INT NOT NULL,
+    account TEXT NOT NULL,
+    label TEXT NOT NULL,
+    amounts TEXT NOT NULL,
+    UNIQUE (year, account)
+  );
+  CREATE TABLE cash_forecasts (
+    id SERIAL PRIMARY KEY,
+    date TEXT NOT NULL,
+    label TEXT NOT NULL,
+    amount DOUBLE PRECISION NOT NULL,
+    recurrence TEXT NOT NULL DEFAULT 'aucune' CHECK (recurrence IN ('aucune','mensuelle')),
+    end_date TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  ALTER TABLE documents ADD COLUMN secef_status TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_code TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_nim TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_counters TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_qr TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_date TEXT NOT NULL DEFAULT '';
+  ALTER TABLE documents ADD COLUMN secef_error TEXT NOT NULL DEFAULT '';
+
+  CREATE TABLE client_ops (
+    op_id TEXT PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    name TEXT NOT NULL,
+    result TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
+  INSERT INTO accounts (number, label) VALUES
+    ('213', 'Logiciels'),
+    ('231', 'Bâtiments'),
+    ('2441', 'Matériel de bureau'),
+    ('2444', 'Matériel informatique'),
+    ('2446', 'Mobilier de bureau'),
+    ('2813', 'Amortissements des logiciels'),
+    ('2831', 'Amortissements des bâtiments'),
+    ('2844', 'Amortissements du matériel et mobilier'),
+    ('2845', 'Amortissements du matériel de transport'),
+    ('423', 'Personnel, oppositions et saisies'),
+    ('663', 'Indemnités forfaitaires versées au personnel'),
+    ('681', 'Dotations aux amortissements d''exploitation'),
+    ('812', 'Valeurs comptables des cessions d''immobilisations'),
+    ('822', 'Produits des cessions d''immobilisations')
+  ON CONFLICT (number) DO NOTHING
   `
 ]

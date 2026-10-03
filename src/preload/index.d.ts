@@ -11,6 +11,8 @@ interface AppStatus {
   version: string
   platform: string
   user: any
+  /** Démarrage sans réseau, sur les données gardées par l'appareil. */
+  offline?: boolean
 }
 
 /** Pont vers les données : Electron (IPC) sur ordinateur, HTTP sur le web et le mobile. */
@@ -26,11 +28,20 @@ interface ErpBridge {
   saveDbConfig(cfg: unknown): Promise<void>
   pdf(id: number, action: 'open' | 'save' | 'print', format?: 'a4' | 'ticket'): Promise<Result>
   saveText(name: string, content: string): Promise<Result>
+  /** Imprime un HTML complet (PDF sur ordinateur, fenêtre d'impression sur le web). */
+  printHtml(html: string, filename: string): Promise<Result>
   /** Envoie un document par e-mail (PDF joint sur ordinateur, HTML depuis le web/mobile). */
   sendDocumentEmail(input: { documentId: number; to: string; subject: string; body: string }): Promise<Result>
   pickImage(): Promise<Result<string | null>>
   backup(): Promise<Result>
   restore(): Promise<Result>
+  /** Mode hors ligne (web et mobile uniquement). */
+  offline?: {
+    pending(): number
+    failed(): { opId: string; name: string; at: string; error: string }[]
+    sync(): Promise<{ sent: number; failed: number }>
+    clearFailed(): void
+  }
 }
 
 interface Window {

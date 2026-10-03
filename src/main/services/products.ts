@@ -39,8 +39,10 @@ export async function saveProduct(ctx: Ctx, input: any) {
     kind === 'produit' ? num(input.min_stock) : 0,
     input.active ?? true
   ]
+  const tracking = kind === 'produit' && ['lot', 'serie'].includes(input.tracking) ? input.tracking : 'aucun'
   return ctx.db.tx(async (db) => {
     if (input.id) {
+      await db.query('UPDATE products SET tracking = $1 WHERE id = $2', [tracking, input.id])
       await db.query(
         `UPDATE products SET name=$1, description=$2, category=$3, unit=$4, sale_price=$5, purchase_price=$6,
          tva_rate=$7, min_stock=$8, active=$9,
@@ -68,6 +70,7 @@ export async function saveProduct(ctx: Ctx, input: any) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
       [kind, ref, ...fields, num(input.purchase_price)]
     )
+    await db.query('UPDATE products SET tracking = $1 WHERE id = $2', [tracking, row!.id])
     await audit(db, ctx, 'creation', 'article', row!.id, name)
     return row!
   })

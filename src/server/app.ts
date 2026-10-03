@@ -152,7 +152,17 @@ export function createHandler(opts: ServerOptions) {
       if (!user && name !== 'auth.needsSetup') throw new HttpError(401, 'Session expirée, veuillez vous reconnecter.')
       // Liens de signature : par défaut, l'adresse publique est celle par laquelle on joint ce serveur.
       if (name === 'signatures.request' && body.args && !body.args.baseUrl) body.args.baseUrl = publicOrigin(req)
-      return send(res, 200, await call({ db, user }, name, body.args))
+      // Hors ligne : une opération rejouée à la resynchronisation n'est exécutée qu'une fois.
+      const opId = typeof body.opId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.opId) ? body.opId : null
+      if (opId && user) {
+        const done = await db.one<{ result: string }>('SELECT result FROM client_ops WHERE op_id = $1 AND user_id = $2', [opId, user.id])
+        if (done) return send(res, 200, { ...JSON.parse(done.result), replayed: true })
+      }
+      const result = await call({ db, user }, name, body.args)
+      if (opId && user && result.ok) {
+        await db.query('INSERT INTO client_ops (op_id, user_id, name, result) VALUES ($1, $2, $3, $4) ON CONFLICT (op_id) DO NOTHING', [opId, user.id, name, JSON.stringify(result)])
+      }
+      return send(res, 200, result)
     }
     const docMatch = /^\/api\/document\/(\d+)$/.exec(path)
     if (method === 'GET' && docMatch) {

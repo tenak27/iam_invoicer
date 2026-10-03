@@ -1,13 +1,14 @@
 // Règles métier partagées entre le processus principal et l'interface.
 
-export type Role = 'admin' | 'commercial' | 'magasinier' | 'comptable' | 'caissier'
+export type Role = 'admin' | 'commercial' | 'magasinier' | 'comptable' | 'caissier' | 'rh'
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrateur',
   commercial: 'Commercial',
   magasinier: 'Magasinier',
   comptable: 'Comptable',
-  caissier: 'Caissier'
+  caissier: 'Caissier',
+  rh: 'Ressources humaines'
 }
 
 export type Module =
@@ -23,15 +24,21 @@ export type Module =
   | 'cash'
   | 'accounting'
   | 'messages'
+  | 'hr'
+  | 'crm'
+  | 'projects'
+  | 'assets'
+  | 'budget'
   | 'settings'
   | 'users'
 
 export const PERMISSIONS: Record<Role, Module[]> = {
-  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'settings', 'users'],
-  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages'],
+  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'settings', 'users'],
+  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages', 'crm', 'projects'],
   magasinier: ['dashboard', 'purchases', 'stock', 'suppliers', 'products'],
-  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages'],
-  caissier: ['cash']
+  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages', 'hr', 'projects', 'assets', 'budget'],
+  caissier: ['cash'],
+  rh: ['hr']
 }
 
 export function can(role: Role, module: Module): boolean {

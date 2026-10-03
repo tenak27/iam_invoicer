@@ -191,13 +191,15 @@ function Pos({ summary, reload }: { summary: any; reload: () => void }) {
       )}
       {done && (
         <Modal title="Vente enregistrée" onClose={() => setDone(null)} footer={<>
-          <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(done.id, 'print', 'ticket')))}>Imprimer le ticket</button>
-          {canSales && <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(done.id, 'open', 'a4')))}>Facture A4</button>}
+          {!done.queued && <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(done.id, 'print', 'ticket')))}>Imprimer le ticket</button>}
+          {canSales && !done.queued && <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(done.id, 'open', 'a4')))}>Facture A4</button>}
           <button className="btn btn-primary" autoFocus onClick={() => setDone(null)}>Nouvelle vente</button>
         </>}>
-          <p className="confirm-msg">Facture <strong>{done.number}</strong> — {formatMoney(done.total_ttc)}</p>
+          {done.queued
+            ? <p className="confirm-msg">Vente enregistrée <strong>hors connexion</strong>. Elle sera envoyée et numérotée dès le retour du réseau.</p>
+            : <p className="confirm-msg">Facture <strong>{done.number}</strong> — {formatMoney(done.total_ttc)}</p>}
           {done.change > 0 && <div className="change-box">Monnaie à rendre : <strong>{formatMoney(done.change)}</strong></div>}
-          {done.paid < done.total_ttc && <p className="text-warn">Reste dû par le client : {formatMoney(done.total_ttc - done.paid)}</p>}
+          {!done.queued && done.paid < done.total_ttc && <p className="text-warn">Reste dû par le client : {formatMoney(done.total_ttc - done.paid)}</p>}
         </Modal>
       )}
       {movement && <MovementModal kind={movement} accounts={options?.accounts ?? []} onClose={() => setMovement(null)} onDone={() => { setMovement(null); reload() }} />}

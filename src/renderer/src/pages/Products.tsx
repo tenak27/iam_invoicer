@@ -69,7 +69,7 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
   const categories = useQuery<string[]>('products.categories')
   const f = useForm<any>({
     ref: '', name: '', description: '', category: '', unit: product.kind === 'prestation' ? 'forfait' : 'unité',
-    sale_price: '0', purchase_price: '0', tva_rate: String(company.default_tva), min_stock: '0', active: true,
+    sale_price: '0', purchase_price: '0', tva_rate: String(company.default_tva), min_stock: '0', active: true, tracking: 'aucun',
     ...product,
     ...(product.id ? { sale_price: String(product.sale_price), purchase_price: String(product.purchase_price), tva_rate: String(product.tva_rate), min_stock: String(product.min_stock) } : {})
   })
@@ -108,6 +108,11 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
           <datalist id="units">{['unité', 'pièce', 'kg', 'litre', 'mètre', 'carton', 'heure', 'jour', 'mois', 'forfait', 'licence'].map((u) => <option key={u} value={u} />)}</datalist>
         </Field>
         {isProduct && <Field label="Stock minimum (alerte)"><input inputMode="decimal" {...f.bind('min_stock')} /></Field>}
+        {isProduct && (
+          <Field label="Traçabilité" hint="Numéros à saisir à la réception et à la vente">
+            <select {...f.bind('tracking')}><option value="aucun">Aucune</option><option value="lot">Par lot (péremption, fabrication)</option><option value="serie">Par numéro de série (une pièce = un numéro)</option></select>
+          </Field>
+        )}
         <div className="field span-3 muted small" style={{ alignSelf: 'end' }}>
           Marge brute unitaire : <strong>{formatMoney(margin)}</strong>
           {Number(f.values.sale_price) > 0 && ` (${Math.round((margin / Number(f.values.sale_price)) * 100)} %)`}

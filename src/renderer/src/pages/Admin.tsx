@@ -9,7 +9,8 @@ import { useSession } from '../session'
 const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité',
-  messages: 'Communications', settings: 'Paramètres', users: 'Utilisateurs'
+  messages: 'Communications', hr: 'RH et paie', crm: 'CRM', projects: 'Projets', assets: 'Immobilisations', budget: 'Budgets et trésorerie',
+  settings: 'Paramètres', users: 'Utilisateurs'
 }
 
 const DATA_TEXT: Record<DataMode, string> = {
@@ -18,7 +19,7 @@ const DATA_TEXT: Record<DataMode, string> = {
   remote: 'serveur en ligne'
 }
 
-type SettingsTab = 'societe' | 'documents' | 'mail' | 'sms' | 'donnees'
+type SettingsTab = 'societe' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees'
 
 const DOC_COLORS = ['#1d6fd6', '#0b4f8a', '#178a55', '#7367f0', '#c2410c', '#be123c', '#33303f']
 
@@ -32,6 +33,7 @@ export function CompanySettingsPage() {
   const [showDb, setShowDb] = useState(false)
   const [smtpPassword, setSmtpPassword] = useState('')
   const [smsSecret, setSmsSecret] = useState('')
+  const [secefToken, setSecefToken] = useState('')
   const [drawSig, setDrawSig] = useState(false)
   useEffect(() => {
     if (data) f.setValues({ ...data, default_tva: String(data.default_tva), payment_terms: String(data.payment_terms), smtp_port: String(data.smtp_port) })
@@ -46,12 +48,14 @@ export function CompanySettingsPage() {
       const sec: any = {}
       if (smtpPassword) sec.smtp_password = smtpPassword
       if (smsSecret) sec.sms_secret = smsSecret
+      if (secefToken) sec.secef_token = secefToken
       if (Object.keys(sec).length) await api('settings.saveSecrets', sec)
       return true
     }, 'Paramètres enregistrés.')
     if (r) {
       setSmtpPassword('')
       setSmsSecret('')
+      setSecefToken('')
       reloadSecrets()
       refreshCompany()
     }
@@ -84,6 +88,7 @@ export function CompanySettingsPage() {
         { value: 'documents', label: 'Documents & signature' },
         { value: 'mail', label: 'Messagerie' },
         { value: 'sms', label: 'SMS' },
+        { value: 'secef', label: 'Facture certifiée' },
         { value: 'donnees', label: 'Données' }
       ]} />
 
@@ -260,6 +265,35 @@ export function CompanySettingsPage() {
               )}
             </div>
             {v.sms_provider && <div className="form-actions"><button className="btn" onClick={() => test('sms')}>Envoyer un SMS d'essai au {v.phone || '…'}</button></div>}
+          </div>
+        </div>
+      )}
+
+      {tab === 'secef' && (
+        <div className="tab-panel" key="secef">
+          <div className="card">
+            <h3>Facture électronique certifiée (SECeF — DGI)</h3>
+            <p className="muted">À la validation, chaque facture et chaque avoir est transmis au système de certification. Le code, le compteur et le QR code renvoyés sont imprimés sur le document.</p>
+            <div className="choice-row three" style={{ margin: '12px 0' }}>
+              {([['', 'Désactivée', 'Factures non certifiées.'], ['simulation', 'Simulation', 'Codes fictifs marqués « non valable », pour tester le circuit.'], ['api', 'Connexion à la DGI', 'Certification réelle avec vos identifiants SECeF.']] as const).map(([val, title, text]) => (
+                <label key={val} className={`choice ${(v.secef_mode ?? '') === val ? 'active' : ''}`}>
+                  <input type="radio" checked={(v.secef_mode ?? '') === val} onChange={() => f.set('secef_mode', val)} />
+                  <div><strong>{title}</strong><div className="muted small">{text}</div></div>
+                </label>
+              ))}
+            </div>
+            {v.secef_mode && (
+              <div className="grid grid-4">
+                <Field label="NIM (identifiant de la machine)"><input {...f.bind('secef_nim')} /></Field>
+                {v.secef_mode === 'api' && <Field label="Adresse de l'API" span={2}><input {...f.bind('secef_url')} placeholder="https://…" inputMode="url" /></Field>}
+                {v.secef_mode === 'api' && (
+                  <Field label="Jeton d'accès" hint={secrets?.secef_token ? 'Enregistré. Laisser vide pour le conserver.' : 'Non renseigné.'}>
+                    <input type="password" value={secefToken} onChange={(e) => setSecefToken(e.target.value)} autoComplete="new-password" />
+                  </Field>
+                )}
+              </div>
+            )}
+            {v.secef_mode === 'api' && <div className="info-box" style={{ marginTop: 14 }}><span>Le connecteur suit le modèle des API e-MCF (envoi puis confirmation). <strong>Faites valider le format exact avec la documentation remise par la DGI</strong> avant la mise en production. Sans certification, la validation d'une facture est refusée.</span></div>}
           </div>
         </div>
       )}

@@ -54,10 +54,15 @@ export interface CompanySettings {
 
   /** Adresse publique du serveur pour les liens de signature (https://facturation.iam.bf). */
   public_url: string
+
+  // Facture électronique certifiée (SECeF) — le jeton est dans la table secrets
+  secef_mode: '' | 'simulation' | 'api'
+  secef_url: string
+  secef_nim: string
 }
 
 /** Clés secrètes : stockées à part, jamais renvoyées à l'interface. */
-export const SECRET_KEYS = ['smtp_password', 'sms_secret'] as const
+export const SECRET_KEYS = ['smtp_password', 'sms_secret', 'secef_token'] as const
 export type SecretKey = (typeof SECRET_KEYS)[number]
 
 export const DEFAULT_SETTINGS: CompanySettings = {
@@ -102,7 +107,10 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   sms_sender: '',
   sms_account: '',
   sms_http_url: '',
-  public_url: ''
+  public_url: '',
+  secef_mode: '',
+  secef_url: '',
+  secef_nim: ''
 }
 
 export async function getSecret(db: Db, key: SecretKey): Promise<string> {

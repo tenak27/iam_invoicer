@@ -144,6 +144,22 @@ function registerIpc(): void {
     })
   )
 
+  // Impression d'un HTML quelconque (bulletins de paie, états) : PDF ouvert dans le lecteur.
+  ipcMain.handle('print.html', (_e, html: string, filename: string) =>
+    guard(async () => {
+      requireSession()
+      const pdf = await renderPdf(html, '<span></span>', 'a4')
+      const dir = process.env.IAM_ERP_PDF_DIR ?? join(app.getPath('temp'), 'iam-invoicer')
+      mkdirSync(dir, { recursive: true })
+      const file = join(dir, String(filename || 'document').replace(/[\/:*?"<>|]/g, '-') + '.pdf')
+      writeFileSync(file, pdf)
+      if (process.env.IAM_ERP_PDF_DIR) return file
+      const err = await shell.openPath(file)
+      if (err) throw new AppError(`Impossible d'ouvrir le PDF : ${err}`)
+      return file
+    })
+  )
+
   // E-mail d'un document : le PDF est fabriqué ici puis joint au message.
   ipcMain.handle('mail.sendDocument', (_e, input: { documentId: number; to: string; subject: string; body: string }) =>
     guard(async () => {

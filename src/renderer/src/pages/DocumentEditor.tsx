@@ -8,7 +8,7 @@ import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
 import { ChatCircleText, EnvelopeSimple } from '@phosphor-icons/react'
 
-type Line = LineInput & { key: number; product_ref?: string }
+type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
 let lineKey = 0
 const emptyLine = (tva: number): Line => ({ key: ++lineKey, product_id: null, description: '', quantity: 1, unit_price: 0, discount: 0, tva_rate: tva })
 
@@ -34,8 +34,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const partyKind = info.side === 'sale' ? 'client' : 'supplier'
   const parties = useQuery<any[]>('parties.options', { kind: partyKind })
   const products = useQuery<any[]>('products.list', {})
+  const warehouses = useQuery<any[]>('warehouses.options')
+  const projects = useQuery<any[]>('projects.options')
 
   const [header, setHeader] = useState({
+    warehouse_id: String(doc?.warehouse_id ?? 1),
+    project_id: doc?.project_id ? String(doc.project_id) : '',
     party_id: doc?.party_id ? String(doc.party_id) : '',
     date: doc?.date ?? todayISO(),
     due_date: doc?.due_date ?? '',
@@ -53,6 +57,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const canMessages = useCan('messages')
 
   const totals = useMemo(() => computeTotals(lines.filter((l) => l.description)), [lines])
+  const trackingOf = (l: Line) => l.tracking ?? products.data?.find((x) => x.id === l.product_id)?.tracking ?? 'aucun'
 
   const setH = (k: keyof typeof header, v: string) => {
     setHeader((h) => ({ ...h, [k]: v }))
@@ -70,7 +75,9 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
       product_ref: p.ref,
       description: p.name + (p.description ? '\n' + p.description : ''),
       unit_price: info.side === 'sale' ? p.sale_price : p.purchase_price,
-      tva_rate: p.tva_rate
+      tva_rate: p.tva_rate,
+      tracking: p.tracking,
+      lot_refs: ''
     })
   }
 
@@ -82,6 +89,8 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         type,
         ...header,
         party_id: Number(header.party_id) || null,
+        warehouse_id: Number(header.warehouse_id) || 1,
+        project_id: Number(header.project_id) || null,
         source_id: doc?.source_id ?? null,
         lines: lines.map(({ key: _k, ...l }) => l)
       })
@@ -205,6 +214,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         }
       />
 
+      {doc?.secef_code && (
+        <div className={`secef-banner ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}`}>
+          <strong>{doc.secef_code.startsWith('SIM-') ? 'Certification SECeF simulée' : 'Facture certifiée SECeF'}</strong>
+          <span>Code {doc.secef_code} · NIM {doc.secef_nim} · {doc.secef_counters} · {doc.secef_date}</span>
+        </div>
+      )}
       <div className="card doc-head">
         <div className="grid grid-4">
           <Field label={info.side === 'sale' ? 'Client' : 'Fournisseur'} span={2}>
@@ -231,6 +246,20 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           <Field label={info.side === 'sale' ? 'Référence client (commande, marché…)' : 'Référence fournisseur'} span={2}>
             {editable ? <input value={header.reference} onChange={(e) => setH('reference', e.target.value)} /> : <div className="readonly">{doc.reference || '—'}</div>}
           </Field>
+          {info.stock !== 0 && (warehouses.data?.length ?? 0) > 1 && (
+            <Field label="Dépôt">
+              {editable ? (
+                <select value={header.warehouse_id} onChange={(e) => setH('warehouse_id', e.target.value)}>{warehouses.data!.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}</select>
+              ) : <div className="readonly">{warehouses.data!.find((w) => w.id === doc.warehouse_id)?.name}</div>}
+            </Field>
+          )}
+          {(projects.data?.length ?? 0) > 0 && (
+            <Field label="Projet">
+              {editable ? (
+                <select value={header.project_id} onChange={(e) => setH('project_id', e.target.value)}><option value="">—</option>{projects.data!.map((pr) => <option key={pr.id} value={pr.id}>{pr.code} — {pr.name}</option>)}</select>
+              ) : <div className="readonly">{doc.project_id ? <Link to={`/projets/${doc.project_id}`}>{projects.data!.find((pr) => pr.id === doc.project_id)?.name ?? 'Voir le projet'}</Link> : '—'}</div>}
+            </Field>
+          )}
           <Field label="Observations (imprimées sur le document)" span={2}>
             {editable ? <textarea rows={2} value={header.notes} onChange={(e) => setH('notes', e.target.value)} /> : <div className="readonly pre">{doc.notes || '—'}</div>}
           </Field>
@@ -269,9 +298,16 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
                 )}
                 <td>
                   {editable ? (
-                    <textarea rows={Math.min(4, (l.description.match(/\n/g)?.length ?? 0) + 1)} value={l.description} onChange={(e) => updateLine(l.key, { description: e.target.value })} placeholder="Désignation" />
+                    <>
+                      <textarea rows={Math.min(4, (l.description.match(/\n/g)?.length ?? 0) + 1)} value={l.description} onChange={(e) => updateLine(l.key, { description: e.target.value })} placeholder="Désignation" />
+                      {trackingOf(l) !== 'aucun' && info.stock !== 0 && (
+                        <input className="lot-input" value={l.lot_refs ?? ''} onChange={(e) => updateLine(l.key, { lot_refs: e.target.value })}
+                          placeholder={trackingOf(l) === 'serie' ? `${l.quantity} numéro(s) de série, séparés par des virgules` : 'Numéro de lot'}
+                          aria-label={trackingOf(l) === 'serie' ? 'Numéros de série' : 'Numéro de lot'} />
+                      )}
+                    </>
                   ) : (
-                    <div className="pre">{l.product_ref && <span className="muted small">{l.product_ref} · </span>}{l.description}</div>
+                    <div className="pre">{l.product_ref && <span className="muted small">{l.product_ref} · </span>}{l.description}{l.lot_refs && <div className="muted small">{trackingOf(l) === 'serie' ? 'N° de série' : 'Lot'} : {l.lot_refs}</div>}</div>
                   )}
                 </td>
                 <NumCell editable={editable} value={l.quantity} onChange={(v) => updateLine(l.key, { quantity: v })} />

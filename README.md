@@ -12,10 +12,17 @@ Il fonctionne sur **Windows, macOS, Android, iOS et dans un navigateur**. Toutes
 | Ventes | Devis → bon de livraison → facture → avoir, numérotation automatique `FAC-2026-0001`, PDF avec montant en lettres |
 | Caisse | Point de vente tactile et lecteur de codes-barres, ouverture et clôture de caisse par caissier, paiement en espèces, Orange Money, Moov Money ou Wave (y compris paiement mixte), rendu de monnaie, entrées et sorties d'espèces, écart de caisse, ticket 80 mm |
 | Achats | Bon de commande → bon de réception (entrée en stock) → facture fournisseur |
-| Stock | Mouvements automatiques, coût moyen pondéré (CMUP), inventaire, alertes de seuil |
+| Stock | Plusieurs dépôts, stock par dépôt, transferts, suivi par lot ou numéro de série avec traçabilité, CMUP, inventaire par dépôt, alertes de seuil |
 | Paiements | Encaissements et décaissements partiels, soldes clients et fournisseurs |
 | Comptabilité | SYSCOHADA révisé : écritures générées automatiquement (ventes, achats, règlements, caisse), opérations diverses, journaux, grand livre, balance, compte de résultat, plan comptable modifiable, exports Excel |
 | Rapports | CA par mois, client et article avec marges, TVA collectée et déductible |
+| CRM | Pipeline d'opportunités par glisser-déposer, prévision pondérée, activités et agenda commercial, conversion d'un prospect en client et en devis |
+| Projets | Chantiers par client, budget en heures et en montant, saisie des temps, facturation des heures en un clic, rentabilité (facturé, achats imputés) |
+| RH et paie | Salariés, paie mensuelle (CNSS, IUTS progressif, abattements, charges de famille), primes, absences, avances, bulletins PDF, déclaration CNSS/IUTS, congés avec soldes, écritures de paie |
+| Immobilisations | Registre, amortissement linéaire prorata temporis, dotations annuelles (681/28xx), cession et mise au rebut avec écritures |
+| Budgets et trésorerie | Budget mensuel par compte avec prévu/réalisé, trésorerie prévisionnelle à 8, 13 ou 26 semaines (factures, paie, prévisions) avec alerte de découvert |
+| Facture certifiée | SECeF (DGI) : certification à la validation, code, compteurs et QR code imprimés ; mode simulation et connecteur API |
+| Hors ligne | Web et mobile : consultation des dernières données, ventes, règlements, temps et congés saisis hors connexion puis envoyés au retour du réseau, sans doublon |
 | Communications | Envoi des documents par e-mail (PDF joint) et par SMS (Orange, Twilio ou passerelle HTTP), relances des factures en retard (une ou toutes), modèles de messages à variables, journal des envois |
 | Signatures | Cachet et signature de la société sur les documents, signature du client sur place (doigt, stylet, souris) ou à distance par lien sécurisé (e-mail/SMS), preuve : empreinte SHA-256, date, IP, appareil |
 | Modèles de documents | Mise en page moderne ou classique, couleur au choix, conditions générales, pied de page |
@@ -57,8 +64,17 @@ Les pièces validées avant l'activation de la comptabilité peuvent être compt
 | Magasinier | Achats, stock, fournisseurs, articles |
 | Comptable | Ventes, achats, paiements, tiers, rapports, comptabilité |
 | Caissier | Caisse uniquement (ses propres sessions) |
+| Ressources humaines | Salariés, paie, congés |
+
+Le commercial accède aussi au CRM et aux projets ; le comptable à la paie, aux projets, aux immobilisations et aux budgets.
 
 Les communications (e-mails, SMS, relances) sont ouvertes à l'administrateur, au commercial et au comptable. Les modèles de messages, la messagerie et les SMS se configurent dans **Société & paramètres** (administrateur).
+
+## Points à faire valider avant usage réel
+
+- **Paie** : les taux CNSS, le plafond, le barème IUTS, les abattements et les réductions pour charges de famille sont des valeurs par défaut, modifiables dans *RH → Paramètres de paie*. **Faites-les vérifier par votre comptable ou auprès de la DGI et de la CNSS** : la réglementation évolue.
+- **Facture certifiée (SECeF)** : le mode « simulation » permet de tester le circuit. Le mode « API » suit le modèle des API e-MCF ; son format doit être ajusté à la documentation officielle remise par la DGI avec vos identifiants. En mode API, une facture non certifiée ne peut pas être validée.
+- **Hors ligne** : les ventes enregistrées sans réseau reçoivent leur numéro et leur date au moment de la synchronisation. L'application de bureau en mode « serveur en ligne » n'a pas encore de mode hors ligne (les postes du bureau peuvent rester en base locale ou réseau).
 
 ## E-mails, SMS et signatures
 

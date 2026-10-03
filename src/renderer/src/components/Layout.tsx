@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
-  ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
+  ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, type Icon
+  WifiSlash, CloudArrowUp, ArrowsClockwise, type Icon
 } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
 import { Navbar } from './Topbar'
+import { OFFLINE_LABELS } from '../offline'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean }
 type Section = { title?: string; items: Item[] }
@@ -29,7 +30,8 @@ const NAV: Section[] = [
       { to: '/docs/BL', label: 'Bons de livraison', module: 'sales', icon: Truck },
       { to: '/docs/FAC', label: 'Factures', module: 'sales', icon: FileText },
       { to: '/docs/AV', label: 'Avoirs', module: 'sales', icon: ArrowUUpLeft },
-      { to: '/clients', label: 'Clients', module: 'clients', icon: Users }
+      { to: '/clients', label: 'Clients', module: 'clients', icon: Users },
+      { to: '/crm', label: 'CRM et opportunités', short: 'CRM', module: 'crm', icon: Handshake }
     ]
   },
   {
@@ -47,7 +49,8 @@ const NAV: Section[] = [
       { to: '/products', label: 'Articles & prestations', short: 'Articles', module: 'products', icon: Package },
       { to: '/stock', label: 'État du stock', short: 'Stock', module: 'stock', icon: Warehouse, end: true },
       { to: '/stock/movements', label: 'Mouvements', module: 'stock', icon: ArrowsDownUp },
-      { to: '/stock/inventory', label: 'Inventaire', module: 'stock', icon: ClipboardText }
+      { to: '/stock/inventory', label: 'Inventaire', module: 'stock', icon: ClipboardText },
+      { to: '/stock/depots', label: 'Dépôts, transferts, lots', short: 'Dépôts', module: 'stock', icon: Stack }
     ]
   },
   {
@@ -55,6 +58,15 @@ const NAV: Section[] = [
     items: [
       { to: '/payments', label: 'Paiements', module: 'payments', icon: Wallet },
       { to: '/reports', label: 'Rapports', module: 'reports', icon: ChartBar }
+    ]
+  },
+  {
+    title: 'Gestion',
+    items: [
+      { to: '/projets', label: 'Projets et chantiers', short: 'Projets', module: 'projects', icon: Kanban },
+      { to: '/rh', label: 'Ressources humaines', short: 'RH', module: 'hr', icon: IdentificationBadge },
+      { to: '/immobilisations', label: 'Immobilisations', module: 'assets', icon: Bank },
+      { to: '/budget', label: 'Budgets et trésorerie', short: 'Trésorerie', module: 'budget', icon: ChartPieSlice }
     ]
   },
   {
@@ -87,7 +99,12 @@ const NAV: Section[] = [
 const ALL_ITEMS = NAV.flatMap((s) => s.items)
 
 /** Onglets du bas sur téléphone : les écrans les plus fréquents du rôle, 4 au maximum + « Menu ». */
-const TAB_PRIORITY = ['/', '/caisse', '/docs/FAC', '/clients', '/compta', '/docs/FF', '/stock', '/products', '/caisse/sessions', '/payments']
+const TAB_PRIORITY = ['/', '/caisse', '/docs/FAC', '/crm', '/rh', '/projets', '/clients', '/compta', '/docs/FF', '/stock', '/products', '/caisse/sessions', '/payments']
+
+/** Écran d'accueil d'un rôle sans tableau de bord : son premier écran autorisé. */
+export function homeFor(role: Parameters<typeof can>[0]): string {
+  return ALL_ITEMS.find((it) => it.to !== '/' && can(role, it.module))?.to ?? '/account'
+}
 
 export function BrandMark({ size = 38 }: { size?: number }) {
   return <img className="brand-logo" src="./favicon.svg" width={size} height={size} alt="" />
@@ -128,6 +145,41 @@ function useCollapsed(): [boolean, () => void] {
       return !c
     })
   return [collapsed, toggle]
+}
+
+/** Bandeau hors ligne : saisies en attente, synchronisation, saisies refusées. */
+function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
+  const off = window.erp.offline
+  const [, refresh] = useState(0)
+  const [syncing, setSyncing] = useState(false)
+  useEffect(() => {
+    const on = () => refresh((n) => n + 1)
+    window.addEventListener('iam-offline', on)
+    return () => window.removeEventListener('iam-offline', on)
+  }, [])
+  if (!remote) return null
+  const pending = off?.pending() ?? 0
+  const failed = off?.failed() ?? []
+  if (online && pending === 0 && failed.length === 0) return null
+  const sync = async () => {
+    if (!off) return
+    setSyncing(true)
+    await off.sync()
+    setSyncing(false)
+    refresh((n) => n + 1)
+  }
+  return (
+    <div className={`offline-bar ${online ? 'pending' : ''}`} role="status">
+      {online ? <CloudArrowUp size={18} aria-hidden="true" /> : <WifiSlash size={18} aria-hidden="true" />}
+      <span className="grow">
+        {!online ? 'Hors connexion : vous consultez les dernières données de cet appareil. ' : ''}
+        {pending > 0 ? `${pending} saisie(s) en attente d'envoi.` : !online ? 'Les ventes, règlements et temps saisis seront envoyés au retour du réseau.' : ''}
+        {failed.length > 0 && ` ${failed.length} saisie(s) refusée(s) par le serveur : ${failed.slice(0, 2).map((f) => `${OFFLINE_LABELS[f.name] ?? f.name} (${f.error})`).join(' ; ')}.`}
+      </span>
+      {online && pending > 0 && <button className="btn btn-sm" onClick={sync} disabled={syncing}><ArrowsClockwise size={16} aria-hidden="true" className={syncing ? 'spin' : ''} />{syncing ? 'Envoi…' : 'Synchroniser'}</button>}
+      {failed.length > 0 && <button className="btn btn-sm btn-ghost" onClick={() => off?.clearFailed()}>Effacer</button>}
+    </div>
+  )
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -205,12 +257,7 @@ export function Layout({ children }: { children: ReactNode }) {
           left={<BrandMark size={30} />}
         />
         <main id="main" className="content" ref={mainRef} tabIndex={-1}>
-          {!online && dbMode === 'remote' && (
-            <div className="offline-bar" role="status">
-              <WifiSlash size={18} aria-hidden="true" />
-              Hors connexion : les données ne peuvent ni être consultées ni enregistrées. Elles reviendront dès que la connexion sera rétablie.
-            </div>
-          )}
+          <OfflineBar online={online} remote={dbMode === 'remote'} />
           <div className="route-view" key={location.pathname}>{children}</div>
         </main>
       </div>

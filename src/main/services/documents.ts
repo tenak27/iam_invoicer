@@ -10,8 +10,9 @@ import { addDays, todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, num, str, type Ctx } from './context'
 import { getSettings } from './settings'
-import { applyStockMovement } from './stock'
+import { applyStockMovement, lineLots, moveLots } from './stock'
 import { postDocument } from './accounting'
+import { certify } from './secef'
 
 function checkType(type: string): asserts type is DocType {
   if (!(type in DOC_TYPES)) fail('Type de document inconnu.')
@@ -69,7 +70,7 @@ export async function loadDocument(db: Db, id: number) {
   return { ...doc, party, lines, payments, children }
 }
 
-function cleanLines(raw: any[]): LineInput[] {
+function cleanLines(raw: any[]): (LineInput & { lot_refs: string })[] {
   const lines = (raw ?? [])
     .map((l) => ({
       product_id: l.product_id ? Number(l.product_id) : null,
@@ -77,7 +78,8 @@ function cleanLines(raw: any[]): LineInput[] {
       quantity: num(l.quantity),
       unit_price: num(l.unit_price),
       discount: Math.min(100, Math.max(0, num(l.discount))),
-      tva_rate: Math.max(0, num(l.tva_rate))
+      tva_rate: Math.max(0, num(l.tva_rate)),
+      lot_refs: str(l.lot_refs)
     }))
     .filter((l) => l.description || l.product_id)
   for (const l of lines) {
@@ -88,14 +90,14 @@ function cleanLines(raw: any[]): LineInput[] {
   return lines
 }
 
-async function writeLines(db: Db, docId: number, lines: LineInput[]) {
+async function writeLines(db: Db, docId: number, lines: (LineInput & { lot_refs?: string })[]) {
   await db.query('DELETE FROM document_lines WHERE document_id = $1', [docId])
   let pos = 0
   for (const l of lines) {
     await db.query(
-      `INSERT INTO document_lines (document_id, position, product_id, description, quantity, unit_price, discount, tva_rate, total_ht)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [docId, pos++, l.product_id, l.description, l.quantity, l.unit_price, l.discount, l.tva_rate, lineHT(l)]
+      `INSERT INTO document_lines (document_id, position, product_id, description, quantity, unit_price, discount, tva_rate, total_ht, lot_refs)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [docId, pos++, l.product_id, l.description, l.quantity, l.unit_price, l.discount, l.tva_rate, lineHT(l), l.lot_refs ?? '']
     )
   }
   const t = computeTotals(lines)
@@ -122,17 +124,20 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
     let due: string | null = str(input.due_date) || null
     if (!due && info.payable) due = addDays(date, party.payment_terms)
     const lines = cleanLines(input.lines)
+    const warehouse = Number(input.warehouse_id) || 1
+    if (!(await db.one('SELECT 1 FROM warehouses WHERE id = $1 AND active', [warehouse]))) fail('Dépôt inconnu ou inactif.')
+    const project = input.project_id ? Number(input.project_id) : null
 
     let id: number = input.id
     if (id) {
-      await db.query('UPDATE documents SET party_id=$1, date=$2, due_date=$3, reference=$4, notes=$5 WHERE id=$6', [
-        party.id, date, due, str(input.reference), str(input.notes), id
+      await db.query('UPDATE documents SET party_id=$1, date=$2, due_date=$3, reference=$4, notes=$5, warehouse_id=$6, project_id=$7 WHERE id=$8', [
+        party.id, date, due, str(input.reference), str(input.notes), warehouse, project, id
       ])
     } else {
       const row = await db.one<{ id: number }>(
-        `INSERT INTO documents (type, party_id, date, due_date, reference, notes, source_id, created_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
-        [type, party.id, date, due, str(input.reference), str(input.notes), input.source_id ?? null, ctx.user?.id ?? null]
+        `INSERT INTO documents (type, party_id, date, due_date, reference, notes, source_id, created_by, warehouse_id, project_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+        [type, party.id, date, due, str(input.reference), str(input.notes), input.source_id ?? null, ctx.user?.id ?? null, warehouse, project]
       )
       id = row!.id
       await audit(db, ctx, 'creation', type, id)
@@ -204,8 +209,13 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
           date: doc.date,
           kind: 'document',
           documentId: doc.id,
+          warehouseId: doc.warehouse_id,
           allowNegative: settings.allow_negative_stock
         })
+        const prod = await db.one<{ tracking: string }>('SELECT tracking FROM products WHERE id = $1', [l.product_id])
+        if (prod && prod.tracking !== 'aucun' && l.lot_refs) {
+          await moveLots(db, l.product_id, doc.warehouse_id, lineLots(prod.tracking, l.lot_refs, l.quantity), info.stock > 0 ? 1 : -1)
+        }
       }
     }
     const number = await nextNumber(db, type, doc.date)
@@ -213,6 +223,7 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
       "UPDATE documents SET status='valide', number=$1, stock_applied=$2, validated_at=now(), updated_at=now() WHERE id=$3",
       [number, moveStock, doc.id]
     )
+    if (type === 'FAC' || type === 'AV') await certify(db, ctx, doc.id)
     await postDocument(db, ctx, doc.id)
     await audit(db, ctx, 'validation', type, doc.id, number)
   })
@@ -231,7 +242,7 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
     const child = await db.one("SELECT number FROM documents WHERE source_id = $1 AND status = 'valide'", [doc.id])
     if (child) fail(`Ce document a été transformé en ${child.number} ; annulez d'abord ce dernier.`)
     if (doc.stock_applied) {
-      const moves = await db.query('SELECT product_id, quantity, unit_cost FROM stock_movements WHERE document_id = $1', [doc.id])
+      const moves = await db.query("SELECT product_id, quantity, unit_cost, warehouse_id FROM stock_movements WHERE document_id = $1 AND kind = 'document'", [doc.id])
       for (const m of moves) {
         await applyStockMovement(db, ctx, {
           productId: m.product_id,
@@ -240,10 +251,18 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
           date: todayISO(),
           kind: 'annulation',
           documentId: doc.id,
+          warehouseId: m.warehouse_id,
           allowNegative: true,
           note: `Annulation ${doc.number}`
         })
       }
+      const tracked = await db.query(
+        `SELECT l.product_id, l.quantity, l.lot_refs, p.tracking FROM document_lines l JOIN products p ON p.id = l.product_id
+         WHERE l.document_id = $1 AND l.lot_refs <> '' AND p.tracking <> 'aucun'`,
+        [doc.id]
+      )
+      const sign = DOC_TYPES[doc.type as DocType].stock > 0 ? -1 : 1
+      for (const t of tracked) await moveLots(db, t.product_id, doc.warehouse_id, lineLots(t.tracking, t.lot_refs, t.quantity), sign)
     }
     await db.query("UPDATE documents SET status='annule', updated_at=now() WHERE id=$1", [doc.id])
     await audit(db, ctx, 'annulation', doc.type, doc.id, doc.number)
@@ -264,6 +283,8 @@ export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType 
     reference: src.reference || src.number,
     notes: args.to === 'AV' ? `Avoir sur facture ${src.number}` : src.notes,
     source_id: src.id,
+    warehouse_id: src.warehouse_id,
+    project_id: src.project_id,
     lines: src.lines
   })
 }

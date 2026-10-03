@@ -26,7 +26,9 @@ async function open(viewport, mobile = false) {
 }
 const shot = (page, name) => page.screenshot({ path: join(out, `${String(++n).padStart(2, '0')}-${name}.png`) })
 const noOverflow = async (page, where) => {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  // En mode mobile, innerWidth suit le contenu : on compare à la largeur réelle de l'écran.
+  const width = page.viewportSize().width
+  const overflow = await page.evaluate((w) => document.documentElement.scrollWidth - w, width)
   if (overflow > 1) throw new Error(`Débordement horizontal sur téléphone (${where}) : ${overflow}px`)
 }
 const call = (page, name, args) =>
@@ -200,7 +202,85 @@ await page.locator('.nav-link', { hasText: 'Société & paramètres' }).click()
 await page.getByRole('tab', { name: 'Documents & signature' }).click()
 await page.locator('.swatches').waitFor()
 await shot(page, 'parametres-documents')
-await page.getByRole('tab', { name: 'Société' }).click()
+await page.getByRole('tab', { name: 'Société', exact: true }).click()
+
+// Modules ERP
+const navTo = async (label) => {
+  await page.locator('.sidebar').getByRole('link', { name: label, exact: true }).click()
+  await page.waitForTimeout(150)
+}
+// Stock avancé
+await navTo('Dépôts, transferts, lots')
+await page.getByRole('heading', { name: 'Dépôts, transferts et lots' }).waitFor()
+await page.getByRole('tab', { name: 'Dépôts', exact: true }).click()
+await page.getByRole('button', { name: 'Nouveau dépôt' }).click()
+await page.getByLabel('Code').fill('BOBO')
+await page.getByLabel('Nom', { exact: true }).fill('Agence Bobo-Dioulasso')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.locator('.pick-card', { hasText: 'Agence Bobo-Dioulasso' }).waitFor()
+await page.getByRole('tab', { name: 'Stock par dépôt' }).click()
+await page.locator('.table-wrap').waitFor()
+await shot(page, 'stock-par-depot')
+
+// RH et paie
+await navTo('Ressources humaines')
+await page.getByRole('button', { name: 'Nouveau salarié' }).click()
+await page.getByLabel('Prénom').fill('Issa')
+await page.getByLabel('Nom', { exact: true }).fill('Compaoré')
+await page.getByLabel('Emploi').fill('Technicien réseau')
+await page.getByLabel('Salaire de base').fill('200000')
+await page.getByLabel('Indemnité de logement').fill('50000')
+await page.getByLabel('Indemnité de transport').fill('20000')
+await page.getByLabel('Charges de famille').fill('2')
+await page.locator('.pay-preview .net').getByText('237 754 FCFA').waitFor()
+await shot(page, 'rh-salarie')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.locator('tr.clickable', { hasText: 'Issa Compaoré' }).waitFor()
+await page.getByRole('tab', { name: 'Paie', exact: true }).click()
+await page.getByRole('button', { name: 'Préparer la paie' }).click()
+await page.getByText('237 754').first().waitFor()
+await shot(page, 'rh-paie')
+
+// CRM
+await navTo('CRM et opportunités')
+await page.getByRole('button', { name: 'Nouvelle opportunité' }).click()
+await page.getByLabel('Intitulé').fill('Vidéosurveillance du siège')
+await page.getByLabel('Nom du prospect').fill('Banque Commerciale du Burkina')
+await page.getByLabel('Montant TTC estimé').fill('3540000')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.locator('.kanban-card', { hasText: 'Vidéosurveillance' }).waitFor()
+await page.getByRole('button', { name: /Passer « Vidéosurveillance du siège » à l'étape Qualifié/ }).click()
+await page.locator('.kanban-col[aria-label="Qualifié"] .kanban-card').waitFor()
+await shot(page, 'crm-pipeline')
+
+// Projets
+await navTo('Projets et chantiers')
+await page.getByRole('button', { name: 'Nouveau projet' }).click()
+await page.getByLabel('Nom du projet').fill('Câblage agence de Koudougou')
+await page.getByLabel('Taux horaire HT').fill('15000')
+await page.getByLabel('Budget en heures').fill('40')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByRole('button', { name: 'Saisir du temps' }).click()
+await page.getByLabel('Heures').fill('6')
+await page.getByLabel('Travail effectué').fill('Tirage des câbles')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.getByText('Tirage des câbles').waitFor()
+await shot(page, 'projet')
+
+// Immobilisations
+await navTo('Immobilisations')
+await page.getByRole('button', { name: 'Nouveau bien' }).click()
+await page.getByLabel('Désignation').fill('Ordinateurs portables (x5)')
+await page.getByLabel('Valeur HT').fill('2500000')
+await page.getByLabel("Comptabiliser l'acquisition").selectOption('481')
+await page.locator('.modal').getByRole('button', { name: 'Enregistrer' }).click()
+await page.locator('tr', { hasText: 'Ordinateurs portables' }).waitFor()
+await shot(page, 'immobilisations')
+
+// Trésorerie prévisionnelle
+await navTo('Budgets et trésorerie')
+await page.locator('.cash-chart').waitFor()
+await shot(page, 'tresorerie')
 
 // Paramètres : mentions Burkina
 await page.locator('.nav-link', { hasText: 'Société & paramètres' }).click()
@@ -255,6 +335,13 @@ await phone.locator('tr.clickable').first().click()
 await phone.locator('.lines-table').waitFor()
 await noOverflow(phone, 'facture')
 await shot(phone, 'mobile-facture')
+for (const [label, name] of [['CRM et opportunités', 'mobile-crm'], ['Ressources humaines', 'mobile-rh'], ['Budgets et trésorerie', 'mobile-tresorerie']]) {
+  await phone.getByRole('button', { name: 'Menu' }).click()
+  await phone.locator('.nav-open .sidebar').getByRole('link', { name: label, exact: true }).click()
+  await phone.waitForTimeout(400)
+  await noOverflow(phone, name)
+  await shot(phone, name)
+}
 
 // Paysage et thème sombre sur téléphone
 await phone.setViewportSize({ width: 844, height: 390 })

@@ -3,6 +3,7 @@
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { amountInWords, formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import type { CompanySettings } from './services/settings'
+import { qrSvg } from './services/secef'
 
 const esc = (s: unknown): string =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
@@ -118,6 +119,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
   .sigbox img.sig { max-height: 58px; max-width: 200px; display: block; margin: 4px 0; }
   .sigbox img.cachet { position: absolute; right: 10px; top: 10px; max-height: 78px; max-width: 120px; opacity: .9; }
   .sigbox .proof { font-size: 6.5pt; color: #8a94a3; word-break: break-all; }
+  .secef { display: flex; gap: 14px; align-items: center; margin-top: 16px; padding: 10px 12px; border: 1px solid #d4dbe3; border-radius: 6px; page-break-inside: avoid; font-size: 8.5pt; }
+  .secef .t { font-weight: 700; color: ${c}; text-transform: uppercase; letter-spacing: .4px; font-size: 8pt; }
+  .secef.sim .t { color: #b8321f; }
   .terms { margin-top: 16px; font-size: 7.5pt; color: #5f6b7a; border-top: 1px solid #e4e9ef; padding-top: 6px; white-space: pre-line; page-break-inside: avoid; }
   .stamp { position: fixed; top: 40%; left: 15%; font-size: 64pt; color: rgba(200, 30, 30, .13); transform: rotate(-25deg); font-weight: 800; }
 </style></head>
@@ -200,6 +204,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false)
     : type === 'BL' || type === 'BR' || type === 'DEV' || type === 'BC'
       ? `<div class="sign"><div>${type === 'BL' ? 'Livré par' : type === 'BR' ? 'Réceptionné par' : 'Pour ' + esc(company.name)}</div><div>${type === 'BL' ? 'Reçu par le client (nom, date, signature)' : type === 'BR' ? 'Livreur' : type === 'DEV' ? 'Bon pour accord du client' : 'Signature et cachet'}</div></div>`
       : ''}
+  ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
   ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}
   ${company.invoice_footer && info.side === 'sale' ? `<p class="muted" style="margin-top:18px;text-align:center">${esc(company.invoice_footer)}</p>` : ''}
 

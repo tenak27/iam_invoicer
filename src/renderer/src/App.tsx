@@ -18,6 +18,13 @@ import { CashRegister, CashSessionDetail, CashSessions } from './pages/Cash'
 import { Accounts, Balance, Entries, IncomeStatement, Ledger } from './pages/Accounting'
 import { can } from '@shared/domain'
 import { MessagesLog, MessageTemplates } from './pages/Messages'
+import { StockAdvanced } from './pages/StockAdvanced'
+import { HrPage } from './pages/Hr'
+import { CrmPage } from './pages/Crm'
+import { ProjectDetail, ProjectsPage } from './pages/Projects'
+import { AssetsPage } from './pages/Assets'
+import { BudgetPage } from './pages/Budget'
+import { homeFor } from './components/Layout'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
 
@@ -42,7 +49,7 @@ export default function App() {
       setPhase('db-error')
       return
     }
-    if (await api<boolean>('auth.needsSetup')) {
+    if (!st.offline && (await api<boolean>('auth.needsSetup'))) {
       setPhase('setup')
       return
     }
@@ -85,7 +92,7 @@ export default function App() {
           <HashRouter>
             <Layout>
               <Routes>
-                <Route path="/" element={can(user.role, 'dashboard') ? <Dashboard /> : <Navigate to="/caisse" />} />
+                <Route path="/" element={can(user.role, 'dashboard') ? <Dashboard /> : <Navigate to={homeFor(user.role)} />} />
                 <Route path="/docs/:type" element={<DocumentList />} />
                 <Route path="/docs/:type/new" element={<DocumentEditor />} />
                 <Route path="/doc/:id" element={<DocumentEditor />} />
@@ -107,6 +114,13 @@ export default function App() {
                 <Route path="/compta/resultat" element={<IncomeStatement />} />
                 <Route path="/compta/comptes" element={<Accounts />} />
                 <Route path="/messages" element={<MessagesLog />} />
+                <Route path="/stock/depots" element={<StockAdvanced />} />
+                <Route path="/rh" element={<HrPage />} />
+                <Route path="/crm" element={<CrmPage />} />
+                <Route path="/projets" element={<ProjectsPage />} />
+                <Route path="/projets/:id" element={<ProjectDetail />} />
+                <Route path="/immobilisations" element={<AssetsPage />} />
+                <Route path="/budget" element={<BudgetPage />} />
                 <Route path="/messages/modeles" element={<MessageTemplates />} />
                 <Route path="/settings" element={<CompanySettingsPage />} />
                 <Route path="/users" element={<Users />} />

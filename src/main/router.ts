@@ -16,6 +16,11 @@ import * as cash from './services/cash'
 import * as messaging from './services/messaging'
 import * as signatures from './services/signatures'
 import { saveSecrets, secretStatus } from './services/settings'
+import * as hr from './services/hr'
+import * as crm from './services/crm'
+import * as projects from './services/projects'
+import * as assets from './services/assets'
+import * as budget from './services/budget'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -132,7 +137,75 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'signatures.list': { access: docModule, fn: signatures.listSignatures },
   'signatures.signOnSite': { access: docModule, fn: signatures.signOnSite },
-  'signatures.request': { access: docModule, fn: signatures.createRequest }
+  'signatures.request': { access: docModule, fn: signatures.createRequest },
+
+  // Stock avancé
+  'warehouses.options': { access: 'user', fn: (ctx) => ctx.db.query('SELECT id, code, name FROM warehouses WHERE active ORDER BY id') },
+  'stock.warehouses': { access: 'stock', fn: stock.listWarehouses },
+  'stock.saveWarehouse': { access: 'stock', fn: stock.saveWarehouse },
+  'stock.byWarehouse': { access: 'stock', fn: stock.stockByWarehouse },
+  'stock.transfer': { access: 'stock', fn: stock.transfer },
+  'stock.transfers': { access: 'stock', fn: stock.listTransfers },
+  'stock.lots': { access: 'stock', fn: stock.listLots },
+  'stock.trace': { access: 'stock', fn: stock.traceLot },
+
+  // Ressources humaines et paie
+  'hr.params': { access: 'hr', fn: (ctx) => hr.getParams(ctx.db) },
+  'hr.saveParams': { access: 'hr', fn: hr.saveParams },
+  'hr.employees': { access: 'hr', fn: hr.listEmployees },
+  'hr.saveEmployee': { access: 'hr', fn: hr.saveEmployee },
+  'hr.runs': { access: 'hr', fn: hr.listRuns },
+  'hr.run': { access: 'hr', fn: hr.getRun },
+  'hr.prepareRun': { access: 'hr', fn: hr.prepareRun },
+  'hr.setVariables': { access: 'hr', fn: hr.setVariables },
+  'hr.deleteRun': { access: 'hr', fn: hr.deleteRun },
+  'hr.validateRun': { access: 'hr', fn: hr.validateRun },
+  'hr.payRun': { access: 'hr', fn: hr.payRun },
+  'hr.payslipsHtml': { access: 'hr', fn: hr.payslipsHtml },
+  'hr.declaration': { access: 'hr', fn: hr.declaration },
+  'hr.leaves': { access: 'hr', fn: hr.listLeaves },
+  'hr.saveLeave': { access: 'hr', fn: hr.saveLeave },
+  'hr.decideLeave': { access: 'hr', fn: hr.decideLeave },
+
+  // CRM
+  'crm.list': { access: 'crm', fn: crm.listOpportunities },
+  'crm.get': { access: 'crm', fn: crm.getOpportunity },
+  'crm.save': { access: 'crm', fn: crm.saveOpportunity },
+  'crm.move': { access: 'crm', fn: crm.moveStage },
+  'crm.saveActivity': { access: 'crm', fn: crm.saveActivity },
+  'crm.toggleActivity': { access: 'crm', fn: crm.toggleActivity },
+  'crm.agenda': { access: 'crm', fn: crm.agenda },
+  'crm.pipeline': { access: 'crm', fn: crm.pipeline },
+  'crm.createQuote': { access: async (ctx) => (can(ctx.user!.role, 'sales') ? 'crm' : 'sales'), fn: crm.createQuote },
+  'crm.clients': { access: 'crm', fn: (ctx) => ctx.db.query("SELECT id, name FROM parties WHERE kind = 'client' AND active ORDER BY name") },
+
+  // Projets
+  'projects.list': { access: 'projects', fn: projects.listProjects },
+  'projects.get': { access: 'projects', fn: projects.getProject },
+  'projects.save': { access: 'projects', fn: projects.saveProject },
+  'projects.saveTime': { access: 'projects', fn: projects.saveTime },
+  'projects.deleteTime': { access: 'projects', fn: projects.deleteTime },
+  'projects.myWeek': { access: 'projects', fn: projects.myWeek },
+  'projects.invoiceTime': { access: async (ctx) => (can(ctx.user!.role, 'sales') ? 'projects' : 'sales'), fn: projects.invoiceTime },
+  'projects.options': { access: 'user', fn: projects.projectOptions },
+  'projects.clients': { access: 'projects', fn: (ctx) => ctx.db.query("SELECT id, name FROM parties WHERE kind = 'client' AND active ORDER BY name") },
+
+  // Immobilisations
+  'assets.list': { access: 'assets', fn: assets.listAssets },
+  'assets.save': { access: 'assets', fn: assets.saveAsset },
+  'assets.postYear': { access: 'assets', fn: assets.postYear },
+  'assets.dispose': { access: 'assets', fn: assets.dispose },
+  'assets.accounts': { access: 'assets', fn: (ctx) => ctx.db.query("SELECT number, label FROM accounts WHERE active AND number ~ '^2[1-4]' ORDER BY number") },
+
+  // Budgets et trésorerie
+  'budget.get': { access: 'budget', fn: budget.getBudget },
+  'budget.saveLine': { access: 'budget', fn: budget.saveBudgetLine },
+  'budget.deleteLine': { access: 'budget', fn: budget.deleteBudgetLine },
+  'budget.copyFromActual': { access: 'budget', fn: budget.copyFromActual },
+  'budget.forecast': { access: 'budget', fn: budget.forecast },
+  'budget.forecasts': { access: 'budget', fn: budget.listForecasts },
+  'budget.saveForecast': { access: 'budget', fn: budget.saveForecast },
+  'budget.deleteForecast': { access: 'budget', fn: budget.deleteForecast }
 }
 
 export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }
