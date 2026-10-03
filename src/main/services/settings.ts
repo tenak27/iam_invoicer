@@ -1,5 +1,5 @@
 import type { Db } from '../db'
-import { audit, type Ctx } from './context'
+import { audit, fail, type Ctx } from './context'
 import { forgetLicenceStatus } from './licence'
 
 export interface CompanySettings {
@@ -63,6 +63,10 @@ export interface CompanySettings {
   secef_url: string
   secef_nim: string
 }
+
+/** Images de la société, insérées dans les documents. */
+const IMAGE_KEYS = ['logo', 'stamp', 'signature_image'] as const
+const IMAGE_DATA_URL = /^data:image\/(png|jpe?g|svg\+xml|webp|gif);base64,[A-Za-z0-9+/=]+$/
 
 /** Clés gérées par le module de licence uniquement. */
 export const PROTECTED_KEYS = ['licence_key', 'trial_start'] as const
@@ -156,6 +160,8 @@ export async function saveSettings(ctx: Ctx, input: Partial<CompanySettings>): P
       if (!(key in input)) continue
       // La licence et la date d'évaluation ne se modifient pas par les paramètres.
       if ((PROTECTED_KEYS as readonly string[]).includes(key)) continue
+      // Images (logo, cachet, signature) : uniquement des images encodées, jamais du texte inséré tel quel dans les documents.
+      if ((IMAGE_KEYS as readonly string[]).includes(key) && input[key] && !IMAGE_DATA_URL.test(String(input[key]))) fail('Image invalide : choisissez un fichier PNG, JPG, SVG ou WebP.')
       await db.query(
         'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
         [key, JSON.stringify(input[key])]

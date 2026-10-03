@@ -16,7 +16,7 @@
 import { randomBytes } from 'node:crypto'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { extname, join, normalize, resolve } from 'node:path'
+import { extname, join, normalize, resolve, sep } from 'node:path'
 import type { Db } from '../main/db'
 import { printable, type PrintFormat } from '../main/printing'
 import { call } from '../main/router'
@@ -231,8 +231,15 @@ export function createHandler(opts: ServerOptions) {
   function serveStatic(req: IncomingMessage, res: ServerResponse, path: string) {
     if (!opts.webRoot) throw new HttpError(404, 'Application web non installée sur ce serveur.')
     const root = resolve(opts.webRoot)
-    let file = normalize(join(root, decodeURIComponent(path)))
-    if (!file.startsWith(root)) throw new HttpError(403, 'Accès refusé.')
+    let decoded: string
+    try {
+      decoded = decodeURIComponent(path)
+    } catch {
+      throw new HttpError(400, 'Adresse invalide.')
+    }
+    let file = normalize(join(root, decoded))
+    // Le fichier doit être DANS le dossier web (et pas dans un dossier voisin au nom proche).
+    if (file !== root && !file.startsWith(root + sep)) throw new HttpError(403, 'Accès refusé.')
     if (!existsSync(file) || statSync(file).isDirectory()) file = join(root, 'index.html') // application monopage
     if (!existsSync(file)) throw new HttpError(404, 'Page introuvable.')
     const ext = extname(file)
