@@ -217,6 +217,13 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'projects.myWeek': { access: 'projects', fn: projects.myWeek },
   'projects.invoiceTime': { access: async (ctx) => (can(ctx.user!.role, 'sales') ? 'projects' : 'sales'), fn: projects.invoiceTime },
   'projects.options': { access: 'user', fn: projects.projectOptions },
+  'projects.saveExpense': { access: 'projects', fn: projects.saveExpense },
+  'projects.deleteExpense': { access: 'projects', fn: projects.deleteExpense },
+  'projects.invoiceExpenses': { access: async (ctx) => (can(ctx.user!.role, 'sales') ? 'projects' : 'sales'), fn: projects.invoiceExpenses },
+  'projects.saveTask': { access: 'projects', fn: projects.saveTask },
+  'projects.moveTask': { access: 'projects', fn: projects.moveTask },
+  'projects.deleteTask': { access: 'projects', fn: projects.deleteTask },
+  'projects.users': { access: 'projects', fn: projects.projectUsers },
   'projects.clients': { access: 'projects', fn: (ctx) => ctx.db.query("SELECT id, name FROM parties WHERE kind = 'client' AND active ORDER BY name") },
 
   // Immobilisations

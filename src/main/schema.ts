@@ -626,5 +626,56 @@ export const MIGRATIONS: string[] = [
     ('4413', 'État, impôt sur les bénéfices (acomptes BIC/IS)'),
     ('891', 'Impôts sur les bénéfices de l''exercice')
   ON CONFLICT (number) DO NOTHING
+  `,
+  // v7 : gestion de projet — dépenses, tâches et jalons, budget par poste, coût horaire interne
+  `
+  ALTER TABLE projects ADD COLUMN cost_rate DOUBLE PRECISION NOT NULL DEFAULT 0;
+  ALTER TABLE projects ADD COLUMN budget_lines JSONB NOT NULL DEFAULT '{}';
+  CREATE TABLE project_expenses (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    supplier TEXT NOT NULL DEFAULT '',
+    amount_ht DOUBLE PRECISION NOT NULL CHECK (amount_ht > 0),
+    tva_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+    amount_ttc DOUBLE PRECISION NOT NULL,
+    paid BOOLEAN NOT NULL DEFAULT TRUE,
+    payment_method TEXT NOT NULL DEFAULT '',
+    billable BOOLEAN NOT NULL DEFAULT FALSE,
+    markup DOUBLE PRECISION NOT NULL DEFAULT 0,
+    invoice_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    receipt TEXT NOT NULL DEFAULT '',
+    user_id INT REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX project_expenses_project_idx ON project_expenses(project_id, date);
+  CREATE TABLE project_tasks (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'a_faire' CHECK (status IN ('a_faire','en_cours','bloque','termine')),
+    milestone BOOLEAN NOT NULL DEFAULT FALSE,
+    assignee_id INT REFERENCES users(id),
+    start_date TEXT,
+    due_date TEXT,
+    estimated_hours DOUBLE PRECISION NOT NULL DEFAULT 0,
+    progress INT NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+    position INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX project_tasks_project_idx ON project_tasks(project_id, status);
+  ALTER TABLE time_entries ADD COLUMN task_id INT REFERENCES project_tasks(id) ON DELETE SET NULL;
+  INSERT INTO accounts (number, label) VALUES
+    ('604', 'Achats stockés de matières et fournitures'),
+    ('605', 'Autres achats'),
+    ('618', 'Autres frais de transport'),
+    ('621', 'Sous-traitance générale'),
+    ('622', 'Locations et charges locatives'),
+    ('637', 'Rémunérations de personnel extérieur à l''entreprise'),
+    ('638', 'Autres charges externes')
+  ON CONFLICT (number) DO NOTHING
   `
 ]

@@ -1468,3 +1468,17 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .role-check { width: 20px; height: 20px; accent-color: var(--tone-b, var(--c-primary)); cursor: pointer; }
 .role-check.changed { outline: 2px solid var(--c-warning); outline-offset: 2px; border-radius: 4px; }
 .role-check:disabled { cursor: not-allowed; }
+
+/* Gestion de projet */
+.project-alert { display: inline-flex; align-items: center; gap: 6px; color: var(--red); font-weight: 600; font-size: 13px; }
+.project-alerts { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; margin-bottom: 16px; border-radius: var(--r-md); background: var(--amber-soft); color: var(--amber); }
+.project-alerts ul { margin: 0; padding-left: 18px; }
+.budget-lines { display: grid; gap: 14px; }
+.budget-line b { font-size: 14px; }
+.task-board { margin-top: 4px; }
+.kanban-card.late { box-shadow: inset 3px 0 0 var(--c-danger), var(--lift); }
+.milestone { color: var(--gold); margin-right: 4px; vertical-align: -2px; }
+.receipt-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.receipt-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--line); }
+.text-danger { color: var(--red); }
+.receipt-full { max-width: 100%; max-height: 70vh; margin: 0 auto; display: block; border-radius: var(--r-sm); }
