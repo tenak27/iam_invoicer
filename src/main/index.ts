@@ -92,7 +92,8 @@ function requireSession(): SessionUser {
   return user
 }
 
-async function renderPdf(html: string, footerTemplate: string, format: PrintFormat): Promise<Buffer> {
+/** HTML → PDF. Les marges viennent du document (@page) ; sans footerTemplate, le pied de page CSS du document est utilisé. */
+async function renderPdf(html: string, footerTemplate: string | null, format: PrintFormat): Promise<Buffer> {
   const win = new BrowserWindow({ show: false, webPreferences: { javascript: false } })
   try {
     await win.loadURL('data:text/html;charset=utf-8;base64,' + Buffer.from(html).toString('base64'))
@@ -100,9 +101,8 @@ async function renderPdf(html: string, footerTemplate: string, format: PrintForm
     return await win.webContents.printToPDF({
       pageSize: 'A4',
       printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<span></span>',
-      footerTemplate
+      preferCSSPageSize: true,
+      ...(footerTemplate ? { displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate } : {})
     })
   } finally {
     win.destroy()
@@ -173,13 +173,15 @@ function registerIpc(): void {
   ipcMain.handle('pdf.document', (_e, id: number, action: 'open' | 'save' | 'print', format: PrintFormat = 'a4') =>
     guard(async () => {
       requireSession()
-      const doc = await requireBackend().printable(id, format)
       if (action === 'print') {
+        // Impression directe : version HTML avec pied de page et numéros de page dans les marges.
+        const doc = await requireBackend().printable(id, format, false)
         const win = new BrowserWindow({ show: false })
         await win.loadURL('data:text/html;charset=utf-8;base64,' + Buffer.from(doc.html).toString('base64'))
         win.webContents.print({ printBackground: true }, () => win.destroy())
         return true
       }
+      const doc = await requireBackend().printable(id, format)
       const pdf = await renderPdf(doc.html, doc.footer, format)
       if (action === 'save') {
         const r = await dialog.showSaveDialog(mainWindow!, {
@@ -202,11 +204,20 @@ function registerIpc(): void {
     })
   )
 
+  // Aperçu avant impression : le PDF exact (pages, marges, numérotation), affiché dans l'application.
+  ipcMain.handle('pdf.preview', (_e, id: number, format: PrintFormat = 'a4') =>
+    guard(async () => {
+      requireSession()
+      const doc = await requireBackend().printable(id, format)
+      return (await renderPdf(doc.html, doc.footer, format)).toString('base64')
+    })
+  )
+
   // Impression d'un HTML quelconque (bulletins de paie, états) : PDF ouvert dans le lecteur.
   ipcMain.handle('print.html', (_e, html: string, filename: string) =>
     guard(async () => {
       requireSession()
-      const pdf = await renderPdf(html, '<span></span>', 'a4')
+      const pdf = await renderPdf(html, null, 'a4')
       const dir = process.env.IAM_ERP_PDF_DIR ?? join(app.getPath('temp'), 'iam-invoicer')
       mkdirSync(dir, { recursive: true })
       const file = join(dir, String(filename || 'document').replace(/[\/:*?"<>|]/g, '-') + '.pdf')

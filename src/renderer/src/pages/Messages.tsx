@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BellRinging, ChatCircleText, EnvelopeSimple, PencilSimple } from '@phosphor-icons/react'
+import { BellRinging, ChatCircleText, EnvelopeSimple, PencilSimple, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react'
 import { api, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, SearchInput, Tabs } from '../components/ui'
+import { KpiStrip } from '../components/KpiStrip'
 import { useCan } from '../session'
 
 const VARIABLES: [string, string][] = [
@@ -47,6 +48,12 @@ export function MessagesLog() {
           <button className="btn btn-primary" onClick={() => remindAll('email')}><BellRinging size={18} aria-hidden="true" />Relancer les retards par e-mail</button>
         </>}
       />
+      <KpiStrip items={[
+        { label: 'Envois', value: rows.length, icon: PaperPlaneTilt },
+        { label: 'E-mails', value: rows.filter((m) => m.channel === 'email').length, icon: EnvelopeSimple },
+        { label: 'SMS', value: rows.filter((m) => m.channel !== 'email').length, icon: ChatCircleText },
+        { label: 'Échecs', value: rows.filter((m) => m.status !== 'envoye').length, icon: WarningCircle, tone: rows.some((m) => m.status !== 'envoye') ? 'bad' : 'good' }
+      ]} />
       <div className="toolbar">
         <Tabs value={channel} onChange={setChannel} tabs={[{ value: '', label: 'Tous' }, { value: 'email', label: 'E-mails' }, { value: 'sms', label: 'SMS' }]} />
         <SearchInput value={search} onChange={setSearch} placeholder="Destinataire, objet, client…" />

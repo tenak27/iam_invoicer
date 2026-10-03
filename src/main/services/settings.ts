@@ -36,6 +36,12 @@ export interface CompanySettings {
   doc_layout: 'classique' | 'moderne'
   doc_terms: string
   doc_show_stamp: boolean
+  /** Marges des documents A4, en millimètres. */
+  doc_margin_top: number
+  doc_margin_side: number
+  doc_margin_bottom: number
+  /** Colonne « N° » sur les lignes des documents. */
+  doc_line_numbers: boolean
   stamp: string // cachet de la société (data URL)
   signature_image: string // signature du responsable (data URL)
   signatory_name: string
@@ -104,6 +110,10 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   doc_layout: 'moderne',
   doc_terms: '',
   doc_show_stamp: true,
+  doc_margin_top: 14,
+  doc_margin_side: 14,
+  doc_margin_bottom: 22,
+  doc_line_numbers: true,
   stamp: '',
   signature_image: '',
   signatory_name: '',

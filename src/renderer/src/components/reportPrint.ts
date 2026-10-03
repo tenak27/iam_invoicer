@@ -28,7 +28,8 @@ export function reportHtml(company: { name: string; logo?: string; tax_id_label?
     })
     .join('')
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
-    @page { size: A4; margin: 14mm; }
+    @page { size: A4; margin: 14mm 14mm 18mm; @bottom-right { content: 'Page ' counter(page) ' / ' counter(pages); font: 8pt 'Segoe UI', Arial, sans-serif; color: #5d6475; } @bottom-left { content: '${String(company.name).replace(/\\/g, '').replace(/'/g, '’').replace(/[\n\r]+/g, ' ')}'; font: 8pt 'Segoe UI', Arial, sans-serif; color: #5d6475; } }
+    thead { display: table-header-group; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1f2433; margin: 0; }
     header { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #1550a8; padding-bottom: 10px; margin-bottom: 14px; }
     header img { max-height: 54px; max-width: 160px; object-fit: contain; }

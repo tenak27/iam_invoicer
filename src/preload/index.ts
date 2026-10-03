@@ -21,6 +21,7 @@ const bridge = {
   testDbConfig: (cfg: unknown) => ipcRenderer.invoke('db.testConfig', cfg),
   saveDbConfig: (cfg: unknown) => ipcRenderer.invoke('db.saveConfig', cfg),
   pdf: (id: number, action: 'open' | 'save' | 'print', format?: 'a4' | 'ticket') => ipcRenderer.invoke('pdf.document', id, action, format),
+  pdfPreview: (id: number, format?: 'a4' | 'ticket') => ipcRenderer.invoke('pdf.preview', id, format),
   saveText: (name: string, content: string) => ipcRenderer.invoke('file.saveText', name, content),
   sendDocumentEmail: (input: unknown) => ipcRenderer.invoke('mail.sendDocument', input),
   printHtml: (html: string, filename: string) => ipcRenderer.invoke('print.html', html, filename),

@@ -13,7 +13,10 @@ const esc = (s: unknown): string =>
 const nl2br = (s: string): string => esc(s).replace(/\n/g, '<br>')
 
 /** Mentions légales du pied de page. */
-export function legalLine(company: CompanySettings): string {
+const escHtml = (v: unknown) => esc(v as any)
+
+export function legalLine(company: CompanySettings, html = true): string {
+  const esc = html ? escHtml : (v: unknown) => String(v ?? '')
   const parts = [
     company.legal_form && `${esc(company.legal_form)}${company.capital ? ` au capital de ${esc(company.capital)}` : ''}`,
     company.rccm && `RCCM : ${esc(company.rccm)}`,
@@ -24,6 +27,18 @@ export function legalLine(company: CompanySettings): string {
   ].filter(Boolean).join(' · ')
   return esc(company.name) + (parts ? ' · ' + parts : '')
 }
+
+/** Marges des documents (mm), bornées pour rester imprimables. */
+export function docMargins(company: CompanySettings) {
+  const mm = (v: unknown, d: number) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? Math.min(40, Math.max(5, n)) : d
+  }
+  return { top: mm(company.doc_margin_top, 14), side: mm(company.doc_margin_side, 14), bottom: mm(company.doc_margin_bottom, 22) }
+}
+
+/** Texte pour une propriété CSS « content » (pied de page imprimé). */
+const cssString = (s: string) => '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\n\r]+/g, ' ') + '"'
 
 /** Pied de page natif de Chromium (export PDF) avec numérotation des pages. */
 export function pdfFooterTemplate(company: CompanySettings): string {
@@ -59,10 +74,13 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
     .map(([rate, r]) => `<tr><td>TVA ${formatNumber(rate, rate % 1 ? 1 : 0)} % sur ${money(r.base)}</td><td>${money(Math.round((r.base * rate) / 100))}</td></tr>`)
     .join('')
 
+  const margins = docMargins(company)
+  const numbered = company.doc_line_numbers !== false
   const lines = doc.lines
     .map(
-      (l: any) => `
+      (l: any, i: number) => `
       <tr>
+        ${numbered ? `<td class="n">${i + 1}</td>` : ''}
         <td class="ref">${esc(l.product_ref ?? '')}</td>
         <td>${nl2br(l.description)}</td>
         <td class="num">${formatQty(l.quantity)}${l.product_unit ? ` <span class="unit">${esc(l.product_unit)}</span>` : ''}</td>
@@ -85,7 +103,18 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>${esc(doc.number ?? info.label)}</title>
 <style>
-  @page { size: A4; margin: 14mm 14mm 20mm; }
+  @page {
+    size: A4;
+    margin: ${margins.top}mm ${margins.side}mm ${margins.bottom}mm;
+    ${forPdf ? '' : `@bottom-left { content: ${cssString(legalLine(company, false))}; font: 7.5pt 'Segoe UI', Arial, sans-serif; color: #7b8794; vertical-align: top; padding-top: 4mm; }
+    @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 7.5pt 'Segoe UI', Arial, sans-serif; color: #7b8794; vertical-align: top; padding-top: 4mm; white-space: nowrap; }`}
+  }
+  /* Sauts de page : en-tête du tableau répété, lignes jamais coupées, blocs gardés entiers */
+  table.lines thead { display: table-header-group; }
+  table.lines tr, table.totals tr { break-inside: avoid; page-break-inside: avoid; }
+  .head, .parties { break-after: avoid; page-break-after: avoid; }
+  .bottom, .words, .signs, .sign, .secef, .terms { break-inside: avoid; page-break-inside: avoid; }
+  td.n, th.n { width: 26px; text-align: center; color: #7b8794; }
   * { box-sizing: border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1f2933; margin: 0; }
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
@@ -123,7 +152,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .sign div { width: 45%; border-top: 1px solid #9aa5b1; padding-top: 4px; font-size: 9pt; color: #5f6b7a; height: 70px; }
   .footer { margin-top: 24px; text-align: center; font-size: 7.5pt; color: #7b8794; border-top: 1px solid #e4e9ef; padding-top: 4px; }
   /* À l'impression, le pied de page se répète en bas de chaque page ; à l'écran (aperçu), il suit le document. */
-  @media print { .footer { position: fixed; bottom: 0; left: 0; right: 0; margin: 0; } }
+  /* À l'impression, mentions légales et numéros de page sont dans la marge basse de chaque page. */
+  @media print { .footer { display: none; } }
   .band { height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
   .signs { display: flex; justify-content: space-between; gap: 18px; margin-top: 24px; page-break-inside: avoid; }
   .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px; min-height: 96px; font-size: 8.5pt; color: #5f6b7a; position: relative; }
@@ -181,7 +211,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
 
   <table class="lines">
     <thead><tr>
-      <th>Réf.</th><th>Désignation</th><th class="num">Qté</th>
+      ${numbered ? '<th class="n">N°</th>' : ''}<th>Réf.</th><th>Désignation</th><th class="num">Qté</th>
       ${showPrices ? '<th class="num">P.U. HT</th><th class="num">Remise</th><th class="num">TVA</th><th class="num">Total HT</th>' : ''}
     </tr></thead>
     <tbody>${lines}</tbody>

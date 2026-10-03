@@ -37,6 +37,8 @@ interface ErpBridge {
   testDbConfig(cfg: unknown): Promise<Result>
   saveDbConfig(cfg: unknown): Promise<void>
   pdf(id: number, action: 'open' | 'save' | 'print', format?: 'a4' | 'ticket'): Promise<Result>
+  /** Ordinateur : PDF exact du document (base64) pour l'aperçu avant impression. */
+  pdfPreview?(id: number, format?: 'a4' | 'ticket'): Promise<Result<string>>
   saveText(name: string, content: string): Promise<Result>
   /** Imprime un HTML complet (PDF sur ordinateur, fenêtre d'impression sur le web). */
   printHtml(html: string, filename: string): Promise<Result>

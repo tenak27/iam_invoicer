@@ -108,8 +108,8 @@ await shot('facture-reglee-partiellement')
 
 // 7. Aperçu puis PDF
 await page.getByRole('button', { name: 'Aperçu', exact: true }).click()
-await modal().locator('.preview-frame iframe').waitFor()
-await page.waitForTimeout(400)
+await modal().locator('.pdf-page canvas').first().waitFor()
+await page.waitForTimeout(3000) // la visionneuse PDF charge le document
 await shot('apercu-facture')
 await modal().getByRole('button', { name: 'Ouvrir PDF' }).click()
 for (let i = 0; i < 50 && readdirSync(join(out, 'pdf')).length === 0; i++) await page.waitForTimeout(200)
@@ -133,7 +133,7 @@ await page.getByRole('button', { name: 'Valider' }).click()
 await confirm()
 await page.getByText(/Bon de réception BR-\d{4}-0001/).waitFor()
 await nav('État du stock')
-await page.getByText('14', { exact: true }).waitFor() // 10 + 5 − 1
+await page.locator('.table-wrap').getByText('14', { exact: true }).first().waitFor() // 10 + 5 − 1
 await shot('stock-apres-reception')
 
 // 9. Autres écrans

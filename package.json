@@ -60,6 +60,7 @@
     "react-router-dom": "^7.18.4",
     "typescript": "^7.0.2",
     "vite": "^7.3.6",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "pdfjs-dist": "^5.7.284"
   }
 }

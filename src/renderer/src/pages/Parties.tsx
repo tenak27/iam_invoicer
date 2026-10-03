@@ -4,7 +4,8 @@ import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge, useForm } from '../components/ui'
-import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit, UsersThree, UserCheck, Scales, Bell } from '@phosphor-icons/react'
+import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 
 type Kind = 'client' | 'supplier'
@@ -45,6 +46,12 @@ export function PartyList({ kind }: { kind: Kind }) {
           </>
         }
       />
+      <KpiStrip items={[
+        { label: L.title, value: rows.length, icon: UsersThree },
+        { label: 'Actifs', value: rows.filter((r) => r.active).length, icon: UserCheck, tone: 'good' },
+        { label: L.balance, value: total, icon: Scales, money: true },
+        { label: kind === 'client' ? 'Clients qui doivent' : 'Fournisseurs à payer', value: rows.filter((r) => r.balance > 0.5).length, icon: Bell, tone: rows.some((r) => r.balance > 0.5) ? 'bad' : 'good' }
+      ]} />
       <div className="toolbar">
         <SearchInput value={search} onChange={setSearch} placeholder="Nom, code, téléphone, contact…" />
         <label className="inline check"><input type="checkbox" checked={inactive} onChange={(e) => setInactive(e.target.checked)} /> Afficher les inactifs</label>

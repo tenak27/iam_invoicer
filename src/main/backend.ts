@@ -27,7 +27,7 @@ export interface Backend {
   login(username: string, password: string): Promise<SessionUser>
   setup(input: unknown): Promise<SessionUser>
   logout(): Promise<void>
-  printable(id: number, format: PrintFormat): Promise<Printable>
+  printable(id: number, format: PrintFormat, forPdf?: boolean): Promise<Printable>
   close(): Promise<void>
 }
 
@@ -49,9 +49,9 @@ class DirectBackend implements Backend {
   async logout() {
     this.session = null
   }
-  printable(id: number, format: PrintFormat) {
+  printable(id: number, format: PrintFormat, forPdf = true) {
     if (!this.session) throw new AppError('Session expirée, veuillez vous reconnecter.')
-    return printable({ db: this.db, user: this.session }, id, format, true)
+    return printable({ db: this.db, user: this.session }, id, format, forPdf)
   }
   close() {
     return this.db.close()
@@ -339,8 +339,8 @@ export class RemoteBackend implements Backend {
     this.session = null
   }
 
-  printable(id: number, format: PrintFormat) {
-    return this.must<Printable>('GET', `/api/document/${id}?format=${format}&pdf=1`)
+  printable(id: number, format: PrintFormat, forPdf = true) {
+    return this.must<Printable>('GET', `/api/document/${id}?format=${format}&pdf=${forPdf ? 1 : 0}`)
   }
 
   /** Envoie les saisies en attente, dans l'ordre ; s'arrête à la première coupure. */

@@ -3,11 +3,12 @@ import { formatDate } from '@shared/format'
 import { ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
-import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
 import { DbConfigForm } from './Auth'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
 import { TaxSettings } from '../components/TaxSettings'
+import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 
 const MODULE_LABELS: Record<string, string> = {
@@ -48,7 +49,7 @@ export function CompanySettingsPage() {
   const v = f.values
   const save = async () => {
     const r = await run(async () => {
-      await api('settings.save', { ...v, default_tva: Number(String(v.default_tva).replace(',', '.')), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
+      await api('settings.save', { ...v, doc_margin_top: Number(v.doc_margin_top) || 14, doc_margin_side: Number(v.doc_margin_side) || 14, doc_margin_bottom: Number(v.doc_margin_bottom) || 22, default_tva: Number(String(v.default_tva).replace(',', '.')), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
       const sec: any = {}
       if (smtpPassword) sec.smtp_password = smtpPassword
       if (smsSecret) sec.sms_secret = smsSecret
@@ -167,6 +168,18 @@ export function CompanySettingsPage() {
                 <textarea rows={4} {...f.bind('doc_terms')} />
               </Field>
             </div>
+          </div>
+          <div className="card">
+            <h3>Mise en page et impression</h3>
+            <div className="grid grid-4">
+              <Field label="Marge haute (mm)"><input type="number" min={5} max={40} {...f.bind('doc_margin_top')} /></Field>
+              <Field label="Marges gauche et droite (mm)"><input type="number" min={5} max={40} {...f.bind('doc_margin_side')} /></Field>
+              <Field label="Marge basse (mm)" hint="Contient le pied de page et le numéro de page"><input type="number" min={12} max={40} {...f.bind('doc_margin_bottom')} /></Field>
+              <label className="inline check" style={{ alignSelf: 'end' }}>
+                <input type="checkbox" checked={v.doc_line_numbers !== false} onChange={(e) => f.set('doc_line_numbers', e.target.checked)} /> Numéroter les lignes (N°)
+              </label>
+            </div>
+            <p className="muted small">Sur chaque page : en-tête du tableau répété, mentions légales et « Page X / Y » en bas. Les lignes, les totaux et les signatures ne sont jamais coupés entre deux pages.</p>
           </div>
           <div className="card">
             <h3>Cachet et signature de la société</h3>
@@ -349,6 +362,12 @@ export function Users() {
   return (
     <div className="page">
       <PageHeader title="Utilisateurs" actions={<button className="btn btn-primary" onClick={() => setEditing({ role: 'commercial' })}>Nouvel utilisateur</button>} />
+      {data && <KpiStrip items={[
+        { label: 'Comptes', value: data.length, icon: UsersThree },
+        { label: 'Actifs', value: data.filter((u) => u.active).length, icon: UserCheck, tone: 'good' },
+        { label: 'Administrateurs', value: data.filter((u) => u.active && u.role === 'admin').length, icon: ShieldCheck },
+        { label: 'Caissiers', value: data.filter((u) => u.active && u.role === 'caissier').length, icon: CashRegister }
+      ]} />}
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : (
         <div className="table-wrap">
           <table className="table">

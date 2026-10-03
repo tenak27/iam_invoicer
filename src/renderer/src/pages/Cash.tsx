@@ -4,6 +4,8 @@ import { computeTotals, lineHT, PAYMENT_METHODS, type LineInput } from '@shared/
 import { formatMoney, formatNumber, formatQty } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
 import { Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, SearchInput, useForm } from '../components/ui'
+import { KpiStrip } from '../components/KpiStrip'
+import { CashRegister as CashRegisterIcon, Coins, LockOpen, Warning } from '@phosphor-icons/react'
 import { useCan, useSession } from '../session'
 
 type CartLine = LineInput & { key: number; ref?: string; stock?: number; kind?: string }
@@ -325,6 +327,12 @@ export function CashSessions() {
   return (
     <div className="page">
       <PageHeader title="Sessions de caisse" actions={<Link className="btn btn-primary" to="/caisse">Point de vente</Link>} />
+      <KpiStrip items={[
+        { label: 'Sessions', value: rows.length, icon: CashRegisterIcon },
+        { label: 'Ventes encaissées', value: rows.reduce((s, r) => s + r.sales_total, 0), icon: Coins, money: true, tone: 'good' },
+        { label: 'Caisses ouvertes', value: rows.filter((r) => r.status === 'ouverte').length, icon: LockOpen },
+        { label: 'Écarts de caisse', value: rows.filter((r) => r.status === 'fermee' && Math.abs((r.counted_amount ?? 0) - (r.expected_amount ?? 0)) > 0.5).length, icon: Warning, tone: 'bad' }
+      ]} />
       <div className="toolbar">
         <label className="inline">Du <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
         <label className="inline">au <input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>

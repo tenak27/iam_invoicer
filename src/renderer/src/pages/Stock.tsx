@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatDate, formatMoney, formatQty, todayISO } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
+import { KpiStrip } from '../components/KpiStrip'
+import { Package, Coins, WarningCircle, Stack } from '@phosphor-icons/react'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, SearchInput, useForm } from '../components/ui'
 
 const KIND_LABELS: Record<string, string> = { document: 'Document', inventaire: 'Inventaire', ajustement: 'Ajustement', annulation: 'Annulation' }
@@ -24,6 +26,12 @@ export function StockState() {
           { label: 'Coût moyen', value: (r) => Math.round(r.avg_cost) }, { label: 'Valeur', value: (r) => Math.round(r.stock_value) }
         ], rows)}>Exporter (Excel)</button>}
       />
+      <KpiStrip items={[
+        { label: 'Produits suivis', value: rows.length, icon: Package },
+        { label: 'Valeur du stock (CMUP)', value: value, icon: Coins, money: true },
+        { label: 'Unités en stock', value: rows.reduce((s, r) => s + Math.max(0, r.stock_qty), 0), icon: Stack },
+        { label: 'Sous le seuil', value: rows.filter((r) => r.stock_qty <= r.min_stock).length, icon: WarningCircle, tone: 'bad' }
+      ]} />
       <div className="toolbar">
         <SearchInput value={search} onChange={setSearch} />
         <label className="inline check"><input type="checkbox" checked={lowOnly} onChange={(e) => setLowOnly(e.target.checked)} /> Sous le seuil minimum uniquement</label>

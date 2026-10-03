@@ -227,7 +227,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
               )}
               <button className="btn" onClick={duplicate}><Copy size={18} aria-hidden="true" />Dupliquer</button>
               <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>
-              <button className="btn" onClick={() => pdf('print')}><Printer size={18} aria-hidden="true" />Imprimer</button>
+              <button className="btn" onClick={openPreview}><Printer size={18} aria-hidden="true" />Imprimer</button>
               <button className="btn" onClick={() => pdf('save')}><DownloadSimple size={18} aria-hidden="true" />PDF</button>
               {doc.status === 'valide' && info.convertsTo.map((to) => (
                 <button key={to} className="btn btn-accent" onClick={() => convert(to)}>→ {DOC_TYPES[to].label}</button>

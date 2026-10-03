@@ -4,8 +4,9 @@ import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, formatMoney } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs } from '../components/ui'
-import { Eye, Trash } from '@phosphor-icons/react'
+import { Eye, Trash, ArrowCircleDown, ArrowCircleUp, Scales, Receipt } from '@phosphor-icons/react'
 import { useCan } from '../session'
+import { KpiStrip } from '../components/KpiStrip'
 import { PaymentModal } from './DocumentEditor'
 
 export function Payments() {
@@ -37,6 +38,12 @@ export function Payments() {
           <button className="btn btn-primary" onClick={() => setPicking(true)}>Nouveau règlement</button>
         </>}
       />
+      <KpiStrip items={[
+        { label: 'Encaissements', value: rows.filter((r) => r.direction === 'in').reduce((s, r) => s + r.amount, 0), icon: ArrowCircleDown, money: true, tone: 'good' },
+        { label: 'Décaissements', value: rows.filter((r) => r.direction === 'out').reduce((s, r) => s + r.amount, 0), icon: ArrowCircleUp, money: true },
+        { label: 'Solde net', value: rows.reduce((s, r) => s + (r.direction === 'in' ? r.amount : -r.amount), 0), icon: Scales, money: true },
+        { label: 'Règlements', value: rows.length, icon: Receipt }
+      ]} />
       <div className="toolbar">
         <Tabs value={direction} onChange={setDirection} tabs={[{ value: '', label: 'Tous' }, { value: 'in', label: 'Encaissements' }, { value: 'out', label: 'Décaissements' }]} />
         <SearchInput value={search} onChange={setSearch} placeholder="Tiers, document, référence…" />

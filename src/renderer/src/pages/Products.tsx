@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { formatMoney, formatQty } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
-import { ArrowCounterClockwise, Copy, PencilSimple, Prohibit } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Copy, PencilSimple, Prohibit, Package, Wrench, Coins, WarningCircle } from '@phosphor-icons/react'
+import { KpiStrip } from '../components/KpiStrip'
 import { useCan, useSession } from '../session'
 
 /** Copie d'un article : nouvelle référence attribuée à l'enregistrement, sans stock. */
@@ -41,6 +42,12 @@ export function Products() {
           </>
         }
       />
+      <KpiStrip items={[
+        { label: 'Produits', value: rows.filter((r) => r.kind === 'produit').length, icon: Package },
+        { label: 'Prestations', value: rows.filter((r) => r.kind === 'prestation').length, icon: Wrench },
+        { label: 'Valeur du stock', value: rows.reduce((s, r) => s + (r.stock_value ?? 0), 0), icon: Coins, money: true, hidden: !canStock },
+        { label: 'Sous le seuil', value: rows.filter((r) => r.kind === 'produit' && r.active && r.stock_qty <= r.min_stock).length, icon: WarningCircle, tone: 'bad', hidden: !canStock }
+      ]} />
       <div className="toolbar">
         <Tabs value={kind} onChange={setKind} tabs={[{ value: '', label: 'Tout' }, { value: 'produit', label: 'Produits' }, { value: 'prestation', label: 'Prestations' }]} />
         <SearchInput value={search} onChange={setSearch} placeholder="Référence, désignation, catégorie…" />

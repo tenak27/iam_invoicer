@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
-import { formatDate } from '@shared/format'
+import { formatDate, todayISO } from '@shared/format'
 import { api, exportCsv, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Loading, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge } from '../components/ui'
-import { ArrowSquareOut, Copy, Eye, FilePdf, Printer, Trash } from '@phosphor-icons/react'
+import { Copy, Eye, FilePdf, Printer, Trash, Files, Coins, HourglassMedium, Warning, PencilLine } from '@phosphor-icons/react'
+import { KpiStrip } from '../components/KpiStrip'
 import { DocumentPreview } from '../components/DocumentPreview'
 
 export function DocumentList() {
@@ -60,6 +61,13 @@ function DocumentListInner({ type }: { type: DocType }) {
           </>
         }
       />
+      <KpiStrip items={[
+        { label: info.plural, value: rows.length, icon: Files },
+        { label: 'Total TTC validé', value: totals.ttc, icon: Coins, money: true },
+        { label: 'Reste à régler', value: totals.rest, icon: HourglassMedium, money: true, hidden: !info.payable },
+        { label: 'En retard', value: rows.filter((r) => r.status === 'valide' && r.due_date && r.due_date < todayISO() && r.total_ttc - r.paid > 0.5).length, icon: Warning, tone: 'bad', hidden: !info.payable },
+        { label: 'Brouillons', value: rows.filter((r) => r.status === 'brouillon').length, icon: PencilLine }
+      ]} />
       <div className="toolbar">
         <SearchInput value={search} onChange={setSearch} placeholder={`Numéro, ${partyLabel.toLowerCase()}, référence…`} />
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Statut">
@@ -105,9 +113,8 @@ function DocumentListInner({ type }: { type: DocType }) {
                   <td className="actions-col">
                     <RowActions actions={[
                       { label: 'Aperçu', icon: Eye, onClick: () => setPreview(r.id) },
-                      { label: 'Ouvrir', icon: ArrowSquareOut, onClick: () => nav(`/doc/${r.id}`) },
                       { label: 'Voir le PDF', icon: FilePdf, tone: 'primary', onClick: () => run(() => unwrap(window.erp.pdf(r.id, 'open'))) },
-                      { label: 'Imprimer', icon: Printer, onClick: () => run(() => unwrap(window.erp.pdf(r.id, 'print'))) },
+                      { label: 'Imprimer (avec aperçu)', icon: Printer, onClick: () => setPreview(r.id) },
                       { label: 'Dupliquer', icon: Copy, tone: 'success', onClick: () => duplicate(r) },
                       { label: 'Supprimer le brouillon', icon: Trash, tone: 'danger', hidden: r.status !== 'brouillon', onClick: () => remove(r) }
                     ]} />
