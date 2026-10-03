@@ -294,7 +294,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
       <div className="card">
         <div className="scroll-x">
-        <table className="table lines-table">
+        <table className="table lines-table" data-cards="lines">
           <thead>
             <tr>
               {editable && <th style={{ width: 220 }}>Article</th>}

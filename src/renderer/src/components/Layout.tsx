@@ -12,6 +12,7 @@ import { useSession } from '../session'
 import { Navbar } from './Topbar'
 import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
+import { useResponsiveTables } from './responsiveTables'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
 type Section = { title?: string; tone: Tone; items: Item[] }
@@ -153,23 +154,35 @@ function useOnline() {
 
 const COLLAPSE_KEY = 'iam.nav.collapsed'
 
+/** Écrans moyens (tablette paysage, petit portable) : menu réduit aux icônes par défaut. */
+const MEDIUM_SCREEN = '(min-width: 901px) and (max-width: 1279px)'
+
 function useCollapsed(): [boolean, () => void] {
-  const [collapsed, setCollapsed] = useState(() => {
+  const [pref, setPref] = useState<string | null>(() => {
     try {
-      return localStorage.getItem(COLLAPSE_KEY) === '1'
+      return localStorage.getItem(COLLAPSE_KEY)
     } catch {
-      return false
+      return null
     }
   })
-  const toggle = () =>
-    setCollapsed((c) => {
-      try {
-        localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1')
-      } catch {
-        /* préférence non mémorisée */
-      }
-      return !c
-    })
+  const [medium, setMedium] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(MEDIUM_SCREEN).matches)
+  useEffect(() => {
+    if (typeof matchMedia === 'undefined') return
+    const mq = matchMedia(MEDIUM_SCREEN)
+    const on = () => setMedium(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  const collapsed = pref === null ? medium : pref === '1'
+  const toggle = () => {
+    const next = collapsed ? '0' : '1'
+    try {
+      localStorage.setItem(COLLAPSE_KEY, next)
+    } catch {
+      /* préférence non mémorisée */
+    }
+    setPref(next)
+  }
   return [collapsed, toggle]
 }
 
@@ -237,6 +250,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   useCountUpEnhancer(mainRef, location.pathname)
+  useResponsiveTables(mainRef, location.pathname)
   const online = useOnline()
   const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && (!licence || licence.modules.includes(it.module)))
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
