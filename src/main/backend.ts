@@ -267,7 +267,9 @@ export class RemoteBackend implements Backend {
   /** Ouvre la base locale de l'utilisateur connecté (un fichier par serveur et par utilisateur). */
   private attach(user: SessionUser) {
     if (!this.opts.dataDir) return
-    const host = new URL(this.url).host.replace(/[^A-Za-z0-9.-]/g, '_')
+    // Un fichier par serveur ET par client hébergé (/t/<client>) et par utilisateur
+    const u = new URL(this.url)
+    const host = (u.host + u.pathname).replace(/[^A-Za-z0-9.-]/g, '_').replace(/_+$/, '')
     this.store = createFileStore(join(this.opts.dataDir, `${host}-${user.id}.json`))
     this.layer = createOfflineLayer(this.store, this.send, () => this.notify())
     try {

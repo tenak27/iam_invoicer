@@ -43,7 +43,14 @@ export interface ServerOptions {
   downloadsDir?: string
   /** Origines autorisées pour CORS ; « * » par défaut (jetons, pas de cookies). */
   corsOrigin?: string
+  /** Préfixe public de ce serveur (client hébergé : « /t/<client> ») pour les liens envoyés. */
+  publicPath?: string
+  /** Code d'activation exigé à la première configuration (client hébergé). */
+  setupCode?: () => Promise<string | null>
 }
+
+/** Code d'activation saisi : majuscules, sans espaces ni tirets superflus. */
+const cleanCode = (v: unknown) => String(v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 
 const MAX_BODY = 4 * 1024 * 1024
 const MIME: Record<string, string> = {
@@ -155,7 +162,9 @@ export function createHandler(opts: ServerOptions) {
     }
     if (method === 'GET' && path === '/api/status') {
       const user = await resolveToken(db, bearer(req))
-      return send(res, 200, { ok: true, data: { app: 'IAM INVOICER', version: opts.version, needsSetup: await needsSetup(db), user } })
+      const setupNeeded = await needsSetup(db)
+      const setupCode = setupNeeded && !!(opts.setupCode && (await opts.setupCode()))
+      return send(res, 200, { ok: true, data: { app: 'IAM INVOICER', version: opts.version, needsSetup: setupNeeded, setupCode, user } })
     }
     if (method === 'POST' && path === '/api/login') {
       const ip = clientIp(req)
@@ -174,6 +183,16 @@ export function createHandler(opts: ServerOptions) {
     }
     if (method === 'POST' && path === '/api/setup') {
       const body = await readJson(req)
+      // Client hébergé : seule la personne qui a reçu le code d'activation configure la société
+      const code = opts.setupCode ? await opts.setupCode() : null
+      if (code && (await needsSetup(db))) {
+        const ip = clientIp(req)
+        limiter.check(ip)
+        if (cleanCode(body.setup_code) !== cleanCode(code)) {
+          limiter.fail(ip)
+          throw new HttpError(403, body.setup_code ? "Code d'activation incorrect." : "Saisissez le code d'activation fourni avec votre accès.")
+        }
+      }
       const user = await setup({ db, user: null }, body)
       const token = await createToken(db, user.id, String(body.device ?? ''))
       return send(res, 200, { ok: true, data: { token, user } })
@@ -233,7 +252,7 @@ export function createHandler(opts: ServerOptions) {
   function publicOrigin(req: IncomingMessage): string {
     const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0] || 'http'
     const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '')
-    return `${proto}://${host}`
+    return `${proto}://${host}${opts.publicPath ?? ''}`
   }
 
   async function signPage(res: ServerResponse, token: string) {

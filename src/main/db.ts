@@ -17,7 +17,7 @@ export interface Db {
 
 export type DbConfig =
   | { mode: 'local'; dataDir?: string } // dataDir absent = base en mémoire (tests)
-  | { mode: 'server'; host: string; port: number; database: string; user: string; password: string; max?: number }
+  | { mode: 'server'; host: string; port: number; database: string; user: string; password: string; max?: number; idleTimeoutMillis?: number }
 
 type Exec = (sql: string, params?: unknown[]) => Promise<any[]>
 

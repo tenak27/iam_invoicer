@@ -116,7 +116,7 @@ export default function App() {
       <ConfirmHost />
       {phase === 'loading' && <Loading />}
       {phase === 'db-error' && <DbConfigScreen error={dbError} />}
-      {phase === 'setup' && <SetupScreen onDone={onLogin} />}
+      {phase === 'setup' && <SetupScreen remote={dbMode === 'remote'} onDone={onLogin} />}
       {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} />}
       {phase === 'ready' && user && company && (
         <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence, updateUser: (patch) => setUser((u) => (u ? { ...u, ...patch } : u)) }}>

@@ -9,18 +9,28 @@ const URL_KEY = 'iam.serverUrl'
 const TOKEN_KEY = 'iam.token'
 const USER_KEY = 'iam.lastUser'
 
+// Plusieurs clients hébergés sur un même domaine (/t/<client>/) : données de l'appareil séparées par client.
+const SCOPE = (() => {
+  try {
+    const m = /^\/t\/([a-z][a-z0-9_]{2,30})\//.exec(location.pathname)
+    return m ? `t:${m[1]}:` : ''
+  } catch {
+    return ''
+  }
+})()
+
 const store = {
   get: (k: string) => {
     try {
-      return localStorage.getItem(k)
+      return localStorage.getItem(SCOPE + k)
     } catch {
       return null
     }
   },
   set: (k: string, v: string | null) => {
     try {
-      if (v === null) localStorage.removeItem(k)
-      else localStorage.setItem(k, v)
+      if (v === null) localStorage.removeItem(SCOPE + k)
+      else localStorage.setItem(SCOPE + k, v)
     } catch {
       /* stockage indisponible : la session durera le temps de la page */
     }
@@ -41,7 +51,9 @@ function createHttpBridge(): ErpBridge {
   const native = Capacitor.isNativePlatform()
   // Sur le web, l'application est servie par le serveur lui-même : même origine par défaut.
   const servedByServer = !native && /^https?:$/.test(location.protocol) && !import.meta.env.DEV
-  const baseUrl = () => store.get(URL_KEY) ?? (servedByServer ? location.origin : null)
+  // Adresse du serveur qui sert l'application : racine du domaine, /app/ ou /t/<client>/
+  const servedBase = () => location.origin + location.pathname.replace(/\/(index\.html)?$/, '').replace(/\/app$/, '')
+  const baseUrl = () => (servedByServer ? servedBase() : store.get(URL_KEY))
   let token = store.get(TOKEN_KEY)
 
   async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, base = baseUrl()): Promise<R<T>> {

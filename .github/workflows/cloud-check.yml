@@ -1,0 +1,32 @@
+# Contrôle de l'hébergement multi-clients sur un vrai PostgreSQL : à chaque envoi sur la
+# branche « controle-cloud », ou manuellement.
+name: controle-cloud
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['controle-cloud']
+
+jobs:
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PG_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - name: Tests PostgreSQL réels
+        run: npx vitest run tests/cloud-pg.test.ts tests/cloud.test.ts --reporter=verbose 2>&1 | tee vitest.log; test ${PIPESTATUS[0]} -eq 0
+      - name: Résumé
+        if: always()
+        run: grep -E "✓|×|FAIL|Error" vitest.log | head -30 | while read -r l; do echo "::notice title=cloud::$l"; done

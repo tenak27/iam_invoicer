@@ -18,11 +18,12 @@ for dmg in "$@"; do
 
   # 1. Signature (sans elle, macOS déclare l'application « endommagée »)
   if SIG=$(codesign --verify --deep --strict --verbose=2 "$APP_SRC" 2>&1); then
-    note notice "$name signature" "$(codesign -dv "$APP_SRC" 2>&1 | grep -E 'Signature|TeamIdentifier' | tr '\n' ' ')"
+    SIGINFO=$(codesign -dv "$APP_SRC" 2>&1 | grep -E 'Signature|TeamIdentifier' | tr '\n' ' ')
   else
     note error "$name signature" "$(echo "$SIG" | tr '\n' ' ')"; FAIL=1
   fi
   ARCHS=$(lipo -archs "$APP_SRC/Contents/MacOS/IAM INVOICER")
+  MINOS=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$APP_SRC/Contents/Info.plist" 2>/dev/null || echo '?')
 
   # 2. Copie dans un dossier « Applications » de test, avec l'attribut de téléchargement
   DEST="$RUNNER_TEMP/apps-$name"
@@ -30,7 +31,7 @@ for dmg in "$@"; do
   APP="$DEST/IAM INVOICER.app"
   xattr -w com.apple.quarantine "0081;$(printf %x "$(date +%s)");Safari;" "$APP"
   GK=$(spctl --assess --type execute -vv "$APP" 2>&1 | tr '\n' ' ')
-  note notice "$name Gatekeeper" "$GK"
+  note notice "$name installation" "Architecture $ARCHS · macOS $MINOS minimum · ${SIGINFO:-signature invalide} · Gatekeeper : $GK"
   xattr -dr com.apple.quarantine "$APP"
   hdiutil detach "$MNT" -quiet || true
 
@@ -58,11 +59,7 @@ for dmg in "$@"; do
   wait $PID; CODE=$?
   cp "$RES/donnees/logs/demarrage.log" "$RES/" 2>/dev/null || true
   if [ -f "$RES/selftest.json" ]; then
-    node -e '
-      const r = require(process.argv[1]); const n = process.argv[2]
-      for (const s of r.steps) console.log(`::${s.ok ? "notice" : "error"} title=${n} ${s.ok ? "✓" : "✗"} ${s.step}::${(s.detail || "ok").replace(/\n/g, " ").slice(0, 400)} (${s.ms} ms)`)
-      console.log(`::${r.ok ? "notice" : "error"} title=${n} auto-contrôle::${r.ok ? "RÉUSSI" : "ÉCHOUÉ"} — ${r.arch}, Electron ${r.electron}, ${r.ms} ms`)
-    ' "$RES/selftest.json" "$name"
+    node scripts/selftest-report.cjs "$RES/selftest.json" "$name" || FAIL=1
     [ "$CODE" = "0" ] || FAIL=1
   else
     note error "$name auto-contrôle" "Code $CODE sans résultat. Sortie : $(tail -c 1200 "$RES/sortie.log" | tr '\n' ' ') Journal : $(tail -c 1200 "$RES/donnees/logs/demarrage.log" 2>/dev/null | tr '\n' ' ')"

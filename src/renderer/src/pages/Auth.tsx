@@ -63,7 +63,7 @@ export function LoginScreen({ onLogin, dbMode, serverUrl }: { onLogin: (u: User)
   )
 }
 
-export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
+export function SetupScreen({ onDone, remote = false }: { onDone: (u: User) => void; remote?: boolean }) {
   const f = useForm<any>({
     name: '',
     legal_form: 'SARL',
@@ -78,7 +78,8 @@ export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
     full_name: '',
     username: 'admin',
     password: '',
-    password2: ''
+    password2: '',
+    setup_code: ''
   })
   const [busy, setBusy] = useState(false)
   const v = f.values
@@ -86,9 +87,9 @@ export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
     e.preventDefault()
     if (v.password !== v.password2) return notify('Les deux mots de passe ne correspondent pas.', 'error')
     setBusy(true)
-    const { full_name, username, password, password2: _, ...company } = v
+    const { full_name, username, password, password2: _, setup_code, ...company } = v
     const user = await run(
-      () => unwrap<User>(window.erp.setup({ company: { ...company, default_tva: Number(String(company.default_tva).replace(',', '.')) || 0 }, full_name, username, password })),
+      () => unwrap<User>(window.erp.setup({ company: { ...company, default_tva: Number(String(company.default_tva).replace(',', '.')) || 0 }, full_name, username, password, ...(setup_code ? { setup_code } : {}) })),
       'Configuration terminée. Bienvenue !'
     )
     setBusy(false)
@@ -97,6 +98,13 @@ export function SetupScreen({ onDone }: { onDone: (u: User) => void }) {
   return (
     <AuthCard title="Bienvenue dans IAM INVOICER" subtitle="Première configuration : votre société et le compte administrateur" wide>
       <form onSubmit={submit}>
+        {remote && (
+          <div className="grid grid-4" style={{ marginBottom: 6 }}>
+            <Field label="Code d'activation" span={2} hint="Fourni avec l'adresse de votre base en ligne (ex. ABCD-EFGH-JKLM). Laissez vide sur votre propre serveur.">
+              <input {...f.bind('setup_code')} autoComplete="off" spellCheck={false} style={{ textTransform: 'uppercase', letterSpacing: '.08em' }} placeholder="XXXX-XXXX-XXXX" />
+            </Field>
+          </div>
+        )}
         <h3 className="section-title">Société</h3>
         <div className="setup-identity">
           <ImagePicker value={v.logo} onChange={(img) => f.set('logo', img)} label="Logo de la société" hint="Votre logo sur les factures, devis et tickets" />
