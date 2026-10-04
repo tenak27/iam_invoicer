@@ -16,6 +16,8 @@ export interface DownloadFile {
   version: string | null
   /** .ipa : signé (installable directement) ou non signé (à signer avec Sideloadly, AltStore…). */
   signed: boolean | null
+  /** macOS : version pour Mac plus anciens (macOS 10.15 à 12). */
+  legacy: boolean
   size: number
   updated: string
   sha256: string
@@ -25,7 +27,7 @@ export interface DownloadFile {
 const ACCEPTED = /\.(exe|msi|zip|dmg|pkg|apk|aab|ipa|appimage|deb)$/i
 export const IOS_BUNDLE_ID = 'com.iamtechnology.invoicer'
 
-export function classify(name: string): Pick<DownloadFile, 'platform' | 'kind' | 'arch' | 'version' | 'signed'> | null {
+export function classify(name: string): Pick<DownloadFile, 'platform' | 'kind' | 'arch' | 'version' | 'signed' | 'legacy'> | null {
   if (!ACCEPTED.test(name)) return null
   const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
   const lower = name.toLowerCase()
@@ -39,7 +41,8 @@ export function classify(name: string): Pick<DownloadFile, 'platform' | 'kind' |
   const arch = /universal/.test(lower) ? 'universal' : /arm64|aarch64|apple-?silicon/.test(lower) ? 'arm64' : /x64|x86_64|amd64|intel/.test(lower) ? 'x64' : null
   const version = /(\d+\.\d+\.\d+)/.exec(name)?.[1] ?? null
   const signed = kind === 'ipa' ? !/unsigned|non-?sign/.test(lower) : null
-  return { platform, kind, arch, version, signed }
+  const legacy = /ancien|legacy|compat/.test(lower)
+  return { platform, kind, arch, version, signed, legacy }
 }
 
 const cmpVersion = (a: string | null, b: string | null) => {

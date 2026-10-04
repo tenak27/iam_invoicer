@@ -479,10 +479,10 @@
           </ol></details>
         </article>
         <article class="dl reveal" data-platform="macos">
-          <div class="dl-top"><div class="ic t4"><i data-icon="AppleLogo" data-size="28"></i></div><div><h3>macOS</h3><small>macOS 12 ou plus récent, puce Apple et Intel</small></div></div>
+          <div class="dl-top"><div class="ic t4"><i data-icon="AppleLogo" data-size="28"></i></div><div><h3>macOS</h3><small>macOS 13 ou plus récent, puce Apple et Intel ; versions pour macOS 10.15 à 12</small></div></div>
           <span class="reco-tag">Votre appareil</span>
           <div class="dl-files"><a class="btn btn-ghost" aria-disabled="true" href="#contact">Bientôt disponible</a></div>
-          <p class="dl-note">Mac de 2020 et après (M1 à M4) : choisissez <b>Puce Apple</b>. Le menu Pomme → <b>À propos de ce Mac</b> indique votre puce.</p>
+          <p class="dl-note">Le menu Pomme → <b>À propos de ce Mac</b> indique la puce et la version de macOS. Mac de 2020 et après (M1 à M4) : <b>Puce Apple</b>. macOS 12 ou plus ancien : la version <b>« macOS 10.15 à 12 »</b>.</p>
           <details class="dl-how"><summary>Comment installer</summary><ol>
             <li>Ouvrez le fichier <b>.dmg</b> et glissez IAM INVOICER dans <b>Applications</b>.</li>
             <li>Ouvrez IAM INVOICER. Si macOS indique qu'il ne peut pas vérifier l'application, cliquez sur <b>Terminé</b>.</li>
@@ -648,6 +648,7 @@
     var frDate = function (d) { return d.split('-').reverse().join('/') }
     var ICON_DL = document.getElementById('ic-dl').innerHTML, ICON_PHONE = document.getElementById('ic-phone').innerHTML
     function label(f) {
+      if (f.platform === 'macos' && f.legacy) return f.arch === 'arm64' ? 'Puce Apple · macOS 11 à 12' : 'Intel · macOS 10.15 à 12'
       if (f.platform === 'macos') return f.arch === 'arm64' ? 'Puce Apple' : f.arch === 'x64' ? 'Mac Intel' : f.arch === 'universal' ? 'Apple et Intel' : 'Fichier .dmg'
       if (f.platform === 'windows') return f.kind === 'portable' ? 'Version portable' : 'Installateur'
       if (f.platform === 'android') return 'Fichier APK'
@@ -685,7 +686,7 @@
         if (!l) latest[f.platform] = [f]
         else if (l[0].version === f.version) l.push(f)
       })
-      if (latest.macos) latest.macos.sort(function (a, b) { var w = function (f) { return f.arch === (arch || 'arm64') ? 0 : f.arch === 'universal' ? 1 : 2 }; return w(a) - w(b) })
+      if (latest.macos) latest.macos.sort(function (a, b) { var w = function (f) { return (f.legacy ? 10 : 0) + (f.arch === (arch || 'arm64') ? 0 : f.arch === 'universal' ? 1 : 2) }; return w(a) - w(b) })
       var origin = location.origin, primary = {}
 
       ;['windows', 'macos', 'android', 'ios'].forEach(function (p) {

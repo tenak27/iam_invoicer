@@ -56,7 +56,6 @@ jobs:
       # CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID, et
       # « identity » dans electron-builder.yml.
       - run: npm run dist:mac -- --publish never
-      # Contrôle des DMG : signature valide (sinon « application endommagée ») et démarrage réel
       # Contrôle réel de chaque DMG : signature, Gatekeeper, auto-contrôle de l'application
       # (base, interface, société, client, PDF), Intel compris via Rosetta
       - name: Auto-contrôle des DMG
@@ -66,6 +65,21 @@ jobs:
         with: { name: Controle-macOS, path: selftest-mac, if-no-files-found: ignore }
       - uses: actions/upload-artifact@v4
         with: { name: IAM-INVOICER-macOS, path: dist/*.dmg, if-no-files-found: error }
+
+  # Mac sous macOS 10.15 à 12 (la version courante exige macOS 13) : Electron 32
+  macos-ancien:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: bash scripts/build-mac-legacy.sh
+      - name: Auto-contrôle des DMG
+        run: bash scripts/mac-selftest.sh dist-ancien/*.dmg
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-macOS-ancien, path: dist-ancien/*.dmg, if-no-files-found: error }
 
   android:
     needs: test
@@ -168,7 +182,7 @@ jobs:
 
   # Publication des installateurs (même si une plateforme a échoué : les autres restent disponibles)
   release:
-    needs: [windows, macos, android, ios]
+    needs: [windows, macos, macos-ancien, android, ios]
     if: startsWith(github.ref, 'refs/tags/') && !cancelled()
     runs-on: ubuntu-latest
     permissions: { contents: write }
@@ -184,7 +198,8 @@ jobs:
           body: |
             Installateurs d'IAM INVOICER ${{ github.ref_name }}.
             - Windows : IAM-INVOICER-Setup-*.exe
-            - macOS : *-arm64.dmg (puce Apple M1…M4) ou *-x64.dmg (Intel)
+            - macOS 13 ou plus : *-arm64.dmg (puce Apple M1…M4) ou *-x64.dmg (Intel)
+            - macOS 10.15 à 12 : *-macos-ancien.dmg
             - Android : *-android.apk
             - iPhone / iPad : *-ios.ipa (signé) ou *-ios-unsigned.ipa (à signer avec Sideloadly ou AltStore)
             Empreintes SHA-256 : SHA256SUMS.txt
