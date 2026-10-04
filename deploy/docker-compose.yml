@@ -34,6 +34,8 @@ services:
       # Hébergement de plusieurs clients (une base PostgreSQL chacun, adresses /t/<client>) :
       # renseignez ADMIN_TOKEN dans deploy/.env (openssl rand -hex 32). Vide : un seul client.
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      # Code exigé pour configurer la base principale (première visite de /app/)
+      SETUP_CODE: ${SETUP_CODE:-}
     volumes:
       # Déposez ici les installateurs (.exe, .dmg, .apk) proposés sur le site
       - ./telechargements:/telechargements:ro

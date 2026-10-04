@@ -22,6 +22,8 @@ DIR="${IAM_DIR:-/opt/iam-invoicer}"
 say() { printf '\n\033[1;34m▶ %s\033[0m\n' "$*"; }
 warn() { printf '  \033[1;33m! %s\033[0m\n' "$*"; }
 die() { printf '\n\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
+# Code d'activation lisible : XXXX-XXXX-XXXX
+gen_code() { openssl rand -hex 6 | tr 'a-f' 'A-F' | fold -w4 | paste -sd- ; }
 
 [ "$(id -u)" = "0" ] || die "Lancez le script en administrateur : sudo bash installer.sh votre-domaine"
 ENV="$DIR/deploy/.env"
@@ -74,6 +76,7 @@ if [ ! -f "$ENV" ]; then
 DOMAIN=$DOMAIN
 DB_PASSWORD=$(openssl rand -hex 24)
 ADMIN_TOKEN=$(openssl rand -hex 32)
+SETUP_CODE=$(openssl rand -hex 6 | tr a-f A-F | sed 's/(....)(....)(....)/--/')
 IAM_PORT=8090
 IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:latest
 EOF
@@ -81,6 +84,7 @@ else
   sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" "$ENV"
   grep -q '^ADMIN_TOKEN=.\+' "$ENV" || { sed -i '/^ADMIN_TOKEN=/d' "$ENV"; echo "ADMIN_TOKEN=$(openssl rand -hex 32)" >> "$ENV"; }
   grep -q '^IAM_PORT=' "$ENV" || echo "IAM_PORT=8090" >> "$ENV"
+  grep -q '^SETUP_CODE=.\+' "$ENV" || { sed -i '/^SETUP_CODE=/d' "$ENV"; echo "SETUP_CODE=$(gen_code)" >> "$ENV"; }
   grep -q '^IAM_IMAGE=' "$ENV" || echo "IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:latest" >> "$ENV"
 fi
 # Image imposée à l'appel (ex. IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:main pour la dernière version de développement)
@@ -163,12 +167,14 @@ cat > /etc/cron.d/iam-invoicer <<EOF
 EOF
 
 TOKEN=$(grep -E '^ADMIN_TOKEN=' "$ENV" | cut -d= -f2-)
+CODE=$(grep -E '^SETUP_CODE=' "$ENV" | cut -d= -f2-)
 cat <<EOF
 
 $(printf '\033[1;32m')✓ IAM INVOICER est installé.$(printf '\033[0m')
 
   Site et application : $SCHEME://$DOMAIN   (application : $SCHEME://$DOMAIN/app/)
   Adresse d'un client : $SCHEME://$DOMAIN/t/<identifiant-du-client>
+  Code d'activation de la base principale (première visite de /app/) : $CODE
 
   Pour créer les bases de vos clients depuis IAM INVOICER (poste de l'éditeur) :
     Administration → Émission de licences → Bases clients en ligne

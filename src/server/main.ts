@@ -12,6 +12,7 @@
 //   LICENCE_PRIVATE_KEY_FILE  serveur de l'éditeur uniquement : clé privée pour émettre les licences
 //   ADMIN_TOKEN     (PostgreSQL) active l'hébergement de plusieurs clients, une base chacun,
 //                   sous /t/<client>, et l'API /api/admin/ (jeton de 32 caractères au moins)
+//   SETUP_CODE      code exigé pour la première configuration de la base principale (recommandé)
 //   ADMIN_DATABASE_URL  compte PostgreSQL qui crée les bases des clients (DATABASE_URL par défaut)
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -35,7 +36,9 @@ async function main() {
     webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'),
     siteRoot: process.env.SITE_ROOT ?? join(__dirname, '../site'),
     downloadsDir: process.env.DOWNLOADS_DIR ?? join(process.env.DATA_DIR ?? 'data', 'telechargements'),
-    corsOrigin: process.env.CORS_ORIGIN
+    corsOrigin: process.env.CORS_ORIGIN,
+    // Première configuration de la base principale réservée à qui connaît SETUP_CODE
+    setupCode: process.env.SETUP_CODE ? async () => process.env.SETUP_CODE! : undefined
   })
   // Hébergement multi-clients : une base PostgreSQL par client
   let handler: (req: IncomingMessage, res: ServerResponse) => Promise<unknown> = root
