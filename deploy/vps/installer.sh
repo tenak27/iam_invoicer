@@ -76,7 +76,7 @@ if [ ! -f "$ENV" ]; then
 DOMAIN=$DOMAIN
 DB_PASSWORD=$(openssl rand -hex 24)
 ADMIN_TOKEN=$(openssl rand -hex 32)
-SETUP_CODE=$(openssl rand -hex 6 | tr a-f A-F | sed 's/(....)(....)(....)/--/')
+SETUP_CODE=$(gen_code)
 IAM_PORT=8090
 IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:latest
 EOF
