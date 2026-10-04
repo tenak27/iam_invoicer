@@ -48,26 +48,13 @@ jobs:
       # « identity » dans electron-builder.yml.
       - run: npm run dist:mac -- --publish never
       # Contrôle des DMG : signature valide (sinon « application endommagée ») et démarrage réel
-      - name: Vérification des DMG
-        run: |
-          set -e
-          for dmg in dist/*.dmg; do
-            echo "== $dmg"
-            MNT=$(hdiutil attach -nobrowse -readonly "$dmg" | grep -o '/Volumes/.*' | head -1)
-            APP="$MNT/IAM INVOICER.app"
-            codesign --verify --deep --strict --verbose=2 "$APP"
-            lipo -archs "$APP/Contents/MacOS/IAM INVOICER"
-            case "$dmg" in
-              *"$(uname -m)"*)
-                rm -rf "$RUNNER_TEMP/app" && mkdir -p "$RUNNER_TEMP/app" && cp -R "$APP" "$RUNNER_TEMP/app/"
-                "$RUNNER_TEMP/app/IAM INVOICER.app/Contents/MacOS/IAM INVOICER" > "$RUNNER_TEMP/app.log" 2>&1 &
-                PID=$!
-                sleep 25
-                if kill -0 $PID 2>/dev/null; then echo "Démarrage OK"; kill $PID || true; else echo "L'application s'est arrêtée :"; cat "$RUNNER_TEMP/app.log"; exit 1; fi
-                ;;
-            esac
-            hdiutil detach "$MNT"
-          done
+      # Contrôle réel de chaque DMG : signature, Gatekeeper, auto-contrôle de l'application
+      # (base, interface, société, client, PDF), Intel compris via Rosetta
+      - name: Auto-contrôle des DMG
+        run: bash scripts/mac-selftest.sh dist/*.dmg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: Controle-macOS, path: selftest-mac, if-no-files-found: ignore }
       - uses: actions/upload-artifact@v4
         with: { name: IAM-INVOICER-macOS, path: dist/*.dmg, if-no-files-found: error }
 

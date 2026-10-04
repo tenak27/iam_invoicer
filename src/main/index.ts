@@ -8,6 +8,7 @@ import { openDb, restoreLocal } from './db'
 import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig } from './autoBackup'
 import type { PrintFormat } from './printing'
 import { AppError, type SessionUser } from './services/context'
+import { diag, diagInit, errText } from './diag'
 
 const configPath = () => join(app.getPath('userData'), 'config.json')
 const localDataDir = () => join(app.getPath('userData'), 'data')
@@ -37,9 +38,22 @@ const syncDir = () => join(app.getPath('userData'), 'sync')
 /**
  * Connexions mémorisées pour se reconnecter sans réseau, chiffrées par le système
  * (DPAPI sous Windows, Trousseau sous macOS). Sans chiffrement disponible, rien n'est mémorisé.
+ * Le trousseau n'est consulté qu'au moment d'une connexion en ligne : sur macOS, l'interroger
+ * au démarrage peut afficher une demande de mot de passe avant même l'ouverture de la fenêtre.
  */
-function createVault(): SessionVault | undefined {
-  if (!safeStorage.isEncryptionAvailable()) return undefined
+function createVault(): SessionVault {
+  let available: boolean | null = null
+  const ok = () => {
+    if (available === null) {
+      try {
+        available = safeStorage.isEncryptionAvailable()
+      } catch {
+        available = false
+      }
+      diag(`Trousseau du système : ${available ? 'disponible' : 'indisponible'}`)
+    }
+    return available
+  }
   const file = () => join(syncDir(), 'sessions.bin')
   const readAll = (): Record<string, SavedLogin> => {
     try {
@@ -50,8 +64,9 @@ function createVault(): SessionVault | undefined {
   }
   const key = (url: string, username: string) => `${url}|${username.trim().toLowerCase()}`
   return {
-    get: (url, username) => readAll()[key(url, username)] ?? null,
+    get: (url, username) => (ok() ? readAll()[key(url, username)] ?? null : null),
     put: (login) => {
+      if (!ok()) return
       const all = readAll()
       all[key(login.url, login.username)] = login
       mkdirSync(syncDir(), { recursive: true })
@@ -78,19 +93,43 @@ let backend: Backend | null = null
 let backendError: string | null = null
 let mainWindow: BrowserWindow | null = null
 
+/** Ouverture de la base trop longue : la fenêtre s'ouvre quand même et affiche l'erreur. */
+const CONNECT_TIMEOUT = 60_000
+
 async function connect(): Promise<void> {
   const cfg = readConfig()
+  const t0 = Date.now()
+  diag(`Ouverture de la base (mode ${cfg.mode})…`)
   try {
     if (cfg.mode === 'local') mkdirSync(localDataDir(), { recursive: true })
-    backend = await openBackend(cfg.mode === 'local' ? { mode: 'local', dataDir: localDataDir() } : cfg, {
+    const opening = openBackend(cfg.mode === 'local' ? { mode: 'local', dataDir: localDataDir() } : cfg, {
       dataDir: syncDir(),
-      vault: createVault(),
+      vault: cfg.mode === 'remote' ? createVault() : undefined,
       onChange: pushSyncState
     })
+    let timer: NodeJS.Timeout | undefined
+    const late = new Promise<never>((_, ko) => {
+      timer = setTimeout(() => ko(new Error(`la base ne répond pas après ${CONNECT_TIMEOUT / 1000} s`)), CONNECT_TIMEOUT)
+    })
+    // Ouverture qui aboutit après le délai : on la garde
+    opening.then((b) => {
+      if (!backend) {
+        backend = b
+        backendError = null
+        diag('Base ouverte après le délai.')
+      }
+    }).catch(() => {})
+    try {
+      backend = await Promise.race([opening, late])
+    } finally {
+      clearTimeout(timer)
+    }
     backendError = null
+    diag(`Base ouverte en ${Date.now() - t0} ms.`)
   } catch (e) {
     backend = null
     backendError = e instanceof Error ? e.message : String(e)
+    diag(`ÉCHEC de l'ouverture de la base : ${errText(e)}`)
   }
 }
 
@@ -396,8 +435,24 @@ function createWindow(): void {
       contextIsolation: true
     }
   })
-  mainWindow.once('ready-to-show', () => mainWindow?.maximize())
+  mainWindow.once('ready-to-show', () => {
+    diag('Fenêtre prête.')
+    mainWindow?.maximize()
+  })
   mainWindow.on('ready-to-show', () => mainWindow?.show())
+  // Filet de sécurité : si « ready-to-show » n'arrive jamais, la fenêtre s'affiche quand même
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      diag("Fenêtre affichée d'office (contenu toujours en chargement).")
+      mainWindow.show()
+    }
+  }, 15_000).unref()
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc, url) => diag(`ÉCHEC du chargement de l'interface : ${code} ${desc} ${url}`))
+  mainWindow.webContents.on('render-process-gone', (_e, d) => diag(`Interface arrêtée : ${d.reason} (code ${d.exitCode})`))
+  mainWindow.webContents.on('console-message', (e: any) => {
+    const level = e.level ?? e.params?.level
+    if (level === 'error' || level === 3) diag(`Console (erreur) : ${e.message ?? e.params?.message}`)
+  })
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) shell.openExternal(url)
     return { action: 'deny' }
@@ -440,13 +495,19 @@ function startSyncLoop() {
   }, 30_000).unref()
 }
 
+// Erreurs inattendues : notées dans le journal de démarrage plutôt que perdues
+process.on('uncaughtException', (e) => diag(`ERREUR non gérée : ${errText(e)}`))
+process.on('unhandledRejection', (e) => diag(`Promesse rejetée non gérée : ${errText(e)}`))
+
 app.whenReady().then(async () => {
+  diagInit()
   // Poste de l'éditeur : clé privée de licence présente → profil « Gestionnaire de licences » utilisable
   configureVendorKey(process.env.IAM_LICENCE_KEY ?? join(homedir(), '.iam-invoicer', 'licence-private.pem'))
   if (app.isPackaged && process.platform !== 'darwin') Menu.setApplicationMenu(null)
   registerIpc()
   await connect()
   createWindow()
+  if (process.env.IAM_SELFTEST) return void selfTest(process.env.IAM_SELFTEST)
   startSyncLoop()
   startBackupLoop()
   // macOS : rouvrir la fenêtre quand on clique sur l'icône du Dock.
@@ -464,3 +525,78 @@ app.on('window-all-closed', async () => {
 app.on('before-quit', () => {
   backend?.close().catch(() => {})
 })
+
+/**
+ * Auto-contrôle de l'application installée (IAM_SELFTEST=<dossier>) : base, interface, création
+ * d'une société et d'un client, export PDF. Résultat dans <dossier>/selftest.json et capture de
+ * la fenêtre dans <dossier>/fenetre.png. Lancé par la fabrication macOS sur GitHub.
+ */
+async function selfTest(dir: string) {
+  const steps: { step: string; ok: boolean; detail?: string; ms: number }[] = []
+  const t0 = Date.now()
+  const step = async (name: string, fn: () => Promise<string | void>, timeout = 60_000) => {
+    const t = Date.now()
+    let timer: NodeJS.Timeout | undefined
+    try {
+      const detail = await Promise.race([
+        fn(),
+        new Promise<never>((_, ko) => {
+          timer = setTimeout(() => ko(new Error(`délai de ${timeout / 1000} s dépassé`)), timeout)
+        })
+      ])
+      steps.push({ step: name, ok: true, detail: detail || undefined, ms: Date.now() - t })
+      diag(`AUTO-CONTRÔLE ✓ ${name}${detail ? ' : ' + detail : ''}`)
+    } catch (e) {
+      steps.push({ step: name, ok: false, detail: errText(e), ms: Date.now() - t })
+      diag(`AUTO-CONTRÔLE ✗ ${name} : ${errText(e)}`)
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  mkdirSync(dir, { recursive: true })
+  await step('Base de données', async () => {
+    if (!backend) throw new Error(backendError ?? 'aucune base')
+    return readConfig().mode
+  })
+  await step("Chargement de l'interface", () => new Promise<string>((ok, ko) => {
+    const wc = mainWindow?.webContents
+    if (!wc) return ko(new Error('pas de fenêtre'))
+    if (!wc.isLoading()) return ok('déjà chargée')
+    wc.once('did-finish-load', () => ok('chargée'))
+    wc.once('did-fail-load', (_e, code, desc) => ko(new Error(`${code} ${desc}`)))
+  }))
+  await step("Affichage de l'interface", async () => {
+    for (let i = 0; i < 40; i++) {
+      const text: string = await mainWindow!.webContents.executeJavaScript("(document.getElementById('root')?.innerText || '').trim().slice(0, 160)")
+      if (text.length > 20) return text.replace(/\s+/g, ' ')
+      await new Promise((r) => setTimeout(r, 500))
+    }
+    throw new Error('écran vide après 20 s')
+  })
+  await step('Capture de la fenêtre', async () => {
+    const img = await mainWindow!.webContents.capturePage()
+    writeFileSync(join(dir, 'fenetre.png'), img.toPNG())
+    return `${img.getSize().width}×${img.getSize().height}`
+  })
+  await step('Création de la société', async () => {
+    const u = await requireBackend().setup({ company: { name: 'Contrôle macOS SARL', country_code: 'BF' }, username: 'admin', full_name: 'Contrôle', password: 'secret123' })
+    return u.username
+  })
+  await step('Enregistrement et lecture', async () => {
+    const r = await requireBackend().call('parties.save', { kind: 'client', name: 'Client contrôle' })
+    if (!r.ok) throw new Error(r.error)
+    const l = await requireBackend().call('parties.list', { kind: 'client' })
+    if (!l.ok) throw new Error(l.error)
+    return `${(l.data as unknown[]).length} client(s)`
+  })
+  await step('Export PDF', async () => {
+    const pdf = await renderPdf('<!doctype html><html><body><h1>IAM INVOICER</h1><p>Contrôle PDF</p></body></html>', null, 'a4')
+    if (pdf.length < 500) throw new Error('PDF vide')
+    return `${pdf.length} octets`
+  })
+  const ok = steps.every((s) => s.ok)
+  writeFileSync(join(dir, 'selftest.json'), JSON.stringify({ ok, version: app.getVersion(), platform: process.platform, arch: process.arch, electron: process.versions.electron, ms: Date.now() - t0, steps }, null, 2))
+  diag(`AUTO-CONTRÔLE ${ok ? 'RÉUSSI' : 'ÉCHOUÉ'} en ${Date.now() - t0} ms`)
+  await backend?.close().catch(() => {})
+  app.exit(ok ? 0 : 1)
+}

@@ -1,0 +1,23 @@
+# Contrôle rapide de la version macOS (sans publication) : à chaque envoi sur la branche
+# « controle-macos », ou manuellement. Fabrique les DMG et lance l'auto-contrôle.
+name: controle-macos
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['controle-macos']
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run dist:mac -- --publish never
+      - name: Auto-contrôle des DMG
+        run: bash scripts/mac-selftest.sh dist/*.dmg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: Controle-macOS, path: selftest-mac, if-no-files-found: ignore }
