@@ -1,0 +1,8 @@
+# Serveur qui a déjà un nginx sur les ports 80/443 (autres sites) : IAM INVOICER écoute
+# seulement en local (127.0.0.1:IAM_PORT) et nginx lui transmet les requêtes de son domaine.
+# Utilisé par deploy/vps/installer.sh (détection automatique) :
+#   docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d db app
+services:
+  app:
+    ports:
+      - "127.0.0.1:${IAM_PORT:-8090}:8080"

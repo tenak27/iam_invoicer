@@ -1,0 +1,28 @@
+# Image Docker du serveur, construite par GitHub à chaque envoi sur « main » :
+# ghcr.io/tenak27/iam-invoicer:main (les versions publiées reçoivent :latest, voir build.yml).
+# Les serveurs la téléchargent au lieu de la construire (deploy/vps/installer.sh) : pas de
+# compilation sur le VPS, donc pas de pic de mémoire pour les autres services.
+name: image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main']
+    paths-ignore: ['android/**', 'ios/**', '*.md', 'docs/formation/**']
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/iam-invoicer:main
+            ghcr.io/${{ github.repository_owner }}/iam-invoicer:main-${{ github.sha }}

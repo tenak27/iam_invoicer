@@ -8,7 +8,7 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     # Plusieurs clients : davantage de connexions (4 au plus par client actif)
-    command: ["postgres", "-c", "max_connections=300", "-c", "shared_buffers=256MB"]
+    command: ["postgres", "-c", "max_connections=300", "-c", "shared_buffers=${PG_SHARED_BUFFERS:-128MB}"]
     environment:
       POSTGRES_DB: iam_invoicer
       POSTGRES_USER: iam
@@ -22,6 +22,8 @@ services:
       retries: 5
 
   app:
+    # Image construite par GitHub (téléchargée) ; « docker compose build » la reconstruit localement.
+    image: ${IAM_IMAGE:-ghcr.io/tenak27/iam-invoicer:latest}
     build:
       context: ..
       dockerfile: deploy/Dockerfile
