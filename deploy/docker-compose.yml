@@ -7,6 +7,8 @@ services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    # Plusieurs clients : davantage de connexions (4 au plus par client actif)
+    command: ["postgres", "-c", "max_connections=300", "-c", "shared_buffers=256MB"]
     environment:
       POSTGRES_DB: iam_invoicer
       POSTGRES_USER: iam
@@ -27,6 +29,9 @@ services:
     environment:
       DATABASE_URL: postgres://iam:${DB_PASSWORD}@db:5432/iam_invoicer
       DOWNLOADS_DIR: /telechargements
+      # Hébergement de plusieurs clients (une base PostgreSQL chacun, adresses /t/<client>) :
+      # renseignez ADMIN_TOKEN dans deploy/.env (openssl rand -hex 32). Vide : un seul client.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
     volumes:
       # Déposez ici les installateurs (.exe, .dmg, .apk) proposés sur le site
       - ./telechargements:/telechargements:ro

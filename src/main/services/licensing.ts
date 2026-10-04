@@ -189,3 +189,102 @@ export async function importRegistry(ctx: Ctx) {
   await audit(ctx.db, ctx, 'import', 'licence', null, `${added} licence(s) du registre CSV`)
   return { added, total: lines.length }
 }
+
+// ── Bases clients hébergées (serveur multi-clients de l'éditeur) ──────────────────────
+// Adresse du serveur et jeton d'administration : table secrets de la base de l'éditeur,
+// jamais renvoyés à l'interface. Les appels passent par ce processus, pas par le navigateur.
+
+async function secret(ctx: Ctx, key: string): Promise<string> {
+  return (await ctx.db.one<{ value: string }>('SELECT value FROM secrets WHERE key = $1', [key]))?.value ?? ''
+}
+async function setSecret(ctx: Ctx, key: string, value: string) {
+  await ctx.db.query('INSERT INTO secrets (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, value])
+}
+
+function cloudUrl(raw: string): string {
+  let url = str(raw)
+  if (!url) fail("Saisissez l'adresse du serveur (ex. cloud.iam.bf).")
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    fail('Adresse du serveur invalide.')
+  }
+  return `${u.protocol}//${u.host}`
+}
+
+async function admin<T = any>(ctx: Ctx, method: string, path: string, body?: unknown, cfg?: { url: string; token: string }): Promise<T> {
+  const url = cfg?.url ?? (await secret(ctx, 'cloud_url'))
+  const token = cfg?.token ?? (await secret(ctx, 'cloud_admin_token'))
+  if (!url || !token) fail("Renseignez d'abord l'adresse du serveur et le jeton d'administration (onglet « Bases clients »).")
+  let res: Response
+  try {
+    res = await fetch(url + path, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(30_000)
+    })
+  } catch (e: any) {
+    fail(`Serveur ${url} injoignable (${e?.name === 'TimeoutError' ? 'délai dépassé' : e?.cause?.code ?? e?.message ?? e}). Vérifiez l'adresse et la connexion Internet.`)
+  }
+  let json: any = null
+  try {
+    json = await res.json()
+  } catch {
+    fail(`Réponse inattendue du serveur (HTTP ${res.status}) : est-ce bien un serveur IAM INVOICER à jour ?`)
+  }
+  if (!json?.ok) fail(json?.error ?? `Erreur du serveur (HTTP ${res.status}).`)
+  return json.data as T
+}
+
+export async function cloudConfig(ctx: Ctx) {
+  const [url, token] = await Promise.all([secret(ctx, 'cloud_url'), secret(ctx, 'cloud_admin_token')])
+  return { url, hasToken: !!token }
+}
+
+export async function cloudSaveConfig(ctx: Ctx, input: { url: string; token?: string }) {
+  const url = cloudUrl(input?.url)
+  const token = str(input?.token) || (await secret(ctx, 'cloud_admin_token'))
+  if (token.length < 32) fail("Jeton d'administration trop court : copiez la valeur ADMIN_TOKEN du serveur (64 caractères).")
+  const list = await admin<unknown[]>(ctx, 'GET', '/api/admin/tenants', undefined, { url, token })
+  await setSecret(ctx, 'cloud_url', url)
+  await setSecret(ctx, 'cloud_admin_token', token)
+  await audit(ctx.db, ctx, 'modification', 'cloud', null, url)
+  return { url, hasToken: true, tenants: list.length }
+}
+
+export async function cloudList(ctx: Ctx) {
+  return admin<any[]>(ctx, 'GET', '/api/admin/tenants')
+}
+
+export async function cloudInfo(ctx: Ctx, input: { slug: string }) {
+  return admin(ctx, 'GET', `/api/admin/tenants/${encodeURIComponent(str(input?.slug))}`)
+}
+
+/** Nouvelle base client, avec la licence du registre préinstallée si elle est choisie. */
+export async function cloudCreate(ctx: Ctx, input: { name: string; slug?: string; contact?: string; notes?: string; licence_id?: number }) {
+  let licence: { licence_key: string; number: string } | undefined
+  if (input?.licence_id) {
+    licence = await ctx.db.one<{ licence_key: string; number: string }>('SELECT licence_key, number FROM licences_issued WHERE id = $1', [input.licence_id])
+    if (!licence) fail('Licence introuvable dans le registre.')
+  }
+  const created = await admin(ctx, 'POST', '/api/admin/tenants', {
+    name: str(input?.name), slug: str(input?.slug) || undefined, contact: str(input?.contact) || undefined, notes: str(input?.notes) || undefined,
+    licence_key: licence?.licence_key, licence_number: licence?.number
+  })
+  await audit(ctx.db, ctx, 'création', 'cloud', null, `${created.slug} ${created.name}`)
+  return { ...created, url: (await secret(ctx, 'cloud_url')) + created.path }
+}
+
+export async function cloudAction(ctx: Ctx, input: { slug: string; action: 'suspend' | 'resume' | 'password' | 'setup-code' | 'delete'; confirm?: string }) {
+  const slug = encodeURIComponent(str(input?.slug))
+  const action = input?.action
+  let out: unknown
+  if (action === 'delete') out = await admin(ctx, 'DELETE', `/api/admin/tenants/${slug}?confirm=${encodeURIComponent(str(input?.confirm))}`)
+  else if (['suspend', 'resume', 'password', 'setup-code'].includes(action)) out = await admin(ctx, 'POST', `/api/admin/tenants/${slug}/${action}`, {})
+  else fail('Action inconnue.')
+  await audit(ctx.db, ctx, action, 'cloud', null, input.slug)
+  return out ?? true
+}

@@ -2,11 +2,12 @@
 // registre, nouvelle licence, renouvellement, révocation, clé à copier ou enregistrer.
 
 import { useMemo, useState } from 'react'
-import { ArrowCounterClockwise, ArrowsClockwise, Certificate, ClockCountdown, Copy, DownloadSimple, FileArrowUp, Key, Plus, Prohibit, SealCheck, WarningCircle } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ArrowsClockwise, Certificate, CloudArrowUp, ClockCountdown, Copy, DownloadSimple, FileArrowUp, Key, Plus, Prohibit, SealCheck, WarningCircle } from '@phosphor-icons/react'
 import { formatDate, todayISO } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
 import { KpiStrip } from '../components/KpiStrip'
-import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, SearchInput, useForm } from '../components/ui'
+import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
+import { CloudTab } from './LicensingCloud'
 
 interface VendorStatus {
   available: boolean
@@ -15,7 +16,7 @@ interface VendorStatus {
   tiers: { id: string; label: string; pitch: string; users: number; whiteLabel: boolean; modules: string[] }[]
   modules: { id: string; label: string }[]
 }
-interface Issued {
+export interface Issued {
   id: number; number: string; company: string; tax_id: string | null; tier: string; modules: string[]; users: number
   issued: string; expires: string | null; white_label: boolean; licence_key: string; contact: string | null; notes: string | null
   revoked: boolean; revoked_reason: string | null; issued_by_name: string | null
@@ -53,6 +54,8 @@ export function LicensingPage() {
   const [q, setQ] = useState('')
   const [form, setForm] = useState<Partial<Issued> | null>(null)
   const [shown, setShown] = useState<Issued | null>(null)
+  const [tab, setTab] = useState<'licences' | 'cloud'>('licences')
+  const [cloudSeed, setCloudSeed] = useState<{ name: string; contact?: string; licence_id?: number } | null>(null)
   const rows = list.data ?? []
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase()
@@ -90,7 +93,7 @@ export function LicensingPage() {
       <PageHeader
         title="Émission de licences"
         subtitle="Licences clients signées par IAM Technology : palier, modules, utilisateurs et durée. Chaque licence est inscrite au registre."
-        actions={st.available ? <>
+        actions={st.available && tab === 'licences' ? <>
           {st.registry && <button className="btn" onClick={importCsv}><FileArrowUp size={18} aria-hidden="true" />Reprendre le registre CSV</button>}
           <button className="btn btn-primary" onClick={() => setForm({ tier: 'pro' })}><Plus size={18} aria-hidden="true" />Nouvelle licence</button>
         </> : undefined}
@@ -103,6 +106,8 @@ export function LicensingPage() {
             (<code>%USERPROFILE%\.iam-invoicer\licence-private.pem</code>) ou sur son serveur (variable <code>LICENCE_PRIVATE_KEY_FILE</code>).</p>
         </div>
       )}
+      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'licences', label: 'Licences' }, { value: 'cloud', label: 'Bases clients en ligne' }]} />
+      {tab === 'cloud' ? <CloudTab licences={rows} seed={cloudSeed} onSeedUsed={() => setCloudSeed(null)} /> : <>
       <KpiStrip items={[
         { label: 'Licences émises', value: rows.length, icon: Certificate },
         { label: 'Actives', value: (counts.active ?? 0) + (counts.soon ?? 0), icon: SealCheck, tone: 'good' },
@@ -142,8 +147,9 @@ export function LicensingPage() {
           </table>
         </div>
       )}
+      </>}
       {form && <IssueModal st={st} initial={form} onClose={() => setForm(null)} onDone={(l) => { setForm(null); list.reload(); setShown(l) }} />}
-      {shown && <KeyModal l={shown} onClose={() => setShown(null)} />}
+      {shown && <KeyModal l={shown} onClose={() => setShown(null)} onCloud={() => { setCloudSeed({ name: shown.company, contact: shown.contact ?? undefined, licence_id: shown.id }); setShown(null); setTab('cloud') }} />}
     </div>
   )
 }
@@ -229,10 +235,11 @@ function IssueModal({ st, initial, onClose, onDone }: { st: VendorStatus; initia
   )
 }
 
-function KeyModal({ l, onClose }: { l: Issued; onClose: () => void }) {
+function KeyModal({ l, onClose, onCloud }: { l: Issued; onClose: () => void; onCloud: () => void }) {
   return (
     <Modal title={`Licence ${l.number}`} wide onClose={onClose}
       footer={<>
+        <button className="btn" onClick={onCloud}><CloudArrowUp size={18} aria-hidden="true" />Créer sa base en ligne</button>
         <button className="btn" onClick={() => saveKey(l)}><DownloadSimple size={18} aria-hidden="true" />Enregistrer (.txt)</button>
         <button className="btn btn-primary" onClick={() => copyKey(l.licence_key)}><Copy size={18} aria-hidden="true" />Copier la clé</button>
       </>}>

@@ -1500,3 +1500,7 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .quota.warn .bar i { background: var(--amber); }
 .quota.full .bar i { background: var(--red); }
 .quota.full .row strong { color: var(--red); }
+
+/* ---------- Bases clients en ligne ---------- */
+.kv-list p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.kv-list code { font-size: 13px; }
