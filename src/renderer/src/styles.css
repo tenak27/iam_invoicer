@@ -1504,3 +1504,10 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 /* ---------- Bases clients en ligne ---------- */
 .kv-list p { margin: 0 0 8px; overflow-wrap: anywhere; }
 .kv-list code { font-size: 13px; }
+
+/* ---------- Écran de démarrage ---------- */
+.startup-card { text-align: center; display: grid; justify-items: center; gap: 10px; }
+.startup-card h1 { margin: 0; font-size: 22px; letter-spacing: .04em; }
+.startup-card p { margin: 0; }
+.startup-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(var(--primary-rgb), .18); border-top-color: var(--c-primary); animation: spin .9s linear infinite; margin: 6px 0; }
+@media (prefers-reduced-motion: reduce) { .startup-spinner { animation-duration: 3s; } }

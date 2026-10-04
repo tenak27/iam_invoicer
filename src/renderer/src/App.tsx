@@ -4,7 +4,7 @@ import { api } from './api'
 import { setDefaultCurrency } from '@shared/format'
 import { setRolePermissions } from '@shared/domain'
 import { countryProfile } from '@shared/countries'
-import { ConfirmHost, Loading, notify, Toaster } from './components/ui'
+import { ConfirmHost, notify, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
@@ -114,7 +114,7 @@ export default function App() {
     <>
       <Toaster />
       <ConfirmHost />
-      {phase === 'loading' && <Loading />}
+      {phase === 'loading' && <StartupScreen />}
       {phase === 'db-error' && <DbConfigScreen error={dbError} />}
       {phase === 'setup' && <SetupScreen remote={dbMode === 'remote'} onDone={onLogin} />}
       {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} />}
@@ -171,5 +171,25 @@ export default function App() {
         </SessionContext.Provider>
       )}
     </>
+  )
+}
+
+/** Démarrage : la base est en cours d'ouverture (la première fois, elle est créée). */
+function StartupScreen() {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 4000)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div className="auth-screen">
+      <div className="auth-card startup-card" role="status" aria-live="polite">
+        <img src="./favicon.svg" width={56} height={56} alt="" />
+        <h1>IAM INVOICER</h1>
+        <div className="startup-spinner" aria-hidden="true" />
+        <p>{slow ? 'Préparation de la base de données…' : 'Démarrage…'}</p>
+        {slow && <p className="muted small">À la première ouverture, la base est créée sur cet ordinateur : cela peut prendre jusqu'à une ou deux minutes sur un ordinateur ancien. Ne fermez pas l'application.</p>}
+      </div>
+    </div>
   )
 }

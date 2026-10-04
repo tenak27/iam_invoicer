@@ -50,10 +50,10 @@ for dmg in "$@"; do
   env -u ELECTRON_RUN_AS_NODE IAM_ERP_DATA="$RES/donnees" IAM_SELFTEST="$RES" \
     $RUN "$APP/Contents/MacOS/IAM INVOICER" > "$RES/sortie.log" 2>&1 &
   PID=$!
-  for _ in $(seq 1 180); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+  for _ in $(seq 1 420); do kill -0 $PID 2>/dev/null || break; sleep 1; done
   if kill -0 $PID 2>/dev/null; then
     kill -9 $PID 2>/dev/null
-    note error "$name auto-contrôle" "Bloqué après 180 s. Journal : $(tail -c 1500 "$RES/donnees/logs/demarrage.log" 2>/dev/null | tr '\n' ' ')"
+    note error "$name auto-contrôle" "Bloqué après 420 s. Journal : $(tail -c 1500 "$RES/donnees/logs/demarrage.log" 2>/dev/null | tr '\n' ' ')"
     FAIL=1; continue
   fi
   wait $PID; CODE=$?

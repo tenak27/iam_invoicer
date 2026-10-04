@@ -90,6 +90,9 @@ function readConfig(): AppConfig {
 }
 
 let backend: Backend | null = null
+/** Ouverture de la base en cours : les appels de l'interface l'attendent. */
+let markConnected: () => void = () => {}
+const connecting = new Promise<void>((ok) => (markConnected = ok))
 let backendError: string | null = null
 let mainWindow: BrowserWindow | null = null
 
@@ -108,12 +111,13 @@ async function connect(): Promise<void> {
       onChange: pushSyncState
     })
     let timer: NodeJS.Timeout | undefined
+    let timedOut = false
     const late = new Promise<never>((_, ko) => {
-      timer = setTimeout(() => ko(new Error(`la base ne répond pas après ${CONNECT_TIMEOUT / 1000} s`)), CONNECT_TIMEOUT)
+      timer = setTimeout(() => (timedOut = true, ko(new Error(`la base ne répond pas après ${CONNECT_TIMEOUT / 1000} s`))), CONNECT_TIMEOUT)
     })
     // Ouverture qui aboutit après le délai : on la garde
     opening.then((b) => {
-      if (!backend) {
+      if (!backend && timedOut) {
         backend = b
         backendError = null
         diag('Base ouverte après le délai.')
@@ -173,11 +177,12 @@ async function renderPdf(html: string, footerTemplate: string | null, format: Pr
 
 function registerIpc(): void {
   ipcMain.handle('api', async (_e, name: string, args: unknown) => {
+    await connecting
     if (!backend) return { ok: false, error: 'Base de données indisponible.' }
     return backend.call(name, args)
   })
 
-  ipcMain.handle('app.status', () => ({
+  ipcMain.handle('app.status', async () => (await connecting, {
     dbReady: !!backend,
     dbError: backendError,
     dbMode: readConfig().mode,
@@ -419,6 +424,16 @@ function appIcon() {
   return existsSync(file) ? nativeImage.createFromPath(file) : undefined
 }
 
+/** Fenêtre affichée (ou 5 s au plus), avant de lancer le travail lourd. */
+function windowShown(): Promise<void> {
+  return new Promise((ok) => {
+    const t = setTimeout(ok, 5000)
+    const done = () => { clearTimeout(t); setTimeout(ok, 150) }
+    if (mainWindow?.isVisible()) return done()
+    mainWindow?.once('show', done)
+  })
+}
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1360,
@@ -505,8 +520,12 @@ app.whenReady().then(async () => {
   configureVendorKey(process.env.IAM_LICENCE_KEY ?? join(homedir(), '.iam-invoicer', 'licence-private.pem'))
   if (app.isPackaged && process.platform !== 'darwin') Menu.setApplicationMenu(null)
   registerIpc()
-  await connect()
+  // La fenêtre s'affiche d'abord (écran « Préparation… ») : la première création de la base
+  // peut prendre du temps sur un Mac ancien et occupe le processus principal pendant ce temps.
   createWindow()
+  await windowShown()
+  await connect()
+  markConnected()
   if (process.env.IAM_SELFTEST) return void selfTest(process.env.IAM_SELFTEST)
   startSyncLoop()
   startBackupLoop()
@@ -568,7 +587,7 @@ async function selfTest(dir: string) {
   await step("Affichage de l'interface", async () => {
     for (let i = 0; i < 40; i++) {
       const text: string = await mainWindow!.webContents.executeJavaScript("(document.getElementById('root')?.innerText || '').trim().slice(0, 160)")
-      if (text.length > 20) return text.replace(/\s+/g, ' ')
+      if (text.length > 20 && !/Démarrage…|Préparation de la base/.test(text)) return text.replace(/\s+/g, ' ')
       await new Promise((r) => setTimeout(r, 500))
     }
     throw new Error('écran vide après 20 s')
