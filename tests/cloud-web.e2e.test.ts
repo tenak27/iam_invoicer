@@ -69,7 +69,7 @@ describe.skipIf(!RUN)('Application web d’un client hébergé', () => {
     await page.getByRole('button', { name: 'Terminer la configuration' }).click()
     await page.locator('.content').waitFor({ timeout: 20_000 })
     // L'application parle bien à la base du client (adresse /t/<client>)
-    const st = await page.evaluate(() => window.erp.status())
+    const st = await page.evaluate(() => (window as any).erp.status())
     expect(st.serverUrl ?? '').toContain(`/t/${a.slug}`)
     // Données : la base A a sa société, la base B est vierge
     const ta = (await manager.get(a.slug))!
