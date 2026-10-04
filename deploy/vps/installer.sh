@@ -68,6 +68,8 @@ if [ -d "$DIR/.git" ]; then
 else
   git clone -q --depth 1 "$REPO" "$DIR"
 fi
+# Le script vient peut-être d'être mis à jour : on repart de la nouvelle version
+if [ -z "${IAM_REEXEC:-}" ]; then IAM_REEXEC=1 exec bash "$DIR/deploy/vps/installer.sh" "$DOMAIN"; fi
 
 if [ ! -f "$ENV" ]; then
   say "Génération des mots de passe (deploy/.env)"
