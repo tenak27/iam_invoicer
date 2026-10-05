@@ -73,7 +73,7 @@ if [ -z "${IAM_REEXEC:-}" ]; then IAM_REEXEC=1 exec bash "$DIR/deploy/vps/instal
 
 if [ ! -f "$ENV" ]; then
   say "Génération des mots de passe (deploy/.env)"
-  umask 077
+  (umask 077; : > "$ENV")
   cat > "$ENV" <<EOF
 DOMAIN=$DOMAIN
 DB_PASSWORD=$(openssl rand -hex 24)
@@ -94,6 +94,10 @@ if [ -n "${IAM_IMAGE:-}" ]; then sed -i "s#^IAM_IMAGE=.*#IAM_IMAGE=$IAM_IMAGE#" 
 chmod 600 "$ENV"
 IAM_PORT=$(grep -E '^IAM_PORT=' "$ENV" | cut -d= -f2-)
 mkdir -p "$DIR/deploy/telechargements" "$DIR/deploy/backups"
+# Installateurs lisibles par le serveur (utilisateur « node » du conteneur) ; sauvegardes réservées à root
+chmod 755 "$DIR/deploy/telechargements"
+find "$DIR/deploy/telechargements" -type f -exec chmod 644 {} +
+chmod 700 "$DIR/deploy/backups"
 
 cd "$DIR/deploy"
 if [ "$MODE" = nginx ]; then

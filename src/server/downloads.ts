@@ -69,7 +69,15 @@ function sha256(path: string, key: string): Promise<string> {
 export async function listDownloads(dir: string | undefined): Promise<DownloadFile[]> {
   if (!dir || !existsSync(dir)) return []
   const out: DownloadFile[] = []
-  for (const name of readdirSync(dir)) {
+  let names: string[]
+  try {
+    names = readdirSync(dir)
+  } catch (e) {
+    // Dossier illisible (droits) : le site affiche « Bientôt disponible » au lieu d'une erreur
+    console.warn(`Dossier des téléchargements illisible (${dir}) : ${(e as Error).message}`)
+    return []
+  }
+  for (const name of names) {
     const c = classify(name)
     if (!c) continue
     const path = join(dir, name)
