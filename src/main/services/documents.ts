@@ -10,7 +10,7 @@ import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } f
 import { resolveTaxes } from './taxes'
 import { addDays, todayISO } from '@shared/format'
 import type { Db } from '../db'
-import { audit, fail, num, str, type Ctx } from './context'
+import { AppError, audit, fail, num, str, type Ctx } from './context'
 import { getSettings } from './settings'
 import { applyStockMovement, lineLots, moveLots } from './stock'
 import { postDocument, postPayment, removeSourceEntry } from './accounting'
@@ -163,6 +163,23 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
     await writeLines(db, id, lines, await documentTaxes(db, type as DocType, input.taxes, input.id ? id : undefined))
     return { id }
   })
+}
+
+/**
+ * Enregistre le brouillon puis, si `validate` est demandé, le valide dans la foulée (un seul appel :
+ * une saisie faite hors connexion est ainsi envoyée et validée à la synchronisation).
+ * Si la validation est refusée, le brouillon reste enregistré et le motif est renvoyé.
+ */
+export async function saveAndMaybeValidate(ctx: Ctx, input: any): Promise<{ id: number; validated?: boolean; error?: string }> {
+  const { id } = await saveDocument(ctx, input)
+  if (!input?.validate) return { id }
+  try {
+    await validateDocument(ctx, { id, applyStock: input.applyStock })
+    return { id, validated: true }
+  } catch (e) {
+    if (!(e instanceof AppError)) throw e
+    return { id, validated: false, error: e.message }
+  }
 }
 
 export async function deleteDraft(ctx: Ctx, args: { id: number }) {

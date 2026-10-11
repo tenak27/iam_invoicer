@@ -129,6 +129,8 @@ const PREFETCH: [string, unknown][] = [
   ['parties.list', { kind: 'client', search: '', includeInactive: false }],
   ['parties.list', { kind: 'supplier', search: '', includeInactive: false }],
   ['warehouses.options', undefined],
+  ['taxes.list', { activeOnly: true, side: 'sale' }],
+  ['taxes.list', { activeOnly: true, side: 'purchase' }],
   ['projects.options', undefined],
   ...['FAC', 'DEV', 'BL', 'AV', 'BC', 'FF'].map((t): [string, unknown] => ['documents.list', { types: [t], search: '', status: '', from: '', to: '', unpaidOnly: false }]),
   ['crm.pipeline', undefined],

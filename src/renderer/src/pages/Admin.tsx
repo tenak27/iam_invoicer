@@ -505,7 +505,7 @@ export function MyAccount() {
       <div className="card narrow profile-card">
         <h3>Photo de profil</h3>
         <div className="profile-photo">
-          <UserAvatar name={user.full_name} size={96} photo={user.avatar} ring={false} />
+          <UserAvatar name={user.full_name} size={96} photo={user.avatar} />
           <div className="stack">
             <button className="btn btn-primary" onClick={choosePhoto}>{user.avatar ? 'Changer la photo' : 'Ajouter une photo'}</button>
             {user.avatar && <button className="btn btn-ghost" onClick={removePhoto}>Retirer la photo</button>}

@@ -13,6 +13,7 @@
 //    devis annulé → validé puis annulé ; facture annulée → brouillon marqué « ANNULÉE »
 //    (une facture validée ne s'annule que par un avoir) ;
 //  - bons d'enlèvement (copies automatiques des bons de livraison) : non repris.
+// Un fichier « produits » (liste JSON d'articles) se reprend avec la même commande.
 // Le compte rendu liste ce qui a été créé et tout ce qui demande une vérification.
 
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -48,6 +49,59 @@ export function mergeClients(clients) {
     }
   }
   return [...byName.values()]
+}
+
+const SERVICE = /abonnement|logiciel|domaine|main d.?oeuvre|pose |conception|installation|migration|support et|reliquat|frais|paiement|clonage|sécurisation|ouverture|licence|vps|odoo|ocr|extension/i
+
+/**
+ * Articles et prestations (fichier « produits »). Référence d'origine gardée si elle est courte et
+ * unique, sinon attribuée par l'application ; un article de même désignation déjà présent est laissé tel quel.
+ */
+export async function runProducts({ rpc, produits, log = () => {}, dryRun = false }) {
+  const report = { crees: 0, existants: 0, produits: 0, prestations: 0, aVerifier: [], erreurs: [] }
+  const existing = dryRun ? [] : await rpc('products.list', { includeInactive: true })
+  const names = new Set(existing.map((p) => low(p.name)))
+  const refs = new Set(existing.map((p) => low(p.ref)))
+  for (const src of produits ?? []) {
+    const name = txt(src['Désignation'])
+    if (!name) continue
+    if (names.has(low(name))) {
+      report.existants++
+      continue
+    }
+    const kind = SERVICE.test(`${src['Catégorie'] ?? ''} ${name}`) ? 'prestation' : 'produit'
+    let ref = txt(src['Référence'])
+    if (low(ref) === low(name) || ref.length > 20) ref = ''
+    else if (refs.has(low(ref))) {
+      report.aVerifier.push(`${name} : référence ${ref} déjà utilisée — nouvelle référence attribuée`)
+      ref = ''
+    }
+    let sale = Number(src['Prix vente']) || 0
+    const last = /dernier PU facturé : ([\d.]+)/.exec(src.Remarque ?? '')
+    if (!sale && last) {
+      sale = Number(last[1])
+      report.aVerifier.push(`${name} : prix de vente à 0 — dernier prix facturé repris (${fmt(sale)})`)
+    }
+    let min = Number(src['Stock minimum']) || 0
+    if (min >= 1000) {
+      report.aVerifier.push(`${name} : stock minimum de ${fmt(min)} manifestement erroné — remis à 0`)
+      min = 0
+    }
+    if (src['TVA %'] === null || src['TVA %'] === undefined) report.sansTva = (report.sansTva ?? 0) + 1
+    const body = { kind, ref, name, description: txt(src.Description), category: txt(src['Catégorie']), unit: txt(src['Unité']), sale_price: sale, purchase_price: Number(src['Prix achat']) || 0, tva_rate: src['TVA %'] ?? 18, min_stock: min, active: src.Statut !== 'inactif' }
+    try {
+      if (!dryRun) await rpc('products.save', body)
+      names.add(low(name))
+      if (ref) refs.add(low(ref))
+      report.crees++
+      kind === 'produit' ? report.produits++ : report.prestations++
+    } catch (e) {
+      report.erreurs.push(`${name} : ${e.message}`)
+    }
+  }
+  if (report.sansTva) report.aVerifier.push(`${report.sansTva} article(s) sans taux de TVA dans l'export : 18 % appliqué`)
+  log(`Articles : ${report.crees} créés (${report.produits} produits, ${report.prestations} prestations), ${report.existants} déjà présents`)
+  return report
 }
 
 /** Lignes d'un document : détail de l'export, sinon une ligne unique portant le montant. */
@@ -270,6 +324,16 @@ async function main() {
   if (!file || (!dryRun && (!url || !username))) die('usage : node tools/import/reprise.mjs --url https://domaine/t/societe --user identifiant --file export.json [--dry-run] [--force]')
   const data = JSON.parse(readFileSync(file, 'utf8'))
 
+  const finish = (report, what) => {
+    if (what === 'articles') {
+      console.log(`\n══ Articles : ${report.crees} créés (${report.produits} produits, ${report.prestations} prestations), ${report.existants} déjà présents ══`)
+      for (const [t, l] of [['À vérifier', report.aVerifier], ['Erreurs', report.erreurs]]) if (l.length) console.log(`\n${t} (${l.length})\n` + l.map((x) => '  - ' + x).join('\n'))
+    } else printReport(report)
+    const out = opt('report') ?? file.replace(/\.json$/i, '') + `-compte-rendu${dryRun ? '-simulation' : ''}.json`
+    writeFileSync(out, JSON.stringify(report, null, 2))
+    console.log(`\nCompte rendu enregistré : ${out}`)
+    if (report.erreurs.length) process.exit(2)
+  }
   let rpc = async () => []
   if (!dryRun) {
     let password = process.env.IAM_PASSWORD
@@ -286,18 +350,15 @@ async function main() {
     const { token } = await post('/api/login', { username, password, device: 'Reprise de historique' }).catch((e) => die(`connexion impossible : ${e.message}`))
     rpc = (name, a) => post('/api/call', { name, args: a }, token)
 
+    if (Array.isArray(data)) return finish(await runProducts({ rpc, produits: data, log: console.log }), 'articles')
     const lic = await rpc('licence.status')
     if (lic.state !== 'active') die(`la base n'a pas de licence active (${lic.label}) : la reprise dépasserait les quantités de l'évaluation. Activez la licence puis relancez.`)
     const existing = await rpc('documents.list', { types: ['DEV', 'BL', 'FAC', 'AV'] })
     if (existing.length && !args.includes('--force')) die(`la base contient déjà ${existing.length} document(s) de vente : reprise déjà faite ? (--force pour continuer quand même, au risque de doublons)`)
   }
 
-  const report = await runReprise({ rpc, data, dryRun, log: (m) => console.log(m) })
-  printReport(report)
-  const out = opt('report') ?? file.replace(/\.json$/i, '') + `-compte-rendu${dryRun ? '-simulation' : ''}.json`
-  writeFileSync(out, JSON.stringify(report, null, 2))
-  console.log(`\nCompte rendu enregistré : ${out}`)
-  if (report.erreurs.length) process.exit(2)
+  if (Array.isArray(data)) return finish(await runProducts({ rpc, produits: data, dryRun, log: console.log }), 'articles')
+  finish(await runReprise({ rpc, data, dryRun, log: (m) => console.log(m) }))
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main().catch((e) => (console.error(e), process.exit(1)))

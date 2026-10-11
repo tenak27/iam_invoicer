@@ -144,3 +144,85 @@ export function installTilt() {
     { passive: true }
   )
 }
+
+/** Cartes : un halo suit le pointeur (souris uniquement). */
+export function installSpotlight() {
+  if (typeof document === 'undefined' || !matchMedia('(hover: hover)').matches) return
+  document.addEventListener(
+    'pointermove',
+    (e) => {
+      if (reducedMotion()) return
+      const el = (e.target as Element | null)?.closest?.<HTMLElement>('.card, .dcard, .pos-tile, .project-card, .tier-card, .kanban-card')
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--mx', `${Math.round(e.clientX - r.left)}px`)
+      el.style.setProperty('--my', `${Math.round(e.clientY - r.top)}px`)
+    },
+    { passive: true }
+  )
+}
+
+/** Boutons principaux : légère attraction vers le pointeur, relâchée en sortant. */
+export function installMagnet() {
+  if (typeof document === 'undefined' || !matchMedia('(hover: hover)').matches) return
+  let last: HTMLElement | null = null
+  const release = () => {
+    last?.style.removeProperty('--bx')
+    last?.style.removeProperty('--by')
+    last = null
+  }
+  document.addEventListener(
+    'pointermove',
+    (e) => {
+      if (reducedMotion()) return
+      const el = (e.target as Element | null)?.closest?.<HTMLElement>('.btn-primary, .nav-icon-btn, .avatar-btn')
+      if (last && last !== el) release()
+      if (!el || el.matches(':disabled')) return
+      last = el
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--bx', (((e.clientX - r.left) / r.width - 0.5) * 6).toFixed(1) + 'px')
+      el.style.setProperty('--by', (((e.clientY - r.top) / r.height - 0.5) * 5).toFixed(1) + 'px')
+    },
+    { passive: true }
+  )
+  document.addEventListener('pointerleave', release, true)
+}
+
+/**
+ * Défilement : les blocs situés sous l'écran montent en fondu quand ils y entrent.
+ * Seuls les blocs hors de vue au moment où ils apparaissent sont concernés ; ceux déjà
+ * visibles gardent leur entrée en cascade. Sans IntersectionObserver, rien n'est masqué.
+ */
+export function installReveal() {
+  if (typeof document === 'undefined' || typeof IntersectionObserver !== 'function' || typeof MutationObserver !== 'function') return
+  const seen = new WeakSet<Element>()
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const en of entries) {
+        if (!en.isIntersecting) continue
+        const el = en.target
+        io.unobserve(el)
+        el.classList.add('fx-in')
+        setTimeout(() => el.classList.remove('fx-reveal', 'fx-in'), 750)
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px' }
+  )
+  let queued = false
+  const scan = () => {
+    queued = false
+    if (reducedMotion()) return
+    document.querySelectorAll('.route-view .page > *, .route-view .bento > *, .route-view .grid > .card').forEach((el) => {
+      if (seen.has(el)) return
+      seen.add(el)
+      if (el.classList.contains('page-hero') || el.getBoundingClientRect().top < innerHeight - 20) return
+      el.classList.add('fx-reveal')
+      io.observe(el)
+    })
+  }
+  new MutationObserver(() => {
+    if (queued) return
+    queued = true
+    requestAnimationFrame(scan)
+  }).observe(document.body, { childList: true, subtree: true })
+}

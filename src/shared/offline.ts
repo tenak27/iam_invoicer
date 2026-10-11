@@ -1,8 +1,8 @@
 // Mode hors ligne (web, mobile, et application de bureau reliée à un serveur en ligne) :
 //  - lectures : la dernière réponse de chaque écran est gardée sur l'appareil et
 //    réaffichée si le réseau tombe (sur le bureau, dans une base locale sur disque) ;
-//  - saisies courantes (vente en caisse, règlement, temps passé, congé, activité
-//    CRM, nouveau client) : mises en file d'attente, puis envoyées dans l'ordre
+//  - saisies courantes (devis, factures, bons, articles, vente en caisse, règlement,
+//    temps passé, congé, activité CRM, clients et fournisseurs) : mises en file d'attente, puis envoyées dans l'ordre
 //    au retour du réseau. Chaque opération porte un identifiant unique : le
 //    serveur ne l'exécute qu'une fois, même si l'envoi est répété.
 // Les numéros (factures…) sont attribués par le serveur lors de la synchronisation.
@@ -17,10 +17,10 @@ export interface KeyValueStore {
 }
 
 /** Saisies acceptées hors ligne. */
-export const QUEUEABLE = new Set(['cash.sale', 'payments.add', 'parties.save', 'crm.save', 'crm.saveActivity', 'projects.saveTime', 'hr.saveLeave'])
+export const QUEUEABLE = new Set(['documents.save', 'products.save', 'cash.sale', 'payments.add', 'parties.save', 'crm.save', 'crm.saveActivity', 'projects.saveTime', 'hr.saveLeave'])
 
 /** Lectures conservées pour la consultation hors ligne. */
-const CACHEABLE = /^(settings\.get|licence\.status|roles\.get|reports\.dashboard|cash\.(current|options)|products\.(list|categories)|parties\.(list|get|options)|documents\.(list|get)|payments\.list|warehouses\.options|projects\.(list|get|options)|crm\.(list|get|pipeline|agenda)|hr\.(employees|leaves))$/
+const CACHEABLE = /^(settings\.get|licence\.status|roles\.get|reports\.dashboard|cash\.(current|options)|products\.(list|categories)|parties\.(list|get|options)|documents\.(list|get)|payments\.list|warehouses\.options|taxes\.list|projects\.(list|get|options)|crm\.(list|get|pipeline|agenda)|hr\.(employees|leaves))$/
 
 const QUEUE_KEY = 'iam.offline.queue'
 const FAILED_KEY = 'iam.offline.failed'
@@ -40,6 +40,8 @@ export function newOpId(): string {
 }
 
 export const OFFLINE_LABELS: Record<string, string> = {
+  'documents.save': 'Document (devis, facture, bon)',
+  'products.save': 'Article',
   'cash.sale': 'Vente en caisse',
   'payments.add': 'Règlement',
   'parties.save': 'Fiche client / fournisseur',

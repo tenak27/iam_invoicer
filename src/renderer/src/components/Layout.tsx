@@ -238,7 +238,7 @@ function OfflineBar({ online, remote }: { online: boolean; remote: boolean }) {
       {reachable ? <CloudArrowUp size={18} aria-hidden="true" /> : <WifiSlash size={18} aria-hidden="true" />}
       <span className="grow">
         {!reachable ? 'Hors connexion : vous consultez les dernières données de cet appareil. ' : ''}
-        {pending > 0 ? `${pending} saisie(s) en attente d'envoi.` : !reachable ? 'Les ventes, règlements et temps saisis seront envoyés au retour du réseau.' : ''}
+        {pending > 0 ? `${pending} saisie(s) en attente d'envoi.` : !reachable ? 'Devis, factures, articles, ventes et règlements saisis seront envoyés à la base en ligne au retour du réseau.' : ''}
         {reachable && pending > 0 && needsLogin ? ' Reconnectez-vous pour les envoyer (session expirée).' : ''}
         {failed.length > 0 && ` ${failed.length} saisie(s) refusée(s) par le serveur : ${failed.slice(0, 2).map((f) => `${OFFLINE_LABELS[f.name] ?? f.name} (${f.error})`).join(' ; ')}.`}
       </span>

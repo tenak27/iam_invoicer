@@ -1,7 +1,7 @@
 // Barre supérieure flottante : recherche rapide (Ctrl+K), thème, notifications,
 // menu du compte. Les menus déroulants se ferment au clic extérieur et à Échap.
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Bell, CashRegister, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, SignOut, Sun, User, Warning,
@@ -34,13 +34,34 @@ function usePopover() {
   return { open, setOpen, ref }
 }
 
-/** Avatar de l'utilisateur : initiales sur anneau dégradé, pastille « en ligne » qui pulse. */
+/** Dégradés de l'avatar : assez sombres pour des initiales blanches lisibles (contraste AA). */
+const AVATAR_TONES: [string, string][] = [
+  ['#2a70d6', '#163f8a'], ['#5b4bd6', '#33248f'], ['#8a3fc4', '#541f85'], ['#c23a7a', '#7d1d4a'],
+  ['#0d8a8f', '#07555c'], ['#1c8a52', '#0c5631'], ['#b3600f', '#733a06'], ['#c0453a', '#7c241c']
+]
+
+/** Teinte stable par personne : le même nom donne toujours la même couleur. */
+function avatarTone(name: string): [string, string] {
+  let h = 0
+  for (const c of name.trim().toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  return AVATAR_TONES[h % AVATAR_TONES.length]
+}
+
+/**
+ * Avatar de l'utilisateur : photo ou initiales sur un dégradé propre à la personne, anneau
+ * tissé qui tourne avec son halo, étincelle en orbite, reflet périodique et pastille
+ * « en ligne » qui pulse. Hors connexion, l'anneau se fige et se ternit.
+ */
 export function UserAvatar({ name, size = 38, online = true, photo, ring = true }: { name: string; size?: number; online?: boolean; photo?: string; ring?: boolean }) {
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+  const [a, b] = avatarTone(name)
+  const style = { width: size, height: size, '--av-a': a, '--av-b': b, '--av-size': `${size}px` } as CSSProperties
   return (
-    <span className="uavatar" style={{ width: size, height: size }} aria-hidden="true">
+    <span className={`uavatar${ring ? ' has-ring' : ''}${online ? '' : ' is-off'}`} style={style} aria-hidden="true">
+      {ring && <span className="uavatar-glow" />}
       {ring && <span className="uavatar-ring" />}
-      <span className="uavatar-face">{photo ? <img src={photo} alt="" /> : initials}</span>
+      <span className="uavatar-face">{photo ? <img src={photo} alt="" /> : <span className="uavatar-initials">{initials}</span>}</span>
+      {ring && <span className="uavatar-orbit"><i /></span>}
       {ring && <span className={`uavatar-dot ${online ? 'on' : 'off'}`} />}
     </span>
   )

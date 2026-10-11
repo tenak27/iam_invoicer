@@ -126,7 +126,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'documents.get': { access: docModule, fn: documents.getDocument },
   'documents.save': {
     access: async (ctx, a) => (a?.id ? docModule(ctx, a) : sideModule(a?.type)),
-    fn: documents.saveDocument
+    fn: documents.saveAndMaybeValidate
   },
   'documents.delete': { access: docModule, fn: documents.deleteDraft },
   'documents.validate': { access: docModule, fn: documents.validateDocument },

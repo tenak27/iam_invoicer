@@ -4,6 +4,9 @@ import { notify } from './components/ui'
 export async function api<T = any>(name: string, args?: unknown): Promise<T> {
   const r = await window.erp.call(name, args)
   if (!r.ok) throw new Error(r.error)
+  // Saisie faite sans réseau : gardée sur l'appareil, envoyée à la base en ligne au retour de la connexion
+  if ((r as { offline?: boolean }).offline && (r.data as { queued?: boolean } | null)?.queued)
+    notify("Hors connexion : saisie enregistrée sur cet appareil. Elle sera envoyée à la base en ligne dès le retour d'Internet.", 'info')
   return r.data as T
 }
 

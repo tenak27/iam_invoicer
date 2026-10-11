@@ -186,4 +186,19 @@ describe('ERP — cycle complet', () => {
     const year = new Date().getFullYear()
     expect(nums).toEqual([`FAC-${year}-0001`, `FAC-${year}-0002`])
   })
+
+  it('enregistrement et validation en un seul appel (saisie hors connexion)', async () => {
+    const line = { description: 'Installation réseau', quantity: 1, unit_price: 50000, tva_rate: 18 }
+    const dev = await ok(admin, 'documents.save', { type: 'DEV', party_id: clientId, lines: [line], validate: true })
+    expect(dev.validated).toBe(true)
+    expect((await ok(admin, 'documents.get', { id: dev.id })).status).toBe('valide')
+    // Validation refusée : le brouillon est gardé et le motif renvoyé
+    const ko = await ok(admin, 'documents.save', { type: 'FAC', party_id: clientId, validate: true, lines: [{ ...line, product_id: routerId, description: 'Routeur Cisco', quantity: 500 }] })
+    expect(ko).toMatchObject({ validated: false })
+    expect(ko.error).toMatch(/Stock insuffisant/)
+    expect((await ok(admin, 'documents.get', { id: ko.id })).status).toBe('brouillon')
+    await ok(admin, 'documents.delete', { id: ko.id })
+    // Sans demande de validation : comportement inchangé
+    expect(await ok(admin, 'documents.save', { type: 'DEV', party_id: clientId, lines: [line] })).not.toHaveProperty('validated')
+  })
 })

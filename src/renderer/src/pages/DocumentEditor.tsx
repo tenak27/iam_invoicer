@@ -5,7 +5,7 @@ import { DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from
 import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { api, run, unwrap, useQuery } from '../api'
-import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
+import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
 import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash } from '@phosphor-icons/react'
@@ -101,10 +101,13 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     })
   }
 
-  const save = async (): Promise<number | undefined> => {
+  type Saved = { id?: number; queued?: boolean; validated?: boolean; error?: string }
+  /** `queued` : saisie faite hors connexion, en attente de synchronisation (pas encore d'identifiant). */
+  const save = async (validate?: { applyStock?: boolean }): Promise<Saved | undefined> => {
     setBusy(true)
     const r = await run(() =>
-      api<{ id: number }>('documents.save', {
+      api<Saved>('documents.save', {
+        ...(validate ? { validate: true, applyStock: validate.applyStock } : {}),
         id: doc?.id,
         type,
         ...header,
@@ -119,13 +122,16 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     setBusy(false)
     if (!r) return undefined
     setDirty(false)
-    return r.id
+    return r
   }
+  /** Saisie en attente d'envoi : retour à la liste, le document y apparaîtra après la synchronisation. */
+  const leaveQueued = () => nav(`/docs/${type}`)
 
   const onSave = async () => {
-    const savedId = await save()
-    if (!savedId) return
-    if (!doc) nav(`/doc/${savedId}`, { replace: true })
+    const saved = await save()
+    if (!saved) return
+    if (saved.queued) return leaveQueued()
+    if (!doc) nav(`/doc/${saved.id}`, { replace: true })
     else onReload()
   }
 
@@ -139,9 +145,18 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
       detail: info.stock !== 0 ? 'Un numéro définitif sera attribué et le stock sera mis à jour. Le document ne sera plus modifiable.' : 'Un numéro définitif sera attribué. Le document ne sera plus modifiable.'
     })
     if (!ok) return
-    const savedId = await save()
-    if (!savedId) return
-    const r = await run(() => api('documents.validate', { id: savedId, applyStock }), `${info.label} validé${info.fem ? 'e' : ''}.`)
+    const saved = await save({ applyStock })
+    if (!saved) return
+    if (saved.queued) return leaveQueued()
+    const savedId = saved.id!
+    const done = `${info.label} validé${info.fem ? 'e' : ''}.`
+    let r: unknown
+    if (saved.validated) {
+      notify(done, 'success')
+      r = true
+    } else if (saved.error) notify(saved.error, 'error')
+    // Serveur d'une version antérieure : il enregistre sans valider, la validation se fait à part
+    else r = await run(() => api('documents.validate', { id: savedId, applyStock }), done)
     // Une facture validée ou un règlement reçu : un moment qui compte
     if (r && type === 'FAC') celebrate()
     if (!doc) nav(`/doc/${savedId}`, { replace: true })

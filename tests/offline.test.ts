@@ -49,6 +49,24 @@ describe('Mode hors ligne', () => {
     expect(changes).toBeGreaterThan(3)
   })
 
+  it('devis, factures et articles saisis hors connexion, envoyés dans l’ordre au retour du réseau', async () => {
+    let online = false
+    const sent: string[] = []
+    const layer = createOfflineLayer(memoryStore(), async (name, args: any) => {
+      if (!online) return { ok: false, error: 'injoignable', network: true }
+      sent.push(`${name}:${args.name ?? args.type}${args.validate ? ':validé' : ''}`)
+      return { ok: true, data: { id: sent.length } }
+    })
+    expect(await layer.call('products.save', { name: 'Routeur' })).toMatchObject({ ok: true, offline: true, data: { queued: true } })
+    expect(await layer.call('documents.save', { type: 'DEV', lines: [] })).toMatchObject({ ok: true, offline: true, data: { queued: true } })
+    // Facture enregistrée et validée en un seul appel : le numéro est attribué par le serveur à l'envoi
+    await layer.call('documents.save', { type: 'FAC', validate: true, lines: [] })
+    expect(layer.pending()).toHaveLength(3)
+    online = true
+    expect(await layer.sync()).toEqual({ sent: 3, failed: 0 })
+    expect(sent).toEqual(['products.save:Routeur', 'documents.save:DEV', 'documents.save:FAC:validé'])
+  })
+
   it('une nouvelle saisie attend derrière la file pour garder l’ordre', async () => {
     let online = false
     const order: string[] = []

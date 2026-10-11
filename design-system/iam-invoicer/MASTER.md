@@ -78,6 +78,15 @@ Règles issues de ui-ux-pro-max (catégorie Animation) : le mouvement exprime un
 - **Tableau de bord :** entrée en cascade des cartes (une seule fois), graphiques qui se dessinent, anneau et barres qui se remplissent, compteurs.
 - **Décoratif :** limité au personnage d'accueil (salut, clignement d'yeux, pièces qui flottent) et à l'avatar.
 
+**Acte 3 (v0.6.2), à la demande de l'éditeur : application très animée.** Section « Mouvement, acte 3 » de `styles.css` et `components/fx.ts`.
+
+- **Avatar** (`UserAvatar`) : dégradé propre à chaque personne (8 teintes sombres, initiales blanches ≥ 4,5:1), anneau tissé qui tourne avec halo, étincelle en orbite, reflet périodique, rebond au survol ; anneau figé et terni hors connexion.
+- **Pointeur** (souris seulement) : halo qui suit le pointeur sur les cartes (`installSpotlight`), boutons principaux aimantés (`installMagnet`).
+- **Défilement :** les blocs situés sous l'écran montent en fondu en y entrant (`installReveal`) ; barre d'avancement sous la barre supérieure.
+- **Entrées :** barre supérieure, sections du menu, titre et actions du bandeau, lignes de tableau, entrées de menu, tuiles de caisse en cascade ; fenêtres, menus et notifications avec rebond ; page qui arrive avec un léger flou.
+- **Continu, discret :** fond vivant derrière les pages, logo qui respire, cloche qui sonne s'il y a des notifications, icônes des indicateurs qui flottent.
+- **Garde-fous inchangés :** `transform` et `opacity` uniquement, rien ne bloque la saisie, tout est coupé avec « réduire les animations » (règle CSS et gardes de `fx.ts`).
+
 **Effets visibles** (`components/fx.ts`)
 
 - **Menu :** une pastille unique glisse vers l'entrée active (`useNavIndicator`), l'icône rebondit.
