@@ -78,6 +78,16 @@ Règles issues de ui-ux-pro-max (catégorie Animation) : le mouvement exprime un
 - **Tableau de bord :** entrée en cascade des cartes (une seule fois), graphiques qui se dessinent, anneau et barres qui se remplissent, compteurs.
 - **Décoratif :** limité au personnage d'accueil (salut, clignement d'yeux, pièces qui flottent) et à l'avatar.
 
+**Effets visibles** (`components/fx.ts`)
+
+- **Menu :** une pastille unique glisse vers l'entrée active (`useNavIndicator`), l'icône rebondit.
+- **Onde d'appui** (`installRipple`) sur les boutons, onglets, entrées de menu et tuiles.
+- **Thème :** le nouveau thème se dévoile en cercle depuis le bouton (`themeReveal`, API View Transitions ; simple bascule ailleurs).
+- **Confettis** (`celebrate`) : réservés aux moments qui comptent : vente encaissée, facture validée, règlement reçu, licence activée.
+- **Tuiles d'indicateurs :** inclinaison vers le pointeur (`installTilt`) et reflet qui traverse.
+- **Entrée d'une page :** ses blocs montent l'un après l'autre (60 ms d'écart, 5 au plus).
+- **Écran de connexion :** fond vivant (halos qui dérivent lentement).
+
 **Garde-fous**
 
 - Uniquement `transform` et `opacity` (exception assumée : la largeur de l'indicateur d'onglets, élément isolé sans enfant).

@@ -1,5 +1,6 @@
 // Licence : état, activation d'une clé, comparaison des paliers.
 
+import { celebrate } from '../components/fx'
 import { useState } from 'react'
 import { CheckCircle, Crown, Key, LockSimple, Phone, Rocket, Storefront, XCircle } from '@phosphor-icons/react'
 import type { Module } from '@shared/domain'
@@ -27,6 +28,7 @@ export function LicencePage() {
     const st = await run(() => api<any>('licence.activate', { key }))
     setBusy(false)
     if (st) {
+      celebrate()
       setKey('')
       notify(`Licence ${st.label} activée. Merci de votre confiance !`, 'success')
       refreshCompany()

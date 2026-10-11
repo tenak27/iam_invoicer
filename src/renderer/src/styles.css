@@ -1577,3 +1577,62 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 /* Onglets dans une page : indicateur à la teinte de la section */
 .route-view .tab-ind { background: var(--tone-grad); box-shadow: 0 4px 12px -4px rgba(var(--tone-rgb), .7); }
 .route-view .tabs.has-ind .tab.active { color: #fff; }
+
+/* =====================================================================
+   Mouvement, acte 2 : effets visibles (components/fx.ts)
+   ===================================================================== */
+
+/* Onde au point d'appui. :where() garde une spécificité nulle : un bouton déjà
+   positionné (fixe, absolu) conserve sa position. */
+:where(.btn, .tab-item, .pos-tile, .row-action) { position: relative; overflow: hidden; }
+.fx-ripple { position: absolute; border-radius: 50%; background: currentColor; pointer-events: none; transform: scale(0); opacity: 0; }
+
+/* Confettis */
+.fx-layer { position: fixed; inset: 0; z-index: 400; pointer-events: none; overflow: hidden; }
+.fx-layer i { position: absolute; will-change: transform, opacity; }
+
+/* Menu : une pastille unique glisse vers l'entrée active */
+.sidebar nav { position: relative; }
+.nav-ind { position: absolute; left: 0; top: 0; border-radius: var(--r-sm); background: linear-gradient(270deg, rgba(29, 111, 214, .72) 0%, #1d6fd6 100%); box-shadow: 0 2px 8px rgba(29, 111, 214, .45); pointer-events: none; }
+.nav-ind.ready { transition: transform .38s var(--ease-spring-soft, cubic-bezier(.3, 1.25, .5, 1)), width var(--t-med) var(--ease-out), height var(--t-med) var(--ease-out); }
+nav.has-ind .nav-link { z-index: 1; }
+nav.has-ind .nav-link.active { background: none; box-shadow: none; animation: none; }
+nav.has-ind .nav-link.active .nav-icon { animation: icon-pop .45s var(--ease-spring); }
+
+/* Thème : dévoilement en cercle depuis le bouton (API View Transitions) */
+.theme-reveal::view-transition-old(root), .theme-reveal::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-reveal::view-transition-old(root) { z-index: 0; }
+.theme-reveal::view-transition-new(root) { z-index: 1; }
+
+/* Tuiles d'indicateurs : inclinaison vers le pointeur, reflet qui traverse */
+.kpi-tile, .mini-kpi { transform: perspective(700px) rotateY(var(--tx, 0deg)) rotateX(var(--ty, 0deg)); transition: transform .25s var(--ease-out), box-shadow var(--t-med); }
+.kpi-tile:hover, .mini-kpi:hover { transform: perspective(700px) rotateY(var(--tx, 0deg)) rotateX(var(--ty, 0deg)) translateY(-3px); }
+.mini-kpi { position: relative; overflow: hidden; }
+.mini-kpi::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .22) 50%, transparent 65%); transform: translateX(-120%); transition: transform .7s var(--ease-out); pointer-events: none; }
+.mini-kpi:hover::after { transform: translateX(120%); }
+
+/* Écran de connexion : fond vivant (deux halos qui dérivent) */
+.auth-screen { overflow: hidden; }
+.auth-screen::after { content: ''; position: absolute; inset: -20%; pointer-events: none; background: radial-gradient(420px 420px at 22% 30%, rgba(var(--primary-rgb), .22), transparent 70%), radial-gradient(380px 380px at 78% 72%, rgba(226, 168, 31, .16), transparent 70%), radial-gradient(300px 300px at 70% 18%, rgba(23, 138, 85, .12), transparent 70%); animation: aurora-drift 18s ease-in-out infinite alternate; }
+.auth-card { z-index: 1; }
+@keyframes aurora-drift { to { transform: translate(4%, -3%) rotate(8deg) scale(1.08); } }
+
+/* Entrée d'une page : ses blocs montent l'un après l'autre. :where() laisse la priorité
+   aux animations propres à un composant (bandeau, cartes du tableau de bord). */
+:where(.route-view .page > *) { animation: block-in var(--t-slow) var(--ease-out) backwards; }
+:where(.route-view .page > :nth-child(2)) { animation-delay: 60ms; }
+:where(.route-view .page > :nth-child(3)) { animation-delay: 120ms; }
+:where(.route-view .page > :nth-child(4)) { animation-delay: 180ms; }
+:where(.route-view .page > :nth-child(n+5)) { animation-delay: 240ms; }
+@keyframes block-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* Cartes et lignes cliquables : léger soulèvement */
+.dcard, .project-card, .tier-card { transition: transform var(--t-med) var(--ease-out), box-shadow var(--t-med); }
+@media (hover: hover) { .project-card:hover, .tier-card:hover { transform: translateY(-4px); } }
+
+/* Champs : le liseré s'étend à la prise de focus */
+input:not([type='checkbox']):not([type='radio']), select, textarea { transition: border-color var(--t-fast), box-shadow var(--t-med) var(--ease-out); }
+
+/* Puces d'état : apparition avec un petit rebond */
+.badge { animation: badge-in .35s var(--ease-spring) backwards; }
+@keyframes badge-in { from { transform: scale(.7); opacity: 0; } }

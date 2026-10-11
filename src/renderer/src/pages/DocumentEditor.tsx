@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { celebrate } from '../components/fx'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@shared/taxes'
@@ -141,6 +142,8 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     const savedId = await save()
     if (!savedId) return
     const r = await run(() => api('documents.validate', { id: savedId, applyStock }), `${info.label} validé${info.fem ? 'e' : ''}.`)
+    // Une facture validée ou un règlement reçu : un moment qui compte
+    if (r && type === 'FAC') celebrate()
     if (!doc) nav(`/doc/${savedId}`, { replace: true })
     else if (r) onReload()
   }
@@ -482,6 +485,7 @@ export function PaymentModal({ doc, remaining, onClose, onDone }: { doc: any; re
     setBusy(true)
     const r = await run(() => api('payments.add', { document_id: doc.id, ...f.values, amount: Number(f.values.amount.replace(/\s/g, '')) }), 'Règlement enregistré.')
     setBusy(false)
+    if (r) celebrate()
     if (r) onDone()
   }
   return (

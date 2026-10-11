@@ -14,6 +14,7 @@ import { Navbar } from './Topbar'
 import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
 import { useResponsiveTables } from './responsiveTables'
+import { useNavIndicator } from './fx'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
 type Section = { title?: string; tone: Tone; items: Item[] }
@@ -253,10 +254,12 @@ export function Layout({ children }: { children: ReactNode }) {
   const [collapsed, toggleCollapsed] = useCollapsed()
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
+  const navRef = useRef<HTMLElement>(null)
   useCountUpEnhancer(mainRef, location.pathname)
   useResponsiveTables(mainRef, location.pathname)
   const online = useOnline()
   const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && moduleLicensed(licence, it.module))
+  const navInd = useNavIndicator(navRef, [location.pathname, collapsed, allowed.length, licence?.vendor])
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
 
   useEffect(() => {
@@ -297,7 +300,8 @@ export function Layout({ children }: { children: ReactNode }) {
             <SidebarSimple size={20} aria-hidden="true" />
           </button>
         </div>
-        <nav>
+        <nav ref={navRef} className={navInd ? 'has-ind' : undefined}>
+          {navInd && <span className={`nav-ind${navInd.ready ? ' ready' : ''}`} aria-hidden="true" style={{ transform: `translate(${navInd.x}px, ${navInd.y}px)`, width: navInd.w, height: navInd.h }} />}
           {NAV.map((section, i) => {
             // Émission de licences : seulement sur le poste ou le serveur de l'éditeur
             const items = section.items.filter((it) => can(user.role, it.module) && (it.module !== 'licensing' || !!licence?.vendor))

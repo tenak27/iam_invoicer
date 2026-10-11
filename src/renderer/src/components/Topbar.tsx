@@ -11,7 +11,9 @@ import { can, ROLE_LABELS, type Module } from '@shared/domain'
 import { formatDate, formatMoney, formatQty } from '@shared/format'
 import { useQuery } from '../api'
 import { useSession } from '../session'
-import { useTheme } from '../theme'
+import { applyTheme, useTheme } from '../theme'
+import { flushSync } from 'react-dom'
+import { themeReveal } from './fx'
 
 export type NavEntry = { to: string; label: string; module: Module; icon: Icon }
 
@@ -50,7 +52,7 @@ export function ThemeCycle() {
   const I = theme === 'light' ? Sun : theme === 'dark' ? Moon : Desktop
   const label = { system: 'automatique', light: 'clair', dark: 'sombre' }[theme]
   return (
-    <button className="nav-icon-btn" onClick={() => setTheme(next)} title={`Thème : ${label}`} aria-label={`Thème ${label}, changer`}>
+    <button className="nav-icon-btn" onClick={(e) => themeReveal(e.currentTarget, () => { applyTheme(next); flushSync(() => setTheme(next)) })} title={`Thème : ${label}`} aria-label={`Thème ${label}, changer`}>
       <I size={21} aria-hidden="true" />
     </button>
   )

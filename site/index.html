@@ -359,6 +359,117 @@
   .mobile-cta { transition: transform .3s var(--ease); }
   .js .mobile-cta:not(.show) { transform: translateY(110%); }
 
+  /* ── Motion design, acte 2 : la page vit ─────────────────────────────────── */
+
+  /* Fond vivant : trois halos qui dérivent lentement (transform seul) */
+  .aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .aurora i { position: absolute; width: 520px; height: 520px; border-radius: 50%; filter: blur(72px); will-change: transform; }
+  .aurora i:nth-child(1) { left: -8%; top: -24%; background: #2f7df6; opacity: .5; animation: drift-a 16s ease-in-out infinite alternate; }
+  .aurora i:nth-child(2) { right: -6%; top: 8%; background: #12b886; opacity: .26; animation: drift-b 21s ease-in-out infinite alternate; }
+  .aurora i:nth-child(3) { left: 36%; bottom: -46%; background: #e8a817; opacity: .2; animation: drift-c 26s ease-in-out infinite alternate; }
+  @keyframes drift-a { to { transform: translate(140px, 90px) scale(1.18); } }
+  @keyframes drift-b { to { transform: translate(-120px, 70px) scale(.86); } }
+  @keyframes drift-c { to { transform: translate(90px, -110px) scale(1.25); } }
+  .final > :not(.aurora) { position: relative; }
+
+  /* Titre : le mot change (gestion, facturation, caisse…) */
+  h1 .l { display: block; }
+  .rot { display: grid; overflow: hidden; height: 1.24em; margin-bottom: -.16em; line-height: 1.06; }
+  .rot b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; color: #9cc4ff; transform: translateY(110%); opacity: 0; transition: transform .55s var(--ease-back), opacity .35s var(--ease); }
+  .rot b.on, html:not(.js) .rot b:first-child { transform: none; opacity: 1; }
+  .rot b.out { transform: translateY(-110%); opacity: 0; transition: transform .32s var(--ease-in), opacity .25s var(--ease-in); }
+
+  /* Écran du héros : inclinaison en 3D qui suit le pointeur */
+  .tilt { transform: perspective(1300px) rotateY(var(--ry, -6deg)) rotateX(var(--rx, 3deg)); transform-style: preserve-3d; transition: transform .35s var(--ease); }
+  .tilt .phone { transform: translateZ(60px); }
+  .tilt .float { transform: translateZ(90px); z-index: 3; }
+  .tilt .phone { z-index: 2; }
+
+  /* Fil d'activité : les effets d'une vente défilent */
+  .feed { min-width: 250px; }
+  .feed .feed-txt { display: block; transition: opacity .25s var(--ease), transform .35s var(--ease); }
+  .feed.swap .feed-txt { opacity: 0; transform: translateY(8px); transition: opacity .18s var(--ease-in), transform .18s var(--ease-in); }
+  .feed .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(4, 120, 87, .5); animation: ping 1.8s var(--ease) infinite; flex-shrink: 0; }
+  @keyframes ping { 70% { box-shadow: 0 0 0 9px rgba(4, 120, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(4, 120, 87, 0); } }
+  .spark { width: 78px; height: 32px; fill: none; stroke: var(--blue); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .spark path { stroke-dasharray: 130; stroke-dashoffset: 130; animation: spark-draw 1.4s var(--ease) 1.6s forwards; }
+  @keyframes spark-draw { to { stroke-dashoffset: 0; } }
+
+  /* Bandeau défilant : conformité et paiements */
+  .marquee { display: flex; gap: 10px; overflow: hidden; margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+  .track { display: flex; gap: 10px; flex-shrink: 0; min-width: 100%; justify-content: space-around; list-style: none; margin: 0; padding: 0; animation: marquee 38s linear infinite; }
+  .marquee:hover .track, .marquee:focus-within .track { animation-play-state: paused; }
+  @keyframes marquee { to { transform: translateX(calc(-100% - 10px)); } }
+  .track li { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14.5px; font-weight: 600; color: var(--text-2); background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; }
+  .track svg { color: var(--accent); }
+
+  /* « Tout est relié » : une facture validée, quatre effets qui s'allument */
+  .flow { display: grid; grid-template-columns: 1fr 150px 1.25fr; align-items: stretch; max-width: 980px; margin: 0 auto; }
+  .flow-src { display: grid; align-items: center; }
+  .node { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: center; }
+  .node .ic { grid-row: span 2; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; margin: 0; }
+  .node b { font-size: 16.5px; }
+  .node span { grid-column: 2; color: var(--muted); font-size: 14px; }
+  .node em { grid-row: 1 / span 2; grid-column: 3; font-style: normal; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .node.src { border-color: var(--navy); box-shadow: var(--shadow); grid-template-columns: auto 1fr; padding: 20px; }
+  .node.src b { font-size: 18.5px; }
+  .flow-out { display: grid; grid-auto-rows: 1fr; }
+  .flow-out .node { margin: 7px 0; }
+  .flow-lines { width: 100%; height: 100%; overflow: visible; }
+  .flow-lines path { fill: none; stroke: var(--blue); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 5 9; opacity: .55; }
+  .flow.in .flow-lines path { animation: dash-flow 1.1s linear infinite; }
+  @keyframes dash-flow { to { stroke-dashoffset: -14; } }
+  .js .flow .node em { opacity: 0; transform: scale(.6); }
+  .flow.in .node.src { animation: src-pulse 7s var(--ease) infinite; }
+  .flow.in .flow-out .node { animation: node-hit 7s var(--ease) infinite; animation-delay: calc(var(--n) * .55s + .5s); }
+  .flow.in .flow-out .node em { animation: em-pop 7s var(--ease-back) infinite; animation-delay: calc(var(--n) * .55s + .5s); }
+  @keyframes src-pulse { 0%, 100% { transform: none; } 4% { transform: scale(1.035); box-shadow: 0 0 0 6px color-mix(in srgb, var(--blue) 18%, transparent), var(--shadow); } 12% { transform: none; } }
+  @keyframes node-hit { 0%, 78%, 100% { border-color: var(--line); background: var(--surface); transform: none; } 5% { transform: scale(1.03); } 8%, 66% { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); transform: none; } }
+  @keyframes em-pop { 0%, 3% { opacity: 0; transform: scale(.6); } 9%, 66% { opacity: 1; transform: none; } 78%, 100% { opacity: 0; transform: scale(.6); } }
+
+  /* Titres de section : les mots montent un à un */
+  .split .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .1em; margin-bottom: -.1em; }
+  .split .w > span { display: inline-block; transform: translateY(108%); transition: transform .65s var(--ease); transition-delay: calc(var(--i) * 45ms + 80ms); }
+  .reveal.in .split .w > span { transform: none; }
+
+  /* Galerie : lecture automatique, progression sur l'onglet actif */
+  .gallery-tabs button { position: relative; overflow: hidden; }
+  .gallery-tabs.auto button[aria-selected='true']::after { content: ''; position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--gold); transform-origin: 0 50%; transform: scaleX(0); animation: tab-progress 4.5s linear forwards; }
+  @keyframes tab-progress { to { transform: scaleX(1); } }
+  .gal-ctrl { display: flex; justify-content: center; margin: -10px 0 18px; }
+  .gal-play { font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); background: none; border: 0; min-height: 44px; padding: 0 14px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .gal-play:hover { color: var(--ink); background: var(--soft); }
+  .gal-play .bars { width: 12px; height: 12px; border-left: 4px solid currentColor; border-right: 4px solid currentColor; }
+  .gal-play[aria-pressed='false'] .bars { width: 0; height: 0; border: 0; border-left: 11px solid currentColor; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+
+  /* Offre mise en avant : liseré lumineux qui tourne */
+  @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  .tier.featured { border-color: transparent; }
+  .tier.featured::before { content: ''; position: absolute; inset: -2px; border-radius: calc(var(--r) + 2px); padding: 2px; background: conic-gradient(from var(--ang), var(--navy), var(--blue), var(--gold), var(--accent), var(--navy)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spin-ang 7s linear infinite; pointer-events: none; }
+  @keyframes spin-ang { to { --ang: 360deg; } }
+
+  @media (max-width: 960px) {
+    .flow { grid-template-columns: 1fr; gap: 0; max-width: 560px; }
+    .flow-lines { display: none; }
+    .flow-src { margin-bottom: 26px; position: relative; }
+    .flow-src::after { content: ''; position: absolute; left: 50%; bottom: -22px; width: 2px; height: 18px; background: var(--blue); opacity: .5; }
+    .tilt { transform: none; }
+    .tilt .phone, .tilt .float { transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora i, .track, .flow.in .node, .flow.in .flow-lines path, .tier.featured::before, .feed .dot { animation: none !important; }
+    .rot b { transition: none; }
+    .js .flow .node em, .flow .node em { opacity: 1 !important; transform: none !important; }
+    .flow-out .node { border-color: var(--accent); }
+    .marquee { flex-wrap: wrap; -webkit-mask-image: none; mask-image: none; }
+    .track { flex-wrap: wrap; justify-content: flex-start; min-width: 0; }
+    .track[aria-hidden='true'], .gal-ctrl { display: none; }
+    .split .w > span { transform: none !important; }
+    .tilt { transform: none; }
+    .spark path { stroke-dashoffset: 0; animation: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .js .hero [data-in], .js .hero .shot .screen, .js .hero .shot .phone, .js .hero .float, .js .shift article .after svg, .js .step::before { opacity: 1 !important; transform: none !important; }
     h1 em::after, .steps::before { transform: scaleX(1) !important; }
@@ -429,10 +540,11 @@
 
 <main id="contenu">
   <div class="hero">
+    <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="wrap">
       <div>
         <span class="eyebrow" data-in style="--d:0"><i data-icon="SealCheck"></i>Conforme au SYSCOHADA révisé · Burkina Faso et zone OHADA</span>
-        <h1 data-in style="--d:1">Toute votre gestion, <em>simple et conforme</em>, même sans Internet.</h1>
+        <h1 data-in style="--d:1" aria-label="Toute votre gestion, simple et conforme, même sans Internet."><span class="l" aria-hidden="true">Toute votre <span class="rot" id="rot"><b class="on">gestion</b><b>facturation</b><b>caisse</b><b>comptabilité</b><b>paie</b></span></span><span class="l" aria-hidden="true"><em>simple et conforme</em>,</span><span class="l" aria-hidden="true">même sans Internet.</span></h1>
         <p class="lead" data-in style="--d:2">Devis, factures, caisse et mobile money, stock, comptabilité, paie et déclarations : une seule application pour votre entreprise, sur ordinateur, téléphone et navigateur.</p>
         <div class="cta" data-in style="--d:3" id="hero-cta">
           <a class="btn btn-primary" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essayer gratuitement 30 jours</span></a>
@@ -446,10 +558,12 @@
         </ul>
       </div>
       <div class="shot" aria-hidden="true">
-        <div class="float"><i data-icon="CheckCircle" data-size="26" data-weight="fill"></i><span>Facture FAC-2026-0142<small>réglée par Orange Money</small></span></div>
+        <div class="tilt">
+        <div class="float feed" id="feed"><span class="dot"></span><span class="feed-txt">Facture FAC-2026-0142<small>validée à l'instant</small></span></div>
         <div class="screen"><div class="chrome"><i></i><i></i><i></i></div><img src="assets/captures/tableau-de-bord.png" alt="" width="1440" height="900" fetchpriority="high"></div>
         <div class="phone"><img src="assets/captures/mobile.png" alt="" width="390" height="844"></div>
-        <div class="float two"><i data-icon="ChartLineUp" data-size="26"></i><span>Écritures comptables<small>passées automatiquement</small></span></div>
+        <div class="float two"><svg class="spark" viewBox="0 0 80 32"><path d="M2 27 L15 21 L27 24 L41 13 L55 16 L78 4"/></svg><span>Ventes du mois<small>mises à jour en direct</small></span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -462,13 +576,7 @@
         <div class="stat reveal"><b data-count="5">5</b><span>plateformes, une seule base de données</span></div>
         <div class="stat reveal"><b data-count="30">30</b><span>jours d'essai gratuit, tous modules</span></div>
       </div>
-      <ul class="badges" aria-label="Conformité et paiements">
-        <li><i data-icon="SealCheck"></i>Plan comptable SYSCOHADA révisé</li>
-        <li><i data-icon="SealCheck"></i>IFU, TVA, retenues, prélèvement BIC</li>
-        <li><i data-icon="SealCheck"></i>Paie CNSS, IUTS, TPA</li>
-        <li><i data-icon="SealCheck"></i>Orange Money, Moov Money, Wave</li>
-        <li><i data-icon="SealCheck"></i>Facture certifiée SECeF</li>
-      </ul>
+      <div class="marquee" role="group" aria-label="Conformité et paiements" tabindex="0"><ul class="track"><li><i data-icon="SealCheck"></i>Plan comptable SYSCOHADA révisé</li><li><i data-icon="SealCheck"></i>IFU, TVA, retenues, prélèvement BIC</li><li><i data-icon="SealCheck"></i>Paie CNSS, IUTS, TPA</li><li><i data-icon="SealCheck"></i>Orange Money, Moov Money, Wave</li><li><i data-icon="SealCheck"></i>Facture certifiée SECeF</li><li><i data-icon="SealCheck"></i>Bilan et compte de résultat</li><li><i data-icon="SealCheck"></i>Fonctionne sans Internet</li><li><i data-icon="SealCheck"></i>Import depuis Excel</li></ul><ul class="track" aria-hidden="true"><li><i data-icon="SealCheck"></i>Plan comptable SYSCOHADA révisé</li><li><i data-icon="SealCheck"></i>IFU, TVA, retenues, prélèvement BIC</li><li><i data-icon="SealCheck"></i>Paie CNSS, IUTS, TPA</li><li><i data-icon="SealCheck"></i>Orange Money, Moov Money, Wave</li><li><i data-icon="SealCheck"></i>Facture certifiée SECeF</li><li><i data-icon="SealCheck"></i>Bilan et compte de résultat</li><li><i data-icon="SealCheck"></i>Fonctionne sans Internet</li><li><i data-icon="SealCheck"></i>Import depuis Excel</li></ul></div>
     </div>
   </div>
 
@@ -492,6 +600,26 @@
           <div class="before"><i data-icon="XCircle" data-weight="fill"></i><span>TVA, retenues, CNSS, IUTS : des jours de calcul chaque mois, et la peur de l'erreur.</span></div>
           <div class="after"><i data-icon="CheckCircle" data-weight="fill"></i><span>Les déclarations du mois sont préparées à partir de vos pièces, avec les taux de votre pays.</span></div>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="flux" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Tout est relié</div>
+        <h2>Une seule saisie, tout se met à jour</h2>
+        <p>Vous validez une facture : IAM INVOICER fait le reste, à l'instant.</p>
+      </div>
+      <div class="flow watch" role="img" aria-label="Exemple : une facture de 20 sacs de ciment à 188 800 FCFA TTC est validée. Le stock baisse de 20, trois écritures comptables sont passées, la créance du client augmente de 188 800 et la TVA collectée du mois de 28 800.">
+        <div class="flow-src"><div class="node src"><div class="ic t1"><i data-icon="FileText" data-size="22"></i></div><b>Facture validée</b><span>20 sacs de ciment · 188 800 FCFA TTC</span></div></div>
+        <svg class="flow-lines" viewBox="0 0 200 400" preserveAspectRatio="none" aria-hidden="true"><path d="M0 200 C110 200 90 50 200 50"/><path d="M0 200 C110 200 90 150 200 150"/><path d="M0 200 C110 200 90 250 200 250"/><path d="M0 200 C110 200 90 350 200 350"/></svg>
+        <div class="flow-out">
+          <div class="node" style="--n:0"><div class="ic t3"><i data-icon="Package" data-size="22"></i></div><b>Stock</b><span>Ciment 50 kg</span><em>−20</em></div>
+          <div class="node" style="--n:1"><div class="ic t4"><i data-icon="Scales" data-size="22"></i></div><b>Comptabilité</b><span>Client, vente, TVA</span><em>3 écritures</em></div>
+          <div class="node" style="--n:2"><div class="ic t5"><i data-icon="UserCircle" data-size="22"></i></div><b>Compte du client</b><span>Créance à 30 jours</span><em>+188 800</em></div>
+          <div class="node" style="--n:3"><div class="ic t2"><i data-icon="Stamp" data-size="22"></i></div><b>TVA du mois</b><span>Collectée, prête à déclarer</span><em>+28 800</em></div>
+        </div>
       </div>
     </div>
   </section>
@@ -535,6 +663,7 @@
         <button role="tab" aria-selected="false" data-img="projet-taches" data-cap="Projets : tâches, temps passés, dépenses et rentabilité."><i data-icon="Kanban"></i>Projets</button>
         <button role="tab" aria-selected="false" data-img="roles" data-cap="Rôles et droits : chaque utilisateur ne voit que ce qui le concerne."><i data-icon="UsersThree"></i>Droits</button>
       </div>
+      <div class="gal-ctrl"><button type="button" class="gal-play" id="gal-play" aria-pressed="true"><span class="bars" aria-hidden="true"></span><span class="txt">Mettre en pause</span></button></div>
       <div class="laptop reveal">
         <div class="bezel"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
           <div class="view"><img id="gallery-img" src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord d'IAM INVOICER" width="1280" height="800" loading="lazy"></div>
@@ -738,6 +867,7 @@
   <section id="contact" style="padding-top:0">
     <div class="wrap">
       <div class="final reveal">
+        <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
         <div>
           <h2>Prêt à simplifier votre gestion ?</h2>
           <p>Essayez gratuitement pendant 30 jours, ou demandez une démonstration et un devis. Nous vous répondons rapidement.</p>
@@ -968,6 +1098,89 @@
       document.querySelectorAll('.watch').forEach(function (el) { el.classList.add('in') })
       if (mobileCta) mobileCta.classList.add('show')
     }
+
+    // Titre : mot tournant
+    var rot = document.getElementById('rot')
+    if (rot && !reduce) {
+      var words = rot.children, wi = 0
+      setInterval(function () {
+        if (document.hidden) return
+        var cur = words[wi]
+        wi = (wi + 1) % words.length
+        cur.className = 'out'
+        words[wi].className = 'on'
+        setTimeout(function () { cur.className = '' }, 400)
+      }, 2400)
+    }
+
+    // Fil d'activité du héros : les effets d'une vente, l'un après l'autre
+    var feed = document.getElementById('feed')
+    if (feed && !reduce) {
+      var msgs = [['Facture FAC-2026-0142', "validée à l'instant"], ['Stock mis à jour', 'Ciment 50 kg : −20'], ['Écritures comptables', 'passées automatiquement'], ['Règlement reçu', 'par Orange Money'], ['TVA du mois', 'recalculée']]
+      var fi = 0, txt = feed.querySelector('.feed-txt')
+      setInterval(function () {
+        if (document.hidden) return
+        feed.classList.add('swap')
+        setTimeout(function () {
+          fi = (fi + 1) % msgs.length
+          txt.textContent = msgs[fi][0]
+          var sm = document.createElement('small'); sm.textContent = msgs[fi][1]; txt.appendChild(sm)
+          feed.classList.remove('swap')
+        }, 200)
+      }, 2800)
+    }
+
+    // Inclinaison 3D de l'écran selon la position du pointeur dans le héros
+    var tilt = document.querySelector('.tilt')
+    if (tilt && !reduce && matchMedia('(hover: hover) and (min-width: 961px)').matches) {
+      hero.addEventListener('pointermove', function (e) {
+        var r = hero.getBoundingClientRect()
+        var nx = (e.clientX - r.left) / r.width - .5, ny = (e.clientY - r.top) / r.height - .5
+        tilt.style.setProperty('--ry', (-6 + nx * 9).toFixed(2) + 'deg')
+        tilt.style.setProperty('--rx', (3 - ny * 7).toFixed(2) + 'deg')
+      })
+      hero.addEventListener('pointerleave', function () { tilt.style.removeProperty('--ry'); tilt.style.removeProperty('--rx') })
+    }
+
+    // Titres de section : découpage en mots (le texte complet reste lu par les lecteurs d'écran)
+    if (!reduce) document.querySelectorAll('.section-head h2').forEach(function (h) {
+      var text = h.textContent.trim()
+      h.setAttribute('aria-label', text)
+      h.classList.add('split')
+      h.textContent = ''
+      text.split(/\s+/).forEach(function (w, i) {
+        var o = document.createElement('span'); o.className = 'w'; o.setAttribute('aria-hidden', 'true')
+        var n = document.createElement('span'); n.textContent = w; n.style.setProperty('--i', i)
+        o.appendChild(n); h.appendChild(o); h.appendChild(document.createTextNode(' '))
+      })
+    })
+
+    // Galerie : lecture automatique tant que l'utilisateur n'a pas choisi lui-même
+    var gt = document.querySelector('.gallery-tabs'), gp = document.getElementById('gal-play')
+    if (gt && gp && !reduce && 'IntersectionObserver' in window) {
+      var gtabs = [].slice.call(gt.querySelectorAll('[role=tab]')), playing = true, visible = false, byScript = false, timer = null
+      var sync = function () {
+        var on = playing && visible
+        gt.classList.toggle('auto', on)
+        gp.setAttribute('aria-pressed', String(playing))
+        gp.querySelector('.txt').textContent = playing ? 'Mettre en pause' : 'Lecture automatique'
+        clearInterval(timer)
+        if (on) timer = setInterval(function () {
+          if (document.hidden) return
+          var i = gtabs.findIndex(function (t) { return t.getAttribute('aria-selected') === 'true' })
+          byScript = true; gtabs[(i + 1) % gtabs.length].click(); byScript = false
+        }, 4500)
+      }
+      gtabs.forEach(function (t) { t.addEventListener('click', function () { if (!byScript) { playing = false; sync() } }) })
+      gp.addEventListener('click', function () { playing = !playing; sync() })
+      new IntersectionObserver(function (es) { visible = es[0].isIntersecting; sync() }, { threshold: .4 }).observe(document.querySelector('.laptop'))
+    } else if (gp) gp.parentNode.hidden = true
+
+    // Boutons d'action : légère attraction vers le pointeur
+    if (!reduce && matchMedia('(hover: hover)').matches) document.querySelectorAll('.hero .cta .btn, .final .cta .btn').forEach(function (bt) {
+      bt.addEventListener('pointermove', function (e) { var r = bt.getBoundingClientRect(); bt.style.transform = 'translate(' + ((e.clientX - r.left - r.width / 2) * .14).toFixed(1) + 'px,' + ((e.clientY - r.top - r.height / 2) * .22).toFixed(1) + 'px)' })
+      bt.addEventListener('pointerleave', function () { bt.style.transform = '' })
+    })
 
     // Halo des cartes de fonctionnalités
     if (!reduce && matchMedia('(hover: hover)').matches) document.querySelectorAll('.cell').forEach(function (c) {

@@ -17,7 +17,7 @@ function read(): ThemeChoice {
   }
 }
 
-function apply(choice: ThemeChoice) {
+export function applyTheme(choice: ThemeChoice) {
   const root = document.documentElement
   if (choice === 'system') root.removeAttribute('data-theme')
   else root.setAttribute('data-theme', choice)
@@ -27,14 +27,14 @@ function apply(choice: ThemeChoice) {
 
 /** À appeler avant le premier rendu pour éviter un flash du mauvais thème. */
 export function initTheme() {
-  apply(read())
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => apply(read()))
+  applyTheme(read())
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(read()))
 }
 
 export function useTheme(): [ThemeChoice, (t: ThemeChoice) => void] {
   const [choice, setChoice] = useState<ThemeChoice>(read)
   useEffect(() => {
-    apply(choice)
+    applyTheme(choice)
     try {
       if (choice === 'system') localStorage.removeItem(KEY)
       else localStorage.setItem(KEY, choice)
