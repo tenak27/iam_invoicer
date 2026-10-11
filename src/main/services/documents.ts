@@ -5,6 +5,7 @@
 // stock mis à jour) → éventuellement annulé. Les factures et avoirs validés ne
 // s'annulent pas : on corrige une facture par un avoir.
 
+import { randomBytes } from 'node:crypto'
 import { DOC_TYPES, lineHT, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } from '@shared/taxes'
 import { resolveTaxes } from './taxes'
@@ -213,6 +214,47 @@ async function recordWithholdings(db: Db, ctx: Ctx, docId: number) {
   }
 }
 
+// ── Authenticité : code imprimé en QR sur les documents validés ──
+const AUTH_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sans 0/O ni 1/I
+
+/** Code tel qu'il est imprimé : XXXX-XXXX-XXXX-XXXX. */
+export const formatAuthCode = (code: string) => code.match(/.{1,4}/g)?.join('-') ?? code
+
+/** Code d'authenticité du document (créé au besoin) : 16 caractères tirés au hasard, impossibles à deviner. */
+export async function ensureAuthCode(db: Db, id: number): Promise<string> {
+  const row = await db.one<{ auth_code: string | null }>('SELECT auth_code FROM documents WHERE id = $1', [id])
+  if (row?.auth_code) return row.auth_code
+  const code = Array.from(randomBytes(16), (b) => AUTH_ALPHABET[b % AUTH_ALPHABET.length]).join('')
+  // Deux impressions simultanées : la première écrit, la seconde relit
+  await db.query('UPDATE documents SET auth_code = $1 WHERE id = $2 AND auth_code IS NULL', [code, id])
+  return (await db.one<{ auth_code: string }>('SELECT auth_code FROM documents WHERE id = $1', [id]))!.auth_code
+}
+
+/**
+ * Vérification publique d'un document par son code : ce que la société a enregistré, pour
+ * comparer avec le document présenté. Rien d'autre n'est révélé (ni lignes, ni coordonnées).
+ */
+export async function verifyDocument(db: Db, raw: unknown) {
+  const code = String(raw ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (code.length !== 16) return null
+  const d = await db.one<{ type: DocType; number: string; status: string; date: string; total_ttc: number; party_name: string; validated_at: string | null }>(
+    `SELECT d.type, d.number, d.status, d.date, d.total_ttc, p.name AS party_name, d.validated_at
+     FROM documents d JOIN parties p ON p.id = d.party_id WHERE d.auth_code = $1 AND d.status <> 'brouillon'`,
+    [code]
+  )
+  if (!d) return null
+  const paid = await db.one<{ paid: number }>(
+    'SELECT COALESCE(SUM(py.amount), 0)::float AS paid FROM payments py JOIN documents d ON d.id = py.document_id WHERE d.auth_code = $1',
+    [code]
+  )
+  const info = DOC_TYPES[d.type]
+  return {
+    code: formatAuthCode(code), type: d.type, label: info.label, number: d.number, cancelled: d.status === 'annule', date: d.date,
+    total_ttc: Number(d.total_ttc), party: d.party_name, validated_at: d.validated_at,
+    settled: info.payable ? Number(paid?.paid ?? 0) >= Number(d.total_ttc) - 0.5 : null
+  }
+}
+
 /** Numéro suivant, atomique même avec plusieurs postes : FAC-2026-0001. */
 export async function nextNumber(db: Db, type: DocType, date: string): Promise<string> {
   const year = date.slice(0, 4)
@@ -277,6 +319,7 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
       "UPDATE documents SET status='valide', number=$1, stock_applied=$2, validated_at=now(), updated_at=now() WHERE id=$3",
       [number, moveStock, doc.id]
     )
+    await ensureAuthCode(db, doc.id)
     if (type === 'FAC' || type === 'AV') await certify(db, ctx, doc.id)
     await postDocument(db, ctx, doc.id)
     await recordWithholdings(db, ctx, doc.id)

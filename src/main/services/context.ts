@@ -11,6 +11,8 @@ export interface SessionUser {
 export interface Ctx {
   db: Db
   user: SessionUser | null
+  /** Adresse publique par laquelle la requête est arrivée (serveur web) : liens imprimés sur les documents. */
+  origin?: string
 }
 
 /** Erreur destinée à être affichée telle quelle à l'utilisateur. */

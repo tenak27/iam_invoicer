@@ -739,5 +739,10 @@ export const MIGRATIONS: string[] = [
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
   CREATE INDEX saved_reports_owner_idx ON saved_reports(owner_id)
+  `,
+  // v11 : code d'authenticité des documents validés (QR code imprimé, page de vérification publique)
+  `
+  ALTER TABLE documents ADD COLUMN auth_code TEXT;
+  CREATE UNIQUE INDEX documents_auth_code_idx ON documents(auth_code)
   `
 ]

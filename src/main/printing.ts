@@ -3,7 +3,9 @@
 
 import { call } from './router'
 import { AppError, type Ctx } from './services/context'
-import { loadDocument } from './services/documents'
+import { DOC_TYPES, type DocType } from '@shared/domain'
+import { formatDate, formatMoney } from '@shared/format'
+import { ensureAuthCode, formatAuthCode, loadDocument } from './services/documents'
 import { getSettings } from './services/settings'
 import { licenceStatus } from './services/licence'
 import { signaturesForPrint } from './services/signatures'
@@ -37,6 +39,18 @@ export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4'
   doc.signatures = await signaturesForPrint(ctx.db, id)
   const company = await getSettings(ctx.db)
   const evaluation = (await licenceStatus(ctx.db)).state !== 'active'
+  // Authenticité : QR code vers la page de vérification si l'adresse publique est connue,
+  // sinon QR code portant ce que la société a enregistré (poste sans serveur en ligne).
+  if (doc.status !== 'brouillon' && company.doc_show_qr !== false) {
+    const code = doc.auth_code ?? (await ensureAuthCode(ctx.db, id))
+    const base = String(ctx.origin || company.public_url || '').replace(/\/+$/, '')
+    const url = /^https?:\/\//.test(base) ? `${base}/verify/${code}` : null
+    const text = [
+      'Document authentique', company.name, `${DOC_TYPES[doc.type as DocType].label} ${doc.number}`, `Date : ${formatDate(doc.date)}`,
+      `Total TTC : ${formatMoney(doc.total_ttc, company.currency || 'FCFA')}`, `Client : ${doc.party.name}`, `Code : ${formatAuthCode(code)}`
+    ].join('\n')
+    doc.auth = { code: formatAuthCode(code), qr: url ?? text, url }
+  }
   const html = format === 'ticket' ? receiptHtml(doc, company, evaluation) : documentHtml(doc, company, forPdf, evaluation)
   const filename = `${doc.number ?? 'Brouillon-' + doc.type + '-' + doc.id} - ${doc.party.name}`.replace(/[\/:*?"<>|]/g, '-') + '.pdf'
   return { html, footer: pdfFooterTemplate(company), filename, format }

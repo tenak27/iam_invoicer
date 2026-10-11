@@ -1,6 +1,6 @@
 // Mise en page HTML des documents imprimables (convertie en PDF par Electron).
 
-import { DOC_TYPES, type DocType } from '@shared/domain'
+import { DOC_LAYOUTS, DOC_TYPES, type DocLayout, type DocType } from '@shared/domain'
 import { countryProfile } from '../shared/countries'
 import { taxCaption, type AppliedTax } from '../shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
@@ -45,6 +45,86 @@ export function pdfFooterTemplate(company: CompanySettings): string {
   return `<div style="width:100%;font-family:Segoe UI,Arial,sans-serif;font-size:7.5pt;color:#7b8794;padding:0 14mm;display:flex;justify-content:space-between"><span>${legalLine(company)}</span><span>Page <span class="pageNumber"></span>/<span class="totalPages"></span></span></div>`
 }
 
+/** Teinte claire de la couleur de la société (fonds de blocs). */
+const tint = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, #fff)`
+
+/**
+ * Habillage de chaque modèle : le contenu et la structure sont identiques, seules ces règles
+ * changent. Elles s'appliquent à l'aperçu, à l'export PDF et à l'impression.
+ */
+const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
+  moderne: () => `.band { display: block; }`,
+  classique: () => `
+  table.lines th, .totals .grand td { background: #33303f; }`,
+  bandeau: (c) => `
+  .head { background: ${c}; color: #fff; padding: 16px 18px; border-radius: 10px; }
+  .head .company-name, .head .doc-title h1 { color: #fff; }
+  .head .muted, .head .meta td:first-child { color: rgba(255, 255, 255, .86); }
+  .head .logo { background: #fff; padding: 5px 8px; border-radius: 6px; }
+  .box { border: none; border-left: 4px solid ${c}; border-radius: 4px; background: ${tint(c, 9)}; }
+  table.lines th { background: ${tint(c, 14)}; color: #1f2933; border-bottom: 2px solid ${c}; }
+  table.lines tr:nth-child(even) td { background: ${tint(c, 4)}; }
+  .words { background: ${tint(c, 9)}; }
+  .totals .grand td:first-child { border-radius: 6px 0 0 6px; }
+  .totals .grand td:last-child { border-radius: 0 6px 6px 0; }`,
+  elegant: (c) => `
+  .company-name, .doc-title h1, .box .name { font-family: Georgia, 'Times New Roman', serif; }
+  .company-name { font-weight: 400; font-size: 18pt; }
+  .doc-title h1 { font-weight: 400; letter-spacing: 3px; font-size: 21pt; }
+  .head { padding-bottom: 14px; border-bottom: 1px solid ${c}; }
+  .box { border: none; border-top: 1.5px solid ${c}; border-radius: 0; padding: 8px 0 0; }
+  table.lines th { background: none; color: #1f2933; border-top: 1.5px solid ${c}; border-bottom: 1.5px solid ${c}; text-transform: uppercase; letter-spacing: .8px; font-size: 7.5pt; padding: 8px 6px; }
+  table.lines td { padding: 8px 6px; }
+  table.lines tr:nth-child(even) td { background: none; }
+  .totals .grand td { background: none; color: ${c}; border-top: 1.5px solid ${c}; border-bottom: 1.5px solid ${c}; font-size: 12pt; }
+  .words { background: none; border-left: none; border-top: 1px solid #d4dbe3; border-bottom: 1px solid #d4dbe3; font-style: italic; }
+  .sigbox, .secef, .auth { border-radius: 0; }`,
+  minimal: () => `
+  .company-name, .doc-title h1, .secef .t, .auth .t { color: #1f2933; }
+  table.lines th { background: none; color: #1f2933; border-bottom: 1.5px solid #1f2933; }
+  table.lines tr:nth-child(even) td { background: none; }
+  .totals .grand td { background: none; color: #1f2933; border-top: 1.5px solid #1f2933; border-bottom: 1.5px solid #1f2933; }
+  .words { background: none; border-left: 2px solid #1f2933; }`,
+  compact: () => `
+  .band { display: block; height: 4px; margin-bottom: 8px; }
+  body { font-size: 8.5pt; }
+  .logo { max-height: 46px; }
+  .company-name { font-size: 13pt; }
+  .doc-title h1 { font-size: 15pt; }
+  .doc-title .num { font-size: 10.5pt; }
+  .muted { font-size: 8pt; line-height: 1.35; }
+  .parties { margin: 10px 0; }
+  .box { padding: 6px 10px; }
+  table.lines th { padding: 4px 5px; font-size: 7.5pt; }
+  table.lines td { padding: 3px 5px; }
+  .bottom { margin-top: 8px; }
+  .totals td { padding: 2px 8px; }
+  .words { margin-top: 8px; padding: 5px 10px; }
+  .signs, .sign { margin-top: 14px; }`
+}
+
+/** Document d'exemple pour l'aperçu des modèles (Société et paramètres → Documents). */
+export function sampleDocumentHtml(company: CompanySettings, layout: DocLayout, color?: string): string {
+  const line = (description: string, quantity: number, unit_price: number, tva_rate: number, product_ref: string, discount = 0) => ({
+    description, quantity, unit_price, tva_rate, product_ref, discount, product_unit: '', total_ht: Math.round(quantity * unit_price * (1 - discount / 100))
+  })
+  const lines = [
+    line('Caméra dôme 4K 12 MP\nPose et réglage compris', 4, 295000, 18, 'ART-0012'),
+    line('Enregistreur NVR 16 voies', 1, 150000, 18, 'ART-0031'),
+    line('Abonnement connexion (mensuel)', 3, 63800, 18, 'PRE-0004', 5),
+    line("Main-d'œuvre, câblage et mise en service", 1, 100000, 18, 'PRE-0001')
+  ]
+  const ht = lines.reduce((s, l) => s + l.total_ht, 0)
+  const tva = Math.round(ht * 0.18)
+  const doc = {
+    type: 'FAC', number: 'FAC-2026-0042', status: 'valide', date: '2026-10-11', due_date: '2026-11-10', reference: 'Devis DEV-2026-0017',
+    party: { name: 'Société Exemple SARL', code: 'CLI-0007', contact: 'Mme Awa Ouédraogo', address: 'Avenue Kwame Nkrumah', city: 'Ouagadougou', phone: '70 00 00 00', tax_id: '00012345A', rccm: '' },
+    lines, notes: 'Livraison sous 7 jours après règlement de l’acompte.', total_ht: ht, total_tva: tva, total_ttc: ht + tva, total_withheld: 0, paid: 0, taxes: [], signatures: [],
+    auth: { code: 'K7MQ-2XPA-9RDW-4TZH', qr: 'https://exemple.bf/verify/K7MQ2XPA9RDW4TZH', url: 'https://exemple.bf/verify/K7MQ2XPA9RDW4TZH' }
+  }
+  return documentHtml(doc, { ...company, name: company.name || 'Votre société', doc_layout: layout, doc_color: color ?? company.doc_color, doc_show_qr: true }, false, false)
+}
+
 /** forPdf : le pied de page est rendu par printToPDF au lieu d'un élément fixe. */
 /** Mention portée par les documents tant qu'aucune licence n'est active. */
 const EVALUATION_NOTE = "Document établi avec une version d'évaluation d'IAM INVOICER"
@@ -59,7 +139,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   const isDraft = doc.status === 'brouillon'
   const isCancelled = doc.status === 'annule'
   const c = /^#[0-9a-fA-F]{6}$/.test(company.doc_color ?? '') ? company.doc_color : '#1d6fd6'
-  const modern = company.doc_layout !== 'classique'
+  const layout: DocLayout = DOC_LAYOUTS.some((l) => l.id === company.doc_layout) ? company.doc_layout : 'moderne'
+  // Authenticité : QR code et code lisible, sur les documents validés (ou annulés) uniquement
+  const auth: { code: string; qr: string; url: string | null } | null = company.doc_show_qr !== false && doc.auth?.code ? doc.auth : null
   const signatures: any[] = doc.signatures ?? []
   const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || company.signature_image) && info.side === 'sale'
 
@@ -116,7 +198,12 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .bottom, .words, .signs, .sign, .secef, .terms { break-inside: avoid; page-break-inside: avoid; }
   td.n, th.n { width: 26px; text-align: center; color: #7b8794; }
   * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1f2933; margin: 0; }
+  /* Couleurs et aplats imprimés tels qu'à l'écran, quel que soit le navigateur ou l'imprimante */
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Segoe UI', 'Helvetica Neue', Roboto, 'Noto Sans', Arial, sans-serif; font-size: 10pt; color: #1f2933; margin: 0; font-variant-numeric: tabular-nums; }
+  img { max-width: 100%; }
+  /* Aperçu à l'écran : la feuille avec ses marges, comme à l'impression */
+  @media screen { html { background: #fff; } body { padding: ${margins.top}mm ${margins.side}mm ${Math.max(10, margins.bottom - 8)}mm; } }
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
   .logo { max-height: 70px; max-width: 220px; margin-bottom: 6px; }
   .company-name { font-size: 16pt; font-weight: 700; color: ${c}; }
@@ -132,7 +219,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .box .label { font-size: 8pt; text-transform: uppercase; color: #5f6b7a; letter-spacing: .5px; }
   .box .name { font-size: 11.5pt; font-weight: 600; margin: 2px 0 4px; }
   table.lines { width: 100%; border-collapse: collapse; }
-  table.lines th { background: ${modern ? c : '#33303f'}; color: #fff; font-weight: 600; font-size: 8.5pt; text-align: left; padding: 6px 6px; }
+  table.lines th { background: ${c}; color: #fff; font-weight: 600; font-size: 8.5pt; text-align: left; padding: 6px 6px; }
   table.lines td { padding: 6px 6px; border-bottom: 1px solid #e4e9ef; vertical-align: top; }
   table.lines tr:nth-child(even) td { background: #f6f8fb; }
   .num { text-align: right; white-space: nowrap; }
@@ -145,7 +232,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .totals td:last-child { text-align: right; white-space: nowrap; }
   .totals .strong td { font-weight: 700; }
   .totals .withheld td { color: #9a4306; }
-  .totals .grand td { background: ${modern ? c : '#33303f'}; color: #fff; font-weight: 700; font-size: 11pt; }
+  .totals .grand td { background: ${c}; color: #fff; font-weight: 700; font-size: 11pt; }
   .words { margin-top: 16px; padding: 8px 12px; background: #f6f8fb; border-left: 3px solid ${c}; page-break-inside: avoid; }
   .notes { flex: 1; }
   .sign { display: flex; justify-content: space-between; margin-top: 28px; page-break-inside: avoid; }
@@ -154,7 +241,13 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   /* À l'impression, le pied de page se répète en bas de chaque page ; à l'écran (aperçu), il suit le document. */
   /* À l'impression, mentions légales et numéros de page sont dans la marge basse de chaque page. */
   @media print { .footer { display: none; } }
-  .band { height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
+  .band { display: none; height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
+  .auth { display: flex; gap: 12px; align-items: center; margin-top: 16px; padding: 8px 12px; border: 1px solid #d4dbe3; border-radius: 6px; break-inside: avoid; page-break-inside: avoid; font-size: 8.5pt; width: fit-content; max-width: 100%; }
+  .auth svg { display: block; flex-shrink: 0; }
+  .auth .t { font-weight: 700; color: ${c}; text-transform: uppercase; letter-spacing: .4px; font-size: 8pt; }
+  .auth .code { font-family: Consolas, 'Courier New', monospace; font-weight: 700; letter-spacing: .5px; }
+  .auth .muted { font-size: 7.5pt; }
+  ${TEMPLATE_CSS[layout](c)}
   .signs { display: flex; justify-content: space-between; gap: 18px; margin-top: 24px; page-break-inside: avoid; }
   .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px; min-height: 96px; font-size: 8.5pt; color: #5f6b7a; position: relative; }
   .sigbox .t { text-transform: uppercase; letter-spacing: .4px; font-size: 7.5pt; }
@@ -168,8 +261,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .stamp { position: fixed; top: 40%; left: 15%; font-size: 64pt; color: rgba(200, 30, 30, .13); transform: rotate(-25deg); font-weight: 800; }
   .eval-mark { position: fixed; top: 58%; left: 8%; font-size: 40pt; color: rgba(29, 111, 214, .11); transform: rotate(-25deg); font-weight: 800; letter-spacing: 2px; white-space: nowrap; pointer-events: none; }
 </style></head>
-<body>
-  ${modern ? '<div class="band"></div>' : ''}
+<body class="tpl-${layout}">
+  <div class="band"></div>
   ${isDraft ? '<div class="stamp">BROUILLON</div>' : isCancelled ? '<div class="stamp">ANNULÉ</div>' : ''}
   ${evaluation ? '<div class="eval-mark" aria-hidden="true">VERSION D’ÉVALUATION</div>' : ''}
   <div class="head">
@@ -252,6 +345,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
       ? `<div class="sign"><div>${type === 'BL' ? 'Livré par' : type === 'BR' ? 'Réceptionné par' : 'Pour ' + esc(company.name)}</div><div>${type === 'BL' ? 'Reçu par le client (nom, date, signature)' : type === 'BR' ? 'Livreur' : type === 'DEV' ? 'Bon pour accord du client' : 'Signature et cachet'}</div></div>`
       : ''}
   ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
+  ${auth ? `<div class="auth">${qrSvg(auth.qr, 84)}<div><div class="t">Document authentique</div><div>Code : <span class="code">${esc(auth.code)}</span></div><div class="muted">${auth.url ? `Scannez ce code, ou saisissez-le sur ${esc(auth.url.replace(/^https?:\/\//, '').replace(/\/verify\/.*$/, '/verify'))}, pour vérifier ce document.` : `Scannez ce code pour lire le numéro, la date et le montant enregistrés par ${esc(company.name)}.`}</div></div></div>` : ''}
   ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}
   ${company.invoice_footer && info.side === 'sale' ? `<p class="muted" style="margin-top:18px;text-align:center">${esc(company.invoice_footer)}</p>` : ''}
   ${evaluation ? `<p class="muted" style="margin-top:8px;text-align:center;font-size:8pt">${EVALUATION_NOTE}</p>` : ''}
@@ -311,6 +405,7 @@ export function receiptHtml(doc: any, company: CompanySettings, evaluation = fal
   </table>
   <hr>
   <div class="c muted">${esc(company.invoice_footer || 'Merci de votre visite.')}</div>
+  ${company.doc_show_qr !== false && doc.auth?.code ? `<div class="c" style="margin-top:2mm">${qrSvg(doc.auth.qr, 96)}<div class="muted">Authenticité : ${esc(doc.auth.code)}</div></div>` : ''}
   ${evaluation ? `<div class="c muted">${EVALUATION_NOTE}</div>` : ''}
 </body></html>`
 }

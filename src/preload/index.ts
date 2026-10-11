@@ -14,6 +14,8 @@ const bridge = {
   kind: 'desktop' as const,
   call: (name: string, args?: unknown) => ipcRenderer.invoke('api', name, args),
   status: () => ipcRenderer.invoke('app.status'),
+  checkUpdate: () => ipcRenderer.invoke('app.checkUpdate'),
+  openExternal: (url: string) => ipcRenderer.invoke('app.openExternal', url),
   login: (username: string, password: string) => ipcRenderer.invoke('session.login', username, password),
   setup: (input: unknown) => ipcRenderer.invoke('session.setup', input),
   logout: () => ipcRenderer.invoke('session.logout'),

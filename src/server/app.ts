@@ -30,6 +30,9 @@ import { documentHtml } from '../main/pdf'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatMoney } from '@shared/format'
 import { signPageHtml } from './signPage'
+import { verifyPageHtml } from './verifyPage'
+import { verifyDocument } from '../main/services/documents'
+import { getSettings } from '../main/services/settings'
 import { iosManifest, listDownloads } from './downloads'
 
 export interface ServerOptions {
@@ -103,8 +106,9 @@ class LoginLimiter {
 export function createHandler(opts: ServerOptions) {
   const { db } = opts
   const limiter = new LoginLimiter()
+  const verifyLimiter = new LoginLimiter()
   // Liens d'impression à usage unique, valables 2 minutes.
-  const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; expires: number }>()
+  const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; origin: string; expires: number }>()
 
   async function readJson(req: IncomingMessage): Promise<any> {
     const chunks: Buffer[] = []
@@ -216,7 +220,7 @@ export function createHandler(opts: ServerOptions) {
         const done = await db.one<{ result: string }>('SELECT result FROM client_ops WHERE op_id = $1 AND user_id = $2', [opId, user.id])
         if (done) return send(res, 200, { ...JSON.parse(done.result), replayed: true })
       }
-      const result = await call({ db, user }, name, body.args)
+      const result = await call({ db, user, origin: publicOrigin(req) }, name, body.args)
       if (opId && user && result.ok) {
         await db.query('INSERT INTO client_ops (op_id, user_id, name, result) VALUES ($1, $2, $3, $4) ON CONFLICT (op_id) DO NOTHING', [opId, user.id, name, JSON.stringify(result)])
       }
@@ -224,7 +228,7 @@ export function createHandler(opts: ServerOptions) {
     }
     const docMatch = /^\/api\/document\/(\d+)$/.exec(path)
     if (method === 'GET' && docMatch) {
-      const ctx: Ctx = { db, user: await session(req) }
+      const ctx: Ctx = { db, user: await session(req), origin: publicOrigin(req) }
       const format = url.searchParams.get('format') === 'ticket' ? 'ticket' : 'a4'
       return send(res, 200, { ok: true, data: await printable(ctx, Number(docMatch[1]), format, url.searchParams.get('pdf') === '1') })
     }
@@ -233,11 +237,11 @@ export function createHandler(opts: ServerOptions) {
       const body = await readJson(req)
       const id = Number(body.id)
       const format: PrintFormat = body.format === 'ticket' ? 'ticket' : 'a4'
-      await printable({ db, user }, id, format, false) // vérifie les droits avant d'émettre le lien
+      await printable({ db, user, origin: publicOrigin(req) }, id, format, false) // vérifie les droits avant d'émettre le lien
       const ticket = randomBytes(24).toString('base64url')
       const now = Date.now()
       for (const [k, t] of tickets) if (t.expires < now) tickets.delete(k)
-      tickets.set(ticket, { user, id, format, expires: now + 120_000 })
+      tickets.set(ticket, { user, id, format, origin: publicOrigin(req), expires: now + 120_000 })
       return send(res, 200, { ok: true, data: { url: `/print/${ticket}` } })
     }
     const signMatch = /^\/api\/public\/sign\/([A-Za-z0-9_-]{20,})$/.exec(path)
@@ -250,9 +254,22 @@ export function createHandler(opts: ServerOptions) {
   }
 
   function publicOrigin(req: IncomingMessage): string {
-    const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0] || 'http'
+    const proto = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() === 'https' ? 'https' : 'http'
     const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '')
+    // Un en-tête d'hôte fantaisiste ne doit pas finir imprimé sur un document
+    if (!/^[A-Za-z0-9.-]+(:\d+)?$/.test(host)) return ''
     return `${proto}://${host}${opts.publicPath ?? ''}`
+  }
+
+  /** Vérification publique d'un document par son code d'authenticité (QR code). */
+  async function verifyPage(req: IncomingMessage, res: ServerResponse, asked: string) {
+    const ip = clientIp(req)
+    verifyLimiter.check(ip)
+    const doc = asked ? await verifyDocument(db, asked) : null
+    // Codes inconnus comptés : on ne devine pas un code par essais successifs
+    if (asked && !doc) verifyLimiter.fail(ip)
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY' })
+    res.end(verifyPageHtml({ company: await getSettings(db), doc, asked: asked.slice(0, 40), action: `${opts.publicPath ?? ''}/verify` }))
   }
 
   async function signPage(res: ServerResponse, token: string) {
@@ -280,7 +297,7 @@ export function createHandler(opts: ServerOptions) {
     const t = tickets.get(ticket)
     tickets.delete(ticket)
     if (!t || t.expires < Date.now()) throw new HttpError(410, "Ce lien d'impression a expiré. Relancez l'impression depuis l'application.")
-    const p = await printable({ db, user: t.user }, t.id, t.format, false)
+    const p = await printable({ db, user: t.user, origin: t.origin }, t.id, t.format, false)
     const auto = '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})</script>'
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
     res.end(p.html.replace('</body>', `${auto}</body>`))
@@ -337,6 +354,8 @@ export function createHandler(opts: ServerOptions) {
       if (path.startsWith('/api/')) return await api(req, res, path, url)
       if (path.startsWith('/print/')) return await printPage(res, path.slice('/print/'.length))
       if (/^\/sign\/[A-Za-z0-9_-]{20,}$/.test(path)) return await signPage(res, path.slice('/sign/'.length))
+      const verify = /^\/verify(?:\/([A-Za-z0-9-]{1,40}))?\/?$/.exec(path)
+      if (verify && (req.method === 'GET' || req.method === 'HEAD')) return await verifyPage(req, res, verify[1] ?? url.searchParams.get('code') ?? '')
       if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Méthode non autorisée.')
       // Fichiers d'installation
       if (path.startsWith('/telechargements/')) return serveStatic(req, res, path.slice('/telechargements'.length), opts.downloadsDir, false, true)

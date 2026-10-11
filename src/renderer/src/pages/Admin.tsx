@@ -9,6 +9,7 @@ import { UserAvatar } from '../components/Topbar'
 import { DbConfigForm } from './Auth'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
 import { TaxSettings } from '../components/TaxSettings'
+import { TemplateGallery } from '../components/TemplateGallery'
 import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 
@@ -143,17 +144,20 @@ export function CompanySettingsPage() {
         <div className="tab-panel" key="documents">
           <div className="card">
             <h3>Modèle des documents</h3>
+            <p className="muted small" style={{ marginTop: -6 }}>Chaque vignette est le rendu réel d'une facture d'exemple : l'aperçu, le PDF et l'impression utilisent exactement ce gabarit.</p>
+            <TemplateGallery
+              value={v.doc_layout || 'moderne'}
+              color={v.doc_color || '#1d6fd6'}
+              options={{ doc_margin_top: Number(v.doc_margin_top) || 14, doc_margin_side: Number(v.doc_margin_side) || 14, doc_margin_bottom: Number(v.doc_margin_bottom) || 22, doc_line_numbers: v.doc_line_numbers !== false }}
+              onChange={(l) => f.set('doc_layout', l)}
+            />
             <div className="grid grid-2">
               <div className="field">
-                <span className="field-label">Mise en page</span>
-                <div className="choice-row">
-                  {(['moderne', 'classique'] as const).map((l) => (
-                    <label key={l} className={`choice ${v.doc_layout === l ? 'active' : ''}`}>
-                      <input type="radio" checked={v.doc_layout === l} onChange={() => f.set('doc_layout', l)} />
-                      <div><strong>{l === 'moderne' ? 'Moderne' : 'Classique'}</strong><div className="muted small">{l === 'moderne' ? 'Bandeau et en-têtes en couleur.' : 'Sobre, en-têtes gris anthracite.'}</div></div>
-                    </label>
-                  ))}
-                </div>
+                <span className="field-label">Authenticité</span>
+                <label className="inline check">
+                  <input type="checkbox" checked={v.doc_show_qr !== false} onChange={(e) => f.set('doc_show_qr', e.target.checked)} /> Imprimer un QR code d'authenticité sur les documents validés
+                </label>
+                <span className="muted small">Scanné, il ouvre une page qui confirme le numéro, la date, le client et le montant enregistrés. Sur un poste sans serveur en ligne, il contient ces informations.</span>
               </div>
               <div className="field">
                 <span className="field-label">Couleur principale</span>

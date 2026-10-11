@@ -9,6 +9,7 @@ import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig 
 import type { PrintFormat } from './printing'
 import { AppError, type SessionUser } from './services/context'
 import { diag, diagInit, errText } from './diag'
+import { compareVersions, pickDownload, releaseFiles, RELEASES_API, type DownloadFile, type UpdateInfo } from '../shared/update'
 
 const configPath = () => join(app.getPath('userData'), 'config.json')
 const localDataDir = () => join(app.getPath('userData'), 'data')
@@ -192,6 +193,42 @@ function registerIpc(): void {
     user: backend?.user() ?? null,
     offline: backend instanceof RemoteBackend ? !backend.reachable : false
   }))
+
+  // Mise à jour disponible : serveur de la société (mode en ligne), sinon dernière publication de l'éditeur.
+  // Aucune installation automatique : l'application propose seulement de télécharger l'installateur.
+  ipcMain.handle('app.checkUpdate', async (): Promise<UpdateInfo | null> => {
+    try {
+      const current = app.getVersion()
+      const device = { platform: process.platform, arch: process.arch, legacy: process.platform === 'darwin' && Number(process.versions.electron.split('.')[0]) < 40 }
+      const get = async (url: string) => {
+        const r = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'iam-invoicer' }, signal: AbortSignal.timeout(12_000) })
+        return r.ok ? r.json() : null
+      }
+      let latest = ''
+      let files: DownloadFile[] = []
+      if (backend instanceof RemoteBackend) {
+        const origin = new URL(backend.url).origin
+        const d = (await get(origin + '/api/downloads'))?.data
+        latest = d?.version ?? ''
+        files = (d?.files ?? []).map((f: DownloadFile) => ({ ...f, url: origin + f.url }))
+      }
+      if (!latest || compareVersions(latest, current) <= 0) {
+        const rel = await get(RELEASES_API)
+        if (rel?.tag_name && compareVersions(rel.tag_name, latest || current) > 0) {
+          latest = String(rel.tag_name).replace(/^v/i, '')
+          files = releaseFiles(rel.assets)
+        }
+      }
+      if (!latest || compareVersions(latest, current) <= 0) return null
+      return { current, latest, url: pickDownload(files, device)?.url ?? null }
+    } catch {
+      return null // sans réseau : on réessaiera
+    }
+  })
+  ipcMain.handle('app.openExternal', (_e, url: string) => {
+    if (/^https:\/\//.test(String(url))) void shell.openExternal(url)
+    return true
+  })
 
   // Synchronisation avec le serveur en ligne (base locale de travail)
   const remote = () => (backend instanceof RemoteBackend ? backend : null)

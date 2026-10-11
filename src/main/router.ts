@@ -63,6 +63,16 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
+  // Aperçu d'un modèle de document sur une facture d'exemple (réglages en cours de saisie compris)
+  'settings.docSample': {
+    access: 'settings',
+    fn: async (ctx, a) => {
+      const { sampleDocumentHtml } = await import('./pdf')
+      const company = await settings.getSettings(ctx.db)
+      for (const k of ['doc_margin_top', 'doc_margin_side', 'doc_margin_bottom', 'doc_line_numbers', 'doc_terms', 'invoice_footer'] as const) if (a?.[k] !== undefined) (company as any)[k] = a[k]
+      return { html: sampleDocumentHtml(company, a?.layout, typeof a?.color === 'string' ? a.color : undefined) }
+    }
+  },
   'licence.status': { access: 'user', fn: licence.getLicence },
   'roles.get': { access: 'user', fn: roles.getRoles },
   'recurring.list': { access: 'sales', fn: recurring.listRecurring },
@@ -275,7 +285,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }
 
 /** Toujours permis, même licence expirée : se mettre en règle (raison sociale, comptes, licence). */
-const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'users.list', 'users.save', 'auth.changePassword'])
+const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'auth.changePassword'])
 
 export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
   try {

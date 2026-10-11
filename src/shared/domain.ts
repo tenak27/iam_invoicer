@@ -90,6 +90,17 @@ export const DOC_TYPES: Record<DocType, DocTypeInfo> = {
   FF: { label: 'Facture fournisseur', plural: 'Factures fournisseurs', fem: true, side: 'purchase', stock: 1, payable: true, convertsTo: [] }
 }
 
+/** Modèles de mise en page des documents (devis, factures, bons) : même contenu, habillage différent. */
+export const DOC_LAYOUTS = [
+  { id: 'moderne', label: 'Moderne', hint: 'Liseré et en-têtes à la couleur de la société.' },
+  { id: 'bandeau', label: 'Bandeau', hint: 'En-tête plein en couleur, blocs teintés.' },
+  { id: 'elegant', label: 'Élégant', hint: 'Titres à empattements, filets fins, beaucoup d’air.' },
+  { id: 'classique', label: 'Classique', hint: 'Sobre, en-têtes gris anthracite.' },
+  { id: 'minimal', label: 'Minimal', hint: 'Sans aplat : économe en encre, idéal en noir et blanc.' },
+  { id: 'compact', label: 'Compact', hint: 'Petits caractères : plus de lignes par page.' }
+] as const
+export type DocLayout = (typeof DOC_LAYOUTS)[number]['id']
+
 export const SALE_TYPES: DocType[] = ['DEV', 'BL', 'FAC', 'AV']
 export const PURCHASE_TYPES: DocType[] = ['BC', 'BR', 'FF']
 

@@ -3,6 +3,7 @@
 // Le jeton de connexion est conservé sur l'appareil pour rester connecté.
 
 import { Capacitor } from '@capacitor/core'
+import { compareVersions, pickDownload, type DownloadFile } from '@shared/update'
 import { createOfflineLayer } from '@shared/offline'
 
 const URL_KEY = 'iam.serverUrl'
@@ -115,6 +116,31 @@ function createHttpBridge(): ErpBridge {
       failed: () => offline.failed(),
       sync: () => offline.sync(),
       clearFailed: () => offline.clearFailed()
+    },
+
+    // Application web : nouvelle version déjà servie → recharger. Application mobile : installateur du serveur.
+    async checkUpdate() {
+      const base = baseUrl()
+      if (!base) return null
+      try {
+        const origin = new URL(base).origin
+        if (!native) {
+          const r = await request<{ version: string }>('GET', '/api/status')
+          return r.ok && compareVersions(r.data.version, __APP_VERSION__) > 0 ? { current: __APP_VERSION__, latest: r.data.version, url: null, reload: true } : null
+        }
+        const d = (await (await fetch(origin + '/api/downloads')).json())?.data
+        if (!d?.version || compareVersions(d.version, __APP_VERSION__) <= 0) return null
+        const file = pickDownload<DownloadFile>(d.files ?? [], { platform: Capacitor.getPlatform() })
+        return { current: __APP_VERSION__, latest: d.version, url: file ? origin + file.url : origin + '/' }
+      } catch {
+        return null
+      }
+    },
+    async openExternal(url) {
+      if (native) {
+        const { Browser } = await import('@capacitor/browser')
+        await Browser.open({ url })
+      } else window.open(url, '_blank', 'noopener')
     },
 
     async status() {

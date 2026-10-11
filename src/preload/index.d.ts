@@ -30,6 +30,10 @@ interface ErpBridge {
   kind: 'desktop' | 'web' | 'mobile'
   call(name: string, args?: unknown): Promise<Result>
   status(): Promise<AppStatus>
+  /** Version plus récente disponible pour cet appareil, sinon null. */
+  checkUpdate?(): Promise<{ current: string; latest: string; url: string | null; reload?: boolean } | null>
+  /** Ouvre une adresse https dans le navigateur du système. */
+  openExternal?(url: string): Promise<unknown>
   login(username: string, password: string): Promise<Result>
   setup(input: unknown): Promise<Result>
   logout(): Promise<Result>

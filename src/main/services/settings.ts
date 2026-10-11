@@ -1,3 +1,4 @@
+import type { DocLayout } from '@shared/domain'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 import { forgetLicenceStatus } from './licence'
@@ -35,7 +36,9 @@ export interface CompanySettings {
 
   // Modèles de documents
   doc_color: string
-  doc_layout: 'classique' | 'moderne'
+  doc_layout: DocLayout
+  /** QR code d'authenticité imprimé sur les documents validés. */
+  doc_show_qr: boolean
   doc_terms: string
   doc_show_stamp: boolean
   /** Marges des documents A4, en millimètres. */
@@ -111,6 +114,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   allow_negative_stock: false,
   doc_color: '#1d6fd6',
   doc_layout: 'moderne',
+  doc_show_qr: true,
   doc_terms: '',
   doc_show_stamp: true,
   doc_margin_top: 14,

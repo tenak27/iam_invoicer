@@ -11,6 +11,7 @@ import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
 import { moduleLicensed } from '@shared/licence'
 import { Navbar } from './Topbar'
+import { UpdatePrompt } from './UpdatePrompt'
 import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
 import { useResponsiveTables } from './responsiveTables'
@@ -332,6 +333,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
         <div className="weave sidebar-weave" />
       </aside>
+      <UpdatePrompt />
       <div className="main-col">
         <Navbar
           entries={allowed}

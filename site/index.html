@@ -516,6 +516,68 @@
     .mobile-cta { display: flex; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
     .mobile-cta .btn { flex: 1; min-height: 48px; padding: 0 12px; font-size: 15.5px; }
   }
+
+  /* Documents : trois feuilles en éventail qui flottent, QR code et vérification */
+  .docs-show { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .docs-copy h2 { margin: 6px 0 12px; }
+  .docs-copy > p { color: var(--muted); font-size: 18px; margin: 0 0 22px; }
+  .docs-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+  .docs-points li { display: flex; gap: 14px; align-items: flex-start; }
+  .docs-points svg { flex-shrink: 0; width: 42px; height: 42px; padding: 9px; border-radius: 12px; background: var(--blue-soft); color: var(--blue); transition: transform .3s var(--ease-back); }
+  .docs-points li:hover svg { transform: scale(1.12) rotate(-6deg); }
+  .docs-points strong { display: block; color: var(--ink); }
+  .docs-points span { color: var(--muted); font-size: 15.5px; }
+  .docs-stage { height: 460px; }
+  .docs-fan { position: relative; height: 460px; transform-origin: top center; }
+  #documents { overflow-x: clip; }
+  .sheet { position: absolute; left: 50%; top: 24px; width: 250px; height: 352px; margin-left: -125px; padding: 22px 20px; border-radius: 6px; background: #fff; box-shadow: 0 30px 50px -28px rgba(11, 47, 99, .55), 0 0 0 1px rgba(15, 23, 42, .06); display: flex; flex-direction: column; gap: 10px; transition: transform .6s var(--ease-back); --tone: #1d6fd6; }
+  .sheet b { display: block; height: 5px; border-radius: 3px; background: var(--tone); }
+  .sheet i { display: block; border-radius: 3px; background: #e6eaf1; }
+  .sheet .t { height: 14px; width: 46%; background: var(--tone); }
+  .sheet .p { height: 44px; width: 52%; margin-left: auto; background: #f1f4f9; border: 1px solid #e3e7ef; }
+  .sheet .tb { display: grid; gap: 6px; margin-top: 4px; }
+  .sheet .tb u { display: block; height: 9px; border-radius: 2px; background: #eef1f6; }
+  .sheet .tb u:first-child { height: 13px; background: var(--tone); }
+  .sheet .tot { height: 16px; width: 44%; margin-left: auto; background: var(--tone); }
+  .s-moderne { z-index: 3; transform: rotate(-3deg); animation: sheet-a 7s ease-in-out infinite; }
+  .s-bandeau { --tone: #0b4f8a; z-index: 2; transform: translateX(118px) translateY(26px) rotate(9deg); animation: sheet-b 8s ease-in-out infinite; }
+  .s-bandeau b { height: 46px; border-radius: 6px; }
+  .s-bandeau .t { display: none; }
+  .s-bandeau .tb u:first-child { background: #dbe6f3; box-shadow: inset 0 -2px 0 var(--tone); }
+  .s-elegant { --tone: #7a4b12; z-index: 1; transform: translateX(-122px) translateY(30px) rotate(-13deg); animation: sheet-c 9s ease-in-out infinite; }
+  .s-elegant b { height: 1.5px; }
+  .s-elegant .t { height: 12px; background: none; box-shadow: inset 0 -1.5px 0 var(--tone); }
+  .s-elegant .tb u:first-child { background: none; box-shadow: inset 0 1.5px 0 var(--tone), inset 0 -1.5px 0 var(--tone); }
+  .s-elegant .tot { background: none; box-shadow: inset 0 1.5px 0 var(--tone), inset 0 -1.5px 0 var(--tone); }
+  @keyframes sheet-a { 50% { transform: rotate(-1deg) translateY(-10px); } }
+  @keyframes sheet-b { 50% { transform: translateX(126px) translateY(14px) rotate(11deg); } }
+  @keyframes sheet-c { 50% { transform: translateX(-130px) translateY(18px) rotate(-15deg); } }
+  .docs-stage:hover .s-bandeau { animation-play-state: paused; transform: translateX(170px) translateY(20px) rotate(14deg); }
+  .docs-stage:hover .s-elegant { animation-play-state: paused; transform: translateX(-174px) translateY(24px) rotate(-18deg); }
+  /* QR code dessiné : motif de modules, balayé par un trait de lecture */
+  .sheet .qr { position: relative; width: 56px; height: 56px; margin-top: auto; border-radius: 4px; overflow: hidden; background: conic-gradient(#0f172a 25%, #fff 0 50%, #0f172a 0 75%, #fff 0) 0 0 / 14px 14px, #fff; box-shadow: 0 0 0 3px #fff, 0 0 0 4px #d7dde7; }
+  .sheet .qr::before { content: ''; position: absolute; inset: 0; background: linear-gradient(#fff, #fff) 0 0 / 20px 20px no-repeat, linear-gradient(#fff, #fff) 100% 0 / 20px 20px no-repeat, linear-gradient(#fff, #fff) 0 100% / 20px 20px no-repeat; }
+  .sheet .qr::after { content: ""; position: absolute; inset: 0; background: linear-gradient(#0f172a, #0f172a) 7px 7px / 6px 6px no-repeat, linear-gradient(#fff, #fff) 4px 4px / 12px 12px no-repeat, linear-gradient(#0f172a, #0f172a) 1px 1px / 18px 18px no-repeat, linear-gradient(#0f172a, #0f172a) 43px 7px / 6px 6px no-repeat, linear-gradient(#fff, #fff) 40px 4px / 12px 12px no-repeat, linear-gradient(#0f172a, #0f172a) 37px 1px / 18px 18px no-repeat, linear-gradient(#0f172a, #0f172a) 7px 43px / 6px 6px no-repeat, linear-gradient(#fff, #fff) 4px 40px / 12px 12px no-repeat, linear-gradient(#0f172a, #0f172a) 1px 37px / 18px 18px no-repeat; }
+  .sheet .qr span { position: absolute; left: 0; right: 0; top: 0; height: 3px; z-index: 1; background: #10b981; box-shadow: 0 0 10px 3px rgba(16, 185, 129, .7); animation: qr-scan 2.6s ease-in-out infinite; }
+  @keyframes qr-scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(53px); } }
+  .verify-chip { position: absolute; right: 2%; bottom: 14px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 12px 18px 12px 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 24px 40px -22px rgba(11, 47, 99, .6); animation: chip-pop 5.2s var(--ease-back) infinite; }
+  .verify-chip svg { width: 40px; height: 40px; fill: none; stroke: #10b981; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+  .verify-chip circle { stroke-dasharray: 145; stroke-dashoffset: 145; animation: chip-draw 5.2s ease-out infinite; }
+  .verify-chip path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: chip-draw 5.2s ease-out .25s infinite; }
+  .verify-chip strong { display: block; color: var(--ink); font-size: 15px; }
+  .verify-chip span { color: var(--muted); font-size: 13px; }
+  @keyframes chip-pop { 0%, 12% { opacity: 0; transform: translateY(14px) scale(.9); } 22%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
+  @keyframes chip-draw { 0%, 22% { stroke-dashoffset: 145; } 40%, 100% { stroke-dashoffset: 0; } }
+  @media (max-width: 900px) {
+    .docs-show { grid-template-columns: 1fr; gap: 26px; }
+    .docs-stage { height: 400px; }
+    .docs-fan { transform: scale(.86); }
+  }
+  @media (max-width: 480px) { .docs-stage { height: 320px; } .docs-fan { transform: scale(.66); } }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet, .sheet .qr span, .verify-chip, .verify-chip circle, .verify-chip path { animation: none !important; }
+    .verify-chip circle, .verify-chip path { stroke-dashoffset: 0; }
+  }
 </style>
 </head>
 <body>
@@ -671,6 +733,30 @@
         <div class="base" aria-hidden="true"></div>
       </div>
       <p class="gallery-caption" id="gallery-cap" aria-live="polite">Tableau de bord : ventes, encaissements, créances et alertes du jour.</p>
+    </div>
+  </section>
+
+  <section id="documents">
+    <div class="wrap docs-show">
+      <div class="docs-stage reveal" aria-hidden="true"><div class="docs-fan">
+        <div class="sheet s-elegant"><b></b><i class="t"></i><i class="p"></i><span class="tb"><u></u><u></u><u></u><u></u></span><i class="tot"></i></div>
+        <div class="sheet s-bandeau"><b></b><i class="t"></i><i class="p"></i><span class="tb"><u></u><u></u><u></u><u></u></span><i class="tot"></i></div>
+        <div class="sheet s-moderne"><b></b><i class="t"></i><i class="p"></i><span class="tb"><u></u><u></u><u></u><u></u></span><i class="tot"></i>
+          <span class="qr"><span></span></span>
+        </div>
+        <div class="verify-chip"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><path d="M15 27l7 7 15-16"/></svg><div><strong>Document authentique</strong><span>FAC-2026-0042 · 1 901 959 FCFA</span></div></div>
+      </div></div>
+      <div class="docs-copy reveal">
+        <div class="kicker">Documents</div>
+        <h2>Des factures à votre image, impossibles à falsifier</h2>
+        <p>Choisissez votre modèle sur un rendu réel, à vos couleurs. Ce que vous voyez à l'écran est exactement ce qui sort en PDF et sur l'imprimante.</p>
+        <ul class="docs-points">
+          <li><i data-icon="Layout"></i><div><strong>Six modèles prêts à l'emploi</strong><span>Moderne, Bandeau, Élégant, Classique, Minimal (économe en encre) et Compact.</span></div></li>
+          <li><i data-icon="Printer"></i><div><strong>PDF et impression fidèles</strong><span>Couleurs conservées, en-têtes répétés, « Page X / Y », rien n'est coupé entre deux pages.</span></div></li>
+          <li><i data-icon="QrCode"></i><div><strong>QR code d'authenticité</strong><span>Votre client le scanne : une page confirme le numéro, la date et le montant que vous avez réellement émis.</span></div></li>
+          <li><i data-icon="RocketLaunch"></i><div><strong>Toujours à jour</strong><span>L'application signale d'elle-même qu'une nouvelle version est disponible.</span></div></li>
+        </ul>
+      </div>
     </div>
   </section>
 
