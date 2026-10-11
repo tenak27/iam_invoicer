@@ -323,6 +323,21 @@ function registerIpc(): void {
     })
   )
 
+  ipcMain.handle('file.saveBinary', (_e, defaultName: string, base64: string) =>
+    guard(async () => {
+      requireSession()
+      const ext = (defaultName.split('.').pop() ?? 'bin').toLowerCase()
+      const r = await dialog.showSaveDialog(mainWindow!, {
+        defaultPath: join(app.getPath('documents'), defaultName),
+        filters: [{ name: ext === 'xlsx' ? 'Classeur Excel' : ext.toUpperCase(), extensions: [ext] }]
+      })
+      if (r.canceled || !r.filePath) return false
+      writeFileSync(r.filePath, Buffer.from(base64, 'base64'))
+      shell.showItemInFolder(r.filePath)
+      return r.filePath
+    })
+  )
+
   ipcMain.handle('file.pickImage', () =>
     guard(async () => {
       const r = await dialog.showOpenDialog(mainWindow!, { filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'svg'] }] })

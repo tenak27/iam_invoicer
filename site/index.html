@@ -4,210 +4,279 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IAM INVOICER — Facturation, caisse, stock et comptabilité SYSCOHADA | IAM Technology</title>
-<meta name="description" content="IAM INVOICER, le logiciel de gestion d'IAM Technology : devis, factures, caisse et mobile money, stock, comptabilité SYSCOHADA, paie CNSS/IUTS et déclarations. Windows, macOS, Android, iOS et web, même sans Internet.">
-<meta name="theme-color" content="#0b4f8a">
+<meta name="description" content="IAM INVOICER, le logiciel de gestion d'IAM Technology pour le Burkina Faso et la zone OHADA : devis, factures, caisse et mobile money, stock, comptabilité SYSCOHADA, paie CNSS/IUTS et déclarations. Sur ordinateur, téléphone et navigateur, même sans Internet.">
+<meta name="theme-color" content="#0b2f63">
+<meta property="og:title" content="IAM INVOICER — Toute votre gestion, simple et conforme">
+<meta property="og:description" content="Facturation, caisse, stock, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
+<meta property="og:type" content="website">
 <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Système de design de la page : design-system/iam-invoicer/pages/landing.md
+     (profil « Trust & Authority + Conversion », style minimaliste suisse).
+     Marine et bleu IAM pour la confiance ; le vert est réservé aux boutons d'action. */
   :root {
-    --blue: #1550a8; --blue-2: #2a70d6; --navy: #0b2f63; --ink: #1f2433; --text-2: #3d4456; --muted: #5d6475;
-    --line: #e2e6ef; --soft: #f3f6fb; --surface: #fff; --bg: #f6f8fc; --gold: #e8a817; --green: #0b6b40; --amber: #9a4306;
+    --navy: #0b2f63; --navy-2: #123f80; --blue: #1d5fc4; --blue-soft: #e8f0fc;
+    --accent: #047857; --accent-hover: #036249; --on-accent: #fff;
+    --bg: #f8fafc; --surface: #fff; --ink: #0f172a; --text-2: #334155; --muted: #475569;
+    --line: #e4e7eb; --soft: #f1f3f5; --gold: #e8a817; --danger: #b42318;
     --weave: repeating-linear-gradient(90deg, #0b4f8a 0 12px, #e8a817 12px 17px, #f4f6fa 17px 18px, #178a55 18px 22px, #2f6db3 22px 33px, #f4f6fa 33px 34px, #e8a817 34px 36px, #0b4f8a 36px 46px, #178a55 46px 48px, #f4f6fa 48px 49px, #2f6db3 49px 58px);
-    --shadow: 0 18px 40px -22px rgba(15, 30, 70, .45);
-    --r: 18px;
+    --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px -12px rgba(15, 23, 42, .18);
+    --r: 14px; --nav-h: 68px;
+    --ease: cubic-bezier(.2, .8, .2, 1); --ease-back: cubic-bezier(.34, 1.4, .64, 1);
   }
   @media (prefers-color-scheme: dark) {
-    :root { --ink: #eef1f8; --text-2: #c9cfdc; --muted: #9aa3b5; --line: #2c3346; --soft: #1d2333; --surface: #171c2a; --bg: #10141f; --shadow: 0 18px 40px -22px rgba(0, 0, 0, .8); }
+    :root {
+      --blue: #7fb0f5; --blue-soft: #1b2a45; --accent: #10b981; --accent-hover: #34d399; --on-accent: #04130d;
+      --bg: #0b1220; --surface: #111a2c; --ink: #f1f5f9; --text-2: #cbd5e1; --muted: #a3b1c6;
+      --line: #24304a; --soft: #16213a; --danger: #fca5a5;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+    }
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; font-family: 'Public Sans', 'Segoe UI', system-ui, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16.5px; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 12px); }
+  body { margin: 0; font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; font-size: 16.5px; -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
   img { max-width: 100%; height: auto; display: block; }
   svg { flex-shrink: 0; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; background: var(--soft); padding: 1px 6px; border-radius: 6px; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
-  .skip { position: absolute; left: -999px; top: 8px; background: #fff; color: var(--blue); padding: 8px 14px; border-radius: 8px; z-index: 100; }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--surface); color: var(--blue); padding: 8px 14px; border-radius: 8px; z-index: 100; }
   .skip:focus { left: 12px; }
-  :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+  h1, h2, h3 { letter-spacing: -.02em; text-wrap: balance; }
+  h2 { font-size: clamp(28px, 3.3vw, 40px); line-height: 1.14; margin: 10px 0 12px; font-weight: 800; }
+  h3 { font-size: 18.5px; margin: 0 0 6px; font-weight: 700; }
+  p { text-wrap: pretty; }
+
+  /* Boutons : cible tactile de 48 px, retour visuel à l'appui */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 12px; font: inherit; font-weight: 700; text-decoration: none; border: 1.5px solid transparent; cursor: pointer; transition: background .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease); }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 16px -8px rgba(4, 120, 87, .7); }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--blue); }
+  .btn-light { background: #fff; color: var(--navy); }
+  .btn-light:hover { background: #eef4ff; }
+  .btn-outline-white { border-color: rgba(255, 255, 255, .5); color: #fff; background: transparent; }
+  .btn-outline-white:hover { background: rgba(255, 255, 255, .12); }
+  .btn .lbl { display: inline-flex; align-items: center; gap: 8px; }
+  .link { color: var(--blue); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .link:hover { text-decoration: underline; }
 
   /* En-tête */
-  header.top { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  header.top .wrap { display: flex; align-items: center; gap: 18px; height: 70px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; letter-spacing: .02em; font-size: 19px; }
-  .brand img { width: 38px; height: 38px; }
-  .brand span { color: var(--blue-2); font-weight: 600; }
-  nav.links { display: flex; gap: 6px; margin-left: auto; }
-  nav.links a { text-decoration: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; color: var(--text-2); }
+  header.top { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  header.top .wrap { display: flex; align-items: center; gap: 14px; height: var(--nav-h); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; letter-spacing: .01em; font-size: 19px; }
+  .brand img { width: 36px; height: 36px; }
+  .brand span { color: var(--blue); font-weight: 600; }
+  nav.links { display: flex; gap: 2px; margin-left: auto; }
+  nav.links a { text-decoration: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; font-size: 15.5px; color: var(--text-2); transition: background .2s, color .2s; }
   nav.links a:hover { background: var(--soft); color: var(--ink); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 12px; font: inherit; font-weight: 700; text-decoration: none; border: 1.5px solid transparent; cursor: pointer; transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s, background .2s; }
-  .btn:hover { transform: translateY(-2px); }
-  .btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue-2)); color: #fff; box-shadow: 0 10px 22px -10px rgba(21, 80, 168, .8); }
-  .btn-light { background: #fff; color: var(--blue); }
-  .btn-ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
-  .btn-outline-white { border-color: rgba(255,255,255,.55); color: #fff; background: rgba(255,255,255,.08); }
-  .menu-toggle { display: none; margin-left: auto; background: none; border: 1.5px solid var(--line); border-radius: 10px; width: 46px; height: 46px; color: var(--ink); }
+  header.top .btn { min-height: 44px; padding: 0 16px; font-size: 15.5px; }
+  .menu-toggle { display: none; margin-left: auto; background: none; border: 1.5px solid var(--line); border-radius: 10px; width: 46px; height: 46px; color: var(--ink); cursor: pointer; }
 
   /* Héros */
-  .hero { position: relative; overflow: hidden; color: #fff; background: linear-gradient(150deg, var(--navy) 0%, var(--blue) 55%, var(--blue-2) 100%); }
-  .hero::before { content: ''; position: absolute; right: -180px; top: -160px; width: 560px; height: 560px; border-radius: 50%; border: 70px solid rgba(255,255,255,.06); animation: float 12s ease-in-out infinite; }
-  .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: var(--weave); }
-  .hero .wrap { position: relative; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-top: 70px; padding-bottom: 90px; }
-  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); padding: 6px 12px; border-radius: 999px; }
-  h1 { font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; margin: 18px 0 16px; letter-spacing: -.02em; }
-  h1 em { font-style: normal; color: var(--gold); }
-  .lead { font-size: 19px; opacity: .93; max-width: 560px; }
+  .hero { position: relative; overflow: hidden; color: #fff; background: linear-gradient(160deg, #071f45 0%, var(--navy) 45%, #17509f 100%); }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(700px 380px at 82% 10%, rgba(120, 170, 255, .22), transparent 70%), linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 100% 44px, linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 44px 100%; pointer-events: none; }
+  .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: var(--weave); }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: 1.02fr 1fr; gap: 52px; align-items: center; padding-top: 76px; padding-bottom: 96px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); padding: 6px 12px; border-radius: 999px; }
+  h1 { font-size: clamp(34px, 4.7vw, 56px); line-height: 1.06; margin: 18px 0 16px; font-weight: 800; }
+  h1 em { font-style: normal; color: #ffd166; }
+  .lead { font-size: 19px; color: rgba(255, 255, 255, .9); max-width: 560px; margin: 0; }
   .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-  .trust { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 28px; font-size: 14.5px; opacity: .92; }
-  .trust span { display: inline-flex; align-items: center; gap: 6px; }
-  .shot { position: relative; animation: rise .9s cubic-bezier(.2,.8,.2,1) both .15s; }
-  .shot .screen { border-radius: 16px; overflow: hidden; box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); border: 6px solid rgba(255,255,255,.14); background: #fff; }
-  .shot .phone { position: absolute; right: -14px; bottom: -46px; width: 30%; border-radius: 22px; overflow: hidden; border: 6px solid #0d1526; box-shadow: 0 30px 60px -20px rgba(0,0,0,.7); animation: bob 6s ease-in-out infinite; }
+  .cta-note { margin-top: 12px; font-size: 14px; color: rgba(255, 255, 255, .78); }
+  .trust { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 26px; padding: 0; list-style: none; font-size: 14.5px; color: rgba(255, 255, 255, .9); }
+  .trust li { display: inline-flex; align-items: center; gap: 7px; }
+  .shot { position: relative; }
+  .shot .screen { border-radius: 14px; overflow: hidden; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .65); border: 1px solid rgba(255, 255, 255, .18); background: #fff; }
+  .shot .screen .chrome { display: flex; gap: 6px; padding: 10px 12px; background: #eef1f6; }
+  .shot .screen .chrome i { width: 10px; height: 10px; border-radius: 50%; background: #c7cedb; }
+  .shot .phone { position: absolute; right: -12px; bottom: -44px; width: 28%; border-radius: 20px; overflow: hidden; border: 5px solid #0d1526; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .7); }
+  .float { position: absolute; left: -22px; top: 18%; background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); }
+  .float svg { color: var(--accent); }
+  .float small { display: block; color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  .float.two { left: auto; right: 22%; top: auto; bottom: -22px; }
+  .float.two svg { color: var(--blue); }
 
-  /* Chiffres */
-  .stats { margin-top: -46px; position: relative; z-index: 2; }
-  .stats .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .stat { border-radius: var(--r); padding: 22px; color: #fff; box-shadow: var(--shadow); }
-  .stat b { display: block; font-size: 36px; line-height: 1.1; font-weight: 800; }
-  .stat:nth-child(1) { background: linear-gradient(135deg, #1550a8, #2a70d6); }
-  .stat:nth-child(2) { background: linear-gradient(135deg, #0b6b40, #128052); }
-  .stat:nth-child(3) { background: linear-gradient(135deg, #9a4306, #b8590b); }
-  .stat:nth-child(4) { background: linear-gradient(135deg, #4c34b0, #6a4fe0); }
+  /* Preuves : chiffres et conformité */
+  .proof { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .proof .wrap { padding-top: 34px; padding-bottom: 34px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .stat { padding: 6px 22px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat b { display: block; font-size: 38px; line-height: 1.1; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 15px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; padding: 22px 0 0; border-top: 1px solid var(--line); list-style: none; }
+  .badges li { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: var(--text-2); background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; }
+  .badges svg { color: var(--accent); }
+  @media (prefers-color-scheme: dark) { .stat b { color: #cfe0ff; } .tier.featured { border-color: var(--blue); } .tier .tag, .step::before, .gallery-tabs button[aria-selected='true'] { background: var(--blue); color: #06122a; border-color: var(--blue); } }
 
-  section { padding: 90px 0; }
-  .section-head { text-align: center; max-width: 720px; margin: 0 auto 46px; }
-  .section-head .kicker { color: var(--blue-2); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: 13.5px; }
-  h2 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.15; margin: 10px 0 12px; letter-spacing: -.01em; }
+  section { padding: 92px 0; }
+  .alt { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .section-head { text-align: center; max-width: 740px; margin: 0 auto 48px; }
+  .kicker { color: var(--blue); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
   .section-head p { color: var(--muted); font-size: 18px; margin: 0; }
 
-  /* Fonctionnalités */
-  .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .feature { background: var(--surface); border-radius: var(--r); padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--line); transition: transform .3s, box-shadow .3s; }
-  .feature:hover { transform: translateY(-6px); }
-  .feature .ic { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #fff; margin-bottom: 14px; }
-  .feature h3 { margin: 0 0 6px; font-size: 18.5px; }
-  .feature p { margin: 0; color: var(--muted); font-size: 15.5px; }
-  .t1 { background: linear-gradient(135deg, #1550a8, #2a70d6); } .t2 { background: linear-gradient(135deg, #0b6b40, #128052); }
-  .t3 { background: linear-gradient(135deg, #9a4306, #b8590b); } .t4 { background: linear-gradient(135deg, #4c34b0, #6a4fe0); }
-  .t5 { background: linear-gradient(135deg, #0b5f6b, #0e7a87); } .t6 { background: linear-gradient(135deg, #a01f4c, #c02a60); }
+  /* Avant / avec */
+  .shift { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .shift article { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; display: grid; gap: 14px; align-content: start; }
+  .shift .before { color: var(--muted); display: flex; gap: 10px; align-items: flex-start; font-size: 15.5px; }
+  .shift .before svg { color: var(--danger); margin-top: 3px; }
+  .shift .after { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .shift .after svg { color: var(--accent); margin-top: 3px; }
 
-  /* Mises en avant */
-  .spot { display: grid; grid-template-columns: 1fr 1fr; gap: 54px; align-items: center; margin-bottom: 80px; }
-  .spot:nth-child(even) .spot-img { order: -1; }
-  .spot-img { border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
-  .spot ul { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
-  .spot li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-2); }
-  .spot li svg { color: #128052; margin-top: 3px; }
-  .alt { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-
-  /* Offres */
-  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .tier { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); display: flex; flex-direction: column; }
-  .tier.featured { outline: 3px solid var(--gold); transform: scale(1.02); }
-  .tier-head { padding: 24px; color: #fff; }
-  .tier-head b { display: block; font-size: 24px; }
-  .tier ul { list-style: none; margin: 0; padding: 20px 24px; display: grid; gap: 8px; flex: 1; }
-  .tier li { display: flex; gap: 9px; color: var(--text-2); font-size: 15.5px; }
-  .tier li svg { color: #128052; margin-top: 3px; }
-  .tier .btn { margin: 0 24px 24px; }
-  .badge { display: inline-block; background: var(--gold); color: #3a2a00; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+  /* Fonctionnalités : grille modulaire */
+  .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .cell { grid-column: span 2; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; transition: border-color .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease); }
+  .cell:hover { border-color: var(--blue); transform: translateY(-3px); box-shadow: var(--shadow); }
+  .cell.wide { grid-column: span 3; }
+  .cell p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .cell .ic, .dl .ic, .doc .ic, .dl-reco .ic { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px; }
+  .cell ul { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; color: var(--text-2); font-size: 15px; }
+  .cell li { display: flex; gap: 8px; align-items: flex-start; }
+  .cell li svg { color: var(--accent); margin-top: 4px; }
+  /* Pastilles d'icônes : aplats (pas de dégradé), la couleur distingue les familles */
+  .t1 { background: var(--blue-soft); color: var(--blue); }
+  .t2 { background: color-mix(in srgb, #047857 14%, var(--surface)); color: var(--accent); }
+  .t3 { background: color-mix(in srgb, #b45309 15%, var(--surface)); color: #b45309; }
+  .t4 { background: color-mix(in srgb, #6d28d9 13%, var(--surface)); color: #6d28d9; }
+  .t5 { background: color-mix(in srgb, #0e7490 14%, var(--surface)); color: #0e7490; }
+  .t6 { background: color-mix(in srgb, #be185d 12%, var(--surface)); color: #be185d; }
+  @media (prefers-color-scheme: dark) { .t3 { color: #fbbf24; } .t4 { color: #c4b5fd; } .t5 { color: #67e8f9; } .t6 { color: #f9a8d4; } }
 
   /* Galerie */
   .gallery-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 26px; }
   .gallery-tabs button { font: inherit; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text-2); cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
-  .gallery-tabs button:hover { border-color: var(--blue-2); color: var(--ink); }
-  .gallery-tabs button[aria-selected='true'] { background: linear-gradient(135deg, var(--blue), var(--blue-2)); color: #fff; border-color: transparent; }
-  .laptop { max-width: 1000px; margin: 0 auto; }
-  .laptop .bezel { background: #0d1526; border-radius: 18px 18px 0 0; padding: 14px 14px 0; box-shadow: var(--shadow); }
+  .gallery-tabs button:hover { border-color: var(--blue); color: var(--ink); }
+  .gallery-tabs button[aria-selected='true'] { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .laptop { max-width: 1000px; margin: 0 auto; padding: 0 4%; }
+  .laptop .bezel { background: #0d1526; border-radius: 16px 16px 0 0; padding: 12px 12px 0; box-shadow: var(--shadow); }
   .laptop .bezel .bar { display: flex; gap: 6px; padding: 0 4px 10px; }
   .laptop .bezel .bar i { width: 10px; height: 10px; border-radius: 50%; background: #3a4560; }
-  .laptop .bezel .bar i:first-child { background: #e5534b; } .laptop .bezel .bar i:nth-child(2) { background: var(--gold); } .laptop .bezel .bar i:nth-child(3) { background: #2fa463; }
   .laptop .view { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #fff; border-radius: 6px 6px 0 0; }
-  .laptop .view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; transition: opacity .45s ease; }
-  .laptop .base { height: 16px; margin: 0 -4%; border-radius: 0 0 16px 16px; background: linear-gradient(#c9d0de, #9aa3b5); }
+  .laptop .view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; transition: opacity .4s ease; }
+  .laptop .base { height: 14px; margin: 0 -4%; border-radius: 0 0 14px 14px; background: linear-gradient(#c9d0de, #9aa3b5); }
   .gallery-caption { text-align: center; color: var(--muted); margin-top: 18px; min-height: 1.6em; }
 
   /* Étapes */
   .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; counter-reset: step; }
-  .step { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 26px 22px 22px; box-shadow: var(--shadow); }
-  .step::before { counter-increment: step; content: counter(step); position: absolute; top: -16px; left: 22px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--blue), var(--blue-2)); box-shadow: 0 6px 14px -6px rgba(21, 80, 168, .8); }
-  .step h3 { margin: 8px 0 6px; font-size: 18px; display: flex; gap: 8px; align-items: center; }
-  .step h3 svg { color: var(--blue-2); }
+  .step { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 28px 22px 22px; }
+  .step::before { counter-increment: step; content: counter(step); position: absolute; top: -16px; left: 22px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--navy); }
+  .step h3 { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .step h3 svg { color: var(--blue); }
   .step p { margin: 0; color: var(--muted); font-size: 15.5px; }
 
+  /* Offres */
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+  .tier { background: var(--surface); border-radius: var(--r); border: 1px solid var(--line); display: flex; flex-direction: column; padding: 26px; position: relative; }
+  .tier.featured { border: 2px solid var(--navy); box-shadow: var(--shadow); }
+  .tier .tag { position: absolute; top: -13px; left: 24px; background: var(--navy); color: #fff; font-size: 12.5px; font-weight: 800; padding: 4px 12px; border-radius: 999px; }
+  .tier h3 { font-size: 22px; }
+  .tier .for { color: var(--muted); font-size: 15px; margin: 0 0 4px; }
+  .tier .users { font-weight: 700; color: var(--blue); font-size: 15px; }
+  .tier ul { list-style: none; margin: 18px 0 22px; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; gap: 9px; flex: 1; align-content: start; }
+  .tier li { display: flex; gap: 9px; color: var(--text-2); font-size: 15.5px; align-items: flex-start; }
+  .tier li svg { color: var(--accent); margin-top: 4px; }
+  .trial { margin: 28px auto 0; max-width: 860px; background: var(--blue-soft); border: 1px solid color-mix(in srgb, var(--blue) 25%, transparent); border-radius: var(--r); padding: 18px 22px; display: flex; gap: 14px; align-items: flex-start; color: var(--text-2); font-size: 15.5px; }
+  .trial svg { color: var(--blue); margin-top: 2px; }
+
   /* Téléchargements */
-  .dl-reco { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 22px 26px; margin-bottom: 26px; border-radius: var(--r); color: #fff; background: linear-gradient(135deg, var(--navy), var(--blue-2)); box-shadow: var(--shadow); position: relative; overflow: hidden; }
-  .dl-reco::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--weave); }
-  .dl-reco .ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,255,255,.14); }
+  .dl-reco { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 22px 26px; margin-bottom: 24px; border-radius: var(--r); color: #fff; background: var(--navy); position: relative; overflow: hidden; }
+  .dl-reco::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--weave); }
+  .dl-reco .ic { margin: 0; background: rgba(255, 255, 255, .14); color: #fff; }
   .dl-reco .txt { flex: 1; min-width: 220px; }
   .dl-reco .txt b { display: block; font-size: 20px; }
   .dl-reco .txt span { opacity: .9; }
   .dl-reco .acts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .dl-reco .btn em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .8; margin-left: 6px; }
   .downloads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
-  .dl { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s, border-color .3s; }
-  .dl.is-reco { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), var(--shadow); }
+  .dl { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .dl.is-reco { border: 2px solid var(--gold); }
   .dl-top { display: flex; gap: 12px; align-items: center; }
-  .dl .ic { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; color: #fff; }
+  .dl .ic { margin: 0; }
   .dl h3 { margin: 0; font-size: 18px; line-height: 1.25; }
   .dl small { color: var(--muted); display: block; font-size: 14px; line-height: 1.4; }
   .reco-tag { display: none; align-self: flex-start; background: var(--gold); color: #3a2a00; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
   .dl.is-reco .reco-tag { display: inline-block; }
   .dl-files { display: grid; gap: 8px; }
-  .dl-files .btn { width: 100%; min-height: 48px; padding: 6px 14px; font-size: 15px; justify-content: space-between; text-align: left; line-height: 1.25; }
+  .dl-files .btn { width: 100%; padding: 6px 14px; font-size: 15px; justify-content: space-between; text-align: left; line-height: 1.25; }
   .dl-files .btn em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .85; white-space: nowrap; }
-  .btn .lbl { display: inline-flex; align-items: center; gap: 8px; }
-  .dl-reco .btn em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .8; margin-left: 6px; }
   .dl-files .btn[aria-disabled='true'] { opacity: .6; pointer-events: none; }
   .dl-note { font-size: 13.5px; color: var(--muted); background: var(--soft); border-radius: 10px; padding: 8px 10px; margin: 0; }
   .dl-qr { display: flex; gap: 12px; align-items: center; background: var(--soft); border-radius: 12px; padding: 10px; font-size: 13.5px; color: var(--text-2); }
   .dl-qr svg { width: 92px; height: 92px; background: #fff; border-radius: 8px; padding: 4px; }
-  .dl-how { padding: 0; border: 0; background: none; }
-  .dl-how summary { font-size: 15px; color: var(--blue-2); min-height: 32px; align-items: center; }
-  .dl-how ol { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); font-size: 14.5px; display: grid; gap: 6px; }
-  .dl-meta { font-size: 13px; color: var(--muted); }
-  .web-strip { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; justify-content: space-between; margin-top: 18px; padding: 18px 22px; border-radius: var(--r); background: var(--surface); border: 1px dashed var(--blue-2); }
-  .web-strip div { display: flex; gap: 12px; align-items: center; }
-  .web-strip svg { color: var(--blue-2); }
-  .all-files { margin-top: 18px; }
-  .all-files .table { overflow-x: auto; margin-top: 12px; }
-  .all-files table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .all-files th, .all-files td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  .all-files th { color: var(--muted); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
-  .all-files code { font-size: 12px; color: var(--text-2); word-break: break-all; }
-  .copy { font: inherit; font-size: 13px; font-weight: 700; color: var(--blue-2); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-height: 36px; cursor: pointer; white-space: nowrap; }
-  .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
-  .doc { display: flex; gap: 14px; align-items: center; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; box-shadow: var(--shadow); transition: transform .25s; }
-  .doc:hover { transform: translateY(-3px); }
-  .doc .ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
-  .doc b { display: block; }
-  .doc span { color: var(--muted); font-size: 14.5px; }
-  .doc > svg { margin-left: auto; color: var(--blue-2); }
-
-  /* À propos, FAQ, contact */
-  .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
-  .values { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .value { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-  .value b { display: flex; gap: 8px; align-items: center; }
-  .faq { max-width: 820px; margin: 0 auto; display: grid; gap: 12px; }
-  details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; }
-  summary { cursor: pointer; font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
-  summary::after { content: '+'; color: var(--blue-2); font-size: 22px; line-height: 1; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 20px; }
+  details[open] { padding-bottom: 16px; }
+  summary { cursor: pointer; font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; align-items: center; min-height: 44px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--blue); font-size: 22px; line-height: 1; }
   details[open] summary::after { content: '−'; }
   details p { color: var(--text-2); margin: 10px 0 0; }
-  .contact { border-radius: 24px; padding: 48px; color: #fff; background: linear-gradient(135deg, var(--navy), var(--blue-2)); display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: center; position: relative; overflow: hidden; }
-  .contact::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: var(--weave); }
+  .dl-how { padding: 0; border: 0; background: none; }
+  .dl-how summary { font-size: 15px; color: var(--blue); }
+  .dl-how ol { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); font-size: 14.5px; display: grid; gap: 6px; }
+  .dl-meta { font-size: 13px; color: var(--muted); }
+  .web-strip { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; justify-content: space-between; margin-top: 18px; padding: 18px 22px; border-radius: var(--r); background: var(--surface); border: 1px dashed var(--blue); }
+  .web-strip div { display: flex; gap: 12px; align-items: center; }
+  .web-strip svg { color: var(--blue); }
+  .all-files { margin-top: 18px; }
+  .all-files .table { overflow-x: auto; margin-top: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+  .all-files code { font-size: 12px; color: var(--text-2); word-break: break-all; background: none; padding: 0; }
+  .copy { font: inherit; font-size: 13px; font-weight: 700; color: var(--blue); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; min-height: 44px; cursor: pointer; white-space: nowrap; }
+  .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+  .doc { display: flex; gap: 14px; align-items: center; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; transition: border-color .2s, transform .2s var(--ease); }
+  .doc:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .doc .ic { margin: 0; }
+  .doc b { display: block; }
+  .doc span { color: var(--muted); font-size: 14.5px; }
+  .doc > svg { margin-left: auto; color: var(--blue); }
+
+  /* Vos données */
+  .hosting { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .host { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; }
+  .host p { color: var(--muted); margin: 0; font-size: 15.5px; }
+  .host .ic { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px; }
+  .secure { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+  .secure div { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--text-2); }
+  .secure svg { color: var(--accent); margin-top: 3px; }
+
+  /* À propos, FAQ, appel final */
+  .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
+  .about p { color: var(--text-2); }
+  .values { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .value { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; color: var(--muted); font-size: 15.5px; }
+  .value b { display: flex; gap: 8px; align-items: center; color: var(--ink); margin-bottom: 4px; }
+  .value svg { color: var(--blue); }
+  .faq { max-width: 820px; margin: 0 auto; display: grid; gap: 12px; }
+  .final { border-radius: 22px; padding: 52px 48px; color: #fff; background: linear-gradient(150deg, #071f45, var(--navy) 55%, #17509f); display: grid; grid-template-columns: 1.2fr 1fr; gap: 34px; align-items: center; position: relative; overflow: hidden; }
+  .final::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: var(--weave); }
+  .final h2 { color: #fff; margin-top: 0; }
+  .final p { color: rgba(255, 255, 255, .88); margin: 0; }
   .contact-list { display: grid; gap: 10px; }
-  .contact-list a, .contact-list span { display: flex; gap: 10px; align-items: center; color: #fff; text-decoration: none; font-weight: 600; background: rgba(255,255,255,.1); padding: 12px 16px; border-radius: 12px; }
+  .contact-list a, .contact-list span { display: flex; gap: 10px; align-items: center; color: #fff; text-decoration: none; font-weight: 600; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .16); padding: 12px 16px; border-radius: 12px; min-height: 48px; }
+  .contact-list a:hover { background: rgba(255, 255, 255, .18); }
   footer { padding: 34px 0 44px; color: var(--muted); font-size: 14.5px; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; justify-content: space-between; align-items: center; }
+  footer a { text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
 
-  /* Animations d'apparition */
-  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  /* Barre d'action fixe sur téléphone */
+  .mobile-cta { display: none; }
+
+  /* Apparition en cascade (une fois), coupée si l'utilisateur réduit les animations */
+  .reveal { opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .45s var(--ease), transform .45s var(--ease-back); }
   .reveal.in { opacity: 1; transform: none; }
-  @keyframes float { 50% { transform: translate(-30px, 24px) scale(1.04); } }
-  @keyframes rise { from { opacity: 0; transform: translateY(40px) scale(.97); } }
-  @keyframes bob { 50% { transform: translateY(-10px); } }
+  .stagger > .reveal:nth-child(2) { transition-delay: .06s; } .stagger > .reveal:nth-child(3) { transition-delay: .12s; }
+  .stagger > .reveal:nth-child(4) { transition-delay: .18s; } .stagger > .reveal:nth-child(5) { transition-delay: .24s; }
+  .stagger > .reveal:nth-child(6) { transition-delay: .3s; } .stagger > .reveal:nth-child(n+7) { transition-delay: .36s; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal { opacity: 1; transform: none; }
@@ -218,36 +287,39 @@
   @media (max-width: 1100px) {
     .downloads { grid-template-columns: repeat(2, 1fr); }
     .steps { grid-template-columns: repeat(2, 1fr); row-gap: 30px; }
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .cell, .cell.wide { grid-column: span 1; }
+    .secure { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 1040px) {
-    .tiers { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
-    .tier.featured { transform: none; }
-  }
-  @media (max-width: 900px) {
-    .hero .wrap, .spot, .about, .contact { grid-template-columns: 1fr; }
-    .spot:nth-child(even) .spot-img { order: 0; }
-    .stats .grid { grid-template-columns: repeat(2, 1fr); }
-    nav.links { display: none; position: absolute; top: 70px; left: 0; right: 0; flex-direction: column; background: var(--surface); padding: 12px 22px 20px; border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
+  @media (max-width: 960px) {
+    .hero .wrap, .about, .final { grid-template-columns: 1fr; }
+    .hero .wrap { padding-top: 52px; padding-bottom: 84px; gap: 40px; }
+    .tiers, .shift, .hosting { grid-template-columns: 1fr; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .stats { grid-template-columns: repeat(2, 1fr); row-gap: 22px; }
+    .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+    nav.links { display: none; position: absolute; top: var(--nav-h); left: 0; right: 0; flex-direction: column; background: var(--surface); padding: 12px 22px 20px; border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
     nav.links.open { display: flex; }
+    nav.links a { min-height: 44px; display: flex; align-items: center; }
     .menu-toggle { display: grid; place-items: center; }
-    header.top .login { display: none; }
-    nav.links .login-mobile { display: inline-flex; }
-    .shot .phone { right: 6px; }
+    header.top .login, header.top .try { display: none; }
+    nav.links .login-mobile { display: inline-flex; margin-top: 8px; }
     section { padding: 64px 0; }
-    .contact { padding: 30px 22px; }
+    .final { padding: 34px 22px; }
+    .float { display: none; }
+    .shot .phone { right: 6px; }
   }
-  @media (min-width: 901px) { nav.links .login-mobile { display: none; } }
+  @media (min-width: 961px) { nav.links .login-mobile { display: none; } }
   @media (max-width: 640px) {
-    .downloads, .steps, .docs { grid-template-columns: 1fr; }
+    body { font-size: 16px; padding-bottom: 76px; }
+    .downloads, .steps, .docs, .bento, .values, .secure { grid-template-columns: 1fr; }
     .dl.is-reco { order: -1; }
     .dl-reco { padding: 20px; }
-    .dl-reco .acts, .dl-reco .acts .btn { width: 100%; }
+    .dl-reco .acts, .dl-reco .acts .btn, .hero .cta .btn { width: 100%; }
     .all-files .sha { display: none; }
-  }
-  @media (max-width: 560px) {
-    .values { grid-template-columns: 1fr; }
-    .stat b { font-size: 28px; }
-    body { font-size: 16px; }
+    .stat b { font-size: 30px; }
+    .stat { padding: 4px 14px; }
+    .mobile-cta { display: flex; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+    .mobile-cta .btn { flex: 1; min-height: 48px; padding: 0 12px; font-size: 15.5px; }
   }
 </style>
 </head>
@@ -255,16 +327,17 @@
 <a class="skip" href="#contenu">Aller au contenu</a>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" alt=""> IAM <span>INVOICER</span></a>
+    <a class="brand" href="#" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" alt="" width="36" height="36"> IAM <span>INVOICER</span></a>
     <nav class="links" id="menu" aria-label="Navigation">
+      <a href="#solution">Solution</a>
       <a href="#fonctionnalites">Fonctionnalités</a>
       <a href="#offres">Offres</a>
       <a href="#telecharger">Télécharger</a>
-      <a href="#entreprise">IAM Technology</a>
-      <a href="#contact">Contact</a>
-      <a class="btn btn-primary login-mobile" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+      <a href="#faq">Questions</a>
+      <a class="btn btn-ghost login-mobile" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
     </nav>
-    <a class="btn btn-primary login" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+    <a class="btn btn-ghost login" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+    <a class="btn btn-primary try" href="#telecharger">Essai gratuit</a>
     <button class="menu-toggle" aria-controls="menu" aria-expanded="false" aria-label="Ouvrir le menu"><i data-icon="List"></i></button>
   </div>
 </header>
@@ -273,57 +346,94 @@
   <div class="hero">
     <div class="wrap">
       <div>
-        <span class="eyebrow"><i data-icon="SealCheck"></i>Conforme SYSCOHADA · Burkina Faso et zone OHADA</span>
+        <span class="eyebrow"><i data-icon="SealCheck"></i>Conforme au SYSCOHADA révisé · Burkina Faso et zone OHADA</span>
         <h1>Toute votre gestion, <em>simple et conforme</em>, même sans Internet.</h1>
-        <p class="lead">Devis, factures, caisse et mobile money, stock, comptabilité, paie CNSS/IUTS et déclarations : IAM INVOICER réunit tout dans une seule application, sur ordinateur, téléphone et navigateur.</p>
+        <p class="lead">Devis, factures, caisse et mobile money, stock, comptabilité, paie et déclarations : une seule application pour votre entreprise, sur ordinateur, téléphone et navigateur.</p>
         <div class="cta">
-          <a class="btn btn-light" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essai gratuit 30 jours</span></a>
-          <a class="btn btn-outline-white" href="/app/"><i data-icon="SignIn"></i>Accéder à mon espace</a>
+          <a class="btn btn-primary" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essayer gratuitement 30 jours</span></a>
+          <a class="btn btn-outline-white" href="#apercu"><i data-icon="PlayCircle"></i>Voir l'application</a>
         </div>
-        <div class="trust">
-          <span><i data-icon="WifiSlash"></i>Fonctionne hors ligne</span>
-          <span><i data-icon="DeviceMobile"></i>Windows, macOS, Android, iOS, web</span>
-          <span><i data-icon="ShieldCheck"></i>Données chiffrées en transit</span>
-        </div>
+        <p class="cta-note">Sans carte bancaire, sans engagement. Vos données restent les vôtres.</p>
+        <ul class="trust" aria-label="Points forts">
+          <li><i data-icon="WifiSlash"></i>Fonctionne hors ligne</li>
+          <li><i data-icon="Devices"></i>Windows, macOS, Android, iOS, web</li>
+          <li><i data-icon="ShieldCheck"></i>Une base par entreprise</li>
+        </ul>
       </div>
-      <div class="shot">
-        <div class="screen"><img src="assets/captures/tableau-de-bord.png" alt="Tableau de bord d'IAM INVOICER : ventes, encaissements, créances" width="1440" height="900"></div>
-        <div class="phone"><img src="assets/captures/mobile.png" alt="IAM INVOICER sur téléphone" width="390" height="844"></div>
+      <div class="shot" aria-hidden="true">
+        <div class="float"><i data-icon="CheckCircle" data-size="26" data-weight="fill"></i><span>Facture FAC-2026-0142<small>réglée par Orange Money</small></span></div>
+        <div class="screen"><div class="chrome"><i></i><i></i><i></i></div><img src="assets/captures/tableau-de-bord.png" alt="" width="1440" height="900" fetchpriority="high"></div>
+        <div class="phone"><img src="assets/captures/mobile.png" alt="" width="390" height="844"></div>
+        <div class="float two"><i data-icon="ChartLineUp" data-size="26"></i><span>Écritures comptables<small>passées automatiquement</small></span></div>
       </div>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="wrap grid">
-      <div class="stat reveal"><b data-count="17">17</b>modules métier</div>
-      <div class="stat reveal"><b data-count="18">18</b>pays OHADA pris en charge</div>
-      <div class="stat reveal"><b data-count="30">30</b>jours d'essai gratuit</div>
-      <div class="stat reveal"><b data-count="5">5</b>plateformes, une seule base</div>
+  <div class="proof">
+    <div class="wrap">
+      <div class="stats stagger">
+        <div class="stat reveal"><b data-count="17">17</b><span>modules reliés entre eux</span></div>
+        <div class="stat reveal"><b data-count="18">18</b><span>pays de la zone OHADA pris en charge</span></div>
+        <div class="stat reveal"><b data-count="5">5</b><span>plateformes, une seule base de données</span></div>
+        <div class="stat reveal"><b data-count="30">30</b><span>jours d'essai gratuit, tous modules</span></div>
+      </div>
+      <ul class="badges" aria-label="Conformité et paiements">
+        <li><i data-icon="SealCheck"></i>Plan comptable SYSCOHADA révisé</li>
+        <li><i data-icon="SealCheck"></i>IFU, TVA, retenues, prélèvement BIC</li>
+        <li><i data-icon="SealCheck"></i>Paie CNSS, IUTS, TPA</li>
+        <li><i data-icon="SealCheck"></i>Orange Money, Moov Money, Wave</li>
+        <li><i data-icon="SealCheck"></i>Facture certifiée SECeF</li>
+      </ul>
     </div>
   </div>
 
-  <section id="fonctionnalites">
+  <section id="solution">
     <div class="wrap">
       <div class="section-head reveal">
-        <div class="kicker">Fonctionnalités</div>
-        <h2>Un vrai logiciel de gestion, pensé pour l'Afrique de l'Ouest</h2>
-        <p>Chaque module est relié aux autres : une vente met à jour le stock, la comptabilité et la trésorerie, sans double saisie.</p>
+        <div class="kicker">Pourquoi changer</div>
+        <h2>Fini les fichiers Excel éparpillés et les fins de mois difficiles</h2>
+        <p>IAM INVOICER a été conçu à Ouagadougou, pour les réalités des entreprises d'Afrique de l'Ouest.</p>
       </div>
-      <div class="features">
-        <div class="feature reveal"><div class="ic t1"><i data-icon="FileText" data-size="26"></i></div><h3>Ventes et facturation</h3><p>Devis, bons de livraison, factures et avoirs numérotés, PDF à votre logo, envoi par e-mail ou SMS, relances.</p></div>
-        <div class="feature reveal"><div class="ic t2"><i data-icon="CashRegister" data-size="26"></i></div><h3>Caisse et mobile money</h3><p>Point de vente tactile, code-barres, Orange Money, Moov Money, Wave, paiement mixte, ticket 80 mm, clôture de caisse.</p></div>
-        <div class="feature reveal"><div class="ic t3"><i data-icon="Package" data-size="26"></i></div><h3>Stock multi-dépôts</h3><p>Plusieurs magasins, transferts, lots et numéros de série, inventaires, alertes de seuil, coût moyen pondéré.</p></div>
-        <div class="feature reveal"><div class="ic t4"><i data-icon="Scales" data-size="26"></i></div><h3>Comptabilité SYSCOHADA</h3><p>Écritures automatiques, journaux, grand livre, balance, compte de résultat, bilan, exports Excel.</p></div>
-        <div class="feature reveal"><div class="ic t5"><i data-icon="Stamp" data-size="26"></i></div><h3>Taxes et déclarations</h3><p>TVA, retenues à la source, droit de timbre, prélèvement BIC, déclarations mensuelles prêtes à reporter.</p></div>
-        <div class="feature reveal"><div class="ic t6"><i data-icon="IdentificationBadge" data-size="26"></i></div><h3>RH et paie</h3><p>Bulletins CNSS, IUTS, TPA, cotisations, congés, déclaration sociale et écritures de paie.</p></div>
-        <div class="feature reveal"><div class="ic t1"><i data-icon="Handshake" data-size="26"></i></div><h3>CRM et projets</h3><p>Pipeline commercial, activités, projets et chantiers, temps passés facturés en un clic.</p></div>
-        <div class="feature reveal"><div class="ic t2"><i data-icon="SealCheck" data-size="26"></i></div><h3>Facture certifiée et signatures</h3><p>Connecteur SECeF, cachet et signature électronique du client, sur place ou à distance.</p></div>
-        <div class="feature reveal"><div class="ic t3"><i data-icon="CloudArrowUp" data-size="26"></i></div><h3>Synchronisation et hors ligne</h3><p>Tous vos postes et téléphones partagent les mêmes données ; sans réseau, on continue de vendre.</p></div>
+      <div class="shift stagger">
+        <article class="reveal">
+          <div class="before"><i data-icon="XCircle" data-weight="fill"></i><span>Factures sous Word, stock sous Excel, caisse sur cahier : tout se ressaisit, les erreurs s'accumulent.</span></div>
+          <div class="after"><i data-icon="CheckCircle" data-weight="fill"></i><span>Une vente met à jour le stock, la caisse, la comptabilité et la créance du client, en une seule saisie.</span></div>
+        </article>
+        <article class="reveal">
+          <div class="before"><i data-icon="XCircle" data-weight="fill"></i><span>Une coupure d'Internet ou de courant, et le logiciel en ligne s'arrête : plus de vente possible.</span></div>
+          <div class="after"><i data-icon="CheckCircle" data-weight="fill"></i><span>Chaque appareil continue de travailler sans réseau et se synchronise au retour de la connexion.</span></div>
+        </article>
+        <article class="reveal">
+          <div class="before"><i data-icon="XCircle" data-weight="fill"></i><span>TVA, retenues, CNSS, IUTS : des jours de calcul chaque mois, et la peur de l'erreur.</span></div>
+          <div class="after"><i data-icon="CheckCircle" data-weight="fill"></i><span>Les déclarations du mois sont préparées à partir de vos pièces, avec les taux de votre pays.</span></div>
+        </article>
       </div>
     </div>
   </section>
 
-  <section id="apercu" class="alt">
+  <section id="fonctionnalites" class="alt">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Fonctionnalités</div>
+        <h2>Un vrai logiciel de gestion, de la facture au bilan</h2>
+        <p>Chaque module est relié aux autres. Vous activez seulement ceux dont vous avez besoin.</p>
+      </div>
+      <div class="bento stagger">
+        <div class="cell wide reveal"><div class="ic t1"><i data-icon="FileText" data-size="24"></i></div><h3>Ventes et facturation</h3><p>Devis, bons de livraison, factures et avoirs numérotés, à votre logo.</p>
+          <ul><li><i data-icon="Check"></i>Aperçu avant impression, PDF, envoi par e-mail ou SMS</li><li><i data-icon="Check"></i>Factures récurrentes, relances, signature électronique du client</li></ul></div>
+        <div class="cell wide reveal"><div class="ic t2"><i data-icon="CashRegister" data-size="24"></i></div><h3>Caisse et mobile money</h3><p>Point de vente tactile, rapide, fait pour le comptoir.</p>
+          <ul><li><i data-icon="Check"></i>Espèces, Orange Money, Moov Money, Wave, paiement mixte</li><li><i data-icon="Check"></i>Code-barres, ticket 80 mm, ouverture et clôture par caissier</li></ul></div>
+        <div class="cell reveal"><div class="ic t3"><i data-icon="Package" data-size="24"></i></div><h3>Stock multi-dépôts</h3><p>Transferts, lots et numéros de série, inventaires, alertes de seuil, coût moyen pondéré.</p></div>
+        <div class="cell reveal"><div class="ic t4"><i data-icon="Scales" data-size="24"></i></div><h3>Comptabilité SYSCOHADA</h3><p>Écritures automatiques, journaux, grand livre, balance, compte de résultat et bilan.</p></div>
+        <div class="cell reveal"><div class="ic t5"><i data-icon="Stamp" data-size="24"></i></div><h3>Taxes et déclarations</h3><p>TVA, retenues à la source, droit de timbre, prélèvement BIC : déclarations prêtes à reporter.</p></div>
+        <div class="cell reveal"><div class="ic t6"><i data-icon="IdentificationBadge" data-size="24"></i></div><h3>RH et paie</h3><p>Bulletins, CNSS, IUTS, TPA, congés, déclaration sociale et écritures de paie.</p></div>
+        <div class="cell reveal"><div class="ic t1"><i data-icon="Kanban" data-size="24"></i></div><h3>CRM et projets</h3><p>Opportunités, tâches, temps passés, dépenses et rentabilité de chaque chantier.</p></div>
+        <div class="cell reveal"><div class="ic t2"><i data-icon="CloudArrowUp" data-size="24"></i></div><h3>Synchronisation</h3><p>Tous vos postes et téléphones partagent les mêmes données, avec ou sans réseau.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="apercu">
     <div class="wrap">
       <div class="section-head reveal">
         <div class="kicker">Aperçu</div>
@@ -350,58 +460,14 @@
     </div>
   </section>
 
-  <section>
-    <div class="wrap">
-      <div class="spot reveal">
-        <div>
-          <div class="kicker" style="color:var(--blue-2);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:13.5px">Pilotage</div>
-          <h2>Voyez où en est votre entreprise, en un coup d'œil</h2>
-          <p style="color:var(--muted)">Chiffre d'affaires, encaissements, créances, trésorerie, articles les plus vendus : un tableau de bord coloré et clair, sur toutes les pages.</p>
-          <ul>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Indicateurs animés et alertes (retards, stock bas)</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Bilan et compte de résultat à jour en permanence</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Aperçu avant impression, numérotation des pages</li>
-          </ul>
-        </div>
-        <div class="spot-img"><img src="assets/captures/factures.png" alt="Liste des factures avec indicateurs et actions" width="1440" height="900" loading="lazy"></div>
-      </div>
-      <div class="spot reveal">
-        <div>
-          <div class="kicker" style="color:var(--blue-2);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:13.5px">Point de vente</div>
-          <h2>Une caisse rapide, faite pour le mobile money</h2>
-          <p style="color:var(--muted)">Encaissez en espèces, Orange Money, Moov Money ou Wave, même avec plusieurs moyens sur une seule vente. Chaque caissier ouvre et clôture sa caisse.</p>
-          <ul>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Lecteur de codes-barres et écran tactile</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Ticket 80 mm ou facture A4</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Ventes enregistrées même sans Internet</li>
-          </ul>
-        </div>
-        <div class="spot-img"><img src="assets/captures/caisse.png" alt="Point de vente : panier et encaissement" width="1440" height="900" loading="lazy"></div>
-      </div>
-      <div class="spot reveal">
-        <div>
-          <div class="kicker" style="color:var(--blue-2);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:13.5px">Comptabilité et fiscalité</div>
-          <h2>Vos déclarations préparées automatiquement</h2>
-          <p style="color:var(--muted)">TVA collectée et déductible, retenues à la source, charges sociales et impôt sur les salaires : les montants du mois sont calculés à partir de vos pièces.</p>
-          <ul>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Plan SYSCOHADA révisé, écritures automatiques</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Identifiant fiscal et taux selon votre pays (IFU, NCC, NINEA…)</li>
-            <li><i data-icon="CheckCircle" data-weight="fill"></i>Import de vos clients, articles et stocks depuis Excel</li>
-          </ul>
-        </div>
-        <div class="spot-img"><img src="assets/captures/bilan.png" alt="Bilan SYSCOHADA : actif et passif" width="1440" height="900" loading="lazy"></div>
-      </div>
-    </div>
-  </section>
-
   <section class="alt">
     <div class="wrap">
       <div class="section-head reveal">
         <div class="kicker">Mise en route</div>
         <h2>Opérationnel en une matinée</h2>
-        <p>Pas de consultant, pas de longue installation : vous facturez le jour même.</p>
+        <p>Pas de longue installation : vous facturez le jour même.</p>
       </div>
-      <div class="steps">
+      <div class="steps stagger">
         <div class="step reveal"><h3><i data-icon="DownloadSimple"></i>Installer</h3><p>Téléchargez l'application pour votre ordinateur ou téléphone, ou ouvrez-la dans le navigateur.</p></div>
         <div class="step reveal"><h3><i data-icon="Buildings"></i>Créer la société</h3><p>Logo, pays, identifiant fiscal (IFU…), régime de TVA et devise : tout s'adapte à votre pays.</p></div>
         <div class="step reveal"><h3><i data-icon="FileXls"></i>Importer</h3><p>Reprenez clients, fournisseurs, articles et stocks depuis vos fichiers Excel.</p></div>
@@ -414,12 +480,12 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="kicker">Offres</div>
-        <h2>Une offre pour chaque taille d'entreprise</h2>
-        <p>Essai gratuit de 30 jours, sans engagement, avec tous les modules. Vos données restent toujours consultables.</p>
+        <h2>Une offre claire pour chaque taille d'entreprise</h2>
+        <p>Commencez par l'essai gratuit. Passez à une licence quand vous êtes prêt, sans rien ressaisir.</p>
       </div>
-      <div class="tiers">
+      <div class="tiers stagger">
         <div class="tier reveal">
-          <div class="tier-head t1"><b>Essentiel</b>Commerces et prestataires · 2 utilisateurs</div>
+          <h3>Essentiel</h3><p class="for">Commerces et prestataires</p><span class="users">2 utilisateurs</span>
           <ul>
             <li><i data-icon="Check"></i>Devis, factures, avoirs</li>
             <li><i data-icon="Check"></i>Caisse et mobile money</li>
@@ -429,7 +495,8 @@
           <a class="btn btn-ghost" href="#contact">Demander un devis</a>
         </div>
         <div class="tier featured reveal">
-          <div class="tier-head t4"><b>Pro <span class="badge">Le plus choisi</span></b>PME · 5 utilisateurs</div>
+          <span class="tag">Le plus choisi</span>
+          <h3>Pro</h3><p class="for">PME</p><span class="users">5 utilisateurs</span>
           <ul>
             <li><i data-icon="Check"></i>Tout l'Essentiel</li>
             <li><i data-icon="Check"></i>Achats et fournisseurs</li>
@@ -440,18 +507,18 @@
           <a class="btn btn-primary" href="#contact">Demander un devis</a>
         </div>
         <div class="tier reveal">
-          <div class="tier-head t3"><b>Entreprise</b>Groupes et multi-sites · illimité</div>
+          <h3>Entreprise</h3><p class="for">Groupes et multi-sites</p><span class="users">Utilisateurs illimités</span>
           <ul>
             <li><i data-icon="Check"></i>Tout le Pro</li>
             <li><i data-icon="Check"></i>RH et paie, déclarations sociales</li>
             <li><i data-icon="Check"></i>CRM, projets, immobilisations, budgets</li>
             <li><i data-icon="Check"></i>Application à votre nom et à votre logo</li>
-            <li><i data-icon="Check"></i>Serveur sur votre domaine</li>
+            <li><i data-icon="Check"></i>Hébergement sur votre domaine</li>
           </ul>
           <a class="btn btn-ghost" href="#contact">Demander un devis</a>
         </div>
       </div>
-      <p style="text-align:center;color:var(--muted);margin-top:22px">Offre sur mesure possible : ne payez que les modules dont vous avez besoin.</p>
+      <div class="trial reveal"><i data-icon="Info" data-size="24"></i><span><b>Essai gratuit de 30 jours, tous modules ouverts</b>, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Une licence lève les limites et conserve tout ce que vous avez saisi. Offre sur mesure possible : ne payez que les modules utiles.</span></div>
     </div>
   </section>
 
@@ -529,45 +596,70 @@
     </div>
   </section>
 
-  <section id="entreprise">
-    <div class="wrap about">
-      <div class="reveal">
-        <div class="kicker" style="color:var(--blue-2);font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:13.5px">IAM Technology</div>
-        <h2>L'éditeur d'IAM INVOICER, à Ouagadougou</h2>
-        <p style="color:var(--text-2)">IAM Technology conçoit des solutions numériques adaptées aux entreprises d'Afrique de l'Ouest : réalités fiscales locales, mobile money, connexions parfois instables. IAM INVOICER est né de ce terrain.</p>
-        <p style="color:var(--text-2)">Nous vous accompagnons de l'installation à la formation de vos équipes, avec une assistance de proximité.</p>
-        <div class="cta"><a class="btn btn-primary" href="#contact"><i data-icon="ChatCircleText"></i>Parler à un conseiller</a></div>
+  <section id="donnees">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Vos données</div>
+        <h2>Vous choisissez où vivent vos données</h2>
+        <p>Trois façons de travailler, que vous pouvez changer plus tard sans perdre une ligne.</p>
       </div>
-      <div class="values reveal">
-        <div class="value"><b><i data-icon="MapPin"></i>Proximité</b>Une équipe sur place, qui connaît vos contraintes.</div>
-        <div class="value"><b><i data-icon="GraduationCap"></i>Formation</b>Prise en main guidée et manuel pour chaque utilisateur.</div>
-        <div class="value"><b><i data-icon="Lifebuoy"></i>Assistance</b>Aide à la mise en service, aux déclarations et aux mises à jour.</div>
-        <div class="value"><b><i data-icon="LockKey"></i>Sécurité</b>Sauvegardes, droits par rôle, journal d'activité.</div>
+      <div class="hosting stagger">
+        <div class="host reveal"><div class="ic t1"><i data-icon="Desktop" data-size="24"></i></div><h3>Sur votre ordinateur</h3><p>Aucune connexion nécessaire. La base est sur le poste, avec une sauvegarde automatique chaque jour.</p></div>
+        <div class="host reveal"><div class="ic t4"><i data-icon="HardDrives" data-size="24"></i></div><h3>Sur votre serveur</h3><p>Au bureau ou sur votre domaine : tous les postes et téléphones partagent les mêmes données.</p></div>
+        <div class="host reveal"><div class="ic t2"><i data-icon="Cloud" data-size="24"></i></div><h3>Hébergé par IAM Technology</h3><p>Nous hébergeons votre base, rien qu'à vous : sa propre base de données, son propre mot de passe.</p></div>
+      </div>
+      <div class="secure stagger">
+        <div class="reveal"><i data-icon="LockKey" data-weight="fill"></i><span>Échanges chiffrés en HTTPS, mots de passe hachés</span></div>
+        <div class="reveal"><i data-icon="UsersThree" data-weight="fill"></i><span>Droits par rôle : chacun ne voit que ce qui le concerne</span></div>
+        <div class="reveal"><i data-icon="ClockCounterClockwise" data-weight="fill"></i><span>Journal d'activité : qui a fait quoi, et quand</span></div>
+        <div class="reveal"><i data-icon="Export" data-weight="fill"></i><span>Export Excel et PDF à tout moment, même après l'essai</span></div>
       </div>
     </div>
   </section>
 
-  <section class="alt">
+  <section id="entreprise" class="alt">
+    <div class="wrap about">
+      <div class="reveal">
+        <div class="kicker">IAM Technology</div>
+        <h2>L'éditeur d'IAM INVOICER, à Ouagadougou</h2>
+        <p>IAM Technology conçoit des solutions numériques adaptées aux entreprises d'Afrique de l'Ouest : réalités fiscales locales, mobile money, connexions parfois instables. IAM INVOICER est né de ce terrain.</p>
+        <p>Nous vous accompagnons de l'installation à la formation de vos équipes, avec une assistance de proximité.</p>
+        <div class="cta"><a class="link" href="#contact">Parler à un conseiller<i data-icon="ArrowRight"></i></a></div>
+      </div>
+      <div class="values stagger">
+        <div class="value reveal"><b><i data-icon="MapPin"></i>Proximité</b>Une équipe sur place, qui connaît vos contraintes.</div>
+        <div class="value reveal"><b><i data-icon="GraduationCap"></i>Formation</b>Prise en main guidée et manuel pour chaque utilisateur.</div>
+        <div class="value reveal"><b><i data-icon="Lifebuoy"></i>Assistance</b>Aide à la mise en service, aux déclarations et aux mises à jour.</div>
+        <div class="value reveal"><b><i data-icon="ArrowsClockwise"></i>Mises à jour</b>Le logiciel évolue avec la réglementation.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
     <div class="wrap">
       <div class="section-head reveal"><div class="kicker">Questions fréquentes</div><h2>Vous vous demandez…</h2></div>
       <div class="faq">
-        <details class="reveal"><summary>Faut-il une connexion Internet ?</summary><p>Non pour l'utilisation courante : sur ordinateur, vous pouvez même travailler seul sur votre poste. Avec un serveur en ligne, chaque appareil continue de fonctionner sans réseau et envoie ses ventes au retour de la connexion.</p></details>
+        <details class="reveal"><summary>Faut-il une connexion Internet ?</summary><p>Non pour l'utilisation courante : sur ordinateur, vous pouvez travailler seul sur votre poste. Avec un serveur en ligne, chaque appareil continue de fonctionner sans réseau et envoie ses ventes au retour de la connexion.</p></details>
         <details class="reveal"><summary>Le logiciel est-il adapté à mon pays ?</summary><p>IAM INVOICER suit le plan comptable SYSCOHADA révisé et s'adapte au pays choisi (identifiant fiscal, devise, TVA, régimes). Les paramètres de taxes et de paie restent modifiables avec votre comptable.</p></details>
         <details class="reveal"><summary>Puis-je reprendre mes données existantes ?</summary><p>Oui : clients, fournisseurs, articles, stock, salariés et plan comptable s'importent depuis Excel ou un fichier CSV, avec un compte rendu ligne par ligne.</p></details>
         <details class="reveal"><summary>Que comprend la version d'essai ?</summary><p>Pendant 30 jours, tous les modules sont ouverts pour découvrir le logiciel, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Les documents imprimés portent la mention « version d'évaluation ». Une licence lève toutes les limites en conservant ce que vous avez saisi.</p></details>
         <details class="reveal"><summary>Que se passe-t-il à la fin de l'essai ?</summary><p>Vos données restent consultables, imprimables et exportables. Pour continuer à saisir, il suffit d'activer une licence.</p></details>
-        <details class="reveal"><summary>Mes données sont-elles en sécurité ?</summary><p>Les mots de passe sont chiffrés, les échanges passent en HTTPS, chaque utilisateur a des droits selon son rôle et toutes les actions sont tracées. Des sauvegardes automatiques sont prévues sur le serveur.</p></details>
+        <details class="reveal"><summary>Mes données sont-elles en sécurité ?</summary><p>Les mots de passe sont hachés, les échanges passent en HTTPS, chaque utilisateur a des droits selon son rôle et toutes les actions sont tracées. En hébergement, chaque entreprise a sa propre base de données, sauvegardée chaque nuit.</p></details>
+        <details class="reveal"><summary>Quels ordinateurs et téléphones sont compatibles ?</summary><p>Windows 10 et 11, macOS 10.15 et plus récents (puce Apple et Intel), Android 7 et plus, iPhone et iPad (iOS 15 et plus), et tout navigateur récent.</p></details>
       </div>
     </div>
   </section>
 
-  <section id="contact">
+  <section id="contact" style="padding-top:0">
     <div class="wrap">
-      <div class="contact reveal">
+      <div class="final reveal">
         <div>
-          <h2 style="color:#fff">Prêt à simplifier votre gestion ?</h2>
-          <p style="opacity:.92">Demandez une démonstration, un devis ou votre licence. Nous vous répondons rapidement.</p>
-          <div class="cta"><a class="btn btn-light" href="/app/"><i data-icon="SignIn"></i>Se connecter</a></div>
+          <h2>Prêt à simplifier votre gestion ?</h2>
+          <p>Essayez gratuitement pendant 30 jours, ou demandez une démonstration et un devis. Nous vous répondons rapidement.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="#telecharger"><i data-icon="DownloadSimple"></i>Essayer gratuitement</a>
+            <a class="btn btn-outline-white" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+          </div>
         </div>
         <div class="contact-list" id="contact-list"></div>
       </div>
@@ -578,9 +670,14 @@
 <footer>
   <div class="wrap">
     <span>© <span id="year"></span> IAM Technology — IAM INVOICER</span>
-    <span><a href="/app/">Se connecter</a> · <a href="#telecharger">Télécharger</a> · <a href="#contact">Contact</a></span>
+    <span><a href="/app/">Se connecter</a> · <a href="#telecharger">Télécharger</a> · <a href="docs/IAM-INVOICER-Guide-installation.pdf">Guide d'installation</a> · <a href="#contact">Contact</a></span>
   </div>
 </footer>
+
+<div class="mobile-cta" role="region" aria-label="Actions rapides">
+  <a class="btn btn-ghost" href="/app/">Se connecter</a>
+  <a class="btn btn-primary" href="#telecharger">Essai gratuit</a>
+</div>
 
 <template id="ic-dl"><i data-icon="DownloadSimple"></i></template>
 <template id="ic-phone"><i data-icon="DeviceMobileCamera"></i></template>

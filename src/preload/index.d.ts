@@ -40,6 +40,8 @@ interface ErpBridge {
   /** Ordinateur : PDF exact du document (base64) pour l'aperçu avant impression. */
   pdfPreview?(id: number, format?: 'a4' | 'ticket'): Promise<Result<string>>
   saveText(name: string, content: string): Promise<Result>
+  /** Fichier binaire (ex. classeur .xlsx), contenu en base64. */
+  saveBinary(name: string, base64: string): Promise<Result>
   /** Imprime un HTML complet (PDF sur ordinateur, fenêtre d'impression sur le web). */
   printHtml(html: string, filename: string): Promise<Result>
   /** Envoie un document par e-mail (PDF joint sur ordinateur, HTML depuis le web/mobile). */

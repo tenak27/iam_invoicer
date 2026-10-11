@@ -220,6 +220,24 @@ function createHttpBridge(): ErpBridge {
       return { ok: true, data: name }
     },
 
+    async saveBinary(name, base64) {
+      if (native) {
+        const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')])
+        const file = await Filesystem.writeFile({ path: name, data: base64, directory: Directory.Cache })
+        await Share.share({ title: name, files: [file.uri] })
+        return { ok: true, data: name }
+      }
+      const bin = atob(base64)
+      const bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(new Blob([bytes], { type: name.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/octet-stream' }))
+      a.download = name
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 10_000)
+      return { ok: true, data: name }
+    },
+
     pickImage: () =>
       new Promise<R<string | null>>((resolve) => {
         const input = document.createElement('input')

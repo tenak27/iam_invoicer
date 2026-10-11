@@ -26,6 +26,7 @@ import * as imports from './services/imports'
 import * as statements from './services/statements'
 import * as licence from './services/licence'
 import * as licensing from './services/licensing'
+import * as analytics from './services/analytics'
 import * as roles from './services/roles'
 import * as recurring from './services/recurring'
 import { isReadAction } from '@shared/licence'
@@ -145,6 +146,14 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'reports.dashboard': { access: 'dashboard', fn: reports.dashboard },
   'reports.sales': { access: 'reports', fn: reports.salesReport },
   'reports.audit': { access: 'users', fn: reports.auditLog },
+  'analytics.catalog': { access: 'reports', fn: analytics.catalog },
+  'analytics.run': { access: 'reports', fn: (ctx, a) => analytics.runAnalysis(ctx, analytics.resolvePreset(a)) },
+  'analytics.values': { access: 'reports', fn: analytics.dimensionValues },
+  'analytics.reports': { access: 'reports', fn: analytics.listReports },
+  'analytics.save': { access: 'reports', fn: analytics.saveReport },
+  'analytics.delete': { access: 'reports', fn: analytics.deleteReport },
+  'analytics.pinned': { access: 'reports', fn: analytics.pinned },
+  'analytics.alerts': { access: 'reports', fn: analytics.alerts },
 
   'cash.current': { access: 'cash', fn: cash.current },
   'cash.open': { access: 'cash', fn: cash.open },

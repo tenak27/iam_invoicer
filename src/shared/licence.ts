@@ -148,5 +148,5 @@ export function normalizeCompany(s: string): string {
 const READ_ACTIONS = /\.(list|get|options|categories|dashboard|sales|valuation|audit|accounts|entries|ledger|balance|income|balanceSheet|month|missing|employees|leaves|runs|params|payslipsHtml|declaration|pipeline|agenda|clients|myWeek|forecast|forecasts|current|history|detail|warehouses|byWarehouse|movements|lots|trace|transfers|log|preview|templates|secrets|needsSetup|status|upcoming)$/
 
 export function isReadAction(name: string): boolean {
-  return READ_ACTIONS.test(name) || name === 'hr.run' || name.startsWith('auth.') || name.startsWith('licence.')
+  return READ_ACTIONS.test(name) || name === 'hr.run' || /^analytics\.(catalog|run|values|reports|pinned|alerts)$/.test(name) || name.startsWith('auth.') || name.startsWith('licence.')
 }

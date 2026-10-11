@@ -723,5 +723,21 @@ export const MIGRATIONS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
   CREATE INDEX licences_issued_company_idx ON licences_issued(company)
+  `,
+  // v10 : analyses enregistrées (informatique décisionnelle), épinglées au tableau de bord, alertes
+  `
+  CREATE TABLE saved_reports (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    config JSONB NOT NULL,
+    owner_id INT REFERENCES users(id) ON DELETE SET NULL,
+    shared BOOLEAN NOT NULL DEFAULT FALSE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    position INT NOT NULL DEFAULT 0,
+    alert JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX saved_reports_owner_idx ON saved_reports(owner_id)
   `
 ]
