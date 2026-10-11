@@ -1,4 +1,4 @@
-// Émission des licences clients (profil « Gestionnaire de licences », poste de l'éditeur) :
+// Émission des licences clients (compte administrateur de l'éditeur, sur son poste) :
 // registre, nouvelle licence, renouvellement, révocation, clé à copier ou enregistrer.
 
 import { useMemo, useState } from 'react'

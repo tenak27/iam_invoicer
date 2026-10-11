@@ -24,12 +24,12 @@ Les modules de chaque palier se règlent dans `TIERS` (`src/shared/licence.ts`).
 
 Sur le poste de l'éditeur (là où se trouve `%USERPROFILE%.iam-invoicerlicence-private.pem`), ou sur un serveur lancé avec `LICENCE_PRIVATE_KEY_FILE`, le menu **Administration → Émission de licences** apparaît :
 
-- Créez un utilisateur avec le rôle **Gestionnaire de licences** : il ne voit que ce module (aucune donnée commerciale ou comptable). L'administrateur y a aussi accès.
+- Connectez-vous avec le compte administrateur **tenak27** : lui seul peut attribuer les licences (`VENDOR_ADMIN` dans `src/shared/licence.ts`). Les autres comptes, même administrateurs, ne voient pas ce module, et le compte `tenak27` ne peut être modifié que par son titulaire.
 - **Nouvelle licence** : raison sociale, IFU, palier ou modules sur mesure, utilisateurs, durée (1 mois à 3 ans, perpétuelle, ou date précise), marque blanche, contact et note interne.
 - La clé se copie en un clic ou s'enregistre en `.txt` avec les instructions d'activation pour le client.
 - Le **registre** liste toutes les licences (actives, à renouveler sous 30 jours, expirées, révoquées). **Renouveler** reprend la licence avec un an de plus ; **Révoquer** la signale dans le registre (une licence déjà activée hors ligne reste valable jusqu'à sa fin : préférez des licences annuelles).
 - Chaque licence est aussi ajoutée au registre CSV `licences.csv` à côté de la clé ; **Reprendre le registre CSV** importe les licences émises avec l'outil ci-dessous.
-- Sur les installations des clients, la clé privée est absente : le menu et le rôle n'apparaissent pas.
+- Sur les installations des clients, la clé privée est absente : le menu n'apparaît pas.
 
 ## Émettre une licence en ligne de commande
 

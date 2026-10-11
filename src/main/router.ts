@@ -29,7 +29,7 @@ import * as licensing from './services/licensing'
 import * as analytics from './services/analytics'
 import * as roles from './services/roles'
 import * as recurring from './services/recurring'
-import { isReadAction } from '@shared/licence'
+import { isReadAction, isVendorAdmin, VENDOR_ADMIN } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
 type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Module>)
@@ -289,6 +289,8 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
       if (route.access !== 'user') {
         mod = typeof route.access === 'function' ? await route.access(ctx, args) : route.access
         if (!can(ctx.user.role, mod)) fail("Vous n'avez pas les droits pour cette action.")
+        // Attribution des licences : réservée au compte administrateur de l'éditeur, quel que soit le rôle
+        if (mod === 'licensing' && !isVendorAdmin(ctx.user)) fail(`L'attribution des licences est réservée au compte administrateur de l'éditeur (${VENDOR_ADMIN}).`)
       }
       // Licence : module inclus, et écriture seulement si la licence (ou l'évaluation) est valide.
       if (!LICENCE_FREE.has(name)) {

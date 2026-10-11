@@ -1,4 +1,5 @@
-// Émission des licences clients depuis l'application (profil « Gestionnaire de licences »).
+// Émission des licences clients depuis l'application, par le compte administrateur de
+// l'éditeur uniquement (VENDOR_ADMIN, contrôlé dans router.ts).
 // Fonctionne uniquement là où se trouve la clé PRIVÉE de l'éditeur : poste de l'éditeur
 // (~/.iam-invoicer/licence-private.pem) ou serveur (LICENCE_PRIVATE_KEY_FILE). La clé
 // n'est jamais transmise à l'interface ; elle doit correspondre à la clé publique du logiciel.

@@ -110,7 +110,7 @@ export interface LicenceStatus {
   message: string
   /** Évaluation : consommation des quotas. */
   usage?: TrialUsage[]
-  /** Poste ou serveur de l'éditeur : émission de licences possible. */
+  /** Poste ou serveur de l'éditeur, compte de l'éditeur (VENDOR_ADMIN) : émission de licences possible. */
   vendor?: boolean
 }
 
@@ -132,6 +132,16 @@ export const VENDOR = {
   phone: '',
   email: '',
   website: ''
+}
+
+/**
+ * Identifiant du compte administrateur de l'éditeur : le seul à pouvoir attribuer les licences
+ * (émission, renouvellement, révocation, bases clients en ligne), là où se trouve la clé privée.
+ */
+export const VENDOR_ADMIN = 'tenak27'
+
+export function isVendorAdmin(user: { username?: string; role?: string } | null | undefined): boolean {
+  return user?.role === 'admin' && String(user.username ?? '').trim().toLowerCase() === VENDOR_ADMIN
 }
 
 /** Nom de société normalisé pour comparer la licence et la configuration. */

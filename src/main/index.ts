@@ -531,7 +531,7 @@ process.on('unhandledRejection', (e) => diag(`Promesse rejetée non gérée : ${
 
 app.whenReady().then(async () => {
   diagInit()
-  // Poste de l'éditeur : clé privée de licence présente → profil « Gestionnaire de licences » utilisable
+  // Poste de l'éditeur : clé privée de licence présente → émission de licences ouverte au compte de l'éditeur
   configureVendorKey(process.env.IAM_LICENCE_KEY ?? join(homedir(), '.iam-invoicer', 'licence-private.pem'))
   if (app.isPackaged && process.platform !== 'darwin') Menu.setApplicationMenu(null)
   registerIpc()

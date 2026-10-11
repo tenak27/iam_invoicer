@@ -77,19 +77,22 @@ describe('Version d’évaluation limitée', () => {
   })
 })
 
-describe('Profil « Gestionnaire de licences »', () => {
+describe('Attribution des licences par le compte de l’éditeur (tenak27)', () => {
   let manager: Ctx
   beforeAll(async () => {
-    // Le poste de l'éditeur a une licence (sinon le quota d'utilisateurs de l'évaluation s'applique)
+    // Évaluation limitée à 2 utilisateurs : le compte de l'éditeur remplace le vendeur
     await db.query("DELETE FROM users WHERE username = 'vendeur'")
     forgetLicenceStatus(db)
+    await ok(admin, 'users.save', { username: 'tenak27', full_name: 'Tenak', role: 'admin', password: 'secret123', active: true })
+    const u = await db.one("SELECT id, username, full_name, role FROM users WHERE username = 'tenak27'")
+    manager = { db, user: { ...u } as SessionUser }
   })
 
   it('sans clé privée : module masqué et émission refusée', async () => {
     configureVendorKey(join(keyDir, 'absente.pem'))
-    const st = await ok(admin, 'licence.status')
+    const st = await ok(manager, 'licence.status')
     expect(st.vendor).toBe(false)
-    expect(await err(admin, 'licensing.issue', { company: 'X', tier: 'pro' })).toMatch(/éditeur/)
+    expect(await err(manager, 'licensing.issue', { company: 'X', tier: 'pro' })).toMatch(/clé privée/)
   })
 
   it('clé privée qui ne correspond pas au logiciel : refusée', async () => {
@@ -97,20 +100,31 @@ describe('Profil « Gestionnaire de licences »', () => {
     const wrong = join(keyDir, 'autre.pem')
     writeFileSync(wrong, other)
     configureVendorKey(wrong)
-    const st = await ok(admin, 'licensing.status')
+    const st = await ok(manager, 'licensing.status')
     expect(st.available).toBe(false)
     expect(st.reason).toMatch(/ne correspond pas/)
   })
 
-  it('le gestionnaire émet une licence valide, inscrite aux registres', async () => {
+  it('un autre compte, même administrateur ou « Gestionnaire de licences », ne peut rien attribuer', async () => {
     configureVendorKey(keyFile)
-    expect((await ok(admin, 'licence.status')).vendor).toBe(true)
-    await ok(admin, 'users.save', { username: 'licences', full_name: 'Awa Licences', role: 'licences', password: 'secret123', active: true })
-    const u = await db.one("SELECT id, username, full_name, role FROM users WHERE username = 'licences'")
-    manager = { db, user: { ...u } as SessionUser }
+    expect((await ok(admin, 'licence.status')).vendor).toBe(false)
+    expect(await err(admin, 'licensing.issue', { company: 'X', tier: 'pro' })).toMatch(/réservée au compte administrateur de l'éditeur \(tenak27\)/)
+    expect(await err(admin, 'licensing.list')).toMatch(/tenak27/)
+    expect(await err({ db, user: { ...admin.user!, role: 'licences' } }, 'licensing.issue', { company: 'X', tier: 'pro' })).toMatch(/tenak27/)
+    // Même identifiant sans le rôle administrateur : refusé
+    expect(await err({ db, user: { ...manager.user!, role: 'commercial' } }, 'licensing.list')).toMatch(/droits/)
+  })
 
-    // Le profil ne voit que l'émission de licences
-    expect(await err(manager, 'parties.list', { kind: 'client' })).toMatch(/droits/)
+  it('le compte tenak27 ne peut être modifié que par son titulaire', async () => {
+    const id = manager.user!.id
+    expect(await err(admin, 'users.save', { id, username: 'tenak27', full_name: 'Tenak', role: 'admin', password: 'pirate123', active: true })).toMatch(/titulaire/)
+    expect(await err(admin, 'users.save', { id, username: 'tenak27', full_name: 'Tenak', role: 'admin', active: false })).toMatch(/titulaire/)
+    expect(await err(manager, 'users.save', { id, username: 'autre', full_name: 'Tenak', role: 'admin', active: true })).toMatch(/ne peut pas être changé/)
+    await ok(manager, 'users.save', { id, username: 'tenak27', full_name: 'Tenak Admin', role: 'admin', active: true })
+  })
+
+  it('tenak27 émet une licence valide, inscrite aux registres', async () => {
+    expect((await ok(manager, 'licence.status')).vendor).toBe(true)
 
     const lic = await ok(manager, 'licensing.issue', { company: 'Pharmacie du Progrès SARL', tax_id: '00012345A', tier: 'pro', expires: '2099-06-30', contact: '70 00 00 00' })
     expect(lic.number).toMatch(/^LIC-\d{4}-0001$/)
@@ -131,7 +145,7 @@ describe('Profil « Gestionnaire de licences »', () => {
 
     const list = await ok<any[]>(manager, 'licensing.list')
     expect(list.map((l) => l.number)).toEqual([sur.number, lic.number])
-    expect(list[1].issued_by_name).toBe('Awa Licences')
+    expect(list[1].issued_by_name).toBe('Tenak Admin')
   })
 
   it('révocation, puis reprise du registre CSV sans doublon', async () => {

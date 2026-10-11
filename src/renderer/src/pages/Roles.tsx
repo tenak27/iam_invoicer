@@ -46,10 +46,9 @@ export function RolesPage() {
   if (loading || !data || !matrix) return <Loading />
 
   const editable = user.role === 'admin'
-  // Profil « Gestionnaire de licences » : uniquement chez l'éditeur
-  const vendor = !!licence?.vendor
-  const ROLES = ALL_ROLES.filter((r) => r !== 'licences' || vendor)
-  const modules = data.defaults.admin.filter((m) => m !== 'licensing' || vendor)
+  // Attribution des licences : réservée au compte de l'éditeur, hors matrice des rôles
+  const ROLES = ALL_ROLES.filter((r) => r !== 'licences')
+  const modules = data.defaults.admin.filter((m) => m !== 'licensing')
   const dirty = JSON.stringify(matrix) !== JSON.stringify(data.current)
   const toggle = (role: Role, m: Module) =>
     setMatrix({ ...matrix, [role]: matrix[role].includes(m) ? matrix[role].filter((x) => x !== m) : [...matrix[role], m] })

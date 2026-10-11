@@ -5,7 +5,7 @@
 import { createPublicKey, verify } from 'node:crypto'
 import { PERMISSIONS, type Module } from '@shared/domain'
 import {
-  BASE_MODULES, LICENCE_PUBLIC_KEY, MODULE_NAMES, normalizeCompany, TIERS, TRIAL_DAYS, TRIAL_LIMITS, TRIAL_QUOTA_LABELS, VENDOR,
+  BASE_MODULES, isVendorAdmin, LICENCE_PUBLIC_KEY, MODULE_NAMES, normalizeCompany, TIERS, TRIAL_DAYS, TRIAL_LIMITS, TRIAL_QUOTA_LABELS, VENDOR,
   type LicencePayload, type LicenceStatus, type TrialQuota, type TrialUsage
 } from '@shared/licence'
 import { todayISO } from '@shared/format'
@@ -177,7 +177,7 @@ export async function checkUserQuota(db: Db, excludeUserId?: number) {
 }
 
 export async function getLicence(ctx: Ctx): Promise<LicenceStatus> {
-  return { ...(await licenceStatus(ctx.db)), vendor: vendorKeyAvailable() }
+  return { ...(await licenceStatus(ctx.db)), vendor: vendorKeyAvailable() && isVendorAdmin(ctx.user) }
 }
 
 export async function activateLicence(ctx: Ctx, args: { key: string }) {

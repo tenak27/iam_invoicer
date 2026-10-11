@@ -1,6 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import type { Role } from '@shared/domain'
 import { ROLE_LABELS } from '@shared/domain'
+import { VENDOR_ADMIN } from '@shared/licence'
 import type { Db } from '../db'
 import { audit, fail, str, type Ctx, type SessionUser } from './context'
 import { checkUserQuota } from './licence'
@@ -97,6 +98,12 @@ export async function saveUser(
   if (input.id) {
     if (input.id === ctx.user?.id && (input.role !== 'admin' || input.active === false))
       fail('Vous ne pouvez pas retirer vos propres droits administrateur.')
+    // Compte de l'éditeur (attribution des licences) : modifiable par lui seul, identifiant fixe
+    const target = await ctx.db.one<{ username: string }>('SELECT username FROM users WHERE id = $1', [input.id])
+    if (target?.username === VENDOR_ADMIN) {
+      if (input.id !== ctx.user?.id) fail(`Le compte « ${VENDOR_ADMIN} » ne peut être modifié que par son titulaire.`)
+      if (username !== VENDOR_ADMIN) fail(`L'identifiant du compte « ${VENDOR_ADMIN} » ne peut pas être changé.`)
+    }
     await ctx.db.query('UPDATE users SET username = $1, full_name = $2, role = $3, active = $4 WHERE id = $5', [
       username, str(input.full_name), input.role, input.active ?? true, input.id
     ])
