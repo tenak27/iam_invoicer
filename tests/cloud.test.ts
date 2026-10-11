@@ -1,6 +1,12 @@
+import { generateKeyPairSync } from 'node:crypto'
+import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { openDb, type Db } from '../src/main/db'
+import { useTestLicenceKey } from '../src/main/services/licence'
+import { configureVendorKey, useTestVendorPublicKey } from '../src/main/services/licensing'
 import { createHandler } from '../src/server/app'
 import { createCloudHandler } from '../src/server/cloud'
 import { slugify, TenantManager, type Provisioner } from '../src/server/tenants'
@@ -31,7 +37,11 @@ function fakeProvisioner() {
       if (!e) throw new Error(`base ${name} absente`)
       if (e.password !== password) throw new Error('authentification refusée')
       e.db ??= await openDb({ mode: 'local' })
-      return { ...e.db, close: async () => {} } // la base simulée survit aux fermetures
+      // La base simulée survit aux fermetures, mais une connexion fermée ne répond plus (comme un vrai pool)
+      const real = e.db
+      let closed = false
+      const guard = <F extends (...a: any[]) => any>(fn: F) => ((...a: any[]) => (closed ? Promise.reject(new Error('connexion fermée')) : fn(...a))) as F
+      return { ...real, query: guard(real.query), one: guard(real.one), tx: guard(real.tx), close: async () => void (closed = true) }
     }
   }
   return { prov, dbs }
@@ -66,7 +76,7 @@ beforeAll(async () => {
   manager = new TenantManager(control, fake.prov)
   await manager.init()
   const root = createHandler({ db: mainDb, version: 't' })
-  server = createServer(createCloudHandler({ root, manager, adminToken: TOKEN, shared: { version: 't' } }))
+  server = createServer(createCloudHandler({ root, manager, adminToken: TOKEN, rootDb: mainDb, shared: { version: 't' } }))
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
 })
@@ -175,5 +185,79 @@ describe('Hébergement de plusieurs clients (une base chacun)', () => {
     expect((await http('DELETE', `/api/admin/tenants/${garage.slug}?confirm=${garage.slug}`, undefined, adminH)).status).toBe(200)
     expect(fake.dbs.has(garage.db_name)).toBe(false)
     expect((await http('GET', `/t/${garage.slug}/api/status`)).status).toBe(404)
+  })
+
+  it('base fermée pour inactivité : rouverte à la requête suivante', async () => {
+    expect((await call(pharma.slug, pharmaToken, 'parties.list', { kind: 'client' })).json.ok).toBe(true)
+    ;(manager as any).idleMs = -1
+    await (manager as any).sweep()
+    ;(manager as any).idleMs = 30 * 60_000
+    const r = await call(pharma.slug, pharmaToken, 'parties.list', { kind: 'client' })
+    expect(r.status).toBe(200)
+    expect(r.json.data).toHaveLength(1)
+  })
+})
+
+describe('Console de l’éditeur', () => {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519')
+  const pubPem = publicKey.export({ type: 'spki', format: 'pem' }) as string
+  let vendor: Record<string, string>
+  let slug = ''
+
+  beforeAll(async () => {
+    useTestLicenceKey(pubPem)
+    useTestVendorPublicKey(pubPem)
+    const dir = mkdtempSync(join(tmpdir(), 'iam-console-'))
+    writeFileSync(join(dir, 'licence-private.pem'), privateKey.export({ type: 'pkcs8', format: 'pem' }) as string)
+    configureVendorKey(join(dir, 'licence-private.pem'))
+    // Base principale : le compte de l'éditeur et un autre administrateur
+    const setup = await http('POST', '/api/setup', { company: { name: 'IAM Technology' }, username: 'tenak27', full_name: 'Éditeur', password: 'secret123' })
+    vendor = { Authorization: `Bearer ${setup.json.data.token}` }
+    await http('POST', '/api/call', { name: 'users.save', args: { username: 'autre', full_name: 'Autre Admin', role: 'admin', password: 'secret123', active: true } }, vendor)
+  })
+  afterAll(() => configureVendorKey(null))
+
+  it('page servie, verrouillée, sans donnée', async () => {
+    expect((await http('GET', '/admin')).location).toBe('/admin/')
+    const page = await http('GET', '/admin/')
+    expect(page.status).toBe(200)
+    expect(page.text).toContain('Console éditeur')
+    expect(page.text).not.toContain(TOKEN)
+  })
+
+  it('connexion par le compte de l’éditeur uniquement', async () => {
+    const me = await http('GET', '/api/admin/me', undefined, vendor)
+    expect(me.json.data).toMatchObject({ by: 'compte', name: 'Éditeur', canIssue: true })
+    expect((await http('GET', '/api/admin/me', undefined, adminH)).json.data.by).toBe('jeton')
+    const other = (await http('POST', '/api/login', { username: 'autre', password: 'secret123' })).json.data.token
+    expect((await http('GET', '/api/admin/tenants', undefined, { Authorization: `Bearer ${other}` })).status).toBe(401)
+    // Le jeton d'un utilisateur d'une société hébergée n'ouvre pas la console
+    expect((await http('GET', '/api/admin/me')).status).toBe(401)
+  })
+
+  it('société créée, licence émise puis attribuée', async () => {
+    const created = await http('POST', '/api/admin/tenants', { name: 'Vista Énergie SARL', contact: '70 11 22 33' }, vendor)
+    slug = created.json.data.slug
+    expect(slug).toBe('vista_energie')
+    const lic = await http('POST', '/api/admin/licences', { company: 'Vista Énergie SARL', tier: 'pro', expires: '2099-01-31' }, vendor)
+    expect(lic.json.data.number).toMatch(/^LIC-\d{4}-\d{4}$/)
+    expect((await http('GET', '/api/admin/licences', undefined, vendor)).json.data[0]).toMatchObject({ company: 'Vista Énergie SARL', issued_by_name: 'Éditeur' })
+    // Clé refusée si elle n'est pas signée par l'éditeur
+    expect((await http('POST', `/api/admin/tenants/${slug}/licence`, { licence_key: 'abc.def' }, vendor)).json.error).toMatch(/invalide/)
+    const set = await http('POST', `/api/admin/tenants/${slug}/licence`, { licence_id: lic.json.data.id }, vendor)
+    expect(set.json.data).toMatchObject({ number: lic.json.data.number, tier: 'pro', expires: '2099-01-31' })
+    // La société se configure : sa licence est active d'emblée
+    const s = await http('POST', `/t/${slug}/api/setup`, { company: { name: 'Vista Énergie SARL' }, username: 'admin', full_name: 'Vista', password: 'secret123', setup_code: created.json.data.setup_code })
+    expect(s.status).toBe(200)
+    const info = (await http('GET', `/api/admin/tenants/${slug}`, undefined, vendor)).json.data
+    expect(info).toMatchObject({ licence_number: lic.json.data.number, configured: true, licence: { state: 'active', label: 'Pro', number: lic.json.data.number } })
+  })
+
+  it('licence du registre préinstallée à la création', async () => {
+    const lic = await http('POST', '/api/admin/licences', { company: 'Eco Food', tier: 'essentiel' }, vendor)
+    const created = await http('POST', '/api/admin/tenants', { name: 'Eco Food', licence_id: lic.json.data.id }, vendor)
+    const list = (await http('GET', '/api/admin/tenants', undefined, vendor)).json.data
+    expect(list.find((t: any) => t.slug === created.json.data.slug).licence_number).toBe(lic.json.data.number)
+    expect((await http('POST', '/api/admin/tenants', { name: 'Sans Licence', licence_id: 9999 }, vendor)).json.error).toMatch(/introuvable/)
   })
 })

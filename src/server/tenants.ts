@@ -9,7 +9,9 @@
 
 import { randomBytes, randomInt } from 'node:crypto'
 import pg from 'pg'
+import { TIERS } from '@shared/licence'
 import { openDb, type Db } from '../main/db'
+import { decodeLicence, forgetLicenceStatus, licenceStatus } from '../main/services/licence'
 
 export interface TenantRow {
   slug: string
@@ -277,7 +279,42 @@ export class TenantManager {
     } catch {
       /* raison sociale illisible */
     }
-    return { users: u?.n ?? 0, documents: d?.n ?? 0, company, configured: (u?.n ?? 0) > 0, size: await this.prov.databaseSize(t.db_name) }
+    const configured = (u?.n ?? 0) > 0
+    const lic = await licenceStatus(db)
+    let licence: { state: string; label: string; number: string | null; users: number; expires: string | null; daysLeft: number | null; message: string } = {
+      state: lic.state, label: lic.label, number: lic.licenceId, users: lic.users, expires: lic.expires, daysLeft: lic.daysLeft, message: lic.message
+    }
+    if (!configured) {
+      // Société pas encore configurée : la licence préinstallée ne peut pas encore être rapprochée de sa raison sociale
+      const k = await db.one<{ value: string }>("SELECT value FROM settings WHERE key = 'licence_key'")
+      let pre = null
+      try {
+        pre = k ? decodeLicence(JSON.parse(k.value)) : null
+      } catch {
+        pre = null
+      }
+      if (pre) {
+        const label = pre.tier === 'sur-mesure' ? 'Sur mesure' : TIERS[pre.tier]?.label ?? pre.tier
+        licence = { state: 'preinstalled', label, number: pre.id, users: pre.users, expires: pre.expires, daysLeft: null, message: `Licence ${label} préinstallée : elle s'activera à la première configuration, si la raison sociale saisie est « ${pre.company} ».` }
+      }
+    }
+    return { users: u?.n ?? 0, documents: d?.n ?? 0, company, configured, size: await this.prov.databaseSize(t.db_name), licence }
+  }
+
+  /** Attribue une licence à la société : clé installée dans sa base, numéro noté au registre des clients. */
+  async setLicence(slug: string, key: string): Promise<{ number: string; company: string; tier: string; expires: string | null; warning?: string }> {
+    const t = await this.must(slug)
+    const clean = String(key ?? '').replace(/\s+/g, '')
+    const lic = decodeLicence(clean)
+    if (!lic) throw new Error('Clé de licence invalide : copiez-la en entier, sans la modifier.')
+    const db = await this.db(t)
+    await db.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['licence_key', JSON.stringify(clean)])
+    forgetLicenceStatus(db)
+    await this.control.query('UPDATE cloud_tenants SET licence_number = $2 WHERE slug = $1', [slug, lic.id])
+    const st = await licenceStatus(db)
+    // Base déjà configurée sous une autre raison sociale : la licence ne s'activera pas telle quelle
+    const warning = st.state === 'active' || !st.company ? undefined : st.message
+    return { number: lic.id, company: lic.company, tier: lic.tier, expires: lic.expires, warning }
   }
 
   async closeAll() {

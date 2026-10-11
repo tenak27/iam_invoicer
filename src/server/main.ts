@@ -54,6 +54,7 @@ async function main() {
       root,
       manager,
       adminToken: process.env.ADMIN_TOKEN,
+      rootDb: db,
       shared: { version: __APP_VERSION__, webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'), corsOrigin: process.env.CORS_ORIGIN }
     })
     console.log(`Hébergement multi-clients actif : ${(await manager.list()).length} client(s), adresses /t/<client>`)
