@@ -1511,3 +1511,69 @@ tr.clickable:hover td.actions-col { background: var(--row-hover); }
 .startup-card p { margin: 0; }
 .startup-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(var(--primary-rgb), .18); border-top-color: var(--c-primary); animation: spin .9s linear infinite; margin: 6px 0; }
 @media (prefers-reduced-motion: reduce) { .startup-spinner { animation-duration: 3s; } }
+
+/* =====================================================================
+   Mouvement (motion design) — jetons et règles communes
+   Voir design-system/iam-invoicer/MASTER.md, section « Mouvement ».
+   Principes : décélération à l'arrivée, accélération au départ, sorties plus
+   courtes que les entrées, transform/opacity uniquement, tout interruptible.
+   ===================================================================== */
+:root {
+  --t-slow: .4s;
+  /* Sortie : environ 65 % de l'entrée (--t-med) */
+  --t-exit: .16s;
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --stagger: 40ms;
+}
+
+/* Appui : retour tactile immédiat sur tout ce qui se clique */
+.btn:active:not(:disabled) { transform: translateY(1px) scale(.98); }
+.icon-btn:active, .nav-icon-btn:active, .tab:active, .row-action:active { transform: scale(.94); }
+.icon-btn, .nav-icon-btn, .row-action { transition: background var(--t-fast), color var(--t-fast), transform var(--t-fast) var(--ease-out); }
+
+/* Fenêtres : sortie (fond qui s'efface, carte qui redescend) */
+.modal-backdrop.closing { animation: fade-out var(--t-exit) var(--ease-in) forwards; pointer-events: none; }
+.modal-backdrop.closing .modal { animation: sink-out var(--t-exit) var(--ease-in) forwards; }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes sink-out { to { transform: translateY(8px) scale(.98); opacity: 0; } }
+
+/* Notifications : icône, entrée par le bas, sortie vers la droite */
+.toast { display: flex; align-items: center; gap: 10px; }
+.toast.leaving { animation: toast-out var(--t-exit) var(--ease-in) forwards; }
+@keyframes toast-out { to { transform: translateX(16px); opacity: 0; } }
+.toast-ic { flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.toast-ic circle { opacity: .35; }
+.toast-success .toast-ic { color: #3ccf8a; }
+.toast-error .toast-ic { color: #ffb4a8; }
+/* La coche se dessine : confirmation visible de l'enregistrement */
+.toast-ic path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: stroke-draw .35s var(--ease-out) .12s forwards; }
+@keyframes stroke-draw { to { stroke-dashoffset: 0; } }
+
+/* Onglets : l'indicateur glisse vers l'onglet choisi (continuité) */
+.tabs { position: relative; }
+.tabs.has-ind .tab { position: relative; z-index: 1; }
+.tabs.has-ind .tab.active { background: none; box-shadow: none; }
+.tab-ind { position: absolute; left: 0; top: 0; border-radius: var(--r-sm); background: var(--c-primary); box-shadow: 0 2px 6px rgba(var(--primary-rgb), .35); pointer-events: none; }
+.tab-ind.ready { transition: transform var(--t-med) var(--ease-out), width var(--t-med) var(--ease-out); }
+
+/* Menu : l'élément actif « se pose » */
+.nav-link.active { animation: nav-settle var(--t-med) var(--ease-out); }
+@keyframes nav-settle { from { transform: scale(.97); opacity: .7; } }
+
+/* Chargement : silhouettes du contenu, en cascade */
+.loading-label { display: block; font-size: 13.5px; }
+.loading-skel { display: grid; gap: 10px; max-width: 560px; margin: 16px auto 0; }
+.loading-skel i { display: block; height: 14px; border-radius: 7px; background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface-3) 50%, var(--surface-2) 70%) 0 0 / 300% 100%; animation: shimmer 1.4s linear infinite; }
+.loading-skel i:nth-child(2) { width: 82%; animation-delay: .12s; }
+.loading-skel i:nth-child(3) { width: 58%; animation-delay: .24s; }
+
+/* Valeur qui change (total du panier, reste à payer) : bref rebond pour attirer l'œil */
+.bump { display: inline-block; animation: bump var(--t-med) var(--ease-spring); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+/* Menus déroulants et panneaux : l'origine suit le déclencheur */
+.pop-panel, .row-menu, .cmd-panel { will-change: transform, opacity; }
+
+/* Onglets dans une page : indicateur à la teinte de la section */
+.route-view .tab-ind { background: var(--tone-grad); box-shadow: 0 4px 12px -4px rgba(var(--tone-rgb), .7); }
+.route-view .tabs.has-ind .tab.active { color: #fff; }

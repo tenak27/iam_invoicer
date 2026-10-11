@@ -161,7 +161,7 @@ function Pos({ summary, reload }: { summary: any; reload: () => void }) {
             <tbody>
               <tr><td>Total HT</td><td><Money value={totals.ht} /></td></tr>
               <tr><td>TVA</td><td><Money value={totals.tva} /></td></tr>
-              <tr className="grand"><td>À payer</td><td><Money value={totals.ttc} /></td></tr>
+              <tr className="grand"><td>À payer</td><td><span key={totals.ttc} className="bump"><Money value={totals.ttc} /></span></td></tr>
             </tbody>
           </table>
           <button className="btn btn-primary btn-block btn-lg" disabled={cart.length === 0} onClick={() => setPaying(true)}>Encaisser {formatMoney(totals.ttc)}</button>

@@ -51,9 +51,38 @@ Les contrastes du texte sont vérifiés à 4,5:1 au moins dans les deux thèmes.
 
 ## Mouvement
 
-- **Animations décoratives :** limitées au personnage d'accueil (salut, clignement d'yeux, pièces qui flottent) et à l'avatar.
-- **Animations d'interface :** ouverture des menus (0,18 s), des fenêtres et du tiroir (0,25 s).
-- **Effets du tableau de bord :** entrée en cascade des cartes (une seule fois), graphiques qui se dessinent, anneau et barres qui se remplissent, fondu entre les pages et les onglets, squelette de chargement.
+Règles issues de ui-ux-pro-max (catégorie Animation) : le mouvement exprime une cause et un effet, il n'est jamais seulement décoratif.
+
+**Jetons** (`styles.css`), à utiliser partout, sans durée en dur :
+
+| Jeton | Valeur | Usage |
+|---|---|---|
+| `--t-fast` | 0,15 s | Survol, appui, couleur |
+| `--t-med` | 0,25 s | Entrée d'une fenêtre, d'un menu, glissement d'un indicateur |
+| `--t-slow` | 0,4 s | Entrée d'une page, graphiques |
+| `--t-exit` | 0,16 s | Toute sortie : environ 65 % de l'entrée |
+| `--ease-out` | décélération | Ce qui arrive |
+| `--ease-in` | accélération | Ce qui part |
+| `--ease-spring` | rebond | Confirmation, valeur qui change |
+| `--stagger` | 40 ms | Décalage entre éléments d'une cascade |
+
+**Dans l'application**
+
+- **Appui :** tout ce qui se clique réagit tout de suite (`scale(.98)` sur les boutons, `.94` sur les boutons-icônes).
+- **Fenêtres** (`Modal`) : entrée par le bas ; sortie plus courte (fond qui s'efface, carte qui redescend) à la fermeture par Échap, la croix ou le fond.
+- **Notifications** (`Toaster`) : icône dont le trait se dessine (la coche confirme l'enregistrement), sortie vers la droite.
+- **Onglets** (`Tabs`) : l'indicateur glisse vers l'onglet choisi (continuité), à la teinte de la section.
+- **Menu :** l'élément actif « se pose ».
+- **Chargement** (`Loading`) : silhouettes du contenu à venir, en cascade.
+- **Valeur qui change :** classe `.bump` avec une `key` égale à la valeur (total « À payer » de la caisse).
+- **Tableau de bord :** entrée en cascade des cartes (une seule fois), graphiques qui se dessinent, anneau et barres qui se remplissent, compteurs.
+- **Décoratif :** limité au personnage d'accueil (salut, clignement d'yeux, pièces qui flottent) et à l'avatar.
+
+**Garde-fous**
+
+- Uniquement `transform` et `opacity` (exception assumée : la largeur de l'indicateur d'onglets, élément isolé sans enfant).
+- Une ou deux animations clés par écran ; pas de parallaxe sur du texte.
+- Interruptible : l'état final est fixé par le code (minuteur de `--t-exit`), jamais par un événement `animationend`.
 - **`prefers-reduced-motion`** coupe tout, **délais compris** : le contenu s'affiche immédiatement. Une animation avec délai et `fill-mode: both` laisse sinon le contenu invisible pendant le délai.
 
 ## À ne pas faire

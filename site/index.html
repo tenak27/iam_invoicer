@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
+<script>document.documentElement.classList.add('js')</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IAM INVOICER — Facturation, caisse, stock et comptabilité SYSCOHADA | IAM Technology</title>
@@ -272,8 +273,8 @@
   .mobile-cta { display: none; }
 
   /* Apparition en cascade (une fois), coupée si l'utilisateur réduit les animations */
-  .reveal { opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .45s var(--ease), transform .45s var(--ease-back); }
-  .reveal.in { opacity: 1; transform: none; }
+  .js .reveal { opacity: 0; transform: translateY(16px) scale(.98); transition: opacity .45s var(--ease), transform .45s var(--ease-back); }
+  .js .reveal.in { opacity: 1; transform: none; }
   .stagger > .reveal:nth-child(2) { transition-delay: .06s; } .stagger > .reveal:nth-child(3) { transition-delay: .12s; }
   .stagger > .reveal:nth-child(4) { transition-delay: .18s; } .stagger > .reveal:nth-child(5) { transition-delay: .24s; }
   .stagger > .reveal:nth-child(6) { transition-delay: .3s; } .stagger > .reveal:nth-child(n+7) { transition-delay: .36s; }
@@ -283,10 +284,93 @@
     html { scroll-behavior: auto; }
   }
 
+  /* ── Mouvement (motion design) ─────────────────────────────────────────────
+     Jetons : --ease à l'arrivée, --ease-in au départ, --ease-back pour les rebonds.
+     Uniquement transform et opacity ; une ou deux animations clés par écran. */
+  :root { --ease-in: cubic-bezier(.4, 0, 1, 1); }
+
+  /* Barre de progression de lecture, liée au défilement */
+  .progress { position: fixed; left: 0; right: 0; top: 0; height: 3px; z-index: 70; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--gold), var(--accent)); pointer-events: none; }
+  header.top { transition: box-shadow .25s var(--ease); }
+  header.top.scrolled { box-shadow: 0 8px 24px -16px rgba(15, 23, 42, .35); }
+
+  /* Héros : entrée en cascade, puis l'écran monte et les étiquettes se posent */
+  .js .hero [data-in] { opacity: 0; transform: translateY(18px); animation: hero-in .6s var(--ease) forwards; animation-delay: calc(var(--d, 0) * 90ms + 80ms); }
+  .js .hero .shot .screen { opacity: 0; transform: translateY(34px) scale(.97); animation: hero-in .8s var(--ease) .25s forwards; }
+  .js .hero .shot .phone { opacity: 0; transform: translateY(40px); animation: hero-in .7s var(--ease) .55s forwards; }
+  .js .hero .float { opacity: 0; transform: scale(.8); animation: pop-in .5s var(--ease-back) .95s forwards, bob 6s ease-in-out 1.6s infinite; }
+  .js .hero .float.two { animation-delay: 1.15s, 2.2s; }
+  @keyframes hero-in { to { opacity: 1; transform: none; } }
+  @keyframes pop-in { to { opacity: 1; transform: none; } }
+  @keyframes bob { 50% { translate: 0 -7px; } }
+  /* Mot-clé du titre : le trait se dessine une fois le titre arrivé */
+  h1 em { position: relative; white-space: nowrap; }
+  h1 em::after { content: ''; position: absolute; left: 0; right: 0; bottom: -.06em; height: .09em; border-radius: 99px; background: currentColor; opacity: .55; transform: scaleX(0); transform-origin: 0 50%; animation: draw-x .7s var(--ease) .9s forwards; }
+  @keyframes draw-x { to { transform: scaleX(1); } }
+  /* Profondeur : l'écran du héros recule légèrement au défilement (réglé par script) */
+  .hero .shot { will-change: transform; }
+
+  /* Boutons : reflet au survol, flèche qui avance */
+  .btn-primary { position: relative; overflow: hidden; }
+  .btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .28) 50%, transparent 65%); transform: translateX(-120%); transition: transform .6s var(--ease); pointer-events: none; }
+  .btn-primary:hover::after { transform: translateX(120%); }
+  .link svg { transition: transform .2s var(--ease); }
+  .link:hover svg { transform: translateX(4px); }
+
+  /* Avant / avec : à l'apparition, le problème s'estompe et la solution se confirme */
+  .js .shift article .after svg { transform: scale(0); }
+  .js .shift article.in .after svg { animation: pop-in .45s var(--ease-back) .45s forwards; }
+  .js .shift article .before { transition: opacity .5s var(--ease) .35s; }
+  .js .shift article.in .before { opacity: .78; }
+
+  /* Fonctionnalités : halo qui suit le pointeur (souris uniquement) */
+  .cell { position: relative; overflow: hidden; }
+  .cell::before { content: ''; position: absolute; inset: 0; background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--blue) 13%, transparent), transparent 70%); opacity: 0; transition: opacity .3s var(--ease); pointer-events: none; }
+  @media (hover: hover) { .cell:hover::before { opacity: 1; } }
+  .cell .ic { transition: transform .3s var(--ease-back); }
+  .cell:hover .ic { transform: translateY(-2px) scale(1.06); }
+
+  /* Étapes : le fil se déroule de la première à la dernière */
+  .steps { position: relative; }
+  .steps::before { content: ''; position: absolute; left: 6%; right: 6%; top: 0; height: 2px; background: linear-gradient(90deg, var(--navy), var(--blue)); transform: scaleX(0); transform-origin: 0 50%; transition: transform 1.1s var(--ease) .2s; z-index: 1; border-radius: 2px; }
+  .steps.in::before, html:not(.js) .steps::before { transform: scaleX(1); }
+  .step::before { z-index: 2; }
+  .js .step::before { transform: scale(0); transition: transform .4s var(--ease-back); }
+  .js .step.in::before { transform: scale(1); }
+
+  /* Aperçu : fondu enchaîné avec un léger zoom */
+  .laptop .view img { transition: opacity .4s ease, transform .5s var(--ease); }
+  .laptop .view img[style*='opacity: 0'] { transform: scale(1.015); }
+
+  /* Questions : ouverture progressive (navigateurs récents), instantanée ailleurs */
+  @supports (interpolate-size: allow-keywords) {
+    :root { interpolate-size: allow-keywords; }
+    details::details-content { block-size: 0; overflow: clip; transition: block-size .3s var(--ease), content-visibility .3s allow-discrete; }
+    details[open]::details-content { block-size: auto; }
+  }
+  summary::after { transition: transform .25s var(--ease); }
+  details[open] summary::after { transform: rotate(180deg); }
+
+  /* Offre mise en avant et cartes : léger soulèvement au survol */
+  .tier, .host, .value, .step { transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease); }
+  @media (hover: hover) { .tier:hover, .host:hover { transform: translateY(-4px); box-shadow: var(--shadow); } }
+
+  /* Téléphone : la barre d'action arrive quand le bouton du héros a quitté l'écran */
+  .mobile-cta { transition: transform .3s var(--ease); }
+  .js .mobile-cta:not(.show) { transform: translateY(110%); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .hero [data-in], .js .hero .shot .screen, .js .hero .shot .phone, .js .hero .float, .js .shift article .after svg, .js .step::before { opacity: 1 !important; transform: none !important; }
+    h1 em::after, .steps::before { transform: scaleX(1) !important; }
+    .js .mobile-cta:not(.show) { transform: none; }
+    .progress { display: none; }
+  }
+
   /* Écrans moyens et petits */
   @media (max-width: 1100px) {
     .downloads { grid-template-columns: repeat(2, 1fr); }
     .steps { grid-template-columns: repeat(2, 1fr); row-gap: 30px; }
+    .steps::before { display: none; }
     .bento { grid-template-columns: repeat(2, 1fr); }
     .cell, .cell.wide { grid-column: span 1; }
     .secure { grid-template-columns: repeat(2, 1fr); }
@@ -324,6 +408,7 @@
 </style>
 </head>
 <body>
+<div class="progress" id="progress" aria-hidden="true"></div>
 <a class="skip" href="#contenu">Aller au contenu</a>
 <header class="top">
   <div class="wrap">
@@ -346,15 +431,15 @@
   <div class="hero">
     <div class="wrap">
       <div>
-        <span class="eyebrow"><i data-icon="SealCheck"></i>Conforme au SYSCOHADA révisé · Burkina Faso et zone OHADA</span>
-        <h1>Toute votre gestion, <em>simple et conforme</em>, même sans Internet.</h1>
-        <p class="lead">Devis, factures, caisse et mobile money, stock, comptabilité, paie et déclarations : une seule application pour votre entreprise, sur ordinateur, téléphone et navigateur.</p>
-        <div class="cta">
+        <span class="eyebrow" data-in style="--d:0"><i data-icon="SealCheck"></i>Conforme au SYSCOHADA révisé · Burkina Faso et zone OHADA</span>
+        <h1 data-in style="--d:1">Toute votre gestion, <em>simple et conforme</em>, même sans Internet.</h1>
+        <p class="lead" data-in style="--d:2">Devis, factures, caisse et mobile money, stock, comptabilité, paie et déclarations : une seule application pour votre entreprise, sur ordinateur, téléphone et navigateur.</p>
+        <div class="cta" data-in style="--d:3" id="hero-cta">
           <a class="btn btn-primary" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essayer gratuitement 30 jours</span></a>
           <a class="btn btn-outline-white" href="#apercu"><i data-icon="PlayCircle"></i>Voir l'application</a>
         </div>
-        <p class="cta-note">Sans carte bancaire, sans engagement. Vos données restent les vôtres.</p>
-        <ul class="trust" aria-label="Points forts">
+        <p class="cta-note" data-in style="--d:4">Sans carte bancaire, sans engagement. Vos données restent les vôtres.</p>
+        <ul class="trust" aria-label="Points forts" data-in style="--d:5">
           <li><i data-icon="WifiSlash"></i>Fonctionne hors ligne</li>
           <li><i data-icon="Devices"></i>Windows, macOS, Android, iOS, web</li>
           <li><i data-icon="ShieldCheck"></i>Une base par entreprise</li>
@@ -467,7 +552,7 @@
         <h2>Opérationnel en une matinée</h2>
         <p>Pas de longue installation : vous facturez le jour même.</p>
       </div>
-      <div class="steps stagger">
+      <div class="steps stagger watch">
         <div class="step reveal"><h3><i data-icon="DownloadSimple"></i>Installer</h3><p>Téléchargez l'application pour votre ordinateur ou téléphone, ou ouvrez-la dans le navigateur.</p></div>
         <div class="step reveal"><h3><i data-icon="Buildings"></i>Créer la société</h3><p>Logo, pays, identifiant fiscal (IFU…), régime de TVA et devise : tout s'adapte à votre pays.</p></div>
         <div class="step reveal"><h3><i data-icon="FileXls"></i>Importer</h3><p>Reprenez clients, fournisseurs, articles et stocks depuis vos fichiers Excel.</p></div>
@@ -848,6 +933,46 @@
       })
     }, { threshold: .15 }) : null
     document.querySelectorAll('.reveal').forEach(function (el) { io ? io.observe(el) : el.classList.add('in') })
+  })()
+</script>
+<script>
+  // Mouvement lié au défilement et au pointeur. Une seule lecture de la position par image
+  // (requestAnimationFrame) ; rien n'est exécuté si l'utilisateur réduit les animations.
+  (function () {
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    var bar = document.getElementById('progress'), head = document.querySelector('header.top')
+    var shot = document.querySelector('.hero .shot'), hero = document.querySelector('.hero')
+    var mobileCta = document.querySelector('.mobile-cta'), heroCta = document.getElementById('hero-cta')
+    var wide = matchMedia('(min-width: 961px)')
+    var ticking = false
+    function frame() {
+      ticking = false
+      var y = scrollY, max = document.documentElement.scrollHeight - innerHeight
+      head.classList.toggle('scrolled', y > 8)
+      if (!reduce) {
+        bar.style.transform = 'scaleX(' + (max > 0 ? Math.min(y / max, 1) : 0) + ')'
+        // Parallaxe discrète (8 % au plus), uniquement sur grand écran et tant que le héros est visible
+        if (shot && wide.matches && y < hero.offsetHeight) shot.style.transform = 'translateY(' + (y * -0.08).toFixed(1) + 'px)'
+      }
+    }
+    addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(frame) } }, { passive: true })
+    frame()
+
+    // Éléments suivis sans effet d'apparition propre (fil des étapes)
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { threshold: .3 })
+      document.querySelectorAll('.watch').forEach(function (el) { io.observe(el) })
+      // Barre d'action mobile : visible dès que les boutons du héros sortent de l'écran
+      if (mobileCta && heroCta) new IntersectionObserver(function (es) { mobileCta.classList.toggle('show', !es[0].isIntersecting) }).observe(heroCta)
+    } else {
+      document.querySelectorAll('.watch').forEach(function (el) { el.classList.add('in') })
+      if (mobileCta) mobileCta.classList.add('show')
+    }
+
+    // Halo des cartes de fonctionnalités
+    if (!reduce && matchMedia('(hover: hover)').matches) document.querySelectorAll('.cell').forEach(function (c) {
+      c.addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px') })
+    })
   })()
 </script>
 </body>

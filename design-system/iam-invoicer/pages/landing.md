@@ -55,4 +55,13 @@ Le profil ui-ux-pro-max ci-dessus est adapté à la marque IAM :
 - **Preuves** : uniquement des faits vérifiables (modules, pays, conformité). Aucun témoignage ni logo client tant qu'il n'y en a pas de réels.
 - **Mouvement** : apparition en cascade (0,45 s, décalage 60 ms), une seule fois ; coupée par `prefers-reduced-motion`.
 - **Téléphone** : barre d'action fixe en bas (Se connecter / Essai gratuit), cibles tactiles de 44 px au moins.
+
+### Mouvement de la page d'accueil
+
+- **Héros** : entrée en cascade (étiquette, titre, texte, boutons, 90 ms d'écart), l'écran monte, le téléphone suit, les deux étiquettes se posent avec un rebond puis flottent doucement ; le trait du mot-clé se dessine.
+- **Défilement** : barre de progression de lecture, en-tête qui prend une ombre, parallaxe de 8 % sur l'écran du héros (grand écran seulement), barre d'action mobile qui arrive quand les boutons du héros quittent l'écran. Une seule lecture de la position par image (`requestAnimationFrame`).
+- **Sens** : « avant / avec » (le problème s'estompe, la coche de la solution apparaît), fil qui relie les quatre étapes, halo qui suit le pointeur sur les fonctionnalités, reflet sur le bouton d'action.
+- **Repli** : sans JavaScript, tout le contenu est visible (les états masqués sont sous `.js`) ; avec `prefers-reduced-motion`, état final immédiat et pas de barre de progression.
+- GSAP n'est pas chargé : les presets du profil (cascade, apparition au défilement, parallaxe) sont reproduits en CSS et en JavaScript natif pour garder la page légère.
+
 - Contrôles faits : 375, 820, 1366 px, thèmes clair et sombre, aucun défilement horizontal, un seul `h1`, images avec `alt`.
