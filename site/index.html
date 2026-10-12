@@ -578,6 +578,122 @@
     .sheet, .sheet .qr span, .verify-chip, .verify-chip circle, .verify-chip path { animation: none !important; }
     .verify-chip circle, .verify-chip path { stroke-dashoffset: 0; }
   }
+
+  /* ---------- Acte 3 du site : plus d'information, plus de mouvement ---------- */
+  /* Avancement de la lecture, sous l'en-tête */
+  .read-bar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: linear-gradient(90deg, var(--blue), var(--gold), #10b981); transform: scaleX(var(--read, 0)); transform-origin: 0 50%; pointer-events: none; }
+  /* Retour en haut */
+  .to-top { position: fixed; right: 18px; bottom: 22px; z-index: 55; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow); opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .3s var(--ease), transform .35s var(--ease-back), border-color .2s; }
+  .to-top.on { opacity: 1; transform: none; pointer-events: auto; }
+  .to-top:hover { border-color: var(--blue); transform: translateY(-3px); }
+  /* Cartes : halo qui suit le pointeur */
+  .glow, .cell, .tier, .host { position: relative; isolation: isolate; }
+  .glow::after, .tier::after, .host::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(320px circle at var(--mx, -400px) var(--my, -400px), color-mix(in srgb, var(--blue) 14%, transparent), transparent 70%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .glow:hover::after, .tier:hover::after, .host:hover::after { opacity: 1; }
+  /* Boutons d'action : légère attraction vers le pointeur */
+  .btn-primary { translate: var(--bx, 0) var(--by, 0); }
+  /* Titres de section : filet qui se trace à l'apparition */
+  .section-head h2 { position: relative; padding-bottom: 14px; }
+  .section-head h2::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 72px; height: 4px; margin-left: -36px; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--gold)); transform: scaleX(0); transition: transform .7s .25s var(--ease); }
+  .section-head.in h2::after, html:not(.js) .section-head h2::after { transform: scaleX(1); }
+
+  /* Métiers */
+  .metiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .metier { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; transition: border-color .25s var(--ease), transform .3s var(--ease), box-shadow .25s var(--ease); }
+  .metier:hover { border-color: var(--blue); transform: translateY(-5px); box-shadow: var(--shadow); }
+  .metier .ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 14px; transition: transform .35s var(--ease-back); }
+  .metier:hover .ic { transform: scale(1.12) rotate(-6deg); }
+  .metier p { margin: 0 0 14px; color: var(--muted); font-size: 15.5px; }
+  .metier ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .metier li { font-size: 13px; font-weight: 700; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 3px 11px; }
+
+  /* Modules en détail : onglets à indicateur glissant, lignes en cascade */
+  .mods { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+  .mod-tabs { position: relative; display: flex; gap: 4px; padding: 10px; overflow-x: auto; scrollbar-width: none; background: var(--soft); border-bottom: 1px solid var(--line); }
+  .mod-tabs::-webkit-scrollbar { display: none; }
+  .mod-tabs button { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: none; font: inherit; font-weight: 700; font-size: 15px; color: var(--text-2); white-space: nowrap; cursor: pointer; transition: color .25s; }
+  .mod-tabs button[aria-selected='true'] { color: #fff; }
+  .mod-tabs button svg { transition: transform .35s var(--ease-back); }
+  .mod-tabs button:hover svg, .mod-tabs button[aria-selected='true'] svg { transform: scale(1.18) rotate(-6deg); }
+  .mod-ind { position: absolute; left: 0; top: 10px; height: 44px; border-radius: 10px; background: var(--navy); box-shadow: 0 8px 18px -10px rgba(11, 47, 99, .9); transition: transform .45s var(--ease-back), width .35s var(--ease); pointer-events: none; }
+  html:not(.js) .mod-ind { display: none; } html:not(.js) .mod-tabs button[aria-selected='true'] { background: var(--navy); }
+  .mod-panels { padding: 30px 32px 34px; min-height: 330px; }
+  .mod-panel h3 { font-size: 24px; margin: 0 0 4px; animation: mod-in .45s var(--ease) backwards; }
+  .mod-panel > p { margin: 0 0 20px; color: var(--muted); font-size: 17px; animation: mod-in .45s .05s var(--ease) backwards; }
+  .mod-panel ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
+  .mod-panel li { position: relative; padding-left: 30px; color: var(--text-2); animation: mod-in .45s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 45ms + 100ms); }
+  .mod-panel li::before { content: ''; position: absolute; left: 0; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, #047857 16%, var(--surface)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-7' fill='none' stroke='%23047857' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 20px no-repeat; }
+  @keyframes mod-in { from { opacity: 0; transform: translateY(12px); } }
+
+  /* Hors connexion : schéma animé sur fond nuit */
+  .night { position: relative; overflow: hidden; color: #fff; background: linear-gradient(160deg, #071f45 0%, var(--navy) 55%, #123f80 100%); }
+  .night::before { content: ''; position: absolute; inset: 0; background: radial-gradient(600px 360px at 85% 0%, rgba(120, 170, 255, .2), transparent 70%), linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px) 0 0 / 100% 44px; pointer-events: none; }
+  .night .kicker { color: #ffd166; }
+  .sync-show { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .sync-copy > p { color: rgba(255, 255, 255, .88); font-size: 18px; margin: 0 0 20px; }
+  .sync-list { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+  .sync-list li { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; }
+  .sync-list svg { color: #34d399; margin-top: 3px; }
+  .sync-note { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px !important; color: rgba(255, 255, 255, .78) !important; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); }
+  .sync-note svg { margin-top: 3px; color: #ffd166; }
+  .sync-stage { position: relative; height: 340px; max-width: 420px; margin: 0 auto; width: 100%; }
+  .sync-links { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sync-links .lk { fill: none; stroke: rgba(255, 255, 255, .28); stroke-width: 2; stroke-dasharray: 6 7; animation: lk-flow 1.2s linear infinite; }
+  @keyframes lk-flow { to { stroke-dashoffset: -26; } }
+  .sync-links .pk { fill: #34d399; filter: drop-shadow(0 0 6px rgba(52, 211, 153, .9)); transition: opacity .3s; }
+  .sync-node { position: absolute; display: grid; justify-items: center; gap: 2px; padding: 12px 16px; min-width: 132px; border-radius: 16px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); backdrop-filter: blur(6px); text-align: center; transition: border-color .4s, background .4s, transform .4s var(--ease-back); }
+  .sync-node b { font-size: 14.5px; }
+  .sync-node .st { font-size: 12.5px; font-weight: 700; color: #6ee7b7; transition: color .3s; }
+  .sync-node.cloud { left: 50%; top: 0; transform: translateX(-50%); animation: node-bob 5s ease-in-out infinite; }
+  .sync-node.dev.left { left: 0; bottom: 46px; } .sync-node.dev.right { right: 0; bottom: 46px; }
+  @keyframes node-bob { 50% { transform: translateX(-50%) translateY(-6px); } }
+  .sync-banner { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 9px; padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; background: rgba(16, 185, 129, .18); border: 1px solid rgba(52, 211, 153, .5); color: #a7f3d0; transition: background .4s, border-color .4s, color .4s; }
+  .sync-banner .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 0 currentColor; animation: dot-ping 1.6s ease-out infinite; }
+  @keyframes dot-ping { to { box-shadow: 0 0 0 9px transparent; } }
+  /* Coupure : liens grisés, paquets retenus, appareils qui continuent */
+  .sync-stage[data-state='offline'] .lk { stroke: rgba(255, 255, 255, .12); animation-play-state: paused; }
+  .sync-stage[data-state='offline'] .pk { opacity: 0; }
+  .sync-stage[data-state='offline'] .dev { border-color: rgba(255, 209, 102, .7); background: rgba(255, 209, 102, .12); transform: translateY(-4px); }
+  .sync-stage[data-state='offline'] .dev .st { color: #ffd166; }
+  .sync-stage[data-state='offline'] .sync-banner { background: rgba(255, 209, 102, .16); border-color: rgba(255, 209, 102, .55); color: #ffe29a; }
+  .sync-stage[data-state='sending'] .pk { opacity: 1; }
+  .sync-stage[data-state='sending'] .dev .st { color: #93c5fd; }
+  .sync-stage[data-state='sending'] .cloud { border-color: rgba(52, 211, 153, .8); }
+
+  /* Comparatif des offres */
+  .compare { margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .compare summary { cursor: pointer; padding: 18px 22px; font-weight: 700; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .compare summary::-webkit-details-marker { display: none; }
+  .compare summary::after { content: '+'; font-size: 24px; line-height: 1; color: var(--blue); transition: transform .3s var(--ease-back); }
+  .compare[open] summary::after { transform: rotate(45deg); }
+  .compare .table { overflow-x: auto; border-top: 1px solid var(--line); }
+  .compare table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  .compare th, .compare td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .compare th[scope='row'], .compare thead th:first-child { text-align: left; font-weight: 600; color: var(--text-2); }
+  .compare thead th { font-size: 15.5px; color: var(--ink); background: var(--soft); }
+  .compare thead th:nth-child(3), .compare tbody td:nth-child(3) { background: color-mix(in srgb, var(--blue) 7%, transparent); }
+  .compare td svg { color: var(--accent); }
+  .compare .no { color: var(--muted); }
+  .compare[open] tbody tr { animation: mod-in .4s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+  .compare-note { margin: 0; padding: 14px 22px; color: var(--muted); font-size: 14.5px; }
+
+  @media (max-width: 900px) {
+    .metiers { grid-template-columns: repeat(2, 1fr); }
+    .sync-show { grid-template-columns: 1fr; gap: 30px; }
+    .mod-panels { padding: 24px 20px 28px; }
+  }
+  @media (max-width: 640px) {
+    .metiers, .mod-panel ul { grid-template-columns: 1fr; }
+    .sync-stage { height: 320px; }
+    .sync-node { min-width: 112px; padding: 10px 10px; }
+    .to-top { bottom: 84px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-panel h3, .mod-panel > p, .mod-panel li, .sync-links .lk, .sync-node.cloud, .sync-banner .dot, .compare[open] tbody tr, .tier.featured { animation: none !important; }
+    .mod-ind, .to-top, .section-head h2::after { transition: none; }
+    .sync-links .pk { display: none; }
+    .btn-primary { translate: none; }
+  }
 </style>
 </head>
 <body>
@@ -686,6 +802,24 @@
     </div>
   </section>
 
+  <section id="metiers" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Pour qui</div>
+        <h2>Un outil qui s'adapte à votre métier</h2>
+        <p>Vous n'activez que les modules utiles : l'application reste simple, quel que soit votre secteur.</p>
+      </div>
+      <div class="metiers stagger">
+        <article class="metier glow reveal"><div class="ic t2"><i data-icon="Storefront" data-size="26"></i></div><h3>Commerce et boutique</h3><p>Vente au comptoir, mobile money, tickets, stock qui se met à jour à chaque vente.</p><ul><li>Caisse</li><li>Stock</li><li>Articles</li></ul></article>
+        <article class="metier glow reveal"><div class="ic t1"><i data-icon="Laptop" data-size="26"></i></div><h3>Prestataires et services</h3><p>Devis signés en ligne, factures récurrentes pour les abonnements et les contrats de maintenance.</p><ul><li>Devis</li><li>Récurrent</li><li>Relances</li></ul></article>
+        <article class="metier glow reveal"><div class="ic t3"><i data-icon="HardHat" data-size="26"></i></div><h3>BTP et chantiers</h3><p>Budget par poste, temps passés, dépenses et rentabilité de chaque chantier, temps et dépenses refacturés au client.</p><ul><li>Projets</li><li>Achats</li><li>Budgets</li></ul></article>
+        <article class="metier glow reveal"><div class="ic t5"><i data-icon="Truck" data-size="26"></i></div><h3>Grossistes et distribution</h3><p>Plusieurs dépôts, transferts, lots et numéros de série, bons de livraison et créances clients.</p><ul><li>Multi-dépôts</li><li>Livraisons</li><li>Créances</li></ul></article>
+        <article class="metier glow reveal"><div class="ic t4"><i data-icon="Calculator" data-size="26"></i></div><h3>Comptables et gestionnaires</h3><p>Écritures passées automatiquement, balance, bilan et déclarations du mois préparées à partir des pièces.</p><ul><li>SYSCOHADA</li><li>TVA</li><li>Bilan</li></ul></article>
+        <article class="metier glow reveal"><div class="ic t6"><i data-icon="Buildings" data-size="26"></i></div><h3>PME et multi-sites</h3><p>Paie, CRM, immobilisations, droits par rôle et une base partagée entre tous les sites et téléphones.</p><ul><li>Paie</li><li>CRM</li><li>Rôles</li></ul></article>
+      </div>
+    </div>
+  </section>
+
   <section id="fonctionnalites" class="alt">
     <div class="wrap">
       <div class="section-head reveal">
@@ -704,6 +838,83 @@
         <div class="cell reveal"><div class="ic t6"><i data-icon="IdentificationBadge" data-size="24"></i></div><h3>RH et paie</h3><p>Bulletins, CNSS, IUTS, TPA, congés, déclaration sociale et écritures de paie.</p></div>
         <div class="cell reveal"><div class="ic t1"><i data-icon="Kanban" data-size="24"></i></div><h3>CRM et projets</h3><p>Opportunités, tâches, temps passés, dépenses et rentabilité de chaque chantier.</p></div>
         <div class="cell reveal"><div class="ic t2"><i data-icon="CloudArrowUp" data-size="24"></i></div><h3>Synchronisation</h3><p>Tous vos postes et téléphones partagent les mêmes données, avec ou sans réseau.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modules">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Dans le détail</div>
+        <h2>Ce que fait chaque module, concrètement</h2>
+        <p>Choisissez un module pour voir tout ce qu'il contient.</p>
+      </div>
+      <div class="mods reveal">
+        <div class="mod-tabs" role="tablist" aria-label="Modules">
+          <span class="mod-ind" aria-hidden="true"></span>
+          <button role="tab" aria-selected="true" aria-controls="mod-ventes" id="tab-ventes"><i data-icon="FileText"></i>Ventes</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-caisse" id="tab-caisse" tabindex="-1"><i data-icon="CashRegister"></i>Caisse</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-stock" id="tab-stock" tabindex="-1"><i data-icon="Package"></i>Stock</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-achats" id="tab-achats" tabindex="-1"><i data-icon="ShoppingCart"></i>Achats</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-compta" id="tab-compta" tabindex="-1"><i data-icon="Scales"></i>Comptabilité</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-taxes" id="tab-taxes" tabindex="-1"><i data-icon="Stamp"></i>Taxes</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-paie" id="tab-paie" tabindex="-1"><i data-icon="IdentificationBadge"></i>RH et paie</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-crm" id="tab-crm" tabindex="-1"><i data-icon="Handshake"></i>CRM</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-projets" id="tab-projets" tabindex="-1"><i data-icon="Kanban"></i>Projets</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-tresorerie" id="tab-tresorerie" tabindex="-1"><i data-icon="ChartLineUp"></i>Budgets</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-analyses" id="tab-analyses" tabindex="-1"><i data-icon="ChartPieSlice"></i>Analyses</button>
+          <button role="tab" aria-selected="false" aria-controls="mod-admin" id="tab-admin" tabindex="-1"><i data-icon="ShieldCheck"></i>Administration</button>
+        </div>
+        <div class="mod-panels">
+          <div class="mod-panel" role="tabpanel" id="mod-ventes" aria-labelledby="tab-ventes">
+            <h3>Ventes et facturation</h3><p>Du premier devis à l'encaissement, sans jamais ressaisir.</p>
+            <ul><li>Devis, bons de livraison, factures et avoirs, numérotés automatiquement par type et par année</li><li>Un devis validé se transforme en bon de livraison ou en facture en un clic</li><li>Six modèles de documents à votre logo et à vos couleurs</li><li>QR code d'authenticité sur chaque document validé</li><li>Envoi par e-mail ou SMS, relances des factures en retard</li><li>Signature électronique du client, sur place ou à distance</li><li>Factures récurrentes pour les abonnements, loyers et contrats</li><li>Retenues à la source et taxes calculées sur le document</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-caisse" aria-labelledby="tab-caisse" hidden>
+            <h3>Caisse et mobile money</h3><p>Un point de vente tactile, pensé pour le comptoir et les files d'attente.</p>
+            <ul><li>Ouverture avec fonds de caisse, clôture et contrôle par caissier</li><li>Espèces, Orange Money, Moov Money, Wave, ou plusieurs modes sur une même vente</li><li>Recherche d'article et lecture de code-barres</li><li>Ticket 80 mm sur imprimante thermique, ou facture A4</li><li>Entrées et sorties de caisse tracées</li><li>Historique et détail de chaque session</li><li>Continue de vendre sans Internet : les ventes partent au retour du réseau</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-stock" aria-labelledby="tab-stock" hidden>
+            <h3>Stock multi-dépôts</h3><p>Vous savez à tout moment ce que vous avez, où, et ce que cela vaut.</p>
+            <ul><li>Plusieurs dépôts et transferts entre eux</li><li>Suivi par lot ou par numéro de série, avec traçabilité</li><li>Inventaires et ajustements justifiés</li><li>Seuil minimum par article et alertes de stock bas</li><li>Valorisation au coût moyen pondéré</li><li>Mouvement automatique à chaque vente, livraison ou réception</li><li>Reprise du stock de départ depuis Excel</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-achats" aria-labelledby="tab-achats" hidden>
+            <h3>Achats et fournisseurs</h3><p>La même rigueur côté dépenses que côté ventes.</p>
+            <ul><li>Bons de commande, bons de réception et factures fournisseurs</li><li>La réception met à jour le stock et le coût moyen</li><li>Fiche de chaque fournisseur : documents, règlements et solde dû</li><li>Décaissements et suivi de ce que vous devez</li><li>TVA déductible reprise dans la déclaration du mois</li><li>Retenues à la source sur les factures fournisseurs</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-compta" aria-labelledby="tab-compta" hidden>
+            <h3>Comptabilité SYSCOHADA</h3><p>Les écritures se passent toutes seules ; vous gardez la main pour le reste.</p>
+            <ul><li>Plan comptable SYSCOHADA révisé, modifiable</li><li>Écritures automatiques à chaque facture, règlement, vente en caisse et paie</li><li>Journaux de ventes, d'achats, de caisse, de mobile money, de banque et d'opérations diverses</li><li>Grand livre et balance</li><li>Compte de résultat et bilan</li><li>Écritures manuelles pour les opérations diverses</li><li>Rattrapage des pièces qui n'ont pas encore d'écriture</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-taxes" aria-labelledby="tab-taxes" hidden>
+            <h3>Taxes et déclarations</h3><p>Les montants à déclarer sont prêts à la fin du mois.</p>
+            <ul><li>TVA collectée et déductible, par taux</li><li>Retenues à la source, droit de timbre, prélèvement BIC</li><li>Taux préréglés pour votre pays, modifiables avec votre comptable</li><li>Déclarations mensuelles préparées à partir de vos pièces</li><li>Facture certifiée SECeF (mode simulation fourni, connexion à l'API de la DGI à paramétrer)</li><li>Identifiant fiscal et régime adaptés au pays choisi</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-paie" aria-labelledby="tab-paie" hidden>
+            <h3>Ressources humaines et paie</h3><p>De la fiche du salarié à l'écriture de paie.</p>
+            <ul><li>Fiches des salariés, catégorie, salaire de base et indemnités</li><li>Préparation de la paie du mois et variables par salarié</li><li>Bulletins avec CNSS, IUTS et TPA</li><li>Demandes de congé et validation</li><li>Déclaration sociale du mois</li><li>Paiement des salaires et écritures comptables associées</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-crm" aria-labelledby="tab-crm" hidden>
+            <h3>CRM et opportunités</h3><p>Aucune affaire ne se perd entre deux appels.</p>
+            <ul><li>Opportunités suivies étape par étape, en glisser-déposer</li><li>Activités à faire : appels, rendez-vous, relances</li><li>Agenda commercial</li><li>Devis créé directement depuis une opportunité</li><li>Montant du portefeuille par étape</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-projets" aria-labelledby="tab-projets" hidden>
+            <h3>Projets et chantiers</h3><p>Vous savez si un chantier gagne ou perd de l'argent, avant la fin.</p>
+            <ul><li>Tâches en tableau, par état et par responsable</li><li>Temps passés saisis par chacun, à la semaine</li><li>Dépenses du projet et budget par poste</li><li>Facturation des temps et des dépenses au client</li><li>Rentabilité : facturé, coûts, marge</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-tresorerie" aria-labelledby="tab-tresorerie" hidden>
+            <h3>Budgets, trésorerie et immobilisations</h3><p>Voir venir, plutôt que constater.</p>
+            <ul><li>Budget annuel par ligne, comparé au réalisé</li><li>Budget repris du réalisé de l'année précédente</li><li>Prévisions de trésorerie : encaissements et décaissements attendus</li><li>Fiches d'immobilisations et amortissements de l'année</li><li>Cession d'une immobilisation avec ses écritures</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-analyses" aria-labelledby="tab-analyses" hidden>
+            <h3>Tableau de bord et analyses</h3><p>Les chiffres qui comptent, sans tableur.</p>
+            <ul><li>Tableau de bord : ventes, encaissements, créances, factures en retard, stock bas</li><li>Analyses croisées par client, article ou période</li><li>Rapports enregistrés, partagés et épinglés au tableau de bord</li><li>Alertes quand un indicateur dépasse un seuil</li><li>Export Excel et PDF de chaque rapport</li></ul>
+          </div>
+          <div class="mod-panel" role="tabpanel" id="mod-admin" aria-labelledby="tab-admin" hidden>
+            <h3>Administration et sécurité</h3><p>Chacun voit ce qui le concerne, et tout est tracé.</p>
+            <ul><li>Rôles prêts à l'emploi : administrateur, commercial, magasinier, comptable, caissier, RH</li><li>Matrice des droits modifiable, module par module</li><li>Journal d'activité : qui a fait quoi, et quand</li><li>Sauvegarde automatique chaque jour sur le poste, chaque nuit en hébergement</li><li>Import Excel ou CSV avec compte rendu ligne par ligne</li><li>Thème clair ou sombre, photo de profil</li></ul>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -756,6 +967,35 @@
           <li><i data-icon="QrCode"></i><div><strong>QR code d'authenticité</strong><span>Votre client le scanne : une page confirme le numéro, la date et le montant que vous avez réellement émis.</span></div></li>
           <li><i data-icon="RocketLaunch"></i><div><strong>Toujours à jour</strong><span>L'application signale d'elle-même qu'une nouvelle version est disponible.</span></div></li>
         </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="hors-ligne" class="night">
+    <div class="wrap sync-show">
+      <div class="sync-copy reveal">
+        <div class="kicker">Sans Internet</div>
+        <h2>La connexion tombe ? Vous continuez de vendre.</h2>
+        <p>Chaque appareil garde une copie de travail des données. Ce que vous saisissez sans réseau est mis en attente, puis envoyé tout seul à la base de votre entreprise dès que la connexion revient.</p>
+        <ul class="sync-list">
+          <li><i data-icon="CheckCircle" data-weight="fill"></i>Devis, factures, bons de livraison et de commande</li>
+          <li><i data-icon="CheckCircle" data-weight="fill"></i>Ventes en caisse et règlements</li>
+          <li><i data-icon="CheckCircle" data-weight="fill"></i>Clients, fournisseurs et articles</li>
+          <li><i data-icon="CheckCircle" data-weight="fill"></i>Opportunités, temps passés et demandes de congé</li>
+        </ul>
+        <p class="sync-note"><i data-icon="Info"></i>Chaque saisie n'est envoyée qu'une fois, dans l'ordre. Le numéro définitif d'une facture est attribué par la base au moment de l'envoi.</p>
+      </div>
+      <div class="sync-stage reveal" id="sync-stage" data-state="online" role="img" aria-label="Schéma : un téléphone et un ordinateur continuent de travailler hors connexion, puis envoient leurs saisies à la base en ligne au retour du réseau.">
+        <svg class="sync-links" viewBox="0 0 400 320" aria-hidden="true">
+          <path class="lk" d="M200 78 C200 150 90 150 90 214"/><path class="lk" d="M200 78 C200 150 310 150 310 214"/>
+          <circle class="pk p1" r="5"><animateMotion dur="1.6s" repeatCount="indefinite" path="M90 214 C90 150 200 150 200 78"/></circle>
+          <circle class="pk p2" r="5"><animateMotion dur="1.6s" begin=".5s" repeatCount="indefinite" path="M310 214 C310 150 200 150 200 78"/></circle>
+          <circle class="pk p3" r="5"><animateMotion dur="1.6s" begin=".9s" repeatCount="indefinite" path="M200 78 C200 150 90 150 90 214"/></circle>
+        </svg>
+        <div class="sync-node cloud"><i data-icon="Cloud" data-size="30" data-weight="fill"></i><b>Base de l'entreprise</b><span class="st" id="sync-cloud">À jour</span></div>
+        <div class="sync-node dev left"><i data-icon="DeviceMobile" data-size="26"></i><b>Téléphone</b><span class="st" id="sync-left">Synchronisé</span></div>
+        <div class="sync-node dev right"><i data-icon="Desktop" data-size="26"></i><b>Ordinateur</b><span class="st" id="sync-right">Synchronisé</span></div>
+        <div class="sync-banner" id="sync-banner"><span class="dot"></span><span id="sync-text">En ligne : tout est synchronisé</span></div>
       </div>
     </div>
   </section>
@@ -819,6 +1059,28 @@
         </div>
       </div>
       <div class="trial reveal"><i data-icon="Info" data-size="24"></i><span><b>Essai gratuit de 30 jours, tous modules ouverts</b>, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Une licence lève les limites et conserve tout ce que vous avez saisi. Offre sur mesure possible : ne payez que les modules utiles.</span></div>
+      <details class="compare reveal">
+        <summary>Comparer les offres en détail</summary>
+        <div class="table"><table>
+          <thead><tr><th scope="col">Module</th><th scope="col">Essentiel</th><th scope="col">Pro</th><th scope="col">Entreprise</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Utilisateurs</th><td>2</td><td>5</td><td>Illimités</td></tr>
+            <tr><th scope="row">Devis, factures, avoirs, bons de livraison</th><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Caisse et mobile money</th><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Clients, articles, stock multi-dépôts</th><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Paiements, tableau de bord et rapports</th><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Achats et fournisseurs</th><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Comptabilité SYSCOHADA, bilan, déclarations</th><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">E-mails et SMS, relances</th><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">RH et paie</th><td><span class="no" aria-label="non inclus">—</span></td><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">CRM et projets</th><td><span class="no" aria-label="non inclus">—</span></td><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Immobilisations, budgets et trésorerie</th><td><span class="no" aria-label="non inclus">—</span></td><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Application à votre nom et à votre logo</th><td><span class="no" aria-label="non inclus">—</span></td><td><span class="no" aria-label="non inclus">—</span></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+            <tr><th scope="row">Fonctionnement hors connexion, tous appareils</th><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td><td><i data-icon="Check" aria-label="inclus"></i></td></tr>
+          </tbody>
+        </table></div>
+        <p class="compare-note">Les prix dépendent du nombre d'utilisateurs, de la durée et de l'hébergement : ils sont communiqués sur devis.</p>
+      </details>
     </div>
   </section>
 
@@ -946,6 +1208,12 @@
         <details class="reveal"><summary>Que se passe-t-il à la fin de l'essai ?</summary><p>Vos données restent consultables, imprimables et exportables. Pour continuer à saisir, il suffit d'activer une licence.</p></details>
         <details class="reveal"><summary>Mes données sont-elles en sécurité ?</summary><p>Les mots de passe sont hachés, les échanges passent en HTTPS, chaque utilisateur a des droits selon son rôle et toutes les actions sont tracées. En hébergement, chaque entreprise a sa propre base de données, sauvegardée chaque nuit.</p></details>
         <details class="reveal"><summary>Quels ordinateurs et téléphones sont compatibles ?</summary><p>Windows 10 et 11, macOS 10.15 et plus récents (puce Apple et Intel), Android 7 et plus, iPhone et iPad (iOS 15 et plus), et tout navigateur récent.</p></details>
+        <details class="reveal"><summary>Combien coûte une licence ?</summary><p>Le prix dépend de l'offre, du nombre d'utilisateurs, de la durée et du mode d'hébergement. Demandez un devis : nous vous répondons avec une proposition adaptée, sans engagement.</p></details>
+        <details class="reveal"><summary>Plusieurs personnes peuvent-elles travailler en même temps ?</summary><p>Oui. Avec un serveur au bureau ou une base hébergée, tous les postes et téléphones travaillent sur les mêmes données en même temps, chacun avec son compte et ses droits. Les numéros de documents restent uniques, même si deux personnes valident au même instant.</p></details>
+        <details class="reveal"><summary>Comment mon client peut-il vérifier une facture ?</summary><p>Chaque document validé porte un QR code et un code d'authenticité. En le scannant, votre client ouvre une page qui confirme le numéro, la date, le montant et l'état du document tels que vous les avez enregistrés.</p></details>
+        <details class="reveal"><summary>Puis-je passer d'un poste seul à plusieurs appareils plus tard ?</summary><p>Oui. Vous pouvez commencer sur un seul ordinateur, puis passer à un serveur ou à une base hébergée : nous vous accompagnons pour reprendre vos données, sans ressaisie.</p></details>
+        <details class="reveal"><summary>Comment se font les mises à jour ?</summary><p>L'application signale d'elle-même qu'une nouvelle version est disponible et propose de la télécharger. Rien ne s'installe sans votre accord, et vos données sont conservées.</p></details>
+        <details class="reveal"><summary>Que se passe-t-il si ma licence expire ?</summary><p>Vos données restent consultables, imprimables et exportables. La saisie reprend dès le renouvellement, sans aucune perte.</p></details>
       </div>
     </div>
   </section>
@@ -1272,6 +1540,141 @@
     if (!reduce && matchMedia('(hover: hover)').matches) document.querySelectorAll('.cell').forEach(function (c) {
       c.addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px') })
     })
+  })()
+</script>
+<button type="button" class="to-top" id="to-top" aria-label="Revenir en haut de la page"><i data-icon="ArrowUp" data-size="22"></i></button>
+<script>
+  // Acte 3 : barre de lecture, retour en haut, halos, onglets des modules, schéma hors connexion.
+  ;(function () {
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    var hover = matchMedia('(hover: hover)').matches
+
+    // Avancement de la lecture et bouton « retour en haut » (une mesure par image au plus)
+    var bar = document.createElement('span')
+    bar.className = 'read-bar'
+    bar.setAttribute('aria-hidden', 'true')
+    var head = document.querySelector('header.top')
+    if (head) head.appendChild(bar)
+    var top = document.getElementById('to-top')
+    var queued = false
+    function onScroll() {
+      if (queued) return
+      queued = true
+      requestAnimationFrame(function () {
+        queued = false
+        var max = document.documentElement.scrollHeight - innerHeight
+        bar.style.setProperty('--read', max > 0 ? Math.min(1, scrollY / max).toFixed(4) : '0')
+        if (top) top.classList.toggle('on', scrollY > innerHeight * 1.2)
+      })
+    }
+    addEventListener('scroll', onScroll, { passive: true })
+    addEventListener('resize', onScroll)
+    onScroll()
+    if (top) top.addEventListener('click', function () { scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }) })
+
+    // Halo qui suit le pointeur sur les cartes, attraction légère des boutons d'action
+    if (hover && !reduce) {
+      document.querySelectorAll('.glow, .tier, .host').forEach(function (c) {
+        c.addEventListener('pointermove', function (e) {
+          var r = c.getBoundingClientRect()
+          c.style.setProperty('--mx', (e.clientX - r.left) + 'px')
+          c.style.setProperty('--my', (e.clientY - r.top) + 'px')
+        })
+      })
+      document.querySelectorAll('.btn-primary').forEach(function (b) {
+        b.addEventListener('pointermove', function (e) {
+          var r = b.getBoundingClientRect()
+          b.style.setProperty('--bx', (((e.clientX - r.left) / r.width - .5) * 8).toFixed(1) + 'px')
+          b.style.setProperty('--by', (((e.clientY - r.top) / r.height - .5) * 6).toFixed(1) + 'px')
+        })
+        b.addEventListener('pointerleave', function () { b.style.removeProperty('--bx'); b.style.removeProperty('--by') })
+      })
+    }
+
+    // Modules : onglets au clavier (flèches), indicateur glissant, lignes en cascade
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.mod-tabs [role=tab]'))
+    var ind = document.querySelector('.mod-ind')
+    function place(tab) {
+      if (!ind || !tab) return
+      ind.style.width = tab.offsetWidth + 'px'
+      ind.style.transform = 'translateX(' + tab.offsetLeft + 'px)'
+    }
+    function select(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab
+        t.setAttribute('aria-selected', String(on))
+        t.tabIndex = on ? 0 : -1
+        var panel = document.getElementById(t.getAttribute('aria-controls'))
+        if (panel) panel.hidden = !on
+      })
+      place(tab)
+      if (focus) tab.focus()
+      if (tab.scrollIntoView && tab.parentNode.scrollWidth > tab.parentNode.clientWidth) tab.parentNode.scrollTo({ left: tab.offsetLeft - 40, behavior: reduce ? 'auto' : 'smooth' })
+    }
+    document.querySelectorAll('.mod-panel li, .compare tbody tr').forEach(function (li) {
+      var i = Array.prototype.indexOf.call(li.parentNode.children, li)
+      li.style.setProperty('--i', i)
+    })
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(t) })
+      t.addEventListener('keydown', function (e) {
+        var k = e.key
+        var j = k === 'ArrowRight' ? i + 1 : k === 'ArrowLeft' ? i - 1 : k === 'Home' ? 0 : k === 'End' ? tabs.length - 1 : -1
+        if (j < 0 && k !== 'Home') return
+        e.preventDefault()
+        select(tabs[(j + tabs.length) % tabs.length], true)
+      })
+    })
+    if (tabs.length) {
+      place(tabs[0])
+      addEventListener('resize', function () { place(tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true' })[0]) })
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { place(tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true' })[0]) })
+    }
+
+    // Hors connexion : en ligne → coupure (les saisies s'accumulent) → envoi → en ligne
+    var stage = document.getElementById('sync-stage')
+    if (stage && !reduce) {
+      var text = document.getElementById('sync-text')
+      var left = document.getElementById('sync-left')
+      var right = document.getElementById('sync-right')
+      var cloud = document.getElementById('sync-cloud')
+      var timer = 0
+      var visible = false
+      function wait(fn, ms) { timer = setTimeout(function () { if (visible) fn() }, ms) }
+      function online() {
+        stage.dataset.state = 'online'
+        text.textContent = 'En ligne : tout est synchronisé'
+        left.textContent = right.textContent = 'Synchronisé'
+        cloud.textContent = 'À jour'
+        wait(offline, 3200)
+      }
+      function offline() {
+        stage.dataset.state = 'offline'
+        text.textContent = 'Connexion coupée : le travail continue'
+        var n = 0
+        ;(function add() {
+          n++
+          left.textContent = n + ' saisie' + (n > 1 ? 's' : '') + ' en attente'
+          right.textContent = Math.max(1, n - 1) + ' saisie' + (n > 2 ? 's' : '') + ' en attente'
+          if (n < 4) wait(add, 900)
+          else wait(sending, 1100)
+        })()
+      }
+      function sending() {
+        stage.dataset.state = 'sending'
+        text.textContent = 'Connexion rétablie : envoi en cours'
+        left.textContent = right.textContent = 'Envoi…'
+        cloud.textContent = 'Réception'
+        wait(online, 2200)
+      }
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) {
+          visible = es[0].isIntersecting
+          clearTimeout(timer)
+          if (visible) online()
+        }, { threshold: .35 }).observe(stage)
+      }
+    }
   })()
 </script>
 </body>
