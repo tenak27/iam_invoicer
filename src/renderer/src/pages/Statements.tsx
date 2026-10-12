@@ -105,9 +105,25 @@ export function Declarations() {
     rows: [['Salaires bruts', data.payroll.gross], ['Cotisations salariales', data.payroll.cnssEmployee], ['Cotisations patronales', data.payroll.cnssEmployer], ['  dont prestations familiales', data.payroll.cnssFamily], ['  dont risques professionnels', data.payroll.cnssRisk], ['  dont pension', data.payroll.cnssPension], ['Impôt sur les salaires (IUTS)', data.payroll.iuts], ["Taxe patronale d'apprentissage", data.payroll.tpa], ...data.payroll.contributions.map((c: any) => [c.label, c.employee + c.employer])],
     foot: ['Total à reverser (cotisations + impôts)', data.payroll.cnssEmployee + data.payroll.cnssEmployer + data.payroll.iuts + data.payroll.tpa + data.payroll.contributions.reduce((s: number, c: any) => s + c.employee + c.employer, 0)]
   }] : []
-  const print = (what: 'tout' | 'tva' | 'retenues' | 'salaires') => {
-    const t = what === 'tva' ? vatTables() : what === 'retenues' ? whTables() : what === 'salaires' ? payTables() : [...vatTables(), ...whTables(), ...payTables()]
-    const title = what === 'tva' ? 'Déclaration de TVA' : what === 'retenues' ? 'État des retenues à la source' : what === 'salaires' ? 'Déclaration des salaires' : 'Déclarations fiscales et sociales'
+  const fmtText = (s: string) => s.replace(/\d{4,}/g, (n) => formatNumber(Number(n)))
+  const scheduleTables = (): ReportTable[] => [{
+    title: `Échéancier du mois${data.country?.regime ? ` — régime ${data.country.regime}` : ''}`, head: ['Déclaration', 'Calcul', 'Montant', 'À déposer avant le'], numeric: [2],
+    rows: (data.schedule as any[]).map((s) => [s.label + (s.note ? ` (${fmtText(s.note)})` : ''), fmtText(s.basis), s.amount ?? '—', s.due ? formatDate(s.due) : 'selon votre avis']),
+    foot: ['Total à prévoir', '', data.scheduleTotal, '']
+  }]
+  const addTables = (): ReportTable[] => [
+    ...(data.additions.collected as any[]).map((g) => ({
+      title: `Taxes collectées à reverser — ${g.label}`, head: ['Pièce', 'Date', 'Client', 'Base', 'Taxe'], numeric: [3, 4],
+      rows: g.documents.map((d: any) => [d.number, formatDate(d.date), d.party, d.basis, d.amount]), foot: ['Total', '', '', g.basis, g.amount]
+    })),
+    ...(data.additions.paid as any[]).map((g) => ({
+      title: `Taxes payées sur achats — ${g.label}`, head: ['Pièce', 'Date', 'Fournisseur', 'Base', 'Taxe'], numeric: [3, 4],
+      rows: g.documents.map((d: any) => [d.number, formatDate(d.date), d.party, d.basis, d.amount]), foot: ['Total', '', '', g.basis, g.amount]
+    }))
+  ]
+  const print = (what: 'tout' | 'tva' | 'retenues' | 'salaires' | 'echeancier' | 'taxes') => {
+    const t = what === 'tva' ? vatTables() : what === 'retenues' ? whTables() : what === 'salaires' ? payTables() : what === 'echeancier' ? scheduleTables() : what === 'taxes' ? addTables() : [...scheduleTables(), ...vatTables(), ...whTables(), ...addTables(), ...payTables()]
+    const title = what === 'tva' ? 'Déclaration de TVA' : what === 'retenues' ? 'État des retenues à la source' : what === 'salaires' ? 'Déclaration des salaires' : what === 'echeancier' ? 'Échéancier fiscal et social' : what === 'taxes' ? 'État des taxes ajoutées aux factures' : 'Déclarations fiscales et sociales'
     return run(() => unwrap(window.erp.printHtml(reportHtml(company, title, `Période : ${monthLabel(month)}`, t, 'État préparatoire établi à partir des pièces validées : reportez les montants sur les formulaires officiels (télédéclaration, sécurité sociale…) et faites-les vérifier par votre comptable.'), `${title} ${month}`)))
   }
 
@@ -115,7 +131,7 @@ export function Declarations() {
     <div className="page">
       <PageHeader
         title="Déclarations"
-        subtitle="Préparez les déclarations du mois : TVA, retenues à la source et salaires, calculées à partir des pièces validées."
+        subtitle="Échéancier du mois, TVA, retenues à la source, taxes ajoutées et salaires, calculés à partir des pièces validées."
         actions={data && <button className="btn btn-primary" onClick={() => print('tout')}><Printer size={18} aria-hidden="true" />Tout imprimer</button>}
       />
       <div className="toolbar"><Field label="Mois"><input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></Field></div>
@@ -127,6 +143,48 @@ export function Declarations() {
             <div className={`kpi ${data.vat.net > 0 ? 'kpi-warn' : 'good'}`}><div className="kpi-label">{data.vat.net >= 0 ? 'TVA à payer' : 'Crédit de TVA'}</div><div className="kpi-value">{formatMoney(Math.abs(data.vat.net))}</div></div>
             <div className="kpi"><div className="kpi-label">Retenues à reverser</div><div className="kpi-value">{formatMoney(data.withholdings.totalOperated)}</div></div>
           </div>
+
+          <div className="card">
+            <div className="row space-between wrap gap">
+              <h3>Échéancier — {monthLabel(month)}{data.country?.regime ? ` · régime ${data.country.regime}` : ''}</h3>
+              <button className="btn btn-sm" onClick={() => print('echeancier')}><Printer size={16} aria-hidden="true" />Imprimer</button>
+            </div>
+            <p className="muted small">Ce qui est à déclarer et à payer pour ce mois, calculé à partir des pièces validées. Les dates sont les échéances habituelles : vérifiez-les sur votre avis ou auprès de votre comptable.</p>
+            <table className="table compact decl sched">
+              <thead><tr><th>Déclaration</th><th>Calcul</th><th className="num">Montant</th><th>À déposer avant le</th></tr></thead>
+              <tbody>
+                {(data.schedule as any[]).map((s, i) => (
+                  <tr key={s.code} style={{ animationDelay: `${i * 50}ms` }}>
+                    <td className="strong">{s.label}{s.note && <div className="muted small">{s.note.replace(/\d{4,}/g, (n: string) => formatNumber(Number(n)))}</div>}</td>
+                    <td className="muted small">{s.basis.replace(/\d{4,}/g, (n: string) => formatNumber(Number(n)))}</td>
+                    <td className="num money">{s.amount === null ? '—' : formatNumber(s.amount)}</td>
+                    <td className="nowrap">{s.due ? <span className={`badge ${s.due < todayISO() && s.amount ? 'pay-partielle' : 'badge-valide'}`}>{formatDate(s.due)}</span> : <span className="muted">selon votre avis</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot><tr><td colSpan={2}>Total à prévoir</td><td className="num">{formatNumber(data.scheduleTotal)}</td><td /></tr></tfoot>
+            </table>
+          </div>
+
+          {(data.additions.collected.length > 0 || data.additions.paid.length > 0) && (
+            <div className="card">
+              <div className="row space-between"><h3>Taxes ajoutées aux factures</h3><button className="btn btn-sm" onClick={() => print('taxes')}><Printer size={16} aria-hidden="true" />Imprimer</button></div>
+              <div className="dash-grid two">
+                {[['Collectées sur vos ventes (à reverser)', data.additions.collected], ['Payées sur vos achats', data.additions.paid]].map(([title, groups]: any) => (
+                  <div key={title}>
+                    <h4>{title}</h4>
+                    {groups.length === 0 ? <p className="muted">Aucune.</p> : groups.map((g: any) => (
+                      <table key={g.code} className="table compact decl">
+                        <thead><tr><th colSpan={3}>{g.label}</th></tr></thead>
+                        <tbody>{g.documents.map((d: any) => <tr key={d.number}><td className="nowrap">{d.number}</td><td>{d.party}</td><td className="num money">{formatNumber(d.amount)}</td></tr>)}</tbody>
+                        <tfoot><tr><td colSpan={2}>Total (base {formatNumber(g.basis)})</td><td className="num">{formatNumber(g.amount)}</td></tr></tfoot>
+                      </table>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="dash-grid two">
             <div className="card">

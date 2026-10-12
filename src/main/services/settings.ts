@@ -59,6 +59,10 @@ export interface CompanySettings {
   smtp_user: string
   smtp_from_name: string
   smtp_from_email: string
+  /** Adresse où arrivent les réponses des clients (vide : celle de l'expéditeur). */
+  smtp_reply_to: string
+  /** Copie cachée de chaque e-mail envoyé (archivage). */
+  smtp_bcc: string
 
   // SMS (la clé secrète est dans la table secrets)
   sms_provider: '' | 'orange' | 'twilio' | 'http'
@@ -131,6 +135,8 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   smtp_user: '',
   smtp_from_name: '',
   smtp_from_email: '',
+  smtp_reply_to: '',
+  smtp_bcc: '',
   sms_provider: '',
   sms_sender: '',
   sms_account: '',

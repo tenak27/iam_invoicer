@@ -60,6 +60,26 @@ describe('Bilan et déclarations', () => {
     expect(d.payroll).toBeNull()
   })
 
+  it('échéancier du mois : montants, date limite et minimum forfaitaire selon le régime', async () => {
+    const d = await ok(admin, 'declarations.month', { month })
+    const [y, m] = month.split('-').map(Number)
+    const due = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, '0')}-20`
+    const by = (code: string) => d.schedule.find((s: any) => s.code === code)
+    // Crédit de TVA : rien à payer, le crédit est signalé
+    expect(by('TVA')).toMatchObject({ amount: 0, due })
+    expect(by('TVA').note).toMatch(/Crédit de TVA de 9000/)
+    expect(by('RAS')).toMatchObject({ amount: 0, due })
+    expect(by('IUTS')).toMatchObject({ amount: null })
+    expect(by('MFP')).toBeUndefined() // régime non renseigné
+    expect(d.turnover).toBe(100000)
+    // Réel normal : 0,5 % du chiffre d'affaires, avec le plancher mensuel
+    await ok(admin, 'settings.save', { regime_fiscal: 'RNI' })
+    const rni = await ok(admin, 'declarations.month', { month })
+    expect(rni.country).toMatchObject({ code: 'BF', regime: 'RNI' })
+    expect(rni.schedule.find((s: any) => s.code === 'MFP')).toMatchObject({ amount: 83334, due })
+    expect(rni.scheduleTotal).toBe(83334)
+  })
+
   it('mois invalide refusé', async () => {
     const r = await call(admin, 'declarations.month', { month: '2026-13-01' })
     expect(r.ok).toBe(false)

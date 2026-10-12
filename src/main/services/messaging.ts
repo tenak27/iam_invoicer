@@ -156,6 +156,9 @@ export async function sendEmail(
   try {
     await transport.sendMail({
       from,
+      // Les réponses des clients arrivent à cette adresse ; la copie cachée archive chaque envoi
+      ...(settings.smtp_reply_to ? { replyTo: settings.smtp_reply_to } : {}),
+      ...(settings.smtp_bcc ? { bcc: settings.smtp_bcc } : {}),
       to: recipients.join(', '),
       subject,
       text: body,

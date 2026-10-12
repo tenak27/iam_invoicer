@@ -77,11 +77,30 @@ describe('Taxes sur les factures', () => {
   })
   afterAll(() => db?.close())
 
-  it('modèles du pays importés inactifs, puis paramétrés', async () => {
-    expect(await ok(admin, 'taxes.importPresets')).toBe(5)
-    expect(await ok(admin, 'taxes.importPresets')).toBe(0) // pas de doublon
+  it('panorama des impôts et taxes du Burkina Faso', async () => {
+    const guide = await ok(admin, 'taxes.guide')
+    expect(guide).toMatchObject({ code: 'BF', country: 'Burkina Faso' })
+    expect(guide.entries.map((e: any) => e.code)).toEqual(expect.arrayContaining(['TVA', 'RAS', 'PREL', 'IUTS', 'TPA', 'CNSS', 'IS', 'MFP']))
+    expect(guide.entries.find((e: any) => e.code === 'TVA').rate).toMatch(/18 %/)
+  })
+
+  it('première ouverture de l’onglet : taxes du pays installées d’elles-mêmes, une seule fois', async () => {
+    expect(await ok<any[]>(admin, 'taxes.list')).toHaveLength(0) // un écran de saisie n'installe rien
+    const all = await ok<any[]>(admin, 'taxes.list', { seed: true })
+    expect(all.map((t) => t.code)).toEqual(['RAS-PS', 'RAS-PS-25', 'RAS-BTP', 'RAS-NR', 'RAS-TVA', 'PREL-BIC', 'TIMBRE', 'TAXE-SPE'])
+    // Rien n'est appliqué d'office : les taxes actives se choisissent sur chaque facture
+    expect(all.some((t) => t.auto)).toBe(false)
+    expect(all.filter((t) => t.active).map((t) => t.code)).toEqual(['RAS-PS', 'RAS-PS-25', 'RAS-BTP', 'RAS-NR', 'PREL-BIC'])
+    expect(all.find((t) => t.code === 'RAS-PS-25')).toMatchObject({ kind: 'withholding', base: 'ht', rate: 25 })
+    // Une taxe supprimée ne revient pas à l'ouverture suivante
+    await ok(admin, 'taxes.delete', { id: all.find((t) => t.code === 'TAXE-SPE').id })
+    expect(await ok<any[]>(admin, 'taxes.list', { seed: true })).toHaveLength(7)
+  })
+
+  it('modèles du pays : pas de doublon, puis paramétrage', async () => {
+    expect(await ok(admin, 'taxes.importPresets')).toBe(1) // seule la taxe supprimée est rajoutée
+    expect(await ok(admin, 'taxes.importPresets')).toBe(0)
     const all = await ok<any[]>(admin, 'taxes.list')
-    expect(all.every((t) => !t.active)).toBe(true)
     const timbre = all.find((t) => t.code === 'TIMBRE')
     await ok(admin, 'taxes.save', { ...timbre, amount: 200, active: true, auto: true })
     const ras = all.find((t) => t.code === 'RAS-PS')

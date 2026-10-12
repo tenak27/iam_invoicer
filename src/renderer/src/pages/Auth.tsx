@@ -7,9 +7,32 @@ import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFi
 import { countryDefaults, countryProfile, DEFAULT_COUNTRY } from '@shared/countries'
 const isDesktop = () => window.erp.kind === 'desktop'
 
+/**
+ * Arrière-plan animé des écrans de connexion : halos de couleur qui dérivent, trame qui glisse
+ * et petites pièces (facture, ticket, graphique, pièce de monnaie) qui montent lentement.
+ * Purement décoratif : ignoré des lecteurs d'écran, figé si le système réduit les animations.
+ */
+export function AuthBackdrop() {
+  return (
+    <div className="auth-bg" aria-hidden="true">
+      <i className="orb o1" /><i className="orb o2" /><i className="orb o3" /><i className="orb o4" />
+      <span className="auth-grid" />
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+        <span key={n} className={`auth-float f${n}`}>
+          {n % 4 === 0 && <svg viewBox="0 0 48 60"><rect x="1.5" y="1.5" width="45" height="57" rx="5" /><path d="M10 14h16M10 26h28M10 34h28M10 42h18" /><rect x="30" y="10" width="9" height="9" rx="1.5" /></svg>}
+          {n % 4 === 1 && <svg viewBox="0 0 56 44"><path d="M4 40V8M4 40h48" /><path className="ln" d="M10 32l10-9 9 6 12-15 9 5" /></svg>}
+          {n % 4 === 2 && <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" /><path d="M22 11v22M28 16h-8.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H15" /></svg>}
+          {n % 4 === 3 && <svg viewBox="0 0 44 56"><path d="M4 2h36v52l-6-4-6 4-6-4-6 4-6-4-6 4z" /><path d="M12 14h20M12 22h20M12 30h12" /></svg>}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function AuthCard(props: { title: string; subtitle?: string; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="auth-screen">
+      <AuthBackdrop />
       <div className={`auth-card ${props.wide ? 'auth-wide' : ''}`}>
         <div className="auth-brand">
           <BrandMark size={46} />

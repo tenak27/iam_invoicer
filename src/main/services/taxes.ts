@@ -3,7 +3,8 @@
 // modifier ou supprimer une taxe ne change pas les documents déjà établis.
 
 import { countryProfile } from '@shared/countries'
-import { taxPresets, type TaxDef, type TaxSide } from '@shared/taxes'
+import { can } from '@shared/domain'
+import { taxGuide, taxPresets, type TaxDef, type TaxSide } from '@shared/taxes'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 import { getSettings } from './settings'
@@ -14,7 +15,23 @@ const num = (v: unknown) => {
 }
 const str = (v: unknown) => String(v ?? '').trim()
 
-export async function listTaxes(ctx: Ctx, args: { activeOnly?: boolean; side?: 'sale' | 'purchase' } = {}): Promise<(TaxDef & { id: number })[]> {
+const SEEDED_KEY = 'taxes_seeded'
+
+/**
+ * Première ouverture de l'onglet Taxes : les modèles du pays sont installés d'eux-mêmes, pour
+ * que les taxes applicables soient visibles sans chercher. Une seule fois : une taxe supprimée
+ * ensuite ne revient pas.
+ */
+async function seedOnce(ctx: Ctx) {
+  if (!ctx.user || !can(ctx.user.role, 'settings')) return
+  if (await ctx.db.one('SELECT 1 FROM settings WHERE key = $1', [SEEDED_KEY])) return
+  await ctx.db.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [SEEDED_KEY, 'true'])
+  if (await ctx.db.one('SELECT 1 FROM taxes LIMIT 1')) return
+  await importTaxPresets(ctx).catch(() => 0) // plan comptable modifié : l'import manuel dira quel compte manque
+}
+
+export async function listTaxes(ctx: Ctx, args: { activeOnly?: boolean; side?: 'sale' | 'purchase'; seed?: boolean } = {}): Promise<(TaxDef & { id: number })[]> {
+  if (args.seed) await seedOnce(ctx)
   return ctx.db.query(
     `SELECT id, code, label, kind, base, rate, amount, account_sale, account_purchase, applies_to, auto, active
      FROM taxes WHERE ($1 = false OR active) AND ($2 = '' OR applies_to = 'both' OR applies_to = $2)
@@ -89,6 +106,13 @@ export async function importTaxPresets(ctx: Ctx) {
     added++
   }
   return added
+}
+
+/** Panorama des impôts et taxes du pays de la société (repère affiché dans l'onglet Taxes). */
+export async function countryTaxGuide(ctx: Ctx) {
+  const s = await getSettings(ctx.db)
+  const p = countryProfile(s.country_code, s.country)
+  return { country: p.name, code: p.code, entries: taxGuide(p.code) }
 }
 
 /** Taxes à appliquer à un document : codes choisis, ou taxes automatiques pour un nouveau document. */

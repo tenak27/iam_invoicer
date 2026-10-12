@@ -1,8 +1,9 @@
 // Société & paramètres → Taxes : taxes additionnelles et retenues à la source.
 
 import { useState } from 'react'
-import { DownloadSimple, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
-import { TAX_BASE_LABELS, TAX_KIND_LABELS, taxCaption, type TaxDef } from '@shared/taxes'
+import { NavLink } from 'react-router-dom'
+import { CalendarCheck, DownloadSimple, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
+import { TAX_BASE_LABELS, TAX_KIND_LABELS, taxCaption, type TaxDef, type TaxGuideEntry } from '@shared/taxes'
 import { formatMoney } from '@shared/format'
 import { api, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, RowActions, useForm } from './ui'
@@ -11,8 +12,48 @@ type Tax = TaxDef & { id?: number }
 
 const SIDE_LABELS = { sale: 'Ventes', purchase: 'Achats', both: 'Ventes et achats' }
 
+const HANDLED = { oui: ['Géré', 'badge-valide'], partiel: ['En partie', 'pay-partielle'], non: ['À suivre à part', 'badge-brouillon'] } as const
+
+/** Panorama des impôts et taxes du pays, avec l'endroit où l'application traite chacun. */
+function TaxGuide() {
+  const { data } = useQuery<{ country: string; code: string; entries: TaxGuideEntry[] }>('taxes.guide')
+  if (!data?.entries.length) return null
+  return (
+    <div className="card">
+      <div className="row space-between wrap gap">
+        <h3>Impôts et taxes applicables — {data.country}</h3>
+        <NavLink className="btn" to="/declarations"><CalendarCheck size={18} aria-hidden="true" />Préparer les déclarations du mois</NavLink>
+      </div>
+      <p className="muted">Ce que doit déclarer une entreprise, et où l'application le calcule. Les taux et échéances sont des repères de gestion : faites-les confirmer par votre comptable, la DGI ou la CNSS. Ils se modifient ci-dessous (taxes des factures), dans RH et paie (IUTS, CNSS, TPA) et dans l'onglet Société (taux de l'impôt sur les bénéfices).</p>
+      <div className="tax-guide">
+        {data.entries.map((e, i) => (
+          <article key={e.code} className="tax-item" style={{ animationDelay: `${i * 40}ms` }}>
+            <header><strong>{e.name}</strong><span className={`badge ${HANDLED[e.handled][1]}`}>{HANDLED[e.handled][0]}</span></header>
+            <dl>
+              <div><dt>Taux</dt><dd>{e.rate}</dd></div>
+              <div><dt>Base</dt><dd>{e.base}</dd></div>
+              <div><dt>Échéance</dt><dd>{e.period}</dd></div>
+              <div><dt>Dans l'application</dt><dd>{e.where}</dd></div>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function TaxSettings() {
-  const { data, error, loading, reload } = useQuery<Tax[]>('taxes.list')
+  return (
+    <>
+      <TaxGuide />
+      <InvoiceTaxes />
+    </>
+  )
+}
+
+function InvoiceTaxes() {
+  // seed : à la première ouverture, les modèles du pays sont installés d'eux-mêmes
+  const { data, error, loading, reload } = useQuery<Tax[]>('taxes.list', { seed: true })
   const [editing, setEditing] = useState<Tax | null>(null)
   const importPresets = async () => {
     const n = await run(() => api<number>('taxes.importPresets'))
@@ -33,7 +74,7 @@ export function TaxSettings() {
       </div>
       <p className="muted">
         La TVA se règle ligne par ligne. Ici : les <strong>taxes ajoutées au total</strong> (droit de timbre, taxe spécifique…) et les <strong>retenues à la source</strong>,
-        déduites du net à payer et enregistrées automatiquement comme règlement à la validation. Les modèles proposés sont inactifs : faites confirmer les taux par votre comptable avant de les activer.
+        déduites du net à payer et enregistrées automatiquement comme règlement à la validation. Une taxe active se choisit sur chaque facture ; aucune n'est appliquée d'office, sauf si vous cochez « automatique ». Faites confirmer les taux par votre comptable.
       </p>
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : !data!.length ? (
         <Empty>Aucune taxe paramétrée. Ajoutez les modèles du pays ou créez une taxe.</Empty>

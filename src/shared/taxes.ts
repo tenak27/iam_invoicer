@@ -125,7 +125,56 @@ export function taxPresets(countryCode: string): TaxDef[] {
     }
   ]
   if (countryCode === 'BF') {
-    common[0] = { ...common[0], label: 'Retenue à la source sur prestations de services (BIC)' }
+    // Burkina Faso : retenues et prélèvement du Code général des impôts, proposés actifs pour être
+    // choisis sur les factures (aucun n'est appliqué d'office) ; timbre et taxe spécifique à compléter.
+    const ras = (code: string, label: string, rate: number): TaxDef => ({ ...common[0], code, label, rate, active: true })
+    return [
+      ras('RAS-PS', 'Retenue à la source 5 % (prestataire résident immatriculé à l’IFU)', 5),
+      ras('RAS-PS-25', 'Retenue à la source 25 % (prestataire résident sans IFU)', 25),
+      ras('RAS-BTP', 'Retenue à la source 1 % (travaux immobiliers et travaux publics)', 1),
+      ras('RAS-NR', 'Retenue à la source 20 % (prestataire non résident)', 20),
+      { ...common[1], label: 'Retenue de TVA à la source (marchés publics)' },
+      { ...common[2], label: 'Prélèvement à la source 2 % (acompte BIC / IS, ventes en gros)', active: true },
+      common[3],
+      common[4]
+    ]
   }
   return common
+}
+
+/** Impôt ou taxe applicable dans un pays : repère pour l'utilisateur, avec l'endroit où l'application le traite. */
+export interface TaxGuideEntry {
+  code: string
+  name: string
+  rate: string
+  base: string
+  /** Périodicité et échéance habituelles. */
+  period: string
+  /** Où cela se passe dans l'application. */
+  where: string
+  /** Géré par l'application (calcul et état préparatoire), en partie, ou à suivre hors de l'application. */
+  handled: 'oui' | 'partiel' | 'non'
+}
+
+/**
+ * Panorama des impôts et taxes d'une entreprise au Burkina Faso (Code général des impôts,
+ * CNSS). Repère de gestion : taux et échéances sont à confirmer auprès de la DGI, de la CNSS ou
+ * d'un comptable, et se modifient dans l'application (taxes, paramètres de paie, taux d'IS).
+ */
+export function taxGuide(countryCode: string): TaxGuideEntry[] {
+  if (countryCode !== 'BF') return []
+  return [
+    { code: 'TVA', name: 'Taxe sur la valeur ajoutée', rate: '18 % (exportations : 0 %)', base: 'Chiffre d’affaires hors taxes', period: 'Mensuelle au réel normal, trimestrielle au réel simplifié ; au plus tard le 20', where: 'Taux sur chaque ligne de document ; Déclarations → TVA', handled: 'oui' },
+    { code: 'RAS', name: 'Retenue à la source sur prestations', rate: '5 % avec IFU, 25 % sans IFU, 1 % travaux immobiliers et publics, 20 % non-résidents', base: 'Montant hors taxes versé au prestataire', period: 'Mensuelle ; reversée au plus tard le 20 du mois suivant', where: 'À choisir sur la facture ; Déclarations → Retenues à la source', handled: 'oui' },
+    { code: 'PREL', name: 'Prélèvement à la source (acompte sur BIC / IS)', rate: '2 % sur les ventes en gros ; autres taux selon l’opération (importations…)', base: 'Montant hors taxes de la vente ou de l’achat', period: 'Mensuelle ; au plus tard le 20 du mois suivant', where: 'Taxe « PREL-BIC » sur la facture ; Déclarations → Taxes ajoutées', handled: 'oui' },
+    { code: 'IUTS', name: 'Impôt unique sur les traitements et salaires', rate: 'Barème progressif, de 0 à 25 %', base: 'Salaire imposable, après abattements et charges de famille', period: 'Mensuelle ; au plus tard le 20 du mois suivant', where: 'RH et paie → bulletins ; Déclarations → Salaires', handled: 'oui' },
+    { code: 'TPA', name: 'Taxe patronale et d’apprentissage', rate: '3 %', base: 'Masse salariale brute', period: 'Mensuelle, avec l’IUTS', where: 'RH et paie ; Déclarations → Salaires', handled: 'oui' },
+    { code: 'CNSS', name: 'Cotisations sociales (CNSS)', rate: '16 % employeur (7 % famille, 3,5 % risques, 5,5 % pension) et 5,5 % salarié', base: 'Salaire brut, dans la limite du plafond (600 000 F par mois dans les paramètres de paie)', period: 'Mensuelle ou trimestrielle selon l’effectif', where: 'RH et paie ; Déclarations → Salaires', handled: 'oui' },
+    { code: 'IS', name: 'Impôt sur les sociétés / BIC', rate: '27,5 % pour les sociétés ; barème pour les entreprises individuelles', base: 'Bénéfice imposable de l’exercice', period: 'Annuelle ; déclaration avant le 30 avril', where: 'Déclarations → estimation de l’impôt sur les bénéfices', handled: 'partiel' },
+    { code: 'MFP', name: 'Minimum forfaitaire de perception', rate: '0,5 % du chiffre d’affaires ; minimum annuel de 1 000 000 F (réel normal) ou 300 000 F (réel simplifié)', base: 'Chiffre d’affaires hors taxes', period: 'Acomptes mensuels au réel normal, trimestriels au réel simplifié ; au plus tard le 20', where: 'Déclarations → échéancier du mois', handled: 'oui' },
+    { code: 'CME', name: 'Contribution des micro-entreprises', rate: 'Forfait selon le chiffre d’affaires et la zone', base: 'Entreprises sous le seuil du réel simplifié, sans TVA', period: 'Annuelle', where: 'Régime « CME » dans Société : TVA à 0 % sur les articles', handled: 'non' },
+    { code: 'IRF', name: 'Impôt sur les revenus fonciers', rate: 'Barème sur le loyer, après abattement', base: 'Loyers versés ; retenu par le locataire quand il est une entreprise', period: 'Mensuelle ; au plus tard le 20 du mois suivant', where: 'À créer comme retenue dans cet onglet si vous louez vos locaux', handled: 'partiel' },
+    { code: 'PATENTE', name: 'Contribution des patentes', rate: 'Droit fixe selon le chiffre d’affaires et droit proportionnel sur la valeur locative', base: 'Chiffre d’affaires et locaux professionnels', period: 'Annuelle', where: 'À comptabiliser en charge (compte 64) à réception de l’avis', handled: 'non' },
+    { code: 'TIMBRE', name: 'Droits de timbre', rate: 'Montant fixe selon l’acte', base: 'Quittances, effets et actes', period: 'À l’acte', where: 'Taxe « TIMBRE » : saisissez le montant puis activez-la', handled: 'partiel' }
+  ]
 }

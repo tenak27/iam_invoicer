@@ -196,10 +196,78 @@ export async function monthlyDeclarations(ctx: Ctx, args: { month: string }) {
     advancesPaid: round(advances?.amount ?? 0)
   }
 
+  // Taxes ajoutées aux factures (prélèvement à la source, timbre…) : collectées sur les ventes
+  // (à reverser), payées sur les achats (acompte ou charge). Un avoir vient en moins.
+  const addDocs = await ctx.db.query<{ type: string; number: string; date: string; party_name: string; taxes: AppliedTax[] }>(
+    `SELECT d.type, d.number, d.date, p.name AS party_name, d.taxes FROM documents d JOIN parties p ON p.id = d.party_id
+     WHERE d.status = 'valide' AND d.type IN ('FAC','AV','FF') AND d.total_taxes > 0 AND d.date BETWEEN $1 AND $2 ORDER BY d.date, d.number`,
+    [from, to]
+  )
+  const additionsOf = (types: string[]) => {
+    const byTax = new Map<string, { code: string; label: string; basis: number; amount: number; documents: { number: string; date: string; party: string; basis: number; amount: number }[] }>()
+    for (const d of addDocs.filter((x) => types.includes(x.type))) {
+      const sign = d.type === 'AV' ? -1 : 1
+      for (const t of (d.taxes ?? []).filter((x) => x.kind === 'addition' && x.value > 0)) {
+        const g = byTax.get(t.code) ?? { code: t.code, label: t.label, basis: 0, amount: 0, documents: [] }
+        g.basis += sign * t.basis
+        g.amount += sign * t.value
+        g.documents.push({ number: d.number, date: d.date, party: d.party_name, basis: sign * t.basis, amount: sign * t.value })
+        byTax.set(t.code, g)
+      }
+    }
+    return [...byTax.values()]
+  }
+  const addCollected = additionsOf(['FAC', 'AV'])
+  const addPaid = additionsOf(['FF'])
+  const additions = { collected: addCollected, paid: addPaid, totalCollected: round(addCollected.reduce((s, g) => s + g.amount, 0)), totalPaid: round(addPaid.reduce((s, g) => s + g.amount, 0)) }
+
+  // Chiffre d'affaires hors taxes du mois (factures moins avoirs) : base du minimum forfaitaire
+  const sales = await ctx.db.one<{ ht: number }>(
+    `SELECT COALESCE(SUM(CASE WHEN type = 'FAC' THEN total_ht ELSE -total_ht END), 0) AS ht FROM documents
+     WHERE status = 'valide' AND type IN ('FAC','AV') AND date BETWEEN $1 AND $2`,
+    [from, to]
+  )
+  const turnover = round(sales?.ht ?? 0)
+
+  // Échéancier : ce qui est à déclarer et à payer pour ce mois, avec la date limite habituelle
+  const country = countryProfile(setting('country_code'), setting('country'))
+  const regime = String((await ctx.db.one<{ value: string }>("SELECT value FROM settings WHERE key = 'regime_fiscal'"))?.value ?? '').replace(/"/g, '')
+  const [y, m] = month.split('-').map(Number)
+  const next = new Date(Date.UTC(y, m, 1)) // premier jour du mois suivant
+  const due20 = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-20`
+  const bf = country.code === 'BF'
+  const schedule: { code: string; label: string; basis: string; amount: number | null; due: string | null; note: string }[] = []
+  schedule.push({
+    code: 'TVA', label: 'TVA', basis: `Collectée ${vat.collected} − déductible ${vat.deductible}${vat.withheldByClients ? ` − retenue par les clients ${vat.withheldByClients}` : ''}`,
+    amount: Math.max(0, vat.net), due: bf ? due20 : null, note: vat.net < 0 ? `Crédit de TVA de ${-vat.net} à reporter sur le mois suivant.` : regime === 'RSI' ? 'Réel simplifié : déclaration trimestrielle.' : ''
+  })
+  const totalOperated = round(operated.reduce((s, g) => s + g.amount, 0))
+  schedule.push({ code: 'RAS', label: 'Retenues à la source opérées', basis: `${operated.reduce((n, g) => n + g.documents.length, 0)} facture(s) fournisseur`, amount: totalOperated, due: bf ? due20 : null, note: totalOperated ? '' : 'Aucune retenue opérée ce mois-ci.' })
+  if (additions.totalCollected) schedule.push({ code: 'PREL', label: 'Taxes ajoutées collectées (prélèvement à la source, timbre…)', basis: addCollected.map((g) => g.code).join(', '), amount: additions.totalCollected, due: bf ? due20 : null, note: '' })
+  if (payroll) {
+    const others = round(payroll.contributions.reduce((s, c) => s + c.employee + c.employer, 0))
+    schedule.push({ code: 'IUTS', label: `${country.wageTax} et taxe patronale`, basis: `Salaires bruts ${payroll.gross}`, amount: round(payroll.iuts + payroll.tpa), due: bf ? due20 : null, note: payroll.status === 'valide' ? '' : 'Paie en préparation : montant provisoire.' })
+    schedule.push({ code: 'CNSS', label: `Cotisations ${country.socialSecurity}`, basis: `Part salariale ${payroll.cnssEmployee} + part patronale ${payroll.cnssEmployer}${others ? ` + autres ${others}` : ''}`, amount: round(payroll.cnssEmployee + payroll.cnssEmployer + others), due: null, note: bf ? 'Mensuelle ou trimestrielle selon l’effectif : date fixée par la CNSS.' : '' })
+  } else schedule.push({ code: 'IUTS', label: `${country.wageTax}, taxe patronale et ${country.socialSecurity}`, basis: 'Paie du mois', amount: null, due: bf ? due20 : null, note: 'Pas de paie pour ce mois : préparez-la dans RH et paie.' })
+  if (bf && (regime === 'RNI' || regime === 'RSI')) {
+    // Minimum forfaitaire de perception : 0,5 % du chiffre d'affaires, avec un plancher annuel
+    const floor = regime === 'RNI' ? Math.ceil(1_000_000 / 12) : Math.ceil(300_000 / 12)
+    schedule.push({
+      code: 'MFP', label: 'Minimum forfaitaire de perception (acompte)', basis: `0,5 % du chiffre d’affaires HT du mois (${turnover})`,
+      amount: Math.max(round(turnover * 0.005), floor), due: due20,
+      note: `Plancher : ${floor} par mois (${regime === 'RNI' ? '1 000 000' : '300 000'} par an).${regime === 'RSI' ? ' Réel simplifié : versement trimestriel.' : ''} S’impute sur l’impôt sur les bénéfices.`
+    })
+  }
+
   return {
     month,
+    country: { code: country.code, name: country.name, regime },
     vat,
-    withholdings: { suffered, operated, totalSuffered: round(suffered.reduce((s, g) => s + g.amount, 0)), totalOperated: round(operated.reduce((s, g) => s + g.amount, 0)) },
+    withholdings: { suffered, operated, totalSuffered: round(suffered.reduce((s, g) => s + g.amount, 0)), totalOperated },
+    additions,
+    turnover,
+    schedule,
+    scheduleTotal: round(schedule.reduce((s, x) => s + (x.amount ?? 0), 0)),
     payroll,
     profitTax
   }

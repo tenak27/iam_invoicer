@@ -28,6 +28,16 @@ const DATA_TEXT: Record<DataMode, string> = {
 
 type SettingsTab = 'societe' | 'taxes' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees'
 
+/** Réglages d'envoi des fournisseurs de messagerie courants (préremplissage du serveur SMTP). */
+const MAIL_PROVIDERS: { name: string; host: string; port: number; secure: boolean; hint?: string }[] = [
+  { name: 'Gmail', host: 'smtp.gmail.com', port: 587, secure: false, hint: 'Gmail : identifiant = votre adresse ; mot de passe = un « mot de passe d’application » créé dans votre compte Google (validation en deux étapes activée), pas votre mot de passe habituel.' },
+  { name: 'Outlook / Microsoft 365', host: 'smtp.office365.com', port: 587, secure: false, hint: 'Microsoft 365 : l’envoi SMTP authentifié doit être autorisé pour la boîte par votre administrateur.' },
+  { name: 'Hostinger', host: 'smtp.hostinger.com', port: 465, secure: true, hint: 'Hostinger : identifiant = l’adresse complète de la boîte créée dans votre espace Hostinger.' },
+  { name: 'OVH', host: 'ssl0.ovh.net', port: 465, secure: true },
+  { name: 'Zoho', host: 'smtp.zoho.com', port: 465, secure: true },
+  { name: 'Yahoo', host: 'smtp.mail.yahoo.com', port: 465, secure: true, hint: 'Yahoo : utilisez un mot de passe d’application.' }
+]
+
 const DOC_COLORS = ['#1d6fd6', '#0b4f8a', '#178a55', '#7367f0', '#c2410c', '#be123c', '#33303f']
 
 export function CompanySettingsPage() {
@@ -94,7 +104,7 @@ export function CompanySettingsPage() {
         { value: 'societe', label: 'Société' },
         { value: 'taxes', label: 'Taxes' },
         { value: 'documents', label: 'Documents & signature' },
-        { value: 'mail', label: 'Messagerie' },
+        { value: 'mail', label: 'E-mail d’envoi' },
         { value: 'sms', label: 'SMS' },
         { value: 'secef', label: 'Facture certifiée' },
         { value: 'donnees', label: 'Données' }
@@ -219,8 +229,18 @@ export function CompanySettingsPage() {
       {tab === 'mail' && (
         <div className="tab-panel" key="mail">
           <div className="card">
-            <h3>Serveur d'envoi (SMTP)</h3>
-            <p className="muted small">Gmail : smtp.gmail.com, port 587, avec un « mot de passe d'application ». Office 365 : smtp.office365.com, port 587.</p>
+            <div className="row space-between wrap gap">
+              <h3>Adresse d'envoi des e-mails aux clients</h3>
+              <span className={`badge ${v.smtp_host && (v.smtp_from_email || v.smtp_user) ? 'badge-valide' : 'pay-partielle'}`}>{v.smtp_host && (v.smtp_from_email || v.smtp_user) ? 'Messagerie configurée' : 'Messagerie à configurer'}</span>
+            </div>
+            <p className="muted">Devis, factures et relances partent de cette adresse, avec le PDF en pièce jointe. Choisissez votre fournisseur pour préremplir le serveur, saisissez votre adresse et son mot de passe, enregistrez, puis envoyez un e-mail d'essai.</p>
+            <div className="mail-providers" role="group" aria-label="Fournisseur de messagerie">
+              {MAIL_PROVIDERS.map((p) => (
+                <button key={p.name} type="button" className={`btn btn-sm ${v.smtp_host === p.host ? 'btn-tonal' : ''}`} aria-pressed={v.smtp_host === p.host}
+                  onClick={() => f.setValues({ ...v, smtp_host: p.host, smtp_port: p.port, smtp_secure: p.secure })}>{p.name}</button>
+              ))}
+            </div>
+            {MAIL_PROVIDERS.find((p) => p.host === v.smtp_host)?.hint && <p className="muted small mail-hint">{MAIL_PROVIDERS.find((p) => p.host === v.smtp_host)!.hint}</p>}
             <div className="grid grid-4">
               <Field label="Serveur SMTP" span={2}><input {...f.bind('smtp_host')} placeholder="smtp.gmail.com" autoCapitalize="off" /></Field>
               <Field label="Port"><input inputMode="numeric" {...f.bind('smtp_port')} /></Field>
@@ -233,6 +253,8 @@ export function CompanySettingsPage() {
               </Field>
               <Field label="Nom de l'expéditeur" span={2}><input {...f.bind('smtp_from_name')} placeholder={v.name} /></Field>
               <Field label="Adresse de l'expéditeur" span={2}><input type="email" {...f.bind('smtp_from_email')} placeholder="facturation@iam.bf" /></Field>
+              <Field label="Réponses envoyées à" span={2} hint="Facultatif : si vos clients doivent répondre à une autre adresse."><input type="email" {...f.bind('smtp_reply_to')} placeholder={v.smtp_from_email || 'contact@iam.bf'} /></Field>
+              <Field label="Copie cachée de chaque envoi" span={2} hint="Facultatif : pour garder une trace dans votre boîte."><input type="email" {...f.bind('smtp_bcc')} placeholder="archives@iam.bf" /></Field>
             </div>
             <div className="form-actions"><button className="btn" onClick={() => test('email')}>Envoyer un e-mail d'essai</button></div>
           </div>

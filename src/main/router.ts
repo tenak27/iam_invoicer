@@ -107,6 +107,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'taxes.save': { access: 'settings', fn: taxes.saveTax },
   'taxes.delete': { access: 'settings', fn: taxes.deleteTax },
   'taxes.importPresets': { access: 'settings', fn: taxes.importTaxPresets },
+  'taxes.guide': { access: 'user', fn: taxes.countryTaxGuide },
   // Droits vérifiés par type de données dans le service
   'imports.run': { access: 'user', fn: imports.runImport },
 
