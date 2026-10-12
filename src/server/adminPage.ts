@@ -323,6 +323,7 @@ const JS = String.raw`
           if (confirmText && !confirm(confirmText)) return
           run(api('POST', '/api/admin/tenants/' + slug + '/' + action, {}), okText).then(function (r) {
             if (r && r.setup_code) dialog('Nouveau code d’activation', h('p', { class: 'secret', text: r.setup_code }))
+            if (r && r.sync_key) dialog('Clé de synchronisation', [h('p', { text: 'À saisir sur le serveur de l’entreprise (Société et paramètres → Données → Copie en ligne), avec l’adresse ' + urlOf(slug) + ' :' }), h('p', { class: 'secret', text: r.sync_key }), h('div', { class: 'actions' }, h('button', { class: 'btn', onclick: function () { copy('Adresse : ' + urlOf(slug) + '\nClé de synchronisation : ' + r.sync_key) }, text: 'Copier l’adresse et la clé' })), h('p', { class: 'sub', text: 'Affichée une seule fois. La base en ligne devient la copie de consultation du serveur de l’entreprise.' })])
             if (r && r.db_password) dialog('Nouveau mot de passe de la base', [h('p', { class: 'secret', text: r.db_password }), h('p', { class: 'sub', text: 'Affiché une seule fois. Les applications de la société ne sont pas concernées.' })])
             refresh()
             reload()
@@ -336,6 +337,7 @@ const JS = String.raw`
             h('dt', { text: 'Configuration' }), h('dd', { text: t.configured ? 'Faite — raison sociale « ' + (t.company || '') + ' »' : 'En attente' + (t.setup_code ? ' · code d’activation ' + t.setup_code : '') }),
             h('dt', { text: 'Activité' }), h('dd', { text: (t.users || 0) + ' utilisateur(s) · ' + (t.documents || 0) + ' document(s) · ' + fmtSize(t.size) }),
             h('dt', { text: 'Licence' }), h('dd', {}, licBadge, L && L.expires ? ' jusqu’au ' + fmtDate(L.expires) : L && (L.state === 'active' || L.state === 'preinstalled') ? ' perpétuelle' : ''),
+            h('dt', { text: 'Serveur d’entreprise' }), h('dd', { text: t.mirrored_at ? 'Copie reçue le ' + new Date(t.mirrored_at).toLocaleString('fr-FR') : t.has_sync_key ? 'Clé créée, aucune copie reçue pour l’instant' : 'Non : la société travaille directement en ligne' }),
             h('dt', { text: 'Contact' }), h('dd', { text: t.contact || '—' }),
             h('dt', { text: 'Note' }), h('dd', { text: t.notes || '—' })),
           L && L.state !== 'active' ? h('div', { class: 'box' + (L.state === 'preinstalled' ? '' : ' warn'), text: L.message }) : null,
@@ -358,6 +360,7 @@ const JS = String.raw`
               ? h('button', { class: 'btn', onclick: function () { act('suspend', 'Accès suspendu.', 'Suspendre l’accès de « ' + t.name + ' » ? Ses données sont conservées.') }, text: 'Suspendre' })
               : h('button', { class: 'btn', onclick: function () { act('resume', 'Accès rétabli.') }, text: 'Réactiver' }),
             !t.configured ? h('button', { class: 'btn', onclick: function () { act('setup-code', 'Nouveau code généré.') }, text: 'Nouveau code d’activation' }) : null,
+            h('button', { class: 'btn', onclick: function () { act('sync-key', 'Clé de synchronisation créée.', t.has_sync_key ? 'Créer une nouvelle clé ? L’ancienne cessera de fonctionner : le serveur de l’entreprise devra recevoir la nouvelle.' : 'Créer une clé de synchronisation ? Le serveur installé dans l’entreprise pourra remplacer le contenu de cette base en ligne par sa copie.') }, text: t.has_sync_key ? 'Nouvelle clé de synchronisation' : 'Clé de synchronisation (serveur d’entreprise)' }),
             h('button', { class: 'btn', onclick: function () { act('password', 'Mot de passe changé.', 'Changer le mot de passe PostgreSQL de cette base ?') }, text: 'Nouveau mot de passe de base' }),
             h('button', { class: 'btn danger', onclick: function () {
               var typed = prompt('Suppression DÉFINITIVE de la base de « ' + t.name + ' » et de toutes ses données.\nFaites une sauvegarde avant.\n\nPour confirmer, saisissez l’identifiant : ' + slug)
@@ -392,7 +395,7 @@ const JS = String.raw`
             h('td', { class: 'name', text: l.number }),
             h('td', {}, h('div', { text: l.company }), h('div', { class: 'sub', text: [l.tax_id, l.contact].filter(Boolean).join(' · ') })),
             h('td', { text: TIERS[l.tier] || l.tier }),
-            h('td', { text: l.users ? String(l.users) : 'illimité' }),
+            h('td', {}, h('div', { text: l.users ? String(l.users) : 'illimité' }), h('div', { class: 'sub', text: l.seats ? l.seats + ' poste(s)' : 'postes illimités' })),
             h('td', { text: fmtDate(l.issued) }),
             h('td', { text: l.expires ? fmtDate(l.expires) : 'perpétuelle' }),
             h('td', {}, h('span', { class: 'badge ' + (l.revoked ? 'b-off' : expired ? 'b-warn' : 'b-ok'), text: l.revoked ? 'Révoquée' : expired ? 'Expirée' : 'Valide' })),
@@ -408,20 +411,21 @@ const JS = String.raw`
       var tax = h('input', {})
       var tier = h('select', {}, Object.keys(TIERS).filter(function (k) { return k !== 'sur-mesure' }).map(function (k) { return h('option', { value: k, text: TIERS[k], selected: k === 'pro' }) }))
       var users = h('input', { type: 'number', min: '0', placeholder: 'celui du palier (0 = illimité)' })
+      var seats = h('input', { type: 'number', min: '0', placeholder: '0 = illimité' })
       var months = h('select', {}, [['12', '1 an'], ['1', '1 mois'], ['6', '6 mois'], ['24', '2 ans'], ['36', '3 ans'], ['', 'Perpétuelle']].map(function (o) { return h('option', { value: o[0], text: o[1] }) }))
       var contact = h('input', {})
       var assign = h('select', {}, h('option', { value: '', text: 'Ne pas attribuer maintenant' }), tenants.map(function (t) { return h('option', { value: t.slug, text: t.name + ' (/t/' + t.slug + ')' }) }))
       var save = h('button', { class: 'btn primary', text: 'Émettre la licence' })
       var d = dialog('Nouvelle licence', h('div', { class: 'grid' },
         field('Raison sociale', company, null, true), field('Identifiant fiscal (IFU)', tax, 'Facultatif'), field('Contact', contact),
-        field('Palier', tier), field('Utilisateurs', users), field('Durée', months), field('Attribuer à', assign)),
+        field('Palier', tier), field('Utilisateurs', users), field('Postes clients', seats, 'Appareils qui peuvent se connecter au serveur : base de la facturation.'), field('Durée', months), field('Attribuer à', assign, null, true)),
         [h('button', { class: 'btn', onclick: function () { d.close() }, text: 'Annuler' }), save])
       save.onclick = function () {
         if (!company.value.trim()) return company.focus()
         var expires = null
         if (months.value) { var x = new Date(); x.setMonth(x.getMonth() + Number(months.value)); expires = x.toISOString().slice(0, 10) }
         save.disabled = true
-        run(api('POST', '/api/admin/licences', { company: company.value, tax_id: tax.value, tier: tier.value, users: users.value, expires: expires, contact: contact.value })).then(function (l) {
+        run(api('POST', '/api/admin/licences', { company: company.value, tax_id: tax.value, tier: tier.value, users: users.value, seats: seats.value, expires: expires, contact: contact.value })).then(function (l) {
           save.disabled = false
           if (!l) return
           d.close()

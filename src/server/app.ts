@@ -33,6 +33,7 @@ import { signPageHtml } from './signPage'
 import { verifyPageHtml } from './verifyPage'
 import { verifyDocument } from '../main/services/documents'
 import { getSettings } from '../main/services/settings'
+import { checkSeat } from '../main/services/licence'
 import { iosManifest, listDownloads } from './downloads'
 
 export interface ServerOptions {
@@ -182,7 +183,12 @@ export function createHandler(opts: ServerOptions) {
         throw e
       }
       limiter.success(ip)
-      const token = await createToken(db, user.id, String(body.device ?? req.headers['user-agent'] ?? ''))
+      // Licence au poste : un nouvel appareil n'entre que s'il reste une place
+      const label = String(body.device ?? req.headers['user-agent'] ?? '')
+      const deviceId = /^[A-Za-z0-9_-]{8,64}$/.test(String(body.device_id ?? '')) ? String(body.device_id) : null
+      // Un administrateur entre toujours : c'est lui qui libère un poste quand ils sont tous pris
+      if (user.role !== 'admin') await checkSeat(db, deviceId ?? (label.slice(0, 200) || 'inconnu'))
+      const token = await createToken(db, user.id, label, deviceId)
       return send(res, 200, { ok: true, data: { token, user } })
     }
     if (method === 'POST' && path === '/api/setup') {
@@ -198,7 +204,7 @@ export function createHandler(opts: ServerOptions) {
         }
       }
       const user = await setup({ db, user: null }, body)
-      const token = await createToken(db, user.id, String(body.device ?? ''))
+      const token = await createToken(db, user.id, String(body.device ?? ''), /^[A-Za-z0-9_-]{8,64}$/.test(String(body.device_id ?? '')) ? String(body.device_id) : null)
       return send(res, 200, { ok: true, data: { token, user } })
     }
     if (method === 'POST' && path === '/api/logout') {

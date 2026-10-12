@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell } from 'electron'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, hostname } from 'node:os'
+import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { configureVendorKey } from './services/licensing'
 import { openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
@@ -9,12 +10,34 @@ import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig 
 import type { PrintFormat } from './printing'
 import { AppError, type SessionUser } from './services/context'
 import { diag, diagInit, errText } from './diag'
+import { Enterprise } from './enterprise'
 import { compareVersions, pickDownload, releaseFiles, RELEASES_API, type DownloadFile, type UpdateInfo } from '../shared/update'
 
 const configPath = () => join(app.getPath('userData'), 'config.json')
 const localDataDir = () => join(app.getPath('userData'), 'data')
 const backupConfigPath = () => join(app.getPath('userData'), 'sauvegardes.json')
 const defaultBackupDir = () => join(app.getPath('documents'), 'IAM INVOICER', 'Sauvegardes')
+
+const enterprisePath = () => join(app.getPath('userData'), 'serveur-entreprise.json')
+let enterprise: Enterprise | null = null
+
+/** Identité de ce poste auprès d'un serveur : compte pour un seul poste de la licence. */
+function deviceIdentity(): { id: string; name: string } {
+  const file = join(app.getPath('userData'), 'poste.json')
+  try {
+    const d = JSON.parse(readFileSync(file, 'utf8'))
+    if (/^[A-Za-z0-9_-]{8,64}$/.test(d.id)) return { id: d.id, name: `${hostname()} (bureau)` }
+  } catch {
+    /* premier lancement */
+  }
+  const id = randomBytes(18).toString('base64url')
+  try {
+    writeFileSync(file, JSON.stringify({ id }))
+  } catch {
+    /* disque en lecture seule : identité valable pour cette session */
+  }
+  return { id, name: `${hostname()} (bureau)` }
+}
 
 /** Sauvegarde automatique de la base de ce poste si elle est due. */
 async function autoBackupIfDue(force = false) {
@@ -109,7 +132,9 @@ async function connect(): Promise<void> {
     const opening = openBackend(cfg.mode === 'local' ? { mode: 'local', dataDir: localDataDir() } : cfg, {
       dataDir: syncDir(),
       vault: cfg.mode === 'remote' ? createVault() : undefined,
-      onChange: pushSyncState
+      onChange: pushSyncState,
+      deviceId: deviceIdentity().id,
+      deviceName: deviceIdentity().name
     })
     let timer: NodeJS.Timeout | undefined
     let timedOut = false
@@ -131,6 +156,15 @@ async function connect(): Promise<void> {
     }
     backendError = null
     diag(`Base ouverte en ${Date.now() - t0} ms.`)
+    // Serveur de l'entreprise et copie en ligne : seulement quand ce poste détient la base
+    await enterprise?.stop().catch(() => {})
+    enterprise = backend?.db
+      ? new Enterprise({
+          configPath: enterprisePath(), db: () => backend?.db ?? null, version: app.getVersion(), webRoot: join(__dirname, '../renderer'),
+          onChange: () => mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents.send('enterprise.changed')
+        })
+      : null
+    void enterprise?.start().catch((e) => diag(`Serveur de l'entreprise : ${errText(e)}`))
   } catch (e) {
     backend = null
     backendError = e instanceof Error ? e.message : String(e)
@@ -388,6 +422,27 @@ function registerIpc(): void {
     })
   )
 
+  // Serveur de l'entreprise (réseau local) et copie en ligne : réservés à l'administrateur du poste qui détient la base
+  const requireAdmin = () => {
+    requireSession()
+    if (backend?.user()?.role !== 'admin') throw new AppError("Réservé à l'administrateur.")
+  }
+  ipcMain.handle('enterprise.get', () => guard(async () => (requireAdmin(), enterprise ? { available: true, ...enterprise.state() } : { available: false })))
+  ipcMain.handle('enterprise.save', (_e, input: any) =>
+    guard(async () => {
+      requireAdmin()
+      if (!enterprise) throw new AppError("Disponible seulement sur le poste qui détient la base (mode « Ce poste » ou « Serveur du bureau »).")
+      return { available: true, ...(await enterprise.save(input ?? {})) }
+    })
+  )
+  ipcMain.handle('enterprise.push', () =>
+    guard(async () => {
+      requireAdmin()
+      if (!enterprise) throw new AppError("Disponible seulement sur le poste qui détient la base.")
+      return enterprise.pushNow()
+    })
+  )
+
   // Sauvegardes automatiques (base de ce poste)
   ipcMain.handle('backup.auto.get', () =>
     guard(async () => {
@@ -594,6 +649,7 @@ app.on('window-all-closed', async () => {
 })
 
 app.on('before-quit', () => {
+  void enterprise?.stop().catch(() => {})
   backend?.close().catch(() => {})
 })
 

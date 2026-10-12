@@ -10,6 +10,7 @@ import { DbConfigForm } from './Auth'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
 import { TaxSettings } from '../components/TaxSettings'
 import { TemplateGallery } from '../components/TemplateGallery'
+import { EnterpriseCard } from '../components/EnterpriseCard'
 import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 
@@ -349,6 +350,7 @@ export function CompanySettingsPage() {
                 : 'Les sauvegardes se font sur le serveur (pg_dump) : voir le guide de déploiement.'}
             </p>
           </div>
+          {desktop && dbMode !== 'remote' && window.erp.enterprise && <EnterpriseCard />}
           {desktop && dbMode === 'remote' && <LocalSyncCard />}
           {desktop && dbMode === 'local' && window.erp.backupAuto && <AutoBackupCard />}
         </div>
@@ -425,6 +427,7 @@ export function Users() {
           </table>
         </div>
       )}
+      <DevicesCard />
       <div className="card">
         <h3>Droits par rôle</h3>
         <table className="table compact">
@@ -437,6 +440,43 @@ export function Users() {
         </table>
       </div>
       {editing && <UserForm user={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); reload() }} />}
+    </div>
+  )
+}
+
+/** Postes (appareils) ayant une session en cours : base de la licence au poste. */
+function DevicesCard() {
+  const { licence } = useSession()
+  const { data, reload } = useQuery<{ key: string; label: string; users: string; last: string; sessions: number }[]>('users.devices')
+  if (!data?.length) return null
+  return (
+    <div className="card">
+      <div className="row space-between wrap gap">
+        <h3>Postes connectés</h3>
+        <span className={`badge ${licence?.seats && data.length >= licence.seats ? 'pay-partielle' : 'badge-valide'}`}>{data.length}{licence?.seats ? ` / ${licence.seats} postes de la licence` : ' poste(s) · licence sans limite de postes'}</span>
+      </div>
+      <p className="muted small">Chaque ordinateur, tablette ou téléphone connecté au serveur compte pour un poste, quel que soit l'utilisateur. Déconnecter un poste libère sa place ; un administrateur peut toujours se connecter pour le faire.</p>
+      <div className="table-wrap">
+        <table className="table compact">
+          <thead><tr><th>Poste</th><th>Utilisateur(s)</th><th>Dernière connexion</th><th className="actions-col">Actions</th></tr></thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={d.key}>
+                <td className="strong">{d.label || 'Appareil'}</td><td>{d.users}</td><td>{new Date(d.last).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                <td className="actions-col">
+                  <RowActions actions={[{
+                    label: 'Déconnecter', icon: Prohibit, tone: 'danger',
+                    onClick: async () => {
+                      if (await confirmDialog(`Déconnecter « ${d.label || 'cet appareil'} » ?`, { detail: 'Ses sessions sont fermées et sa place est libérée. Il devra se reconnecter.', danger: true }))
+                        if (await run(() => api('users.revokeDevice', { key: d.key }), 'Poste déconnecté.')) reload()
+                    }
+                  }]} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

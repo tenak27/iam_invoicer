@@ -9,6 +9,7 @@ const setSyncState = (s: SyncState | null) => {
 }
 ipcRenderer.on('offline.changed', (_e, s: SyncState) => setSyncState(s))
 ipcRenderer.invoke('offline.state').then(setSyncState, () => {})
+ipcRenderer.on('enterprise.changed', () => window.dispatchEvent(new Event('iam-enterprise')))
 
 const bridge = {
   kind: 'desktop' as const,
@@ -31,6 +32,11 @@ const bridge = {
   pickImage: () => ipcRenderer.invoke('file.pickImage'),
   backup: () => ipcRenderer.invoke('backup.create'),
   restore: () => ipcRenderer.invoke('backup.restore'),
+  enterprise: {
+    get: () => ipcRenderer.invoke('enterprise.get'),
+    save: (input: unknown) => ipcRenderer.invoke('enterprise.save', input),
+    push: () => ipcRenderer.invoke('enterprise.push')
+  },
   backupAuto: {
     get: () => ipcRenderer.invoke('backup.auto.get'),
     set: (input: { enabled?: boolean; keep?: number }) => ipcRenderer.invoke('backup.auto.set', input),

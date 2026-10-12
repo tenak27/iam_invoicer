@@ -43,6 +43,7 @@ export function LicencePage() {
           <div className="mini-kpi"><span>Offre</span><strong>{licence.label}</strong></div>
           <div className={`mini-kpi ${licence.canWrite ? 'good' : 'bad'}`}><span>État</span><strong>{STATE_TEXT[licence.state]}</strong></div>
           <div className="mini-kpi"><span>Utilisateurs actifs</span><strong>{activeUsers}{licence.users ? ` / ${licence.users}` : ' (illimité)'}</strong></div>
+          {!!licence.seats && <div className="mini-kpi"><span>Postes connectés</span><strong>{licence.seatsUsed ?? 0} / {licence.seats}</strong></div>}
           <div className="mini-kpi">
             <span>{licence.state === 'trial' ? 'Fin de l’évaluation' : 'Échéance'}</span>
             <strong>{licence.state === 'trial' ? `${licence.daysLeft} jour(s)` : licence.expires ? formatDate(licence.expires) : 'Perpétuelle'}</strong>

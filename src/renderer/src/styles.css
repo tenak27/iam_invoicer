@@ -1937,3 +1937,15 @@ input[type='checkbox']:checked, input[type='radio']:checked { animation: check-p
   .auth-bg .orb, .auth-grid, .auth-card, .auth-card > *, .auth-brand .brand-logo, .tax-item, .sched tbody tr, .mail-hint { animation: none !important; }
   .auth-float { display: none; }
 }
+
+/* Serveur de l'entreprise et copie en ligne (v0.8) */
+.ent-card h3 { display: flex; align-items: center; gap: 9px; }
+.ent-addresses { display: grid; gap: 10px; margin: 6px 0 14px; }
+.ent-address { display: flex; align-items: center; gap: 12px; width: fit-content; max-width: 100%; padding: 12px 16px; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: rgba(var(--primary-rgb), .07); color: var(--text); font: inherit; cursor: pointer; animation: card-in .4s var(--ease-out) backwards; transition: border-color var(--t-fast), transform var(--t-med) var(--ease-out), box-shadow var(--t-med); }
+.ent-address:hover { border-color: var(--c-primary); transform: translateY(-2px); box-shadow: var(--lift); }
+.ent-address code { font-size: 17px; font-weight: 700; letter-spacing: .01em; background: none; user-select: all; }
+.ent-address svg:first-child { color: var(--green); animation: dot-pulse-soft 2s ease-in-out infinite; }
+@keyframes dot-pulse-soft { 50% { opacity: .45; } }
+.ent-addresses ol { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.ent-actions { align-items: flex-end; }
+@media (prefers-reduced-motion: reduce) { .ent-address, .ent-address svg:first-child { animation: none !important; } }

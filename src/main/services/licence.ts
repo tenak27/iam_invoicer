@@ -56,6 +56,9 @@ async function writeSetting(db: Db, key: string, value: string) {
 
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86_400_000)
 
+/** Réglage posé sur une base qui est la copie en ligne d'un serveur d'entreprise (date du dernier envoi reçu). */
+export const MIRROR_KEY = 'mirror_at'
+
 const cache = new WeakMap<Db, { at: number; status: LicenceStatus }>()
 export function forgetLicenceStatus(db: Db) {
   cache.delete(db)
@@ -64,7 +67,8 @@ export function forgetLicenceStatus(db: Db) {
 export async function licenceStatus(db: Db): Promise<LicenceStatus> {
   const hit = cache.get(db)
   if (hit && Date.now() - hit.at < 5000) return hit.status
-  const status = await computeStatus(db)
+  const mirror = await readSetting(db, MIRROR_KEY)
+  const status: LicenceStatus = { ...(await computeStatus(db)), ...(mirror ? { mirror } : {}) }
   cache.set(db, { at: Date.now(), status })
   return status
 }
@@ -81,8 +85,8 @@ async function computeStatus(db: Db): Promise<LicenceStatus> {
   const trialLeft = TRIAL_DAYS - daysBetween(trialStart, today)
   const trial = (message: string): LicenceStatus =>
     trialLeft > 0
-      ? { state: 'trial', label: 'Évaluation', tier: 'trial', modules: ALL_MODULES, users: TRIAL_LIMITS.users, expires: null, daysLeft: trialLeft, company, licenceId: null, whiteLabel: false, canWrite: true, message }
-      : { state: 'trial_over', label: 'Évaluation terminée', tier: 'trial', modules: ALL_MODULES, users: 0, expires: null, daysLeft: 0, company, licenceId: null, whiteLabel: false, canWrite: false, message: `Période d'évaluation terminée : vos données restent consultables. Activez une licence pour continuer (${contact}).` }
+      ? { state: 'trial', label: 'Évaluation', tier: 'trial', modules: ALL_MODULES, users: TRIAL_LIMITS.users, seats: 0, expires: null, daysLeft: trialLeft, company, licenceId: null, whiteLabel: false, canWrite: true, message }
+      : { state: 'trial_over', label: 'Évaluation terminée', tier: 'trial', modules: ALL_MODULES, users: 0, seats: 0, expires: null, daysLeft: 0, company, licenceId: null, whiteLabel: false, canWrite: false, message: `Période d'évaluation terminée : vos données restent consultables. Activez une licence pour continuer (${contact}).` }
 
   if (!key) {
     const st = trial(`Évaluation : ${Math.max(trialLeft, 0)} jour(s) restant(s), quantités limitées. Contact : ${contact}.`)
@@ -96,7 +100,7 @@ async function computeStatus(db: Db): Promise<LicenceStatus> {
   const modules = [...new Set([...BASE_MODULES, ...lic.modules])].filter((m) => ALL_MODULES.includes(m))
   const label = lic.tier === 'sur-mesure' ? 'Sur mesure' : TIERS[lic.tier]?.label ?? lic.tier
   const daysLeft = lic.expires ? daysBetween(today, lic.expires) : null
-  const base = { label, tier: lic.tier, modules, users: lic.users, expires: lic.expires, daysLeft, company: lic.company, licenceId: lic.id, whiteLabel: lic.whiteLabel }
+  const base = { label, tier: lic.tier, modules, users: lic.users, seats: Number(lic.seats) || 0, expires: lic.expires, daysLeft, company: lic.company, licenceId: lic.id, whiteLabel: lic.whiteLabel }
   if (daysLeft !== null && daysLeft < 0)
     return { ...base, state: 'expired', canWrite: false, message: `Licence ${label} expirée le ${lic.expires} : vos données restent consultables. Renouvelez-la auprès de ${contact}.` }
   return {
@@ -176,8 +180,41 @@ export async function checkUserQuota(db: Db, excludeUserId?: number) {
   if (row!.n >= st.users) fail(`Votre licence ${st.label} est limitée à ${st.users} utilisateur(s) actif(s). Désactivez un compte ou passez au palier supérieur.`)
 }
 
+/** Postes actuellement reconnus : un par appareil ayant une session en cours. */
+export async function listDevices(db: Db) {
+  return db.query<{ key: string; label: string; users: string; last: string; sessions: number }>(
+    `SELECT COALESCE(s.device_id, NULLIF(s.device, ''), 'inconnu') AS key, MAX(s.device) AS label, string_agg(DISTINCT u.full_name, ', ') AS users,
+            MAX(s.created_at) AS last, COUNT(*)::int AS sessions
+     FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE s.expires_at > now() GROUP BY 1 ORDER BY MAX(s.created_at) DESC`
+  )
+}
+
+/**
+ * Licence au nombre de postes : un appareil déjà connu se reconnecte toujours ; un nouvel
+ * appareil est refusé quand tous les postes de la licence sont pris.
+ */
+export async function checkSeat(db: Db, deviceKey: string) {
+  const st = await licenceStatus(db)
+  if (!st.seats) return
+  const devices = await listDevices(db)
+  if (devices.some((d) => d.key === deviceKey) || devices.length < st.seats) return
+  fail(`Votre licence ${st.label} autorise ${st.seats} poste(s) et ils sont tous utilisés. Déconnectez un poste dans Administration → Utilisateurs → Postes connectés, ou demandez des postes supplémentaires à ${VENDOR.name}.`)
+}
+
+/** Déconnecte un poste : toutes ses sessions sont fermées, la place est libérée. */
+export async function revokeDevice(ctx: Ctx, args: { key: string }) {
+  const key = String(args?.key ?? '')
+  const r = await ctx.db.query(
+    "DELETE FROM auth_sessions WHERE COALESCE(device_id, NULLIF(device, ''), 'inconnu') = $1 RETURNING user_id",
+    [key]
+  )
+  await audit(ctx.db, ctx, 'déconnexion', 'poste', null, key.slice(0, 80))
+  return { closed: r.length }
+}
+
 export async function getLicence(ctx: Ctx): Promise<LicenceStatus> {
-  return { ...(await licenceStatus(ctx.db)), vendor: vendorKeyAvailable() && isVendorAdmin(ctx.user) }
+  const st = await licenceStatus(ctx.db)
+  return { ...st, seatsUsed: st.seats ? (await listDevices(ctx.db)).length : undefined, vendor: vendorKeyAvailable() && isVendorAdmin(ctx.user) }
 }
 
 export async function activateLicence(ctx: Ctx, args: { key: string }) {

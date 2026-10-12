@@ -15,6 +15,19 @@ interface AppStatus {
   offline?: boolean
 }
 
+interface EnterpriseInfo {
+  available: boolean
+  serve?: boolean
+  listening?: boolean
+  port?: number
+  addresses?: string[]
+  error?: string | null
+  cloudUrl?: string
+  hasCloudKey?: boolean
+  cloudMinutes?: number
+  mirror?: { enabled: boolean; running: boolean; last: string | null; lastError: string | null; rows: number; bytes: number }
+}
+
 interface SyncState {
   reachable: boolean
   pending: number
@@ -53,6 +66,12 @@ interface ErpBridge {
   pickImage(): Promise<Result<string | null>>
   backup(): Promise<Result>
   restore(): Promise<Result>
+  /** Ordinateur qui détient la base : partage sur le réseau local et copie en ligne. */
+  enterprise?: {
+    get(): Promise<Result<EnterpriseInfo>>
+    save(input: { serve?: boolean; port?: number; cloudUrl?: string; cloudKey?: string; cloudMinutes?: number }): Promise<Result<EnterpriseInfo>>
+    push(): Promise<Result>
+  }
   /** Ordinateur, base de ce poste : sauvegardes automatiques. */
   backupAuto?: {
     get(): Promise<Result<{ enabled: boolean; dir: string; keep: number; last: string | null; lastError: string | null; available: boolean; files: { name: string; size: number; date: string }[] }>>

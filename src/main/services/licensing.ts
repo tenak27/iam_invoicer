@@ -130,17 +130,19 @@ export async function issueLicence(ctx: Ctx, input: any) {
   const today = todayISO()
   if (expires && expires <= today) fail("La date de fin doit être dans le futur.")
   const taxId = str(input?.tax_id)
+  const seats = input?.seats === '' || input?.seats === undefined || input?.seats === null ? 0 : Number(input.seats)
+  if (!Number.isInteger(seats) || seats < 0 || seats > 10000) fail("Nombre de postes invalide (0 = illimité).")
   const whiteLabel = !!input?.white_label || (tier !== 'sur-mesure' && TIERS[tier].whiteLabel)
 
   return ctx.db.tx(async (db) => {
     const number = await nextNumber({ ...ctx, db }, today.slice(0, 4))
-    const payload: LicencePayload = { v: 1, id: number, company, ...(taxId ? { taxId } : {}), tier, modules, users, issued: today, expires, whiteLabel }
+    const payload: LicencePayload = { v: 1, id: number, company, ...(taxId ? { taxId } : {}), tier, modules, users, ...(seats ? { seats } : {}), issued: today, expires, whiteLabel }
     const data = Buffer.from(JSON.stringify(payload)).toString('base64url')
     const licence = `${data}.${sign(null, Buffer.from(data), key).toString('base64url')}`
     const row = await db.one(
-      `INSERT INTO licences_issued (number, company, tax_id, tier, modules, users, issued, expires, white_label, licence_key, contact, notes, renews_id, issued_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
-      [number, company, taxId || null, tier, JSON.stringify(modules), users, today, expires, whiteLabel, licence, str(input?.contact) || null, str(input?.notes) || null, Number(input?.renews_id) || null, ctx.user?.id ?? null]
+      `INSERT INTO licences_issued (number, company, tax_id, tier, modules, users, issued, expires, white_label, licence_key, contact, notes, renews_id, issued_by, seats)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+      [number, company, taxId || null, tier, JSON.stringify(modules), users, today, expires, whiteLabel, licence, str(input?.contact) || null, str(input?.notes) || null, Number(input?.renews_id) || null, ctx.user?.id ?? null, seats]
     )
     // Registre CSV partagé avec l'outil en ligne de commande
     const reg = registryPath()

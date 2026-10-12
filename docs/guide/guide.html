@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.7.1</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.8.0</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -261,7 +261,7 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.7.1 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.8.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
   <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
   <table>
     <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
@@ -323,8 +323,41 @@ DATABASE_URL=postgres://iam:MOTDEPASSE@localhost:5432/iam_invoicer PORT=8080 npm
 <!-- ============================ 4. SERVEUR DU BUREAU ============================ -->
 <section class="chap tone-violet">
   <h2><span class="n">4</span> Serveur du bureau (réseau local)</h2>
+  <p>Pour une entreprise qui veut garder ses données dans ses locaux. Deux montages : le <b>serveur de l'entreprise intégré</b> à l'application de bureau (4.1 à 4.3, recommandé, rien d'autre à installer), ou une base <b>PostgreSQL</b> du réseau local (4.4 et 4.5).</p>
+  <h3>4.1 Serveur de l'entreprise : un poste partage la base</h3>
+  <ol class="steps">
+    <li>Sur l'ordinateur qui servira de serveur, installez IAM INVOICER en mode <b>Ce poste</b> et créez la société. Donnez à cette machine une <b>adresse IP fixe</b> (réservation DHCP sur le routeur).</li>
+    <li>Ouvrez <b>Société et paramètres → Données → Serveur de l'entreprise</b>, gardez le port <b>8080</b> (ou choisissez-en un entre 1024 et 65535) et cliquez sur <b>Partager sur le réseau</b>. Autorisez l'application dans le pare-feu de Windows s'il le demande (réseau privé).</li>
+    <li>L'application affiche l'adresse à utiliser, par exemple <code>http://192.168.1.10:8080</code>.</li>
+    <li><b>Sur les autres ordinateurs :</b> écran de connexion → <b>Base de données … — modifier → Serveur en ligne ou de l'entreprise</b>, saisissez cette adresse. <b>Sur téléphone, tablette ou navigateur :</b> la même adresse, sur le Wi-Fi de l'entreprise.</li>
+    <li>Créez un compte par personne dans <b>Utilisateurs</b>. Le partage redémarre tout seul à chaque ouverture de l'application sur le serveur.</li>
+  </ol>
+  <div class="box warn"><b class="t">À savoir</b>
+    <ul>
+      <li>L'application doit rester <b>ouverte sur le poste serveur</b> pendant les heures de travail ; désactivez la mise en veille de cette machine.</li>
+      <li>Les échanges du réseau local passent en HTTP, sans chiffrement : réservez ce mode au réseau de l'entreprise (pas de Wi-Fi invité) et ne redirigez pas le port du routeur vers Internet.</li>
+      <li>La sauvegarde quotidienne automatique et la restauration se font sur le poste serveur (chapitre 13).</li>
+    </ul>
+  </div>
+  <h3>4.2 Copie en ligne : le serveur pointe vers le cloud</h3>
+  <p>Le serveur de l'entreprise recopie sa base, à intervalles réguliers, vers la base en ligne de la société. Elle sert à <b>consulter</b> de l'extérieur (téléphone, navigateur) avec les mêmes comptes, et de sauvegarde hors des locaux. La saisie reste sur le serveur de l'entreprise : la copie en ligne est en lecture seule.</p>
+  <ol class="steps">
+    <li><b>Éditeur :</b> dans la console <code>/admin/</code>, créez la base de la société (chapitre 3), puis <b>Clé de synchronisation</b>. La clé n'est affichée qu'une fois ; en créer une nouvelle annule la précédente.</li>
+    <li><b>Sur le serveur de l'entreprise :</b> <b>Société et paramètres → Données → Copie en ligne</b>, saisissez l'adresse (<code>https://votre-domaine/t/ma_societe</code>), la clé et l'intervalle (15 minutes par défaut), puis <b>Enregistrer</b>. <b>Envoyer maintenant</b> lance un envoi immédiat.</li>
+    <li>Sans Internet, le travail continue ; l'envoi reprend au retour de la connexion. Rien n'est renvoyé si rien n'a changé.</li>
+  </ol>
+  <div class="box danger"><b class="t">Contrainte</b><p>Chaque envoi <b>remplace</b> le contenu de la base en ligne par celui du serveur de l'entreprise. Ne branchez jamais la copie en ligne sur une base où l'on saisit directement. Taille maximale d'un envoi : 64 Mo compressés.</p></div>
+  <p>Serveur Linux installé chez le client (chapitre 3) plutôt qu'un poste Windows : renseignez <code>CLOUD_MIRROR_URL</code>, <code>CLOUD_MIRROR_KEY</code> et, au besoin, <code>CLOUD_MIRROR_MINUTES</code> dans <code>deploy/.env</code>.</p>
+  <h3>4.3 Licence au nombre de postes</h3>
+  <p>Une licence peut fixer un <b>nombre de postes</b>. Un poste est un appareil (ordinateur, tablette, téléphone ou navigateur) ayant une session ouverte sur le serveur, quel que soit le nombre d'utilisateurs qui s'en servent.</p>
+  <ul>
+    <li><b>Émission :</b> champ « Postes clients » dans <b>Émission de licences</b> ou dans la console <code>/admin/</code> ; en ligne de commande, <code>node tools/licence/issue.mjs … --seats 5</code>. Zéro ou vide : pas de limite de postes.</li>
+    <li><b>Dépassement :</b> le poste en trop est refusé à la connexion, avec un message clair. Un <b>administrateur peut toujours se connecter</b>, pour libérer une place.</li>
+    <li><b>Suivi :</b> <b>Utilisateurs → Postes connectés</b> liste les appareils et permet d'en <b>déconnecter</b> un. Un poste qui se déconnecte libère sa place.</li>
+    <li><b>Ajout de postes :</b> émettez une nouvelle licence avec le nouveau nombre et activez-la sur le serveur ; aucune réinstallation.</li>
+  </ul>
+  <h3>4.4 Variante PostgreSQL : installer la base sur la machine serveur</h3>
   <p>Les applications de bureau se connectent directement à une base PostgreSQL du réseau local. Il n'y a pas de serveur IAM INVOICER à installer, seulement PostgreSQL.</p>
-  <h3>4.1 Installer PostgreSQL sur la machine serveur</h3>
   <ol class="steps">
     <li>Installez PostgreSQL (version 17 conseillée) : installateur officiel sous Windows, <code>apt install postgresql</code> sous Debian ou Ubuntu.</li>
     <li>Donnez à la machine une <b>adresse IP fixe</b> (réservation DHCP sur le routeur), par exemple <code>192.168.1.10</code>.</li>
@@ -338,7 +371,7 @@ CREATE DATABASE iam_invoicer OWNER iam;
 <pre>host  iam_invoicer  iam  192.168.1.0/24  scram-sha-256</pre></li>
     <li>Redémarrez PostgreSQL et ouvrez le port <b>5432</b> dans le pare-feu, pour le réseau local seulement.</li>
   </ol>
-  <h3>4.2 Brancher chaque poste</h3>
+  <h3>4.5 Variante PostgreSQL : brancher chaque poste</h3>
   <p>Sur l'écran de connexion de l'application de bureau : <b>Base de données … — modifier → Serveur du bureau</b>, puis indiquez l'hôte (<code>192.168.1.10</code>), le port (5432), la base, l'utilisateur et le mot de passe. Les tables sont créées automatiquement à la première connexion.</p>
   <div class="box danger"><b class="t">Contraintes de sécurité</b>
     <ul>
@@ -355,8 +388,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.7.1.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.7.1.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.8.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.8.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -389,10 +422,10 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.7.1-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.7.1-x64.dmg</code></td></tr>
-      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.7.1-arm64-macos-ancien.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.7.1-x64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.0-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.0-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.8.0-arm64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.8.0-x64-macos-ancien.dmg</code></td></tr>
     </tbody>
   </table>
   <div class="box warn"><b class="t">La version de macOS compte</b><p>La version principale refuse de s'ouvrir sur macOS 12 ou plus ancien (« Vous ne pouvez pas utiliser cette version de l'application avec cette version de macOS »). Menu Pomme → <b>À propos de ce Mac</b> indique la version : sous macOS 13, prenez un fichier « macos-ancien ».</p></div>
@@ -742,7 +775,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
   <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, l'IPA iOS et l'image Docker du serveur. Sur une étiquette de version, tous les installateurs sont publiés dans une Release GitHub, avec le fichier d'empreintes <code>SHA256SUMS.txt</code>.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.7.1 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.8.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
     <li><b>Résultats :</b> page <b>Releases</b> du dépôt (permanente), ou onglet <b>Artifacts</b> de l'exécution (90 jours).</li>
     <li><b>APK signé (publication) :</b> secrets <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>. Sans eux, l'APK est signé avec la clé de test : installable, mais une version signée autrement ne pourra pas le mettre à jour sans désinstallation.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>

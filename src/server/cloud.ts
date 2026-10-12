@@ -17,6 +17,7 @@
 //   POST   /api/admin/tenants/:client/resume        réactiver
 //   POST   /api/admin/tenants/:client/password      nouveau mot de passe de la base
 //   POST   /api/admin/tenants/:client/setup-code    nouveau code d'activation
+//   POST   /api/admin/tenants/:client/sync-key      nouvelle clé de synchronisation (copie d'un serveur d'entreprise)
 //   POST   /api/admin/tenants/:client/licence       { licence_key | licence_id } attribuer une licence
 //   PATCH  /api/admin/tenants/:client               { name?, contact?, licence_number?, notes? }
 //   DELETE /api/admin/tenants/:client?confirm=<client>   suppression définitive
@@ -25,6 +26,8 @@
 //   POST   /api/admin/licences/:id/revoke           révoquer ou rétablir au registre
 
 import { timingSafeEqual } from 'node:crypto'
+import { gunzipSync } from 'node:zlib'
+import type { Snapshot } from '../main/snapshot'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { isVendorAdmin } from '@shared/licence'
 import type { Db } from '../main/db'
@@ -67,6 +70,23 @@ async function readJson(req: IncomingMessage): Promise<any> {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
     throw Object.assign(new Error('JSON invalide.'), { status: 400 })
+  }
+}
+
+/** Instantané envoyé par un serveur d'entreprise : JSON compressé, 64 Mo au plus. */
+async function readSnapshot(req: IncomingMessage): Promise<Snapshot> {
+  const chunks: Buffer[] = []
+  let size = 0
+  for await (const c of req) {
+    size += c.length
+    if (size > 64 * 1024 * 1024) throw Object.assign(new Error('Copie trop volumineuse (plus de 64 Mo compressés).'), { status: 413 })
+    chunks.push(c as Buffer)
+  }
+  try {
+    const raw = Buffer.concat(chunks)
+    return JSON.parse((req.headers['content-encoding'] === 'gzip' ? gunzipSync(raw, { maxOutputLength: 1024 * 1024 * 1024 }) : raw).toString('utf8'))
+  } catch {
+    throw Object.assign(new Error('Copie illisible.'), { status: 400 })
   }
 }
 
@@ -141,7 +161,10 @@ export function createCloudHandler(opts: CloudOptions): Handler {
       if (method === 'GET') {
         const t = await manager.get(slug)
         if (!t) return json(res, 404, { ok: false, error: `Client inconnu : ${slug}` })
-        const { db_password: _p, ...info } = t
+        const { db_password: _p, ...row } = t
+        // L'empreinte de la clé de synchronisation ne sort pas du serveur
+        const { sync_key_hash, ...info } = row as typeof row & { sync_key_hash?: string | null }
+        Object.assign(info, { has_sync_key: !!sync_key_hash })
         return done({ ...info, ...(await manager.stats(slug).catch((e) => ({ error: String(e?.message ?? e) }))) })
       }
       if (method === 'PATCH') return done(await manager.update(slug, await readJson(req)))
@@ -158,6 +181,7 @@ export function createCloudHandler(opts: CloudOptions): Handler {
         return done(await manager.resetPassword(slug))
       }
       if (action === 'setup-code') return done(await manager.resetSetupCode(slug))
+      if (action === 'sync-key') return done(await manager.newSyncKey(slug))
       if (action === 'licence') {
         const body = await readJson(req)
         const key = body.licence_id ? (await fromRegistry(body.licence_id)).licence_key : body.licence_key
@@ -235,11 +259,27 @@ export function createCloudHandler(opts: CloudOptions): Handler {
         res.writeHead(301, { Location: `/t/${slug}/${url.search}` })
         return void res.end()
       }
+      // Copie envoyée par le serveur de l'entreprise (clé de synchronisation de cette société)
+      if (rest === '/api/mirror') {
+        if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Méthode non autorisée.' })
+        const ip = ipOf(req)
+        const f = failures.get(ip)
+        if (f && Date.now() - f.since > 15 * 60_000) failures.delete(ip)
+        else if (f && f.n >= 10) return json(res, 429, { ok: false, error: 'Trop de tentatives. Réessayez dans 15 minutes.' })
+        const key = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1] ?? ''
+        if (!manager.syncKeyMatches(t, key)) {
+          const g = failures.get(ip) ?? { n: 0, since: Date.now() }
+          g.n++
+          failures.set(ip, g)
+          return json(res, 401, { ok: false, error: 'Clé de synchronisation refusée : demandez-en une nouvelle à IAM Technology.' })
+        }
+        return json(res, 200, { ok: true, data: await manager.receiveMirror(slug, await readSnapshot(req)) })
+      }
       req.url = rest + url.search
       return await tenantHandler(t)(req, res)
     } catch (e: any) {
       if (res.headersSent) return void res.end()
-      const status = Number(e?.status) || (e instanceof AppError || /inconnu|invalide|obligatoire|déjà utilisé|Confirmez|introuvable/.test(String(e?.message)) ? 400 : 500)
+      const status = Number(e?.status) || (e instanceof AppError || /inconnu|invalide|obligatoire|déjà utilisé|Confirmez|introuvable|Versions différentes|Instantané|illisible/.test(String(e?.message)) ? 400 : 500)
       if (status === 500) console.error(`[cloud ${req.method} ${path}]`, e)
       return json(res, status, { ok: false, error: status === 500 ? `Erreur du serveur : ${e?.message ?? e}` : String(e?.message ?? e) })
     }

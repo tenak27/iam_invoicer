@@ -60,6 +60,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 
   'users.list': { access: 'users', fn: auth.listUsers },
   'users.save': { access: 'users', fn: auth.saveUser },
+  'users.devices': { access: 'users', fn: (ctx) => licence.listDevices(ctx.db) },
+  'users.revokeDevice': { access: 'users', fn: licence.revokeDevice },
 
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
@@ -286,7 +288,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
 export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }
 
 /** Toujours permis, même licence expirée : se mettre en règle (raison sociale, comptes, licence). */
-const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'auth.changePassword'])
+const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'users.devices', 'users.revokeDevice', 'auth.changePassword'])
 
 export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
   try {
@@ -303,6 +305,9 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
         // Attribution des licences : réservée au compte administrateur de l'éditeur, quel que soit le rôle
         if (mod === 'licensing' && !isVendorAdmin(ctx.user)) fail(`L'attribution des licences est réservée au compte administrateur de l'éditeur (${VENDOR_ADMIN}).`)
       }
+      // Copie en ligne d'un serveur d'entreprise : consultation seule, la saisie se fait sur ce serveur
+      if (!isReadAction(name) && (await licence.licenceStatus(ctx.db)).mirror)
+        fail("Cette base est la copie en ligne du serveur de votre entreprise : elle se consulte, mais la saisie se fait sur le serveur de l'entreprise.")
       // Licence : module inclus, et écriture seulement si la licence (ou l'évaluation) est valide.
       if (!LICENCE_FREE.has(name)) {
         await licence.enforceLicence(ctx.db, name, mod, isReadAction(name))

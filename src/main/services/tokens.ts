@@ -9,11 +9,11 @@ const TTL_DAYS = 30
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 
-export async function createToken(db: Db, userId: number, device = ''): Promise<string> {
+export async function createToken(db: Db, userId: number, device = '', deviceId?: string | null): Promise<string> {
   const token = randomBytes(32).toString('base64url')
   await db.query(
-    `INSERT INTO auth_sessions (token_hash, user_id, device, expires_at) VALUES ($1, $2, $3, now() + ($4 || ' days')::interval)`,
-    [hash(token), userId, device.slice(0, 200), String(TTL_DAYS)]
+    `INSERT INTO auth_sessions (token_hash, user_id, device, device_id, expires_at) VALUES ($1, $2, $3, $5, now() + ($4 || ' days')::interval)`,
+    [hash(token), userId, device.slice(0, 200), String(TTL_DAYS), deviceId || null]
   )
   // Ménage des jetons expirés.
   await db.query('DELETE FROM auth_sessions WHERE expires_at < now()')

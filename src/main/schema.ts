@@ -744,5 +744,10 @@ export const MIGRATIONS: string[] = [
   `
   ALTER TABLE documents ADD COLUMN auth_code TEXT;
   CREATE UNIQUE INDEX documents_auth_code_idx ON documents(auth_code)
+  `,
+  // v12 : licence au nombre de postes (identifiant de l'appareil sur chaque session)
+  `
+  ALTER TABLE auth_sessions ADD COLUMN device_id TEXT;
+  ALTER TABLE licences_issued ADD COLUMN seats INT NOT NULL DEFAULT 0
   `
 ]

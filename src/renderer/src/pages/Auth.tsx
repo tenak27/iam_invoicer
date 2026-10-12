@@ -220,12 +220,12 @@ export function DbConfigForm() {
       {desktop && (
         <div className="choice-row three">
           {choice('local', 'Ce poste uniquement', "Base intégrée à l'application. Idéal pour démarrer ou travailler seul.")}
-          {choice('remote', 'Serveur en ligne (domaine)', 'Synchronisé avec les autres sites, postes, téléphones et tablettes via Internet.')}
+          {choice('remote', 'Serveur en ligne ou de l’entreprise', 'Base hébergée sur Internet, ou serveur installé dans votre entreprise (son adresse commence par http://).')}
           {choice('server', 'Serveur du bureau (réseau local)', 'Tous les postes du bureau partagent une base PostgreSQL.')}
         </div>
       )}
       {mode === 'remote' && (
-        <Field label="Adresse du serveur" hint="Exemple : facturation.iam.bf — https:// est ajouté automatiquement.">
+        <Field label="Adresse du serveur" hint="En ligne : facturation.iam.bf (https:// est ajouté). Serveur de l’entreprise : l’adresse affichée sur ce serveur, par exemple http://192.168.1.20:8080.">
           <input value={f.values.url} onChange={(e) => f.set('url', e.target.value)} placeholder="facturation.iam.bf" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} />
         </Field>
       )}

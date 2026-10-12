@@ -95,6 +95,10 @@ export interface RemoteOptions {
   vault?: SessionVault
   /** Appelé à chaque changement de l'état de synchronisation. */
   onChange?: () => void
+  /** Identifiant de ce poste : il compte pour un seul poste de la licence, quel que soit l'utilisateur. */
+  deviceId?: string
+  /** Nom du poste affiché dans « Postes connectés ». */
+  deviceName?: string
   /** Nombre de jours pendant lesquels on peut se connecter hors ligne après la dernière connexion en ligne. */
   offlineDays?: number
 }
@@ -292,7 +296,7 @@ export class RemoteBackend implements Backend {
   }
 
   async login(username: string, password: string) {
-    const r = await this.request<{ token: string; user: SessionUser }>('POST', '/api/login', { username, password, device: 'IAM INVOICER bureau' })
+    const r = await this.request<{ token: string; user: SessionUser }>('POST', '/api/login', { username, password, device: this.opts.deviceName || 'IAM INVOICER bureau', device_id: this.opts.deviceId })
     if (r.ok) {
       this.token = r.data.token
       this.session = r.data.user
@@ -322,7 +326,7 @@ export class RemoteBackend implements Backend {
   }
 
   async setup(input: any) {
-    const r = await this.must<{ token: string; user: SessionUser }>('POST', '/api/setup', { ...input, device: 'IAM INVOICER bureau' })
+    const r = await this.must<{ token: string; user: SessionUser }>('POST', '/api/setup', { ...input, device: this.opts.deviceName || 'IAM INVOICER bureau', device_id: this.opts.deviceId })
     this.token = r.token
     this.username = String(input?.username ?? '')
     this.session = r.user

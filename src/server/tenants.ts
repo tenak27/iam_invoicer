@@ -7,11 +7,12 @@
 // La création d'une base passe par un compte PostgreSQL administrateur (ADMIN_DATABASE_URL,
 // ou DATABASE_URL s'il a les droits), utilisé uniquement pour créer, modifier et supprimer.
 
-import { randomBytes, randomInt } from 'node:crypto'
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import pg from 'pg'
 import { TIERS } from '@shared/licence'
 import { openDb, type Db } from '../main/db'
-import { decodeLicence, forgetLicenceStatus, licenceStatus } from '../main/services/licence'
+import { decodeLicence, forgetLicenceStatus, licenceStatus, MIRROR_KEY } from '../main/services/licence'
+import { importSnapshot, type Snapshot } from '../main/snapshot'
 
 export interface TenantRow {
   slug: string
@@ -164,11 +165,47 @@ export class TenantManager {
 
   async init() {
     await this.control.query(CONTROL_SQL)
+    // Copie en ligne d'un serveur d'entreprise : empreinte de la clé de synchronisation, date du dernier envoi reçu
+    await this.control.query('ALTER TABLE cloud_tenants ADD COLUMN IF NOT EXISTS sync_key_hash TEXT')
+    await this.control.query('ALTER TABLE cloud_tenants ADD COLUMN IF NOT EXISTS mirrored_at TIMESTAMPTZ')
+  }
+
+  /** Nouvelle clé de synchronisation (remplace la précédente) : affichée une seule fois, seule son empreinte est gardée. */
+  async newSyncKey(slug: string): Promise<{ sync_key: string }> {
+    await this.must(slug)
+    const key = randomBytes(32).toString('base64url')
+    await this.control.query('UPDATE cloud_tenants SET sync_key_hash = $2 WHERE slug = $1', [slug, createHash('sha256').update(key).digest('hex')])
+    return { sync_key: key }
+  }
+
+  /** La clé présentée est-elle celle de cette société ? */
+  syncKeyMatches(t: TenantRow, key: string): boolean {
+    const stored = (t as TenantRow & { sync_key_hash?: string | null }).sync_key_hash
+    if (!stored || !key) return false
+    const a = Buffer.from(createHash('sha256').update(key).digest('hex'))
+    const b = Buffer.from(stored)
+    return a.length === b.length && timingSafeEqual(a, b)
+  }
+
+  /**
+   * Reçoit la copie du serveur de l'entreprise : la base hébergée est remplacée par l'instantané
+   * et devient une copie de consultation (la saisie se fait sur le serveur de l'entreprise).
+   */
+  async receiveMirror(slug: string, snapshot: Snapshot): Promise<{ tables: number; rows: number; at: string }> {
+    const t = await this.must(slug)
+    const db = await this.db(t)
+    const r = await importSnapshot(db, snapshot)
+    const at = new Date().toISOString()
+    await db.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [MIRROR_KEY, JSON.stringify(at)])
+    forgetLicenceStatus(db)
+    await this.control.query('UPDATE cloud_tenants SET mirrored_at = now(), setup_code = NULL WHERE slug = $1', [slug])
+    return { ...r, at }
   }
 
   async list(): Promise<(Omit<TenantRow, 'db_password'> & { size: number | null })[]> {
     const rows = await this.control.query<TenantRow>('SELECT * FROM cloud_tenants ORDER BY created_at DESC, slug')
-    return Promise.all(rows.map(async ({ db_password: _p, ...r }) => ({ ...r, size: await this.prov.databaseSize(r.db_name) })))
+    // Ni mot de passe ni empreinte de clé ne sortent du serveur
+    return Promise.all(rows.map(async ({ db_password: _p, ...r }) => ({ ...r, sync_key_hash: undefined, has_sync_key: !!(r as any).sync_key_hash, size: await this.prov.databaseSize(r.db_name) })))
   }
 
   async get(slug: string): Promise<TenantRow | null> {

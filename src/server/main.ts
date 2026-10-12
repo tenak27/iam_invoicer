@@ -14,6 +14,8 @@
 //                   sous /t/<client>, et l'API /api/admin/ (jeton de 32 caractères au moins)
 //   SETUP_CODE      code exigé pour la première configuration de la base principale (recommandé)
 //   ADMIN_DATABASE_URL  compte PostgreSQL qui crée les bases des clients (DATABASE_URL par défaut)
+//   CLOUD_MIRROR_URL    serveur installé dans l'entreprise : adresse de sa base en ligne (https://…/t/<société>)
+//   CLOUD_MIRROR_KEY    clé de synchronisation de cette base ; CLOUD_MIRROR_MINUTES : intervalle (15 par défaut)
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { join } from 'node:path'
@@ -23,6 +25,7 @@ import { dbConfigFromEnv } from './config'
 import { configureVendorKey } from '../main/services/licensing'
 import { createCloudHandler } from './cloud'
 import { pgProvisioner, TenantManager } from './tenants'
+import { MirrorLoop } from '../main/mirror'
 
 declare const __APP_VERSION__: string
 
@@ -58,6 +61,15 @@ async function main() {
       shared: { version: __APP_VERSION__, webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'), corsOrigin: process.env.CORS_ORIGIN }
     })
     console.log(`Hébergement multi-clients actif : ${(await manager.list()).length} client(s), adresses /t/<client>`)
+  }
+  // Copie en ligne : ce serveur d'entreprise envoie régulièrement sa base à sa base hébergée
+  if (process.env.CLOUD_MIRROR_URL && process.env.CLOUD_MIRROR_KEY) {
+    const mirror = new MirrorLoop(() => db, () => {
+      const s = mirror.state()
+      if (s.lastError) console.warn(`Copie en ligne : ${s.lastError}`)
+    })
+    mirror.configure({ url: process.env.CLOUD_MIRROR_URL, key: process.env.CLOUD_MIRROR_KEY, minutes: Number(process.env.CLOUD_MIRROR_MINUTES) || 15 })
+    console.log(`Copie en ligne active vers ${process.env.CLOUD_MIRROR_URL}`)
   }
   const port = Number(process.env.PORT) || 8080
   const host = process.env.HOST ?? '0.0.0.0'

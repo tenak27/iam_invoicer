@@ -5,7 +5,7 @@
 //   node tools/licence/issue.mjs --client "SONABEL" --ifu 00012345A --tier entreprise --perpetual
 //   node tools/licence/issue.mjs --client "Boutique X" --tier sur-mesure --modules sales,clients,products,cash --users 3 --until 2027-06-30
 //
-// Options : --users N (sinon celui du palier), --white-label, --id LIC-…,
+// Options : --users N (sinon celui du palier), --seats N (postes clients, 0 = illimité), --white-label, --id LIC-…,
 //           --key chemin/vers/licence-private.pem (défaut : ~/.iam-invoicer/licence-private.pem)
 // Chaque licence émise est ajoutée au registre ~/.iam-invoicer/licences.csv.
 
@@ -43,6 +43,9 @@ if (tier === 'sur-mesure') {
 const users = opt('users') !== undefined ? Number(opt('users')) : tier === 'sur-mesure' ? 3 : TIERS[tier].users
 if (!Number.isInteger(users) || users < 0) die('--users : nombre entier (0 = illimité).')
 
+const seats = opt('seats') !== undefined ? Number(opt('seats')) : 0
+if (!Number.isInteger(seats) || seats < 0) die('--seats : nombre entier de postes clients (0 = illimité).')
+
 const today = new Date().toISOString().slice(0, 10)
 let expires = null
 if (opt('until')) {
@@ -70,6 +73,7 @@ const payload = {
   tier,
   modules,
   users,
+  ...(seats ? { seats } : {}),
   issued: today,
   expires,
   whiteLabel: flag('white-label') || (tier !== 'sur-mesure' && TIERS[tier].whiteLabel)
@@ -81,7 +85,7 @@ const licence = `${data}.${signature}`
 appendFileSync(registry, [id, today, `"${client.replace(/"/g, '""')}"`, payload.taxId ?? '', tier, users || 'illimité', expires ?? 'perpétuelle', payload.whiteLabel ? 'oui' : 'non', licence].join(';') + '\r\n')
 
 console.log(`\nLicence ${id} — ${client}`)
-console.log(`Palier : ${tier} · ${users || 'illimité'} utilisateur(s) · ${expires ? `jusqu'au ${expires}` : 'perpétuelle'}${payload.whiteLabel ? ' · marque blanche' : ''}`)
+console.log(`Palier : ${tier} · ${users || 'illimité'} utilisateur(s) · ${seats || 'illimité'} poste(s) · ${expires ? `jusqu'au ${expires}` : 'perpétuelle'}${payload.whiteLabel ? ' · marque blanche' : ''}`)
 console.log(`Modules : ${modules.map((m) => MODULE_NAMES[m]).join(', ')}`)
 console.log('\nClé à transmettre au client (Société & paramètres → Licence) :\n')
 console.log(licence)

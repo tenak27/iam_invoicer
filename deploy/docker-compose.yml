@@ -36,6 +36,11 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       # Code exigé pour configurer la base principale (première visite de /app/)
       SETUP_CODE: ${SETUP_CODE:-}
+      # Serveur installé dans une entreprise : copie de sa base vers sa base en ligne
+      # (adresse https://…/t/<société> et clé de synchronisation créée dans /admin/)
+      CLOUD_MIRROR_URL: ${CLOUD_MIRROR_URL:-}
+      CLOUD_MIRROR_KEY: ${CLOUD_MIRROR_KEY:-}
+      CLOUD_MIRROR_MINUTES: ${CLOUD_MIRROR_MINUTES:-15}
     volumes:
       # Déposez ici les installateurs (.exe, .dmg, .apk) proposés sur le site
       - ./telechargements:/telechargements:ro

@@ -9,6 +9,7 @@ import { createOfflineLayer } from '@shared/offline'
 const URL_KEY = 'iam.serverUrl'
 const TOKEN_KEY = 'iam.token'
 const USER_KEY = 'iam.lastUser'
+const DEVICE_KEY = 'iam.device'
 
 // Plusieurs clients hébergés sur un même domaine (/t/<client>/) : données de l'appareil séparées par client.
 const SCOPE = (() => {
@@ -56,6 +57,15 @@ function createHttpBridge(): ErpBridge {
   const servedBase = () => location.origin + location.pathname.replace(/\/(index\.html)?$/, '').replace(/\/app$/, '')
   const baseUrl = () => (servedByServer ? servedBase() : store.get(URL_KEY))
   let token = store.get(TOKEN_KEY)
+  // Identifiant de cet appareil : il compte pour un seul poste de la licence
+  const deviceId = () => {
+    let id = store.get(DEVICE_KEY)
+    if (!id) {
+      id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^A-Za-z0-9_-]/g, '')
+      store.set(DEVICE_KEY, id)
+    }
+    return id
+  }
 
   async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, base = baseUrl()): Promise<R<T>> {
     if (!base) return { ok: false, error: 'Adresse du serveur non configurée.' }
@@ -159,8 +169,8 @@ function createHttpBridge(): ErpBridge {
     },
 
     login: async (username, password) =>
-      keepToken(await request('POST', '/api/login', { username, password, device: `IAM INVOICER ${Capacitor.getPlatform()}` })),
-    setup: async (input) => keepToken(await request('POST', '/api/setup', { ...(input as object), device: `IAM INVOICER ${Capacitor.getPlatform()}` })),
+      keepToken(await request('POST', '/api/login', { username, password, device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() })),
+    setup: async (input) => keepToken(await request('POST', '/api/setup', { ...(input as object), device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() })),
     async logout() {
       await request('POST', '/api/logout', {})
       token = null

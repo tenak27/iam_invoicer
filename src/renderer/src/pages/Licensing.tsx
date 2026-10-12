@@ -128,7 +128,7 @@ export function LicensingPage() {
                   <tr key={l.id} className={`clickable ${l.revoked ? 'inactive' : ''}`} onClick={() => setShown(l)}>
                     <td className="strong">{l.number}</td>
                     <td className="strong">{l.company}<div className="muted small">{[l.tax_id && `IFU ${l.tax_id}`, l.contact].filter(Boolean).join(' · ')}</div></td>
-                    <td>{TIER_LABEL[l.tier] ?? l.tier}<div className="muted small">{l.users ? `${l.users} utilisateur(s)` : 'Utilisateurs illimités'}{l.white_label ? ' · marque blanche' : ''}</div></td>
+                    <td>{TIER_LABEL[l.tier] ?? l.tier}<div className="muted small">{l.users ? `${l.users} utilisateur(s)` : 'Utilisateurs illimités'}{(l as any).seats ? ` · ${(l as any).seats} poste(s)` : ''}{l.white_label ? ' · marque blanche' : ''}</div></td>
                     <td>{formatDate(l.issued)}<div className="muted small">{l.issued_by_name ?? ''}</div></td>
                     <td>{l.expires ? formatDate(l.expires) : 'Perpétuelle'}</td>
                     <td><span className={s.cls}>{s.label}</span></td>
@@ -161,6 +161,7 @@ function IssueModal({ st, initial, onClose, onDone }: { st: VendorStatus; initia
   const f = useForm<any>({
     company: '', tax_id: '', contact: '', notes: '', white_label: false, ...initial,
     users: initial.users === undefined ? '' : String(initial.users),
+    seats: (initial as any).seats ? String((initial as any).seats) : '',
     duration: (renewal ? 'date' : '12') as Duration,
     until: initial.expires ?? ''
   })
@@ -177,7 +178,7 @@ function IssueModal({ st, initial, onClose, onDone }: { st: VendorStatus; initia
   const submit = async () => {
     if (f.values.duration === 'date' && !f.values.until) return notify('Choisissez la date de fin.', 'error')
     const r = await run(() => api<Issued>('licensing.issue', {
-      company: f.values.company, tax_id: f.values.tax_id, tier: f.values.tier, modules, users: f.values.users,
+      company: f.values.company, tax_id: f.values.tax_id, tier: f.values.tier, modules, users: f.values.users, seats: f.values.seats,
       expires, white_label: f.values.white_label, contact: f.values.contact, notes: f.values.notes, renews_id: initial.renews_id
     }), 'Licence émise et inscrite au registre.')
     if (r) onDone(r)
@@ -197,6 +198,7 @@ function IssueModal({ st, initial, onClose, onDone }: { st: VendorStatus; initia
           </select>
         </Field>
         <Field label="Utilisateurs actifs" hint="0 = illimité ; vide = valeur du palier."><input inputMode="numeric" {...f.bind('users')} placeholder={String(defaultUsers)} /></Field>
+        <Field label="Postes clients" hint="Appareils qui se connectent au serveur ; vide ou 0 = illimité. Base de la facturation."><input inputMode="numeric" {...f.bind('seats')} placeholder="illimité" /></Field>
         <Field label="Durée">
           <select {...f.bind('duration')}>
             <option value="1">1 mois</option>

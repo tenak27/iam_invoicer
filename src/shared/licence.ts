@@ -85,6 +85,8 @@ export interface LicencePayload {
   tier: Tier
   modules: Module[]
   users: number
+  /** Postes clients autorisés à se connecter au serveur (absent ou 0 : illimité). */
+  seats?: number
   issued: string
   /** Date de fin (AAAA-MM-JJ) ; null = licence perpétuelle. */
   expires: string | null
@@ -100,6 +102,8 @@ export interface LicenceStatus {
   tier: Tier | 'trial'
   modules: Module[]
   users: number
+  /** Postes clients autorisés (0 : illimité). */
+  seats: number
   expires: string | null
   daysLeft: number | null
   company: string
@@ -110,6 +114,10 @@ export interface LicenceStatus {
   message: string
   /** Évaluation : consommation des quotas. */
   usage?: TrialUsage[]
+  /** Base en ligne qui est la copie d'un serveur d'entreprise : date du dernier envoi reçu. Consultation seule. */
+  mirror?: string
+  /** Postes actuellement connectés (licence au poste uniquement). */
+  seatsUsed?: number
   /** Poste ou serveur de l'éditeur, compte de l'éditeur (VENDOR_ADMIN) : émission de licences possible. */
   vendor?: boolean
 }
@@ -155,7 +163,7 @@ export function normalizeCompany(s: string): string {
 }
 
 /** Actions qui ne modifient rien : autorisées même sans licence valide (consultation, impression, export). */
-const READ_ACTIONS = /\.(list|get|options|categories|dashboard|sales|valuation|audit|accounts|entries|ledger|balance|income|balanceSheet|month|missing|employees|leaves|runs|params|payslipsHtml|declaration|pipeline|agenda|clients|myWeek|forecast|forecasts|current|history|detail|warehouses|byWarehouse|movements|lots|trace|transfers|log|preview|templates|secrets|needsSetup|status|upcoming|guide)$/
+const READ_ACTIONS = /\.(list|get|options|categories|dashboard|sales|valuation|audit|accounts|entries|ledger|balance|income|balanceSheet|month|missing|employees|leaves|runs|params|payslipsHtml|declaration|pipeline|agenda|clients|myWeek|forecast|forecasts|current|history|detail|warehouses|byWarehouse|movements|lots|trace|transfers|log|preview|templates|secrets|needsSetup|status|upcoming|guide|devices)$/
 
 export function isReadAction(name: string): boolean {
   return READ_ACTIONS.test(name) || name === 'hr.run' || /^analytics\.(catalog|run|values|reports|pinned|alerts)$/.test(name) || name.startsWith('auth.') || name.startsWith('licence.')
