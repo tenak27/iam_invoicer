@@ -34,6 +34,8 @@ import { ProjectDetail, ProjectsPage } from './pages/Projects'
 import { AssetsPage } from './pages/Assets'
 import { BudgetPage } from './pages/Budget'
 import { homeFor } from './components/Layout'
+import { ExpensesPage } from './pages/Expenses'
+import { RequestsPage } from './pages/Requests'
 import { LicensingPage } from './pages/Licensing'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
@@ -165,6 +167,8 @@ export default function App() {
                 <Route path="/stock/movements" element={<StockMovements />} />
                 <Route path="/stock/inventory" element={<Inventory />} />
                 <Route path="/payments" element={<Payments />} />
+                <Route path="/depenses" element={<ExpensesPage />} />
+                <Route path="/besoins" element={<RequestsPage />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/caisse" element={<CashRegister />} />
                 <Route path="/caisse/sessions" element={<CashSessions />} />

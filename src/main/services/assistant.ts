@@ -80,6 +80,24 @@ export async function listAssistant(ctx: Ctx): Promise<AssistantItem[]> {
     }
   }
 
+  // Circuits de validation : ce qui attend la décision de la personne connectée
+  if (can(role, 'approvals')) {
+    const e = await db.one<{ n: number; total: number }>(`SELECT COUNT(*)::int AS n, COALESCE(SUM(amount), 0)::float8 AS total FROM expenses WHERE status = 'soumise' AND user_id <> $1`, [ctx.user.id])
+    if (e?.n) items.push({ key: 'depenses_a_viser', tone: 'warn', title: `${e.n} dépense${s(e.n)} à approuver`, detail: `${money(e.total, currency)} attendent votre visa.`, to: '/depenses' })
+    const r = await db.one<{ n: number }>(`SELECT COUNT(*)::int AS n FROM purchase_requests WHERE status = 'soumise' AND user_id <> $1`, [ctx.user.id])
+    if (r?.n) items.push({ key: 'besoins_a_viser', tone: 'warn', title: `${r.n} expression${s(r.n)} de besoin à viser`, detail: 'Vos équipes attendent votre accord pour avancer.', to: '/besoins' })
+  }
+  if (can(role, 'finance')) {
+    const e = await db.one<{ n: number; total: number }>(`SELECT COUNT(*)::int AS n, COALESCE(SUM(amount), 0)::float8 AS total FROM expenses WHERE status = 'approuvee'`)
+    if (e?.n) items.push({ key: 'depenses_a_payer', tone: 'info', title: `${e.n} dépense${s(e.n)} approuvée${s(e.n)} à payer`, detail: `${money(e.total, currency)} à régler.`, to: '/depenses' })
+    const r = await db.one<{ n: number; total: number }>(`SELECT COUNT(*)::int AS n, COALESCE(SUM(total), 0)::float8 AS total FROM purchase_requests WHERE status = 'approuvee'`)
+    if (r?.n) items.push({ key: 'besoins_a_valider', tone: 'warn', title: `${r.n} demande${s(r.n)} en attente de validation financière`, detail: `${money(r.total, currency)} d'achats estimés.`, to: '/besoins' })
+  }
+  if (has('purchases')) {
+    const r = await db.one<{ n: number }>(`SELECT COUNT(*)::int AS n FROM purchase_requests WHERE status = 'validee'`)
+    if (r?.n) items.push({ key: 'besoins_a_commander', tone: 'info', title: `${r.n} demande${s(r.n)} validée${s(r.n)} à commander`, detail: 'À transformer en bon de commande.', to: '/besoins' })
+  }
+
   const order = { danger: 0, warn: 1, info: 2 }
   return items.sort((a, b) => order[a.tone] - order[b.tone])
 }

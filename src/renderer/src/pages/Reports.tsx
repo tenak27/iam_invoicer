@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { formatQty, todayISO } from '@shared/format'
 import { exportCsv, useQuery } from '../api'
 import { Empty, ErrorBox, Loading, Money, PageHeader, Tabs } from '../components/ui'
+import { BarChart, BarList, PieChart } from '../components/charts'
 
 type Tab = 'month' | 'client' | 'product' | 'tva' | 'purchases'
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 const monthLabel = (m: string) => `${MONTHS[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`
+const SHORT = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+const shortMonth = (m: string) => `${SHORT[Number(m.slice(5, 7)) - 1]} ${m.slice(2, 4)}`
 
 export function Reports() {
   const year = todayISO().slice(0, 4)
@@ -24,7 +27,10 @@ export function Reports() {
     switch (tab) {
       case 'month': {
         const tot = d.byMonth.reduce((s: any, r: any) => ({ ht: s.ht + r.ht, ttc: s.ttc + r.ttc, n: s.n + r.count }), { ht: 0, ttc: 0, n: 0 })
-        return <ReportTable
+        return <>
+          {d.byMonth.length > 0 && <BarChart key={range} summary={`Chiffre d'affaires par mois, total ${Math.round(tot.ht)} hors taxes`} labels={d.byMonth.map((r: any) => shortMonth(r.month))}
+            series={[{ name: 'CA HT', values: d.byMonth.map((r: any) => r.ht) }, { name: 'CA TTC', values: d.byMonth.map((r: any) => r.ttc) }, { name: 'Cumul HT', line: true, color: '#f59e0b', values: d.byMonth.map((_: any, i: number) => d.byMonth.slice(0, i + 1).reduce((s: number, r: any) => s + r.ht, 0)) }]} />}
+          <ReportTable
           rows={d.byMonth}
           file={`CA par mois ${range}.csv`}
           cols={[
@@ -34,11 +40,16 @@ export function Reports() {
             { label: 'CA TTC', value: (r) => r.ttc, money: true }
           ]}
           total={['Total', tot.n, tot.ht, tot.ttc]}
-        />
+        /></>
       }
       case 'client': {
         const total = d.byClient.reduce((s: number, r: any) => s + r.ht, 0)
-        return <ReportTable
+        return <>
+          {d.byClient.length > 0 && <div className="chart-duo" key={range}>
+            <PieChart title="CA HT" summary="Répartition du chiffre d'affaires par client" segments={d.byClient.map((r: any) => ({ label: r.name, value: r.ht }))} />
+            <BarList items={d.byClient.map((r: any) => ({ label: r.name, value: r.ht, sub: `${r.count} document(s)` }))} />
+          </div>}
+          <ReportTable
           rows={d.byClient}
           file={`CA par client ${range}.csv`}
           cols={[
@@ -49,11 +60,14 @@ export function Reports() {
             { label: 'Part', value: (r) => (total ? Math.round((r.ht / total) * 1000) / 10 : 0), pct: true }
           ]}
           total={['', 'Total', '', total, 100]}
-        />
+        /></>
       }
       case 'product': {
         const t = d.byProduct.reduce((s: any, r: any) => ({ ht: s.ht + r.ht, cost: s.cost + r.cost }), { ht: 0, cost: 0 })
+        const best = [...d.byProduct].sort((a: any, b: any) => b.ht - a.ht).slice(0, 10)
         return <>
+          {best.length > 0 && <BarChart key={range} summary="Chiffre d'affaires, coût et marge des dix meilleurs articles" labels={best.map((r: any) => (r.name.length > 12 ? r.name.slice(0, 11) + '…' : r.name))}
+            series={[{ name: 'CA HT', values: best.map((r: any) => r.ht) }, { name: 'Coût estimé', color: '#64748b', values: best.map((r: any) => r.cost) }, { name: 'Marge', line: true, color: '#10b981', values: best.map((r: any) => r.ht - r.cost) }]} />}
           <ReportTable
             rows={d.byProduct}
             file={`Ventes par article ${range}.csv`}
@@ -74,6 +88,8 @@ export function Reports() {
       case 'tva': {
         const t = d.tva.reduce((s: any, r: any) => ({ c: s.c + r.collected, d: s.d + r.deductible }), { c: 0, d: 0 })
         return <>
+          {d.tva.length > 0 && <BarChart key={range} summary="TVA collectée, déductible et nette par mois" labels={d.tva.map((r: any) => shortMonth(r.month))}
+            series={[{ name: 'Collectée', values: d.tva.map((r: any) => r.collected) }, { name: 'Déductible', color: '#8b5cf6', values: d.tva.map((r: any) => r.deductible) }, { name: 'Nette à reverser', line: true, color: '#ef4444', values: d.tva.map((r: any) => r.collected - r.deductible) }]} />}
           <ReportTable
             rows={d.tva}
             file={`TVA ${range}.csv`}
@@ -90,7 +106,12 @@ export function Reports() {
       }
       case 'purchases': {
         const total = d.purchases.reduce((s: number, r: any) => s + r.ht, 0)
-        return <ReportTable
+        return <>
+          {d.purchases.length > 0 && <div className="chart-duo" key={range}>
+            <PieChart title="Achats HT" summary="Répartition des achats par fournisseur" segments={d.purchases.map((r: any) => ({ label: r.name, value: r.ht }))} />
+            <BarList items={d.purchases.map((r: any) => ({ label: r.name, value: r.ht, sub: `${r.count} facture(s)` }))} />
+          </div>}
+          <ReportTable
           rows={d.purchases}
           file={`Achats par fournisseur ${range}.csv`}
           cols={[
@@ -100,7 +121,7 @@ export function Reports() {
             { label: 'Achats HT', value: (r) => r.ht, money: true }
           ]}
           total={['', 'Total', '', total]}
-        />
+        /></>
       }
     }
   }

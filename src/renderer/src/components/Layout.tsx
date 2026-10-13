@@ -5,8 +5,7 @@ import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
   ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
-  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, Key, type Icon
-} from '@phosphor-icons/react'
+  WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, Key, type Icon, Coins } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
 import { useSession } from '../session'
 import { moduleLicensed } from '@shared/licence'
@@ -47,6 +46,7 @@ const NAV: Section[] = [
     title: 'Achats',
     tone: 'amber',
     items: [
+      { to: '/besoins', label: 'Expressions de besoin', short: 'Besoins', module: 'requests', icon: ClipboardText },
       { to: '/docs/BC', label: 'Bons de commande', module: 'purchases', icon: ShoppingCart },
       { to: '/docs/BR', label: 'Réceptions', module: 'purchases', icon: Tray },
       { to: '/docs/FF', label: 'Factures fournisseurs', short: 'Achats', module: 'purchases', icon: Receipt },
@@ -68,6 +68,7 @@ const NAV: Section[] = [
     title: 'Finance',
     tone: 'violet',
     items: [
+      { to: '/depenses', label: 'Dépenses', module: 'expenses', icon: Coins },
       { to: '/payments', label: 'Paiements', module: 'payments', icon: Wallet },
       { to: '/reports', label: 'Rapports', module: 'reports', icon: ChartBar }
     ]

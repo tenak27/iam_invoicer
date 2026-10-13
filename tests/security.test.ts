@@ -86,7 +86,7 @@ beforeAll(async () => {
   control = await openDb({ mode: 'local' })
   manager = new TenantManager(control, prov)
   await manager.init()
-  cloud = await listen(createCloudHandler({ root: createHandler({ db: control, version: 't', webRoot }), manager, adminToken: ADMIN, rootDb: control, shared: { version: 't', webRoot, trustProxy: true } }))
+  cloud = await listen(createCloudHandler({ root: createHandler({ db: control, version: 't', webRoot, ratePerMinute: 1_000_000 }), manager, adminToken: ADMIN, rootDb: control, shared: { version: 't', webRoot, trustProxy: true, ratePerMinute: 1_000_000 } }))
 
   // Base principale : un administrateur ordinaire (pas le compte de l'éditeur)
   await http(`${cloud}/api/setup`, { body: { company: { name: 'Éditeur' }, username: 'gerant', full_name: 'Gérant', password: PASS } })

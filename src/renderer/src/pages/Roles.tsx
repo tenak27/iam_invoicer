@@ -28,6 +28,10 @@ const FEATURES: Record<Module, string> = {
   projects: 'Projets, temps passés, facturation des heures',
   assets: 'Immobilisations, amortissements, cessions',
   budget: 'Budgets, trésorerie prévisionnelle',
+  expenses: 'Saisie de ses dépenses, justificatifs, suivi de leur validation',
+  requests: 'Expressions de besoin : demandes d’achat internes et leur suivi',
+  approvals: 'Visa du responsable sur les dépenses et les expressions de besoin',
+  finance: 'Validation financière des demandes, paiement des dépenses',
   settings: 'Société, taxes, documents, messagerie, licence',
   users: 'Comptes utilisateurs, rôles et droits, journal d’activité',
   licensing: 'Émission des licences clients, registre, renouvellements (poste de l’éditeur)'

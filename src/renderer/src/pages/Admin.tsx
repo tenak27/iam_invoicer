@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatDate } from '@shared/format'
-import { ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
+import { ROLE_HINTS, ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
 import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister } from '@phosphor-icons/react'
@@ -18,6 +18,7 @@ const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité',
   messages: 'Communications', hr: 'RH et paie', crm: 'CRM', projects: 'Projets', assets: 'Immobilisations', budget: 'Budgets et trésorerie',
+  expenses: 'Dépenses', requests: 'Expressions de besoin', approvals: 'Approbations', finance: 'Validation financière',
   settings: 'Paramètres', users: 'Utilisateurs', licensing: 'Émission de licences'
 }
 
@@ -434,7 +435,7 @@ export function Users() {
           <thead><tr><th>Rôle</th><th>Accès</th></tr></thead>
           <tbody>
             {(Object.keys(ROLE_LABELS) as Role[]).filter((r) => r !== 'licences').map((r) => (
-              <tr key={r}><td className="strong">{ROLE_LABELS[r]}</td><td>{PERMISSIONS[r].map((m) => MODULE_LABELS[m]).join(', ')}</td></tr>
+              <tr key={r}><td className="strong">{ROLE_LABELS[r]}<div className="muted small">{ROLE_HINTS[r]}</div></td><td>{PERMISSIONS[r].map((m) => MODULE_LABELS[m] ?? m).join(', ')}</td></tr>
             ))}
           </tbody>
         </table>
@@ -493,7 +494,7 @@ function UserForm({ user, onClose, onSaved }: { user: any; onClose: () => void; 
       <div className="grid grid-2">
         <Field label="Nom complet"><input autoFocus {...f.bind('full_name')} /></Field>
         <Field label="Identifiant de connexion"><input {...f.bind('username')} /></Field>
-        <Field label="Rôle">
+        <Field label="Rôle" hint={ROLE_HINTS[f.values.role as Role]}>
           <select {...f.bind('role')}>{(Object.keys(ROLE_LABELS) as Role[]).filter((r) => r !== 'licences' || f.values.role === r).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>
         </Field>
         <Field label={user.id ? 'Nouveau mot de passe (facultatif)' : 'Mot de passe'}><input type="password" {...f.bind('password')} /></Field>

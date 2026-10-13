@@ -1,15 +1,36 @@
 // Règles métier partagées entre le processus principal et l'interface.
 
-export type Role = 'admin' | 'commercial' | 'magasinier' | 'comptable' | 'caissier' | 'rh' | 'licences'
+export type Role = 'admin' | 'directeur' | 'daf' | 'comptable' | 'commercial' | 'acheteur' | 'magasinier' | 'caissier' | 'rh' | 'chef_service' | 'employe' | 'licences'
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrateur',
-  commercial: 'Commercial',
-  magasinier: 'Magasinier',
+  directeur: 'Directeur général',
+  daf: 'Directeur administratif et financier',
   comptable: 'Comptable',
+  commercial: 'Commercial',
+  acheteur: 'Responsable des achats',
+  magasinier: 'Magasinier',
   caissier: 'Caissier',
   rh: 'Ressources humaines',
+  chef_service: 'Chef de service',
+  employe: 'Employé',
   licences: 'Gestionnaire de licences'
+}
+
+/** Ce que fait chaque rôle dans l'entreprise (page Utilisateurs, choix du rôle). */
+export const ROLE_HINTS: Record<Role, string> = {
+  admin: 'Tous les droits, paramètres et utilisateurs compris.',
+  directeur: 'Voit toute l’activité ; vise et valide les dépenses et les demandes d’achat.',
+  daf: 'Finances, comptabilité et trésorerie ; validation financière et paiement des dépenses.',
+  comptable: 'Écritures, déclarations, règlements ; paie les dépenses approuvées.',
+  commercial: 'Devis, factures, clients, caisse et suivi commercial.',
+  acheteur: 'Fournisseurs et commandes ; transforme les demandes validées en bons de commande.',
+  magasinier: 'Stock, réceptions et inventaires.',
+  caissier: 'Point de vente et sessions de caisse.',
+  rh: 'Salariés, paie et congés.',
+  chef_service: 'Vise les dépenses et les expressions de besoin de son équipe.',
+  employe: 'Saisit ses dépenses et ses expressions de besoin, et suit leur avancement.',
+  licences: 'Émission des licences (éditeur).'
 }
 
 export type Module =
@@ -30,18 +51,31 @@ export type Module =
   | 'projects'
   | 'assets'
   | 'budget'
+  /** Dépenses de l'entreprise : saisie et suivi de ses propres dépenses. */
+  | 'expenses'
+  /** Expressions de besoin : demandes d'achat internes. */
+  | 'requests'
+  /** Visa du responsable sur les dépenses et les expressions de besoin. */
+  | 'approvals'
+  /** Validation financière des demandes et paiement des dépenses. */
+  | 'finance'
   | 'settings'
   | 'users'
   /** Émission des licences clients : uniquement sur le poste ou le serveur de l'éditeur (clé privée). */
   | 'licensing'
 
 export const PERMISSIONS: Record<Role, Module[]> = {
-  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'settings', 'users', 'licensing'],
-  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages', 'crm', 'projects'],
-  magasinier: ['dashboard', 'purchases', 'stock', 'suppliers', 'products'],
-  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages', 'hr', 'projects', 'assets', 'budget'],
-  caissier: ['cash'],
-  rh: ['hr'],
+  admin: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'cash', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'expenses', 'requests', 'approvals', 'finance', 'settings', 'users', 'licensing'],
+  directeur: ['dashboard', 'sales', 'purchases', 'stock', 'payments', 'clients', 'suppliers', 'products', 'reports', 'accounting', 'messages', 'hr', 'crm', 'projects', 'assets', 'budget', 'expenses', 'requests', 'approvals', 'finance'],
+  daf: ['dashboard', 'purchases', 'payments', 'suppliers', 'reports', 'accounting', 'hr', 'assets', 'budget', 'expenses', 'requests', 'approvals', 'finance'],
+  comptable: ['dashboard', 'sales', 'purchases', 'payments', 'clients', 'suppliers', 'reports', 'accounting', 'messages', 'hr', 'projects', 'assets', 'budget', 'expenses', 'requests', 'finance'],
+  commercial: ['dashboard', 'sales', 'payments', 'clients', 'products', 'cash', 'messages', 'crm', 'projects', 'expenses', 'requests'],
+  acheteur: ['dashboard', 'purchases', 'suppliers', 'products', 'stock', 'expenses', 'requests'],
+  magasinier: ['dashboard', 'purchases', 'stock', 'suppliers', 'products', 'expenses', 'requests'],
+  caissier: ['cash', 'expenses'],
+  rh: ['hr', 'expenses', 'requests'],
+  chef_service: ['dashboard', 'reports', 'projects', 'expenses', 'requests', 'approvals'],
+  employe: ['expenses', 'requests'],
   licences: ['licensing']
 }
 

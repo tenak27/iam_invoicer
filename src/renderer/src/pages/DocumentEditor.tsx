@@ -80,6 +80,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lines, taxDefs.data, chosenCodes.join(','), editable]
   )
+  // TVA du document : un seul interrupteur remet toutes les lignes au taux de la société, ou à zéro
+  const tvaOn = lines.some((l) => Number(l.tva_rate) > 0)
+  const toggleTva = () => {
+    setLines((ls) => ls.map((l) => ({ ...l, tva_rate: tvaOn ? 0 : (products.data?.find((p) => p.id === l.product_id)?.tva_rate ?? company.default_tva) || company.default_tva })))
+    setDirty(true)
+  }
   const trackingOf = (l: Line) => l.tracking ?? products.data?.find((x) => x.id === l.product_id)?.tracking ?? 'aucun'
 
   const setH = (k: keyof typeof header, v: string) => {
@@ -388,17 +394,24 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           <button className="btn btn-sm add-line" onClick={() => setLines((ls) => [...ls, emptyLine(company.default_tva)])}>+ Ajouter une ligne</button>
         )}
 
-        {editable && availableTaxes.length > 0 && (
+        {editable && (
           <div className="tax-picker" role="group" aria-label="Taxes et retenues">
-            <span className="field-label">Taxes et retenues</span>
+            <span className="field-label">Taxes et retenues <small className="muted">· activez celles qui s'appliquent à ce document</small></span>
+            <button type="button" role="switch" aria-checked={tvaOn} className={`tax-switch ${tvaOn ? 'on' : ''}`} onClick={toggleTva}>
+              <span className="tax-track" aria-hidden="true"><i /></span>
+              <span className="tax-switch-text"><strong>TVA {String(company.default_tva).replace('.', ',')} %</strong><small>{tvaOn ? formatMoney(totals.tva) : 'Sans TVA sur ce document'}</small></span>
+            </button>
             {availableTaxes.map((t) => {
               const on = chosenCodes.includes(t.code)
+              const applied = totals.taxes.find((x) => x.code === t.code)
               return (
-                <button key={t.code} type="button" className={`tax-chip ${t.kind} ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => toggleTax(t.code)}>
-                  <span className="tax-dot" aria-hidden="true" />{taxCaption(t)}
+                <button key={t.code} type="button" role="switch" aria-checked={on} className={`tax-switch ${t.kind} ${on ? 'on' : ''}`} onClick={() => toggleTax(t.code)}>
+                  <span className="tax-track" aria-hidden="true"><i /></span>
+                  <span className="tax-switch-text"><strong>{taxCaption(t)}</strong><small>{on && applied ? `${t.kind === 'withholding' ? '− ' : '+ '}${formatMoney(applied.value)}` : t.kind === 'withholding' ? 'Retenue à la source' : 'Taxe ajoutée au total'}</small></span>
                 </button>
               )
             })}
+            {availableTaxes.length === 0 && <span className="muted small">D'autres taxes (retenues, timbre, prélèvement) s'activent dans Société et paramètres → Taxes.</span>}
           </div>
         )}
 

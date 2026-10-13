@@ -19,7 +19,8 @@ export interface TierDef {
 }
 
 /** Modules toujours disponibles (administration de base). */
-export const BASE_MODULES: Module[] = ['dashboard', 'settings', 'users']
+// Dépenses, expressions de besoin et leurs validations font partie de toutes les offres
+export const BASE_MODULES: Module[] = ['dashboard', 'settings', 'users', 'expenses', 'requests', 'approvals', 'finance']
 
 export const TIERS: Record<Exclude<Tier, 'sur-mesure'>, TierDef> = {
   essentiel: {
@@ -49,6 +50,7 @@ export const MODULE_NAMES: Record<Module, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
   suppliers: 'Fournisseurs', products: 'Articles', reports: 'Rapports', cash: 'Caisse', accounting: 'Comptabilité et déclarations',
   messages: 'E-mails et SMS', hr: 'RH et paie', crm: 'CRM', projects: 'Projets', assets: 'Immobilisations', budget: 'Budgets et trésorerie',
+  expenses: 'Dépenses', requests: 'Expressions de besoin', approvals: 'Approbations (visa du responsable)', finance: 'Validation financière et paiements',
   settings: 'Paramètres', users: 'Utilisateurs', licensing: 'Émission de licences'
 }
 
@@ -163,7 +165,7 @@ export function normalizeCompany(s: string): string {
 }
 
 /** Actions qui ne modifient rien : autorisées même sans licence valide (consultation, impression, export). */
-const READ_ACTIONS = /\.(list|get|options|categories|dashboard|sales|valuation|audit|accounts|entries|ledger|balance|income|balanceSheet|month|missing|employees|leaves|runs|params|payslipsHtml|declaration|pipeline|agenda|clients|myWeek|forecast|forecasts|current|history|detail|warehouses|byWarehouse|movements|lots|trace|transfers|log|preview|templates|secrets|needsSetup|status|upcoming|guide|devices)$/
+const READ_ACTIONS = /\.(list|get|options|categories|dashboard|sales|valuation|audit|accounts|entries|ledger|balance|income|balanceSheet|month|missing|employees|leaves|runs|params|payslipsHtml|declaration|pipeline|agenda|clients|myWeek|forecast|forecasts|current|history|detail|warehouses|byWarehouse|movements|lots|trace|transfers|log|preview|templates|secrets|needsSetup|status|upcoming|guide|devices|suppliers)$/
 
 export function isReadAction(name: string): boolean {
   return READ_ACTIONS.test(name) || name === 'hr.run' || /^analytics\.(catalog|run|values|reports|pinned|alerts)$/.test(name) || name.startsWith('auth.') || name.startsWith('licence.')

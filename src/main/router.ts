@@ -31,6 +31,8 @@ import * as analytics from './services/analytics'
 import * as roles from './services/roles'
 import * as recurring from './services/recurring'
 import { listAssistant } from './services/assistant'
+import * as expenses from './services/expenses'
+import * as requests from './services/requests'
 import { isReadAction, isVendorAdmin, VENDOR_ADMIN } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -283,6 +285,27 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'assets.postYear': { access: 'assets', fn: assets.postYear },
   'assets.dispose': { access: 'assets', fn: assets.dispose },
   'assets.accounts': { access: 'assets', fn: (ctx) => ctx.db.query("SELECT number, label FROM accounts WHERE active AND number ~ '^2[1-4]' ORDER BY number") },
+
+  // Dépenses de l'entreprise : chaque étape vérifie son droit (approbation, paiement) dans le service
+  'expenses.list': { access: 'expenses', fn: expenses.listExpenses },
+  'expenses.get': { access: 'expenses', fn: expenses.getExpense },
+  'expenses.save': { access: 'expenses', fn: expenses.saveExpense },
+  'expenses.submit': { access: 'expenses', fn: expenses.submitExpense },
+  'expenses.delete': { access: 'expenses', fn: expenses.deleteExpense },
+  'expenses.decide': { access: 'approvals', fn: expenses.decideExpense },
+  'expenses.pay': { access: 'finance', fn: expenses.payExpense },
+  'expenses.unpay': { access: 'finance', fn: expenses.unpayExpense },
+
+  // Expressions de besoin : visa, validation financière et commande contrôlés à chaque étape
+  'requests.list': { access: 'requests', fn: requests.listRequests },
+  'requests.get': { access: 'requests', fn: requests.getRequest },
+  'requests.save': { access: 'requests', fn: requests.saveRequest },
+  'requests.submit': { access: 'requests', fn: requests.submitRequest },
+  'requests.delete': { access: 'requests', fn: requests.deleteRequest },
+  'requests.decide': { access: 'requests', fn: requests.decideRequest },
+  'requests.order': { access: 'purchases', fn: requests.orderRequest },
+  'requests.close': { access: 'purchases', fn: requests.closeRequest },
+  'requests.suppliers': { access: 'purchases', fn: (ctx) => ctx.db.query("SELECT id, code, name FROM parties WHERE kind = 'supplier' AND active ORDER BY name") },
 
   // Budgets et trésorerie
   'budget.get': { access: 'budget', fn: budget.getBudget },

@@ -749,5 +749,77 @@ export const MIGRATIONS: string[] = [
   `
   ALTER TABLE auth_sessions ADD COLUMN device_id TEXT;
   ALTER TABLE licences_issued ADD COLUMN seats INT NOT NULL DEFAULT 0
+  `,
+  // v13 : rôles d'un ERP (direction, finances, achats, chef de service, employé), dépenses de
+  // l'entreprise et expressions de besoin, avec l'historique de leurs circuits de validation
+  `
+  ALTER TABLE users DROP CONSTRAINT users_role_check;
+  ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','directeur','daf','comptable','commercial','acheteur','magasinier','caissier','rh','chef_service','employe','licences'));
+  CREATE TABLE expenses (
+    id SERIAL PRIMARY KEY,
+    number TEXT UNIQUE,
+    date TEXT NOT NULL,
+    category TEXT NOT NULL,
+    label TEXT NOT NULL,
+    amount DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    method TEXT NOT NULL DEFAULT 'Espèces',
+    beneficiary TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    receipt TEXT NOT NULL DEFAULT '',
+    project_id INT REFERENCES projects(id) ON DELETE SET NULL,
+    status TEXT NOT NULL DEFAULT 'brouillon' CHECK (status IN ('brouillon','soumise','approuvee','payee','rejetee')),
+    rejected_reason TEXT NOT NULL DEFAULT '',
+    user_id INT NOT NULL REFERENCES users(id),
+    approved_by INT REFERENCES users(id),
+    paid_by INT REFERENCES users(id),
+    submitted_at TIMESTAMPTZ,
+    approved_at TIMESTAMPTZ,
+    paid_at TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX expenses_status_idx ON expenses(status, date);
+  CREATE INDEX expenses_user_idx ON expenses(user_id);
+  CREATE TABLE purchase_requests (
+    id SERIAL PRIMARY KEY,
+    number TEXT UNIQUE,
+    date TEXT NOT NULL,
+    needed_by TEXT,
+    title TEXT NOT NULL,
+    department TEXT NOT NULL DEFAULT '',
+    priority TEXT NOT NULL DEFAULT 'normale',
+    justification TEXT NOT NULL DEFAULT '',
+    total DOUBLE PRECISION NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'brouillon' CHECK (status IN ('brouillon','soumise','approuvee','validee','commandee','cloturee','rejetee')),
+    rejected_reason TEXT NOT NULL DEFAULT '',
+    user_id INT NOT NULL REFERENCES users(id),
+    document_id INT REFERENCES documents(id) ON DELETE SET NULL,
+    submitted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX purchase_requests_status_idx ON purchase_requests(status);
+  CREATE INDEX purchase_requests_user_idx ON purchase_requests(user_id);
+  CREATE TABLE purchase_request_lines (
+    id SERIAL PRIMARY KEY,
+    request_id INT NOT NULL REFERENCES purchase_requests(id) ON DELETE CASCADE,
+    position INT NOT NULL DEFAULT 0,
+    product_id INT REFERENCES products(id) ON DELETE SET NULL,
+    description TEXT NOT NULL,
+    quantity DOUBLE PRECISION NOT NULL,
+    unit TEXT NOT NULL DEFAULT '',
+    unit_price DOUBLE PRECISION NOT NULL DEFAULT 0
+  );
+  CREATE INDEX purchase_request_lines_idx ON purchase_request_lines(request_id);
+  CREATE TABLE workflow_events (
+    id SERIAL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    ref_id INT NOT NULL,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    action TEXT NOT NULL,
+    comment TEXT NOT NULL DEFAULT '',
+    at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX workflow_events_ref_idx ON workflow_events(kind, ref_id)
   `
 ]
