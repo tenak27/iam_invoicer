@@ -434,6 +434,159 @@
   .acces-co span { display: grid; font-weight: 700; } .acces-co em { font-style: normal; font-weight: 400; font-size: 12.5px; color: var(--muted); word-break: break-all; }
   .acces-alt { border-top: 1px solid var(--line); padding-top: 14px; font-size: 14.5px; color: var(--muted); }
 
+  /* ══ Motion design ══ */
+  /* Rideau d'ouverture */
+  .intro { position: fixed; inset: 0; z-index: 300; display: none; place-items: center; background: #0a1f44; }
+  .motion .intro { display: grid; animation: intro-out .7s var(--ease) 1.05s forwards; }
+  .intro img { width: 92px; height: 92px; border-radius: 24px; animation: intro-logo 1s var(--back) both; box-shadow: 0 30px 80px -20px rgba(59, 130, 246, .9); }
+  .intro::after { content: ''; position: absolute; width: 180px; height: 3px; margin-top: 150px; border-radius: 3px; background: linear-gradient(90deg, #3b82f6, #f5b301); transform-origin: left; animation: intro-bar .9s var(--ease) .1s both; }
+  @keyframes intro-logo { from { opacity: 0; transform: scale(.4) rotate(-18deg); } }
+  @keyframes intro-bar { from { transform: scaleX(0); } }
+  @keyframes intro-out { to { clip-path: inset(0 0 100% 0); visibility: hidden; } }
+  .intro { clip-path: inset(0); }
+  /* Avancement de lecture et pointeur */
+  .read { position: fixed; left: 0; top: 0; height: 3px; width: 100%; z-index: 120; transform-origin: left; transform: scaleX(var(--read, 0)); background: linear-gradient(90deg, var(--blue), var(--cta), var(--gold)); pointer-events: none; }
+  .cursor { position: fixed; left: 0; top: 0; z-index: 250; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--blue) 70%, transparent); background: color-mix(in srgb, var(--blue) 8%, transparent); pointer-events: none; opacity: 0; transition: width .3s var(--back), height .3s var(--back), margin .3s var(--back), opacity .3s, background .3s, border-color .3s; }
+  .cursor.on { opacity: 1; }
+  .cursor.big { width: 68px; height: 68px; margin: -34px 0 0 -34px; background: color-mix(in srgb, var(--cta) 16%, transparent); border-color: color-mix(in srgb, var(--cta) 70%, transparent); }
+  .cursor.down { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
+  /* Héros : réseau animé, titre révélé mot à mot, expression tournante */
+  #fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .75; }
+  .h1-line .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; margin-bottom: -.08em; }
+  .h1-line .w > span { display: inline-block; transform: translateY(110%) rotate(6deg); transform-origin: left bottom; animation: word-up .9s var(--ease) forwards; animation-delay: calc(1.15s + var(--i) * 90ms); }
+  html:not(.motion) .h1-line .w > span { transform: none; animation: none; }
+  @keyframes word-up { to { transform: none; } }
+  .rot { display: inline-grid; justify-items: center; overflow: hidden; vertical-align: bottom; padding: 0 .08em .12em; margin-bottom: -.12em; }
+  .rot > span { grid-area: 1 / 1; white-space: nowrap; transform: translateY(105%); opacity: 0; transition: transform .7s var(--ease), opacity .5s; }
+  .rot > span.on { transform: none; opacity: 1; }
+  .rot > span.out { transform: translateY(-105%); opacity: 0; }
+  .hero h1 { max-width: none; }
+  .screen { transform: rotateX(calc(var(--rx, 8deg) + var(--sx, 0deg))) rotateY(var(--ry, 0deg)) scale(var(--sc, 1)); }
+  .motion .screen { transition: transform .25s linear; }
+  .chip, .phone { translate: var(--px, 0) var(--py, 0); transition: translate .5s var(--ease); }
+  .btn-cta, .btn-ghost { translate: var(--bx, 0) var(--by, 0); }
+  .btn-cta { position: relative; overflow: hidden; }
+  .btn-cta::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%); transform: translateX(-120%); animation: shine 4.5s var(--ease) infinite; }
+  @keyframes shine { 0%, 62% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+  /* Titres de section : mots qui montent */
+  .head h2 .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .14em; margin-bottom: -.14em; }
+  .head h2 .w > span { display: inline-block; transform: translateY(112%); transition: transform .85s var(--ease); transition-delay: calc(var(--i) * 55ms); }
+  .head.in h2 .w > span, .rv.in h2 .w > span, .rv.in > h2 .w > span { transform: none; }
+  /* Bandeau double */
+  .ticker { display: grid; gap: 14px; }
+  .ticker-track { transform: translateX(0) skewX(var(--skew, 0deg)); }
+  .ticker-track.rev { animation-direction: reverse; animation-duration: 56s; opacity: .7; }
+  /* Récit épinglé : une saisie, tout suit */
+  .story-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .story-steps button { width: 100%; height: 100%; display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: center; text-align: left; padding: 14px 16px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; transition: border-color .35s, background .35s, transform .45s var(--back), box-shadow .35s, opacity .35s; }
+  .story-steps .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue); transition: background .35s, color .35s, transform .45s var(--back); }
+  .story-steps b { display: block; color: var(--ink); font-size: 16.5px; }
+  .story-steps small { display: block; color: var(--muted); font-size: 14px; line-height: 1.4; }
+  .story-scene, .story-bar { display: none; }
+  .motion .story { height: 440vh; }
+  .motion .story-pin { position: sticky; top: calc(var(--nav) + 20px); height: calc(100vh - var(--nav) - 44px); min-height: 520px; display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 36px; align-items: center; }
+  .motion .story-steps { grid-template-columns: 1fr; gap: 10px; position: relative; }
+  .motion .story-steps button { opacity: .55; }
+  .motion .story-steps li.done button { opacity: .85; }
+  .motion .story-steps li.done .ico { background: var(--green); color: #fff; }
+  .motion .story-steps li.now button { opacity: 1; border-color: var(--blue); background: var(--blue-soft); transform: translateX(10px); box-shadow: var(--shadow); }
+  .motion .story-steps li.now .ico { background: var(--blue); color: #fff; transform: scale(1.1) rotate(-6deg); }
+  @media (prefers-color-scheme: dark) { .motion .story-steps li.now .ico { color: #06122b; } }
+  .motion .story-scene { display: grid; position: relative; height: min(100%, 520px); border-radius: 30px; overflow: hidden; background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--blue) 26%, transparent), transparent 60%), radial-gradient(90% 80% at 0% 100%, color-mix(in srgb, var(--cta) 16%, transparent), transparent 60%), var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .motion .story-bar { display: block; position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); transform-origin: left; transform: scaleX(var(--p, 0)); }
+  .panel { grid-area: 1 / 1; min-width: 0; display: grid; place-items: center; padding: 30px; opacity: 0; transform: translateY(40px) scale(.94); transition: opacity .5s var(--ease), transform .7s var(--ease); pointer-events: none; }
+  .panel.on { opacity: 1; transform: none; }
+  .panel.past { transform: translateY(-40px) scale(.94); }
+  .pcard { width: 100%; max-width: 440px; min-width: 0; background: #fff; color: #1f2933; border-radius: 20px; padding: 24px; box-shadow: 0 40px 70px -34px rgba(10, 31, 68, .6), 0 0 0 1px rgba(15, 23, 42, .06); font-size: 15px; position: relative; }
+  .pcard h4 { margin: 0 0 14px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #64748b; display: flex; justify-content: space-between; align-items: center; }
+  .pcard .line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e8ecf1; }
+  .pcard .total { display: flex; justify-content: space-between; margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #1d4ed8; color: #fff; font-weight: 800; font-size: 17px; }
+  .pcard .seal { position: absolute; right: 22px; top: 54px; padding: 5px 14px; border: 2.5px solid #059669; color: #059669; border-radius: 8px; font-weight: 800; letter-spacing: .1em; font-size: 13px; transform: rotate(-10deg) scale(0); }
+  .panel.on .seal { animation: seal .6s var(--back) .55s forwards; }
+  @keyframes seal { 0% { transform: rotate(-30deg) scale(2.4); opacity: 0; } 100% { transform: rotate(-10deg) scale(1); opacity: 1; } }
+  .panel.on .pcard > * { animation: rise .6s var(--ease) both; animation-delay: calc(var(--k, 0) * 90ms + .1s); }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  .pstock { display: grid; grid-template-columns: 1fr 120px 60px; gap: 12px; align-items: center; padding: 9px 0; font-weight: 600; }
+  .pstock u { display: block; height: 10px; border-radius: 99px; background: #eef2f8; overflow: hidden; text-decoration: none; }
+  .pstock u b { display: block; height: 100%; border-radius: 99px; background: #059669; width: var(--from); }
+  .panel.on .pstock u b { animation: shrink 1.1s var(--ease) .7s forwards; }
+  @keyframes shrink { to { width: var(--to); } }
+  .pstock span { text-align: right; font-variant-numeric: tabular-nums; color: #475569; }
+  .minus { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 99px; background: #fee2e2; color: #b91c1c; font-size: 12.5px; font-weight: 800; transform: scale(0); }
+  .panel.on .minus { animation: pop-in .5s var(--back) .9s forwards; }
+  @keyframes pop-in { to { transform: scale(1); } }
+  .ppay { text-align: center; display: grid; justify-items: center; gap: 8px; }
+  .ppay .ring { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: #dcfce7; color: #059669; }
+  .panel.on .ppay .ring { animation: ring-pop .7s var(--back) .3s both; }
+  @keyframes ring-pop { from { transform: scale(0) rotate(-90deg); } }
+  .ppay .amount { font-size: 38px; font-weight: 800; letter-spacing: -.03em; color: #0b1220; font-variant-numeric: tabular-nums; }
+  .ppay .via { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .ppay .via span { padding: 5px 12px; border-radius: 99px; background: #f1f5f9; font-size: 13px; font-weight: 700; color: #475569; }
+  .ppay .via span.sel { background: #ff7900; color: #fff; }
+  .pledger { display: grid; gap: 7px; font-variant-numeric: tabular-nums; font-size: 14px; }
+  .pledger div { display: grid; grid-template-columns: 56px 1fr 90px 90px; gap: 8px; padding: 9px 12px; border-radius: 10px; background: #f1f5f9; }
+  .pledger div b { color: #1d4ed8; } .pledger div span:nth-child(n+3) { text-align: right; }
+  .pledger .balance { background: #dcfce7; color: #047857; font-weight: 800; grid-template-columns: 1fr auto; }
+  .pdecl { display: grid; gap: 10px; }
+  .pdecl .due { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #fff7ed; color: #9a3412; font-weight: 700; }
+  .pdecl .big { font-size: 32px; font-weight: 800; letter-spacing: -.03em; color: #0b1220; }
+  /* Tuiles en relief */
+  .motion .tile { transform: perspective(1100px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(var(--lift, 0)); transition: transform .25s var(--ease), box-shadow .35s, border-color .3s; }
+  .motion .tile:hover { --lift: -6px; }
+  /* Votre métier */
+  .jobs { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 40px; align-items: start; }
+  .job-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .job-list button { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 16px; text-align: left; cursor: pointer; transition: border-color .25s, background .25s, transform .4s var(--back), box-shadow .25s; }
+  .job-list button svg { color: var(--muted); flex-shrink: 0; transition: color .25s, transform .4s var(--back); }
+  .job-list button:hover { transform: translateY(-3px); border-color: var(--blue); }
+  .job-list button[aria-pressed=true] { border-color: var(--blue); background: var(--blue-soft); box-shadow: var(--shadow); transform: scale(1.03); }
+  .job-list button[aria-pressed=true] svg { color: var(--blue); transform: scale(1.2) rotate(-8deg); }
+  .job-out { position: relative; border-radius: 28px; padding: 30px; background: linear-gradient(155deg, #0a1f44, #143f8f); color: #dbe6ff; box-shadow: var(--shadow-lg); overflow: hidden; min-height: 360px; }
+  .job-out::before { content: ''; position: absolute; width: 380px; height: 380px; right: -140px; top: -160px; border-radius: 50%; background: radial-gradient(closest-side, rgba(245, 179, 1, .35), transparent); animation: bob 9s ease-in-out infinite; }
+  .job-out h3 { color: #fff; font-size: 26px; position: relative; }
+  .job-out p { position: relative; margin-top: 10px; color: #c8d6f7; }
+  .job-mods { position: relative; list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .job-mods li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .16); color: #fff; font-weight: 600; font-size: 15px; animation: job-in .5s var(--back) both; animation-delay: calc(var(--i) * 60ms); }
+  .job-mods li::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #6ee7b7; box-shadow: 0 0 0 4px rgba(110, 231, 183, .25); flex-shrink: 0; }
+  @keyframes job-in { from { opacity: 0; transform: translateY(14px) scale(.9); } }
+  .job-offer { position: relative; margin-top: 22px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, .18); }
+  .job-offer span { color: #c8d6f7; font-size: 15px; } .job-offer b { color: #ffd166; font-size: 19px; display: block; }
+  /* Hors connexion : interrupteur */
+  .net { margin-top: 26px; display: inline-flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 20px 8px 10px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .08); color: #fff; font: inherit; font-weight: 700; cursor: pointer; transition: background .3s, border-color .3s, transform .3s var(--back); }
+  .net:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .14); }
+  .net .sw { position: relative; width: 56px; height: 32px; border-radius: 99px; background: #34d399; transition: background .35s; flex-shrink: 0; }
+  .net .sw i { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transform: translateX(24px); transition: transform .4s var(--back); box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+  .net[aria-checked=false] .sw { background: #f59e0b; } .net[aria-checked=false] .sw i { transform: none; }
+  /* Appel final vivant */
+  .final { background-size: 140% 140%; animation: drift 14s ease-in-out infinite alternate; }
+  @keyframes drift { to { background-position: 100% 60%; } }
+  .final::before { content: ''; position: absolute; inset: -40% -10%; background: conic-gradient(from 0deg, transparent 0 70%, rgba(255, 255, 255, .12) 80%, transparent 90%); animation: spin 16s linear infinite; pointer-events: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .final > * { position: relative; }
+  .faq details[open] p { animation: rise .45s var(--ease) both; }
+  @media (max-width: 1040px) {
+    .motion .story { height: 380vh; }
+    .motion .story-pin { grid-template-columns: 1fr; gap: 14px; align-content: center; }
+    .motion .story-steps { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .motion .story-steps button { grid-template-columns: 1fr; justify-items: center; padding: 8px 4px; transform: none !important; }
+    .motion .story-steps button > span:last-child { display: none; }
+    .motion .story-steps li.now button > span:last-child { display: block; position: absolute; left: 0; right: 0; top: calc(100% + 10px); text-align: center; }
+    .motion .story-steps li.now small { display: none; }
+    .motion .story-scene { margin-top: 44px; height: min(60vh, 440px); }
+    .jobs { grid-template-columns: 1fr; }
+    .story-steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .job-list { grid-template-columns: 1fr 1fr; } .job-list button { font-size: 14.5px; padding: 10px 12px; }
+    .job-mods { grid-template-columns: 1fr; } .job-out { padding: 22px; }
+    .panel { padding: 16px; } .pcard { padding: 18px; font-size: 14px; } .ppay .amount { font-size: 30px; }
+    .pledger div { grid-template-columns: 44px 1fr 76px 76px; font-size: 12.5px; padding: 8px; }
+    .story-steps { grid-template-columns: 1fr; }
+    .rot > span { white-space: normal; }
+  }
+  @media (hover: none) { .cursor { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .intro, .cursor, #fx { display: none !important; } .rot > span { transition: none; } .panel { transition: none; } }
+
   /* Apparition au défilement */
   .js .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d, 0) * 80ms); }
   .js .rv.in { opacity: 1; transform: none; }
@@ -491,6 +644,9 @@
 <script src="qrcode.js" defer></script>
 </head>
 <body>
+<div class="intro" aria-hidden="true"><img src="assets/logo-mark.svg" alt="" width="92" height="92"></div>
+<span class="read" aria-hidden="true"></span>
+<span class="cursor" id="cursor" aria-hidden="true"></span>
 <a class="skip" href="#contenu">Aller au contenu</a>
 <span hidden id="ic-dl"><i data-icon="DownloadSimple"></i></span>
 <span hidden id="ic-phone"><i data-icon="DeviceMobile"></i></span>
@@ -513,9 +669,10 @@
 
 <main id="contenu">
   <section class="hero" id="hero">
+    <canvas id="fx" aria-hidden="true"></canvas>
     <div class="wrap hero-in">
       <a class="pill rv" href="#fonctions"><b>Nouveau</b>Dépenses, expressions de besoin et validations<i data-icon="ArrowRight"></i></a>
-      <h1 class="rv" style="--d:1">Toute votre gestion, <em>même sans Internet.</em></h1>
+      <h1 id="h1" aria-label="Toute votre gestion, même sans Internet."><span class="h1-line" aria-hidden="true">Toute votre gestion,</span><br><em class="rot" id="rot" aria-hidden="true"><span class="on">même sans Internet.</span><span>sur votre téléphone.</span><span>conforme au Burkina Faso.</span><span>sans rien ressaisir.</span></em></h1>
       <p class="lead rv" style="--d:2">Devis, factures, caisse, stock, dépenses, comptabilité SYSCOHADA et paie dans un seul logiciel, pensé pour les entreprises du Burkina Faso. Sur ordinateur, téléphone et navigateur.</p>
       <div class="cta rv" style="--d:3" id="hero-cta">
         <a class="btn btn-cta" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essayer gratuitement 30 jours</span></a>
@@ -554,12 +711,55 @@
         <h2>Vous facturez. <em>Le reste suit tout seul.</em></h2>
         <p>Fini les fichiers Excel éparpillés et les fins de mois difficiles : chaque vente met à jour le stock, la comptabilité et vos déclarations, sans rien ressaisir.</p>
       </div>
-      <div class="flow rv" id="flow">
-        <div class="node first" data-d="0"><span class="ico"><i data-icon="Receipt" data-size="26"></i></span><h3>La facture</h3><p>Validée en un clic, numérotée, avec son QR code d'authenticité.</p></div>
-        <div class="node"><span class="ico"><i data-icon="Package" data-size="26"></i></span><h3>Le stock</h3><p>Quantités et coût moyen ajustés dans le bon dépôt.</p></div>
-        <div class="node"><span class="ico"><i data-icon="Wallet" data-size="26"></i></span><h3>L'encaissement</h3><p>Espèces, Orange Money, Moov Money, Wave, virement.</p></div>
-        <div class="node"><span class="ico"><i data-icon="Calculator" data-size="26"></i></span><h3>La comptabilité</h3><p>Écritures SYSCOHADA passées automatiquement.</p></div>
-        <div class="node"><span class="ico"><i data-icon="Stamp" data-size="26"></i></span><h3>La déclaration</h3><p>TVA et retenues du mois prêtes avant le 20.</p></div>
+      <div class="story" id="story">
+        <div class="story-pin">
+          <ol class="story-steps" id="story-steps">
+            <li><button type="button"><span class="ico"><i data-icon="Receipt" data-size="24"></i></span><span><b>1 · La facture</b><small>Validée en un clic, numérotée, avec son QR code.</small></span></button></li>
+            <li><button type="button"><span class="ico"><i data-icon="Package" data-size="24"></i></span><span><b>2 · Le stock</b><small>Quantités et coût moyen ajustés dans le bon dépôt.</small></span></button></li>
+            <li><button type="button"><span class="ico"><i data-icon="Wallet" data-size="24"></i></span><span><b>3 · L'encaissement</b><small>Espèces, Orange Money, Moov Money, Wave, virement.</small></span></button></li>
+            <li><button type="button"><span class="ico"><i data-icon="Calculator" data-size="24"></i></span><span><b>4 · La comptabilité</b><small>Écritures SYSCOHADA passées automatiquement.</small></span></button></li>
+            <li><button type="button"><span class="ico"><i data-icon="Stamp" data-size="24"></i></span><span><b>5 · La déclaration</b><small>TVA et retenues du mois prêtes avant le 20.</small></span></button></li>
+          </ol>
+          <div class="story-scene" aria-hidden="true">
+            <div class="panel"><div class="pcard">
+              <h4><span>Facture FAC-2026-0142</span><span>Davycas International</span></h4><span class="seal">VALIDÉE</span>
+              <div class="line" style="--k:1"><span>Ciment 50 kg × 20</span><b>130 000</b></div>
+              <div class="line" style="--k:2"><span>Installation et mise en service</span><b>290 000</b></div>
+              <div class="line" style="--k:3"><span>TVA 18 %</span><b>75 600</b></div>
+              <div class="total" style="--k:4"><span>Total TTC</span><span>495 600 FCFA</span></div>
+            </div></div>
+            <div class="panel"><div class="pcard">
+              <h4><span>Stock · Dépôt principal</span><span>Mis à jour</span></h4>
+              <div class="pstock" style="--k:1"><span>Ciment 50 kg<span class="minus">−20</span></span><u><b style="--from:82%;--to:76%"></b></u><span>390</span></div>
+              <div class="pstock" style="--k:2"><span>Fer à béton 12</span><u><b style="--from:38%;--to:38%;background:#f59e0b"></b></u><span>96</span></div>
+              <div class="pstock" style="--k:3"><span>Peinture 20 L</span><u><b style="--from:9%;--to:9%;background:#dc2626"></b></u><span>4</span></div>
+              <div class="line" style="--k:4"><span>Coût moyen pondéré recalculé</span><b>5 850</b></div>
+            </div></div>
+            <div class="panel"><div class="pcard ppay">
+              <span class="ring"><i data-icon="CheckCircle" data-size="48" data-weight="fill"></i></span>
+              <span style="--k:1;font-weight:700;color:#64748b">Règlement reçu</span>
+              <span class="amount" style="--k:2"><span data-roll="495600">495 600</span> FCFA</span>
+              <span class="via" style="--k:3"><span>Espèces</span><span class="sel">Orange Money</span><span>Wave</span><span>Virement</span></span>
+            </div></div>
+            <div class="panel"><div class="pcard">
+              <h4><span>Journal des ventes</span><span>Automatique</span></h4>
+              <div class="pledger">
+                <div style="--k:1"><b>411</b><span>Client Davycas</span><span>495 600</span><span></span></div>
+                <div style="--k:2"><b>701</b><span>Ventes de marchandises</span><span></span><span>420 000</span></div>
+                <div style="--k:3"><b>4431</b><span>TVA facturée</span><span></span><span>75 600</span></div>
+                <div class="balance" style="--k:4"><span>Écriture équilibrée</span><span>495 600 = 495 600</span></div>
+              </div>
+            </div></div>
+            <div class="panel"><div class="pcard pdecl">
+              <h4><span>Déclaration du mois</span><span>Prête</span></h4>
+              <div class="line" style="--k:1"><span>TVA collectée</span><b>75 600</b></div>
+              <div class="line" style="--k:2"><span>TVA déductible</span><b>32 400</b></div>
+              <div style="--k:3"><small style="color:#64748b;font-weight:700">TVA nette à reverser</small><div class="big"><span data-roll="43200">43 200</span> FCFA</div></div>
+              <div class="due" style="--k:4"><i data-icon="CalendarCheck" data-size="24"></i>À déposer avant le 20 du mois suivant.</div>
+            </div></div>
+            <span class="story-bar"></span>
+          </div>
+        </div>
       </div>
       <div class="stats rv" style="margin-top:44px">
         <div class="stat"><b><span data-count="14">14</span></b><span>modules, de la facture au bilan</span></div>
@@ -777,6 +977,7 @@
           <li><i data-icon="CheckCircle" data-weight="fill"></i>Clients, fournisseurs et articles</li>
           <li><i data-icon="CheckCircle" data-weight="fill"></i>Chaque saisie n'est envoyée qu'une fois, dans l'ordre</li>
         </ul>
+        <button type="button" class="net" id="net" role="switch" aria-checked="true"><span class="sw"><i></i></span><span id="net-label">Internet branché — cliquez pour couper</span></button>
       </div>
       <div class="sync-stage rv" style="--d:1" id="sync-stage" data-state="online" role="img" aria-label="Schéma : un téléphone et un ordinateur continuent de travailler hors connexion, puis envoient leurs saisies à la base au retour du réseau.">
         <svg class="sync-links" viewBox="0 0 400 320" aria-hidden="true">
@@ -809,6 +1010,32 @@
         <div class="rv" style="--d:1"><i data-icon="Database" data-size="28"></i><b>Une base par société</b>En hébergement, vos données ne côtoient celles de personne.</div>
         <div class="rv" style="--d:2"><i data-icon="Bug" data-size="28"></i><b>Tests d'intrusion</b>Les mêmes attaques sont rejouées avant chaque nouvelle version.</div>
         <div class="rv" style="--d:3"><i data-icon="Fingerprint" data-size="28"></i><b>Comptes protégés</b>Blocage après plusieurs mots de passe erronés, journal de chaque action.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metiers">
+    <div class="wrap">
+      <div class="head rv">
+        <div class="eyebrow">Votre métier</div>
+        <h2>Dites-nous ce que vous faites, <em>on vous montre l'essentiel.</em></h2>
+        <p>Choisissez votre activité : les modules utiles et l'offre conseillée s'affichent.</p>
+      </div>
+      <div class="jobs rv">
+        <div class="job-list" role="group" aria-label="Votre activité" id="job-list">
+          <button type="button" data-job="commerce" aria-pressed="true"><i data-icon="CashRegister" data-size="26"></i>Commerce et boutique</button>
+          <button type="button" data-job="services" aria-pressed="false"><i data-icon="Handshake" data-size="26"></i>Prestataire de services</button>
+          <button type="button" data-job="btp" aria-pressed="false"><i data-icon="Kanban" data-size="26"></i>BTP et chantiers</button>
+          <button type="button" data-job="resto" aria-pressed="false"><i data-icon="Receipt" data-size="26"></i>Restaurant et maquis</button>
+          <button type="button" data-job="gros" aria-pressed="false"><i data-icon="Truck" data-size="26"></i>Grossiste, distribution</button>
+          <button type="button" data-job="ong" aria-pressed="false"><i data-icon="UsersThree" data-size="26"></i>ONG et association</button>
+        </div>
+        <div class="job-out" aria-live="polite">
+          <h3 id="job-title"></h3>
+          <p id="job-text"></p>
+          <ul class="job-mods" id="job-mods"></ul>
+          <div class="job-offer"><span>Offre conseillée<b id="job-offer"></b></span><a class="btn btn-cta" href="#telecharger"><i data-icon="RocketLaunch"></i>Essayer gratuitement</a></div>
+        </div>
       </div>
     </div>
   </section>
@@ -1124,7 +1351,21 @@
         ;(function add() { n++; left.textContent = n + ' saisie' + (n > 1 ? 's' : '') + ' en attente'; right.textContent = Math.max(1, n - 1) + ' en attente'; if (n < 4) wait(add, 900); else wait(sending, 1100) })()
       }
       var sending = function () { stage.dataset.state = 'sending'; text.textContent = 'Connexion rétablie : envoi en cours'; left.textContent = right.textContent = 'Envoi…'; cloud.textContent = 'Réception'; wait(online, 2200) }
-      new IntersectionObserver(function (es) { visible = es[0].isIntersecting; clearTimeout(st); if (visible) online() }, { threshold: .35 }).observe(stage)
+      var manual = false, net = $('net'), netLabel = $('net-label')
+      var show = function (on) { net.setAttribute('aria-checked', String(on)); netLabel.textContent = on ? 'Internet branché — cliquez pour couper' : 'Internet coupé — cliquez pour rebrancher' }
+      var autoWait = wait
+      wait = function (fn, ms) { if (manual && (fn === offline || fn === sending)) return; autoWait(fn, ms) }
+      var baseOnline = online, baseOffline = offline, baseSending = sending
+      online = function () { show(true); baseOnline() }
+      offline = function () { show(false); baseOffline() }
+      sending = function () { show(true); baseSending() }
+      net.addEventListener('click', function () {
+        manual = true
+        visible = true
+        clearTimeout(st)
+        if (net.getAttribute('aria-checked') === 'true') offline(); else sending()
+      })
+      new IntersectionObserver(function (es) { if (manual) return; visible = es[0].isIntersecting; clearTimeout(st); if (visible) online() }, { threshold: .35 }).observe(stage)
     }
 
     // Retour en haut, barre d'action mobile
@@ -1305,6 +1546,217 @@
       group('d-colors', function (b) { live.style.setProperty('--tone', b.dataset.c) })
       render()
     }
+  })()
+</script>
+<script>
+  // Motion design : tout ce qui bouge est piloté ici. Rien ne s'exécute si l'on demande moins de mouvement.
+  (function () {
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    var hover = matchMedia('(hover: hover)').matches
+    var $ = function (id) { return document.getElementById(id) }
+    var all = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)) }
+    var root = document.documentElement
+    var fmt = function (n) { return Math.round(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') }
+
+    // Votre métier : modules utiles et offre conseillée (fonctionne aussi sans animation)
+    var JOBS = {
+      commerce: ['Une boutique qui tourne rond', 'Vendez au comptoir, encaissez en espèces ou en mobile money, et sachez chaque soir ce qu’il reste en rayon.', ['Caisse tactile et tickets', 'Mobile money', 'Stock et alertes', 'Factures et avoirs', 'Dépenses', 'Rapports de ventes'], 'Essentiel'],
+      services: ['Facturez votre savoir-faire', 'Du devis à la relance : vos prestations sont facturées à temps et votre comptabilité suit.', ['Devis et factures', 'Factures récurrentes', 'Relances par e-mail et SMS', 'Dépenses et validations', 'Comptabilité SYSCOHADA', 'Déclarations de TVA'], 'Pro'],
+      btp: ['Chaque chantier sous contrôle', 'Suivez les achats, les dépenses et la marge de chaque chantier, du devis à la réception.', ['Projets et chantiers', 'Expressions de besoin', 'Bons de commande', 'Stock par dépôt', 'Dépenses par projet', 'Immobilisations'], 'Entreprise'],
+      resto: ['Le service d’abord', 'Encaissez vite, même quand le réseau tombe, et clôturez la caisse sans écart.', ['Point de vente tactile', 'Sessions et clôture de caisse', 'Mobile money', 'Stock des produits', 'Dépenses du jour', 'Fonctionne hors connexion'], 'Essentiel'],
+      gros: ['Du dépôt au client', 'Plusieurs dépôts, des lots, des livraisons : chaque mouvement est tracé et valorisé.', ['Stock multi-dépôts et lots', 'Bons de livraison', 'Achats et fournisseurs', 'Créances et relances', 'Comptabilité SYSCOHADA', 'Rapports de marge'], 'Pro'],
+      ong: ['Chaque franc justifié', 'Circuits de validation, budgets et pièces justificatives : vos dépenses sont traçables de la demande au paiement.', ['Dépenses et justificatifs', 'Expressions de besoin', 'Validations à deux niveaux', 'Budgets et trésorerie', 'Paie et déclarations', 'Journal de chaque action'], 'Entreprise']
+    }
+    var jobList = $('job-list')
+    function job(key) {
+      var j = JOBS[key]
+      if (!j) return
+      $('job-title').textContent = j[0]
+      $('job-text').textContent = j[1]
+      var ul = $('job-mods')
+      ul.textContent = ''
+      j[2].forEach(function (m, i) { var li = document.createElement('li'); li.textContent = m; li.style.setProperty('--i', i); ul.appendChild(li) })
+      $('job-offer').textContent = j[3]
+      all('button', jobList).forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.job === key)) })
+    }
+    if (jobList) {
+      jobList.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) job(b.dataset.job) })
+      job('commerce')
+    }
+
+    // Récit : un clic sur une étape y conduit
+    var story = $('story'), steps = all('#story-steps li'), panels = all('.story-scene .panel')
+    var pin = story ? story.querySelector('.story-pin') : null
+    function storyRange() { return Math.max(1, story.offsetHeight - pin.offsetHeight) }
+    steps.forEach(function (li, i) {
+      li.querySelector('button').addEventListener('click', function () {
+        if (!root.classList.contains('motion')) return
+        var top = story.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(root).getPropertyValue('--nav')) || 72) - 20
+        scrollTo({ top: top + storyRange() * (i + .5) / steps.length, behavior: 'smooth' })
+      })
+    })
+    if (reduce) return
+    root.classList.add('motion')
+
+    // Mots découpés : titre du héros et titres de section
+    function split(el) {
+      var i = 0
+      all('*', el).concat([el]).forEach(function () {})
+      ;(function walk(node) {
+        Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+          if (n.nodeType === 3) {
+            var frag = document.createDocumentFragment()
+            n.textContent.split(/(\s+)/).forEach(function (part) {
+              if (!part) return
+              if (/^\s+$/.test(part)) return frag.appendChild(document.createTextNode(' '))
+              var o = document.createElement('span'); o.className = 'w'
+              var inner = document.createElement('span'); inner.textContent = part; inner.style.setProperty('--i', i++)
+              o.appendChild(inner); frag.appendChild(o)
+            })
+            node.replaceChild(frag, n)
+          } else if (n.nodeType === 1 && n.tagName !== 'BR') walk(n)
+        })
+      })(el)
+    }
+    all('.h1-line').forEach(split)
+    all('.head h2, .circuit h2, .sync h2').forEach(function (h) { h.setAttribute('aria-label', h.textContent.trim()); split(h); all('.w', h).forEach(function (w) { w.setAttribute('aria-hidden', 'true') }) })
+
+    // Expression tournante du titre
+    var rot = $('rot')
+    if (rot) {
+      var words = all('span', rot), wi = 0
+      setInterval(function () {
+        if (document.hidden) return
+        var cur = words[wi]
+        wi = (wi + 1) % words.length
+        cur.className = 'out'
+        words[wi].className = 'on'
+        setTimeout(function () { cur.className = '' }, 750)
+      }, 3000)
+    }
+
+    // Bandeau : seconde rangée en sens inverse
+    var track = document.querySelector('.ticker-track')
+    if (track) { var rev = track.cloneNode(true); rev.classList.add('rev'); track.parentNode.appendChild(rev) }
+
+    // Réseau animé du héros : points reliés, attirés par le pointeur
+    var canvas = $('fx'), hero = $('hero')
+    if (canvas && canvas.getContext) {
+      var ctx = canvas.getContext('2d'), pts = [], W = 0, H = 0, mouse = { x: -999, y: -999 }, running = false, dpr = Math.min(window.devicePixelRatio || 1, 2)
+      var dark = matchMedia('(prefers-color-scheme: dark)').matches
+      var size = function () {
+        W = hero.offsetWidth; H = hero.offsetHeight
+        canvas.width = W * dpr; canvas.height = H * dpr
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        var n = Math.round(Math.min(90, W * H / 16000))
+        pts = []
+        for (var i = 0; i < n; i++) pts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, r: 1 + Math.random() * 1.8 })
+      }
+      var draw = function () {
+        if (!running) return
+        ctx.clearRect(0, 0, W, H)
+        var rgb = dark ? '127,168,255' : '29,78,216'
+        for (var i = 0; i < pts.length; i++) {
+          var a = pts[i]
+          var dx = mouse.x - a.x, dy = mouse.y - a.y, d = Math.sqrt(dx * dx + dy * dy)
+          if (d < 180) { a.vx += dx / d * .012; a.vy += dy / d * .012 }
+          a.vx *= .992; a.vy *= .992
+          a.x += a.vx; a.y += a.vy
+          if (a.x < 0 || a.x > W) a.vx *= -1
+          if (a.y < 0 || a.y > H) a.vy *= -1
+          ctx.fillStyle = 'rgba(' + rgb + ',.55)'
+          ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, 6.283); ctx.fill()
+          for (var j = i + 1; j < pts.length; j++) {
+            var b = pts[j], ex = a.x - b.x, ey = a.y - b.y, e = ex * ex + ey * ey
+            if (e < 15000) { ctx.strokeStyle = 'rgba(' + rgb + ',' + (.22 * (1 - e / 15000)).toFixed(3) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke() }
+          }
+        }
+        requestAnimationFrame(draw)
+      }
+      size()
+      addEventListener('resize', size)
+      hero.addEventListener('pointermove', function (e) { var r = hero.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top })
+      hero.addEventListener('pointerleave', function () { mouse.x = mouse.y = -999 })
+      new IntersectionObserver(function (es) { var on = es[0].isIntersecting; if (on && !running) { running = true; draw() } else if (!on) running = false }).observe(hero)
+    }
+
+    // Héros : notifications et téléphone en parallaxe selon le pointeur
+    if (hover) {
+      var floats = all('.stage .chip, .stage .phone')
+      hero.addEventListener('pointermove', function (e) {
+        var r = hero.getBoundingClientRect(), nx = (e.clientX - r.left) / r.width - .5, ny = (e.clientY - r.top) / r.height - .5
+        floats.forEach(function (f, i) { var k = 14 + i * 9; f.style.setProperty('--px', (-nx * k).toFixed(1) + 'px'); f.style.setProperty('--py', (-ny * k).toFixed(1) + 'px') })
+      })
+      // Boutons aimantés
+      all('.btn-cta, .hero .btn-ghost').forEach(function (b) {
+        b.addEventListener('pointermove', function (e) { var r = b.getBoundingClientRect(); b.style.setProperty('--bx', ((e.clientX - r.left - r.width / 2) * .18).toFixed(1) + 'px'); b.style.setProperty('--by', ((e.clientY - r.top - r.height / 2) * .3).toFixed(1) + 'px') })
+        b.addEventListener('pointerleave', function () { b.style.removeProperty('--bx'); b.style.removeProperty('--by') })
+      })
+      // Tuiles en relief
+      all('.tile').forEach(function (t) {
+        t.addEventListener('pointermove', function (e) { var r = t.getBoundingClientRect(); t.style.setProperty('--ty', (((e.clientX - r.left) / r.width - .5) * 6).toFixed(2) + 'deg'); t.style.setProperty('--tx', (-((e.clientY - r.top) / r.height - .5) * 6).toFixed(2) + 'deg') })
+        t.addEventListener('pointerleave', function () { t.style.removeProperty('--tx'); t.style.removeProperty('--ty') })
+      })
+      // Pointeur : anneau qui suit avec un léger retard et grossit sur ce qui se clique
+      var cur = $('cursor'), cx = 0, cy = 0, tx = 0, ty = 0, seen = false
+      addEventListener('pointermove', function (e) {
+        if (e.pointerType && e.pointerType !== 'mouse') return
+        tx = e.clientX; ty = e.clientY
+        if (!seen) { seen = true; cx = tx; cy = ty; cur.classList.add('on'); follow() }
+        cur.classList.toggle('big', !!e.target.closest('a, button, summary, input, [role=tab], [role=switch]'))
+      }, { passive: true })
+      addEventListener('pointerdown', function () { cur.classList.add('down') })
+      addEventListener('pointerup', function () { cur.classList.remove('down') })
+      document.addEventListener('pointerleave', function () { cur.classList.remove('on'); seen = false })
+      var follow = function () {
+        if (!seen) return
+        cx += (tx - cx) * .2; cy += (ty - cy) * .2
+        cur.style.transform = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px)'
+        requestAnimationFrame(follow)
+      }
+    }
+
+    // Chiffres qui défilent dans le récit
+    function roll(el) {
+      var end = +el.dataset.roll, t0 = performance.now()
+      ;(function tick(t) { var k = Math.min((t - t0) / 900, 1); el.textContent = fmt(end * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick) })(t0)
+    }
+
+    // Défilement : avancement de lecture, écran qui se redresse, récit épinglé, bandeau incliné par la vitesse
+    var screen = $('screen'), stageEl = document.querySelector('.stage'), active = -1, lastY = scrollY, skew = 0, queued = false
+    var tracks = all('.ticker-track')
+    function frame() {
+      queued = false
+      var max = root.scrollHeight - innerHeight
+      root.style.setProperty('--read', max > 0 ? Math.min(1, scrollY / max).toFixed(4) : '0')
+      if (screen && stageEl) {
+        var r = stageEl.getBoundingClientRect()
+        var k = Math.max(0, Math.min(1, 1 - (r.top - innerHeight * .25) / (innerHeight * .75)))
+        screen.style.setProperty('--sx', ((1 - k) * 18).toFixed(2) + 'deg')
+        screen.style.setProperty('--sc', (.9 + k * .1).toFixed(3))
+      }
+      var v = scrollY - lastY
+      lastY = scrollY
+      skew += (Math.max(-9, Math.min(9, v * .25)) - skew) * .3
+      tracks.forEach(function (t) { t.style.setProperty('--skew', skew.toFixed(2) + 'deg') })
+      if (story && pin) {
+        var top = story.getBoundingClientRect().top - (parseFloat(getComputedStyle(root).getPropertyValue('--nav')) || 72) - 20
+        var p = Math.max(0, Math.min(1, -top / storyRange()))
+        var idx = Math.min(steps.length - 1, Math.floor(p * steps.length))
+        story.querySelector('.story-bar').style.setProperty('--p', p.toFixed(4))
+        if (idx !== active) {
+          active = idx
+          steps.forEach(function (li, i) { li.className = i < idx ? 'done' : i === idx ? 'now' : '' })
+          panels.forEach(function (pn, i) { pn.className = 'panel' + (i === idx ? ' on' : i < idx ? ' past' : '') })
+          all('[data-roll]', panels[idx]).forEach(roll)
+        }
+      }
+      if (Math.abs(skew) > .05) ask()
+    }
+    function ask() { if (!queued) { queued = true; requestAnimationFrame(frame) } }
+    addEventListener('scroll', ask, { passive: true })
+    addEventListener('resize', ask)
+    frame()
   })()
 </script>
 </body>
