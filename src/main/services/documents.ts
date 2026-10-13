@@ -123,14 +123,25 @@ async function documentTaxes(db: Db, type: DocType, requested: unknown, existing
   return type === 'AV' ? defs.filter((t) => t.kind !== 'withholding') : defs
 }
 
-/** Création ou modification d'un brouillon. */
+/**
+ * Création ou modification d'un brouillon. Exception : un devis validé peut être corrigé par un
+ * administrateur (il garde son numéro). Un devis n'a d'effet ni sur le stock ni en comptabilité ;
+ * il reste figé dès que le client l'a signé ou qu'il a été transformé en commande ou en facture.
+ */
 export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }> {
   return ctx.db.tx(async (db) => {
     let type: string = input.type
+    let revised: string | null = null
     if (input.id) {
-      const existing = await db.one('SELECT type, status FROM documents WHERE id = $1 FOR UPDATE', [input.id])
+      const existing = await db.one('SELECT type, status, number FROM documents WHERE id = $1 FOR UPDATE', [input.id])
       if (!existing) fail('Document introuvable.')
-      if (existing.status !== 'brouillon') fail('Seul un brouillon peut être modifié.')
+      if (existing.status === 'valide' && existing.type === 'DEV') {
+        if (ctx.user?.role !== 'admin') fail('Un devis validé ne peut être modifié que par un administrateur.')
+        if (await db.one('SELECT 1 FROM signatures WHERE document_id = $1', [input.id])) fail('Ce devis a été signé par le client : il ne peut plus être modifié. Dupliquez-le pour établir un nouveau devis.')
+        const child = await db.one<{ number: string | null }>("SELECT number FROM documents WHERE source_id = $1 AND status <> 'annule' ORDER BY id LIMIT 1", [input.id])
+        if (child) fail(`Ce devis a déjà été transformé (${child.number ?? 'document en brouillon'}) : il ne peut plus être modifié.`)
+        revised = existing.number
+      } else if (existing.status !== 'brouillon') fail('Seul un brouillon peut être modifié.')
       type = existing.type
     }
     checkType(type)
@@ -162,6 +173,7 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
       await audit(db, ctx, 'creation', type, id)
     }
     await writeLines(db, id, lines, await documentTaxes(db, type as DocType, input.taxes, input.id ? id : undefined))
+    if (revised) await audit(db, ctx, 'modification', type, id, `${revised} modifié après validation`)
     return { id }
   })
 }
@@ -174,6 +186,8 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
 export async function saveAndMaybeValidate(ctx: Ctx, input: any): Promise<{ id: number; validated?: boolean; error?: string }> {
   const { id } = await saveDocument(ctx, input)
   if (!input?.validate) return { id }
+  // Devis validé corrigé par un administrateur : il est déjà validé, rien à refaire
+  if ((await ctx.db.one<{ status: string }>('SELECT status FROM documents WHERE id = $1', [id]))?.status === 'valide') return { id, validated: true }
   try {
     await validateDocument(ctx, { id, applyStock: input.applyStock })
     return { id, validated: true }

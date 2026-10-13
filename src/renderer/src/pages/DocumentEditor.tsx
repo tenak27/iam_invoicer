@@ -8,7 +8,7 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
-import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash } from '@phosphor-icons/react'
+import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash, PencilSimple } from '@phosphor-icons/react'
 import { DocumentPreview } from '../components/DocumentPreview'
 
 type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
@@ -32,8 +32,11 @@ function ExistingDocument({ id }: { id: number }) {
 function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onReload: () => void }) {
   const info = DOC_TYPES[type]
   const nav = useNavigate()
-  const { company } = useSession()
-  const editable = !doc || doc.status === 'brouillon'
+  const { company, user } = useSession()
+  // Devis validé : un administrateur peut le rouvrir pour le corriger (numéro conservé)
+  const canRevise = !!doc && type === 'DEV' && doc.status === 'valide' && user.role === 'admin'
+  const [revising, setRevising] = useState(false)
+  const editable = !doc || doc.status === 'brouillon' || (canRevise && revising)
   const partyKind = info.side === 'sale' ? 'client' : 'supplier'
   const parties = useQuery<any[]>('parties.options', { kind: partyKind })
   const products = useQuery<any[]>('products.list', {})
@@ -230,7 +233,12 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           </span>
         }
         actions={
-          editable ? (
+          revising ? (
+            <>
+              <button className="btn btn-ghost" onClick={() => { setRevising(false); onReload() }} disabled={busy}>Abandonner les modifications</button>
+              <button className="btn btn-primary" onClick={onSave} disabled={busy}><FloppyDisk size={18} aria-hidden="true" />Enregistrer le devis modifié</button>
+            </>
+          ) : editable ? (
             <>
               {doc && <button className="btn btn-ghost" onClick={remove}><Trash size={18} aria-hidden="true" />Supprimer</button>}
               {doc && <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>}
@@ -248,6 +256,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
                   <button className="btn" onClick={() => setSending('sms')}><ChatCircleText size={18} aria-hidden="true" />SMS</button>
                 </>
               )}
+              {canRevise && <button className="btn" onClick={() => setRevising(true)} title="Réservé aux administrateurs : le devis garde son numéro"><PencilSimple size={18} aria-hidden="true" />Modifier</button>}
               <button className="btn" onClick={duplicate}><Copy size={18} aria-hidden="true" />Dupliquer</button>
               {type === 'FAC' && doc.status === 'valide' && <button className="btn" onClick={makeRecurring}><Repeat size={18} aria-hidden="true" />Rendre récurrente</button>}
               <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>

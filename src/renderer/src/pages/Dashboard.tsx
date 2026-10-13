@@ -162,7 +162,16 @@ export function Dashboard() {
             <p className="hero-sub">Chiffre d'affaires HT du mois <Growth now={d.salesMonth} before={d.salesPrevMonth} /></p>
             {canSales && <button className="btn btn-primary" onClick={() => nav('/docs/FAC')}>Voir les ventes</button>}
           </div>
-          <Mascot className="hero-mascot" />
+          <Mascot
+            className="hero-mascot"
+            mood={assistant.data?.some((i) => i.tone === 'danger') ? 'alert' : up ? 'happy' : 'calm'}
+            messages={[
+              ...(assistant.data ?? []).slice(0, 3).map((i) => i.title),
+              up ? 'Les ventes montent, bravo !' : `Bonjour ${first} !`,
+              'Ctrl K : tout retrouver en un instant.',
+              'Un devis validé se transforme en facture en un clic.'
+            ]}
+          />
         </section>
 
         {/* Chiffre d'affaires 12 mois */}

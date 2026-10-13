@@ -200,3 +200,31 @@ describe('Accueil de la société et assistant du jour', () => {
     if (login.body.ok) expect(await rpc('assistant.list', undefined, login.body.data.token)).toEqual([])
   })
 })
+
+describe('Devis validé : correction par un administrateur', () => {
+  it('modifiable par un administrateur seulement, numéro conservé, figé une fois transformé', async () => {
+    const client = await rpc('parties.save', { kind: 'client', name: 'Client Devis' })
+    const line = (price: number) => [{ description: 'Étude', quantity: 1, unit_price: price, tva_rate: 18 }]
+    const created = await rpc('documents.save', { type: 'DEV', party_id: client.id, validate: true, taxes: [], lines: line(100000) })
+    const before = await rpc('documents.get', { id: created.id })
+    expect(before).toMatchObject({ status: 'valide', total_ttc: 118000 })
+    // Un commercial ne modifie pas un devis validé
+    await rpc('users.save', { username: 'vendeur9', full_name: 'Vendeur', role: 'commercial', password: 'motdepasse9', active: true }).catch(() => null)
+    const seller = await post('/api/login', { username: 'vendeur9', password: 'motdepasse9' }, '')
+    if (seller.body.ok) {
+      const refused = await post('/api/call', { name: 'documents.save', args: { id: created.id, type: 'DEV', party_id: client.id, taxes: [], lines: line(1) } }, seller.body.data.token)
+      expect(refused.body.error).toMatch(/administrateur/)
+    }
+    // L'administrateur corrige : même numéro, toujours validé, nouveau total, trace au journal
+    await rpc('documents.save', { id: created.id, type: 'DEV', party_id: client.id, reference: 'Rév. 2', taxes: [], lines: line(150000), validate: true })
+    const after = await rpc('documents.get', { id: created.id })
+    expect(after).toMatchObject({ status: 'valide', number: before.number, total_ttc: 177000, reference: 'Rév. 2' })
+    expect((await rpc('reports.audit', { limit: 5 })).some((a: any) => /modifié après validation/.test(a.details))).toBe(true)
+    // Une facture validée reste figée
+    const fac = await rpc('documents.save', { type: 'FAC', party_id: client.id, validate: true, taxes: [], lines: line(5000) })
+    await expect(rpc('documents.save', { id: fac.id, type: 'FAC', party_id: client.id, taxes: [], lines: line(1) })).rejects.toThrow(/brouillon/)
+    // Devis transformé : plus modifiable
+    await rpc('documents.convert', { id: created.id, to: 'FAC' })
+    await expect(rpc('documents.save', { id: created.id, type: 'DEV', party_id: client.id, taxes: [], lines: line(1) })).rejects.toThrow(/déjà été transformé/)
+  })
+})

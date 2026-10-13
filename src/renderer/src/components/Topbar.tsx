@@ -1,6 +1,7 @@
 // Barre supérieure flottante : recherche rapide (Ctrl+K), thème, notifications,
 // menu du compte. Les menus déroulants se ferment au clic extérieur et à Échap.
 
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -52,12 +53,24 @@ function avatarTone(name: string): [string, string] {
  * tissé qui tourne avec son halo, étincelle en orbite, reflet périodique et pastille
  * « en ligne » qui pulse. Hors connexion, l'anneau se fige et se ternit.
  */
+/** Inclinaison en relief vers le pointeur (sans effet si l'on demande moins de mouvement : voir styles.css). */
+function tilt(e: ReactPointerEvent<HTMLElement>) {
+  const el = e.currentTarget
+  const r = el.getBoundingClientRect()
+  el.style.setProperty('--tx', (((e.clientX - r.left) / r.width - 0.5) * 2).toFixed(2))
+  el.style.setProperty('--ty', (((e.clientY - r.top) / r.height - 0.5) * 2).toFixed(2))
+}
+function untilt(e: ReactPointerEvent<HTMLElement>) {
+  e.currentTarget.style.setProperty('--tx', '0')
+  e.currentTarget.style.setProperty('--ty', '0')
+}
+
 export function UserAvatar({ name, size = 38, online = true, photo, ring = true }: { name: string; size?: number; online?: boolean; photo?: string; ring?: boolean }) {
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
   const [a, b] = avatarTone(name)
   const style = { width: size, height: size, '--av-a': a, '--av-b': b, '--av-size': `${size}px` } as CSSProperties
   return (
-    <span className={`uavatar${ring ? ' has-ring' : ''}${online ? '' : ' is-off'}`} style={style} aria-hidden="true">
+    <span className={`uavatar${ring ? ' has-ring' : ''}${online ? '' : ' is-off'}`} style={style} aria-hidden="true" onPointerMove={tilt} onPointerLeave={untilt}>
       {ring && <span className="uavatar-glow" />}
       {ring && <span className="uavatar-ring" />}
       <span className="uavatar-face">{photo ? <img src={photo} alt="" /> : <span className="uavatar-initials">{initials}</span>}</span>
