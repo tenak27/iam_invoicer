@@ -179,7 +179,15 @@ export function createHandler(opts: ServerOptions) {
       const user = await resolveToken(db, bearer(req))
       const setupNeeded = await needsSetup(db)
       const setupCode = setupNeeded && !!(opts.setupCode && (await opts.setupCode()))
-      return send(res, 200, { ok: true, data: { app: 'IAM INVOICER', version: opts.version, needsSetup: setupNeeded, setupCode, user } })
+      // Où ouvrir l'application web de cette base : sous /app/ quand le site occupe la racine
+      const web = !opts.publicPath && opts.siteRoot && existsSync(join(opts.siteRoot, 'index.html')) ? '/app/' : '/'
+      return send(res, 200, { ok: true, data: { app: 'IAM INVOICER', version: opts.version, needsSetup: setupNeeded, setupCode, user, web } })
+    }
+    // Identité affichée avant la connexion (écran d'accueil) : ce qui figure déjà sur les documents de la société
+    if (method === 'GET' && path === '/api/brand') {
+      const c = await getSettings(db)
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=300' })
+      return res.end(JSON.stringify({ ok: true, data: { name: c.name, logo: c.logo, color: /^#[0-9a-fA-F]{6}$/.test(c.doc_color ?? '') ? c.doc_color : '', city: c.city } }))
     }
     if (method === 'POST' && path === '/api/login') {
       const ip = clientIp(req)

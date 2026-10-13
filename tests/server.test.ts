@@ -170,3 +170,33 @@ describe('Configuration du serveur', () => {
     })
   })
 })
+
+describe('Accueil de la société et assistant du jour', () => {
+  it('identité publique : nom, logo et couleur, rien d’autre', async () => {
+    await rpc('settings.save', { name: 'IAM Technology', doc_color: '#0b4f8a', city: 'Ouagadougou', bank_account: 'BF00 SECRET', smtp_user: 'compta@iam.bf' })
+    const r = await fetch(base + '/api/brand')
+    const j = await r.json()
+    expect(j.data).toEqual({ name: 'IAM Technology', logo: '', color: '#0b4f8a', city: 'Ouagadougou' })
+    expect(JSON.stringify(j)).not.toMatch(/SECRET|compta@/)
+    // Chemin de l'application web annoncé pour s'y rendre depuis une autre adresse
+    expect((await (await fetch(base + '/api/status')).json()).data.web).toBe('/')
+  })
+
+  it('l’assistant signale retards, devis sans suite et brouillons, selon les droits', async () => {
+    const client = await rpc('parties.save', { kind: 'client', name: 'Client Assistant' })
+    await rpc('documents.save', { type: 'FAC', party_id: client.id, validate: true, date: '2026-01-10', due_date: '2026-02-10', taxes: [], lines: [{ description: 'Retard', quantity: 1, unit_price: 100000, tva_rate: 18 }] })
+    const old = new Date(Date.now() - 20 * 86_400_000).toISOString().slice(0, 10)
+    await rpc('documents.save', { type: 'DEV', party_id: client.id, validate: true, date: old, taxes: [], lines: [{ description: 'Devis', quantity: 1, unit_price: 50000, tva_rate: 18 }] })
+    await rpc('documents.save', { type: 'FAC', party_id: client.id, taxes: [], lines: [{ description: 'Brouillon', quantity: 1, unit_price: 1, tva_rate: 0 }] })
+    const items = await rpc('assistant.list')
+    const keys = items.map((i: any) => i.key)
+    expect(keys).toEqual(expect.arrayContaining(['retards', 'devis', 'brouillons']))
+    expect(items[0].tone).toBe('danger')
+    expect(items.find((i: any) => i.key === 'retards')).toMatchObject({ to: '/docs/FAC' })
+    expect(items.find((i: any) => i.key === 'retards').detail).toMatch(/118[\s  ]000/)
+    // Un caissier n'a ni ventes ni stock : rien ne lui est montré
+    await rpc('users.save', { username: 'caisse9', full_name: 'Caisse', role: 'caissier', password: 'motdepasse9', active: true }).catch(() => null)
+    const login = await post('/api/login', { username: 'caisse9', password: 'motdepasse9' }, '')
+    if (login.body.ok) expect(await rpc('assistant.list', undefined, login.body.data.token)).toEqual([])
+  })
+})

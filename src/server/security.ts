@@ -85,7 +85,7 @@ export function contentSecurityPolicy(html: string): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob:",
-    "connect-src 'self' https://api.github.com",
+    "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
     "frame-src 'self' blob: data:",
     "worker-src 'self' blob:",
     "object-src 'none'",

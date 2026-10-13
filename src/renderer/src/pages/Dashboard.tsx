@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  ArrowDownLeft, ArrowRight, ArrowUpRight, Bank, ChartLineUp, CreditCard, DeviceMobile, Money as MoneyIcon,
-  Package, Receipt, TrendDown, TrendUp, Users, Wallet, Warning, type Icon
-} from '@phosphor-icons/react'
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, Bank, ChartLineUp, CreditCard, DeviceMobile, Money as MoneyIcon, Package, Receipt, TrendDown, TrendUp, Users, Wallet, Warning, type Icon, Sparkle } from '@phosphor-icons/react'
 import { formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import { paymentState, PAYMENT_STATE_LABELS } from '@shared/domain'
 import { todayISO } from '@shared/format'
@@ -94,6 +91,7 @@ export function Dashboard() {
   const { user, company } = useSession()
   const nav = useNavigate()
   const { data, error, loading, reload } = useQuery<any>('reports.dashboard')
+  const assistant = useQuery<{ key: string; tone: 'danger' | 'warn' | 'info'; title: string; detail: string; to: string }[]>('assistant.list')
   const canSales = useCan('sales')
   const canPayments = useCan('payments')
   if (loading && !data) return <DashboardSkeleton />
@@ -133,6 +131,27 @@ export function Dashboard() {
           foot={<span>{d.overdue.length > 0 ? `${d.overdue.length} facture(s) en retard` : 'Aucun retard de paiement'}</span>} />
         <Kpi tone="violet" icon={Receipt} label="Factures du mois" value={d.counts.invoices_month} money={false}
           foot={<span>{plural(d.counts.clients, 'client')} · {plural(d.counts.products, 'article')}</span>} />
+
+        {/* Assistant du jour : ce qui mérite l'attention, avec le chemin pour le traiter */}
+        {(assistant.data?.length ?? 0) > 0 && (
+          <section className="dcard assistant span-12" aria-labelledby="assistant-title">
+            <header className="dcard-head">
+              <div>
+                <h2 id="assistant-title"><Sparkle size={20} weight="fill" aria-hidden="true" /> À traiter aujourd'hui</h2>
+                <p>{plural(assistant.data!.length, 'point')} repéré{assistant.data!.length > 1 ? 's' : ''} dans vos données, du plus urgent au moins urgent.</p>
+              </div>
+            </header>
+            <div className="assistant-list">
+              {assistant.data!.map((it, i) => (
+                <button key={it.key} type="button" className={`assistant-item tone-${it.tone}`} style={{ animationDelay: `${i * 70}ms` }} onClick={() => nav(it.to)}>
+                  <span className="assistant-dot" aria-hidden="true" />
+                  <span className="assistant-text"><strong>{it.title}</strong><small>{it.detail}</small></span>
+                  <ArrowRight size={18} weight="bold" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Accueil animé */}
         <section className="dcard hero span-5">

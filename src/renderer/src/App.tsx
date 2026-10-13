@@ -1,3 +1,4 @@
+import { WelcomeSplash, type WelcomeInfo } from './components/Welcome'
 import { useCallback, useEffect, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { api } from './api'
@@ -37,6 +38,24 @@ import { LicensingPage } from './pages/Licensing'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
 
+/** Vrai une seule fois après un changement de serveur (signalé dans l'adresse ou par le pont). */
+function justConnected(): boolean {
+  let yes = false
+  try {
+    const url = new URL(location.href)
+    if (url.searchParams.has('bienvenue')) {
+      yes = true
+      url.searchParams.delete('bienvenue')
+      history.replaceState(null, '', url.pathname + url.search + url.hash)
+    }
+    if (localStorage.getItem('iam.bienvenue')) {
+      yes = true
+      localStorage.removeItem('iam.bienvenue')
+    }
+  } catch {}
+  return yes
+}
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>('loading')
   const [dbError, setDbError] = useState<string | null>(null)
@@ -45,6 +64,9 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [company, setCompany] = useState<Session['company'] | null>(null)
   const [licence, setLicence] = useState<Session['licence']>(null)
+  const [welcome, setWelcome] = useState<WelcomeInfo | null>(null)
+  const [brand, setBrand] = useState<WelcomeInfo | null>(null)
+  const closeWelcome = useCallback(() => setWelcome(null), [])
 
   /** Factures récurrentes arrivées à échéance : créées à la connexion. */
   const runRecurring = useCallback(async (u: User) => {
@@ -65,6 +87,7 @@ export default function App() {
     setDefaultCurrency(c.currency, countryProfile(c.country_code, c.country).currencyWords)
     setCompany(c)
     setLicence(lic)
+    return c
   }, [])
 
   const boot = useCallback(async () => {
@@ -80,6 +103,11 @@ export default function App() {
       setPhase('setup')
       return
     }
+    // Base tout juste connectée (adresse saisie puis testée) : accueil au nom de la société
+    const arrived = justConnected()
+    const b = (await window.erp.brand?.().catch(() => null)) ?? null
+    if (b) setBrand(b)
+    if (arrived && b) setWelcome({ ...b, connected: true, line: st.dbMode === 'remote' ? 'Base en ligne connectée' : 'Base connectée' })
     if (st.user) {
       setUser(st.user)
       loadProfile(st.user)
@@ -100,7 +128,8 @@ export default function App() {
     setUser(u)
     loadProfile(u)
     runRecurring(u)
-    await refreshCompany()
+    const c = await refreshCompany()
+    setWelcome({ name: c.name, logo: c.logo, color: brand?.color, line: `Bonjour ${u.full_name.split(' ')[0]}` })
     setPhase('ready')
   }
 
@@ -114,10 +143,11 @@ export default function App() {
     <>
       <Toaster />
       <ConfirmHost />
+      {welcome && <WelcomeSplash info={welcome} onDone={closeWelcome} />}
       {phase === 'loading' && <StartupScreen />}
       {phase === 'db-error' && <DbConfigScreen error={dbError} />}
       {phase === 'setup' && <SetupScreen remote={dbMode === 'remote'} onDone={onLogin} />}
-      {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} />}
+      {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} brand={brand} />}
       {phase === 'ready' && user && company && (
         <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence, updateUser: (patch) => setUser((u) => (u ? { ...u, ...patch } : u)) }}>
           <HashRouter>

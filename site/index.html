@@ -626,6 +626,84 @@
   @keyframes mod-in { from { opacity: 0; transform: translateY(12px); } }
 
   /* Hors connexion : schéma animé sur fond nuit */
+  /* Accès à mon espace */
+  dialog.acces { width: min(480px, calc(100vw - 28px)); border: 1px solid var(--line); border-radius: 20px; padding: 0; background: var(--surface); color: var(--ink); box-shadow: 0 40px 90px -30px rgba(11, 47, 99, .6); }
+  dialog.acces::backdrop { background: rgba(7, 20, 45, .55); backdrop-filter: blur(6px); }
+  dialog.acces[open] { animation: acces-in .35s var(--ease-back); }
+  @keyframes acces-in { from { opacity: 0; transform: translateY(18px) scale(.96); } }
+  .acces-in { padding: 26px 26px 22px; display: grid; gap: 14px; }
+  .acces-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .acces-head h2 { margin: 0; font-size: 23px; }
+  .acces-head p { margin: 4px 0 0; color: var(--muted); font-size: 15.5px; }
+  .acces-x { border: 0; background: var(--soft); color: var(--ink); width: 36px; height: 36px; border-radius: 50%; font-size: 20px; line-height: 1; cursor: pointer; flex-shrink: 0; }
+  .acces label { font-weight: 700; font-size: 14.5px; display: grid; gap: 6px; }
+  .acces input { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
+  .acces input:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
+  .acces-msg { min-height: 22px; font-size: 14.5px; font-weight: 600; margin: 0; }
+  .acces-msg.err { color: var(--danger); } .acces-msg.ok { color: var(--accent); }
+  .acces-recent { display: grid; gap: 8px; }
+  .acces-recent small { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+  .acces-co { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); text-decoration: none; transition: border-color .2s, transform .25s var(--ease); }
+  .acces-co:hover { border-color: var(--blue); transform: translateX(3px); }
+  .acces-co b { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--navy), var(--accent)); flex-shrink: 0; }
+  .acces-co span { display: grid; font-weight: 700; } .acces-co span em { font-style: normal; font-weight: 400; font-size: 12.5px; color: var(--muted); word-break: break-all; }
+  .acces-alt { border-top: 1px solid var(--line); padding-top: 14px; font-size: 14.5px; color: var(--muted); }
+
+  /* Démonstration : la facture se compose en direct */
+  .demo { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 48px; align-items: center; }
+  .demo-form { display: grid; gap: 14px; }
+  .demo-form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .demo-form label { display: grid; gap: 6px; font-weight: 700; font-size: 14.5px; }
+  .demo-form input[type=text], .demo-form input[type=number] { font: inherit; padding: 11px 13px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); width: 100%; min-width: 0; }
+  .demo-form input:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
+  .demo-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-chips button { font: inherit; font-weight: 700; font-size: 14.5px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: border-color .2s, background .2s, transform .25s var(--ease-back); }
+  .demo-chips button[aria-pressed=true] { border-color: var(--navy); background: var(--navy); color: #fff; transform: scale(1.04); }
+  .demo-swatches { display: flex; gap: 10px; }
+  .demo-swatches button { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); background: var(--c); cursor: pointer; transition: transform .25s var(--ease-back), box-shadow .2s; }
+  .demo-swatches button[aria-pressed=true] { transform: scale(1.18); box-shadow: 0 0 0 2.5px var(--c); }
+  .demo-stage { perspective: 1400px; }
+  .live { --tone: #1d6fd6; position: relative; background: #fff; color: #1f2933; border-radius: 10px; padding: 26px 26px 20px; max-width: 520px; margin: 0 auto; font-size: 13px; line-height: 1.45; box-shadow: 0 40px 70px -34px rgba(11, 47, 99, .6), 0 0 0 1px rgba(15, 23, 42, .07); transform: rotateY(-7deg) rotateX(3deg); transition: transform .6s var(--ease); transform-style: preserve-3d; }
+  .demo-stage:hover .live { transform: none; }
+  .live.flash { animation: live-flash .5s var(--ease); }
+  @keyframes live-flash { 40% { transform: rotateY(-4deg) rotateX(2deg) scale(1.015); } }
+  .live-top { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 12px; border-top: 5px solid var(--tone); padding-top: 14px; transition: all .35s var(--ease); }
+  .live-co { font-size: 17px; font-weight: 800; color: var(--tone); word-break: break-word; transition: color .3s; }
+  .live-top small { color: #7b8794; display: block; }
+  .live-title { text-align: right; flex-shrink: 0; }
+  .live-title strong { display: block; font-size: 19px; letter-spacing: .04em; color: var(--tone); transition: color .3s; }
+  .live-to { margin: 4px 0 14px auto; width: 58%; border: 1px solid #dfe4ea; border-radius: 8px; padding: 9px 12px; }
+  .live-to small { text-transform: uppercase; letter-spacing: .05em; font-size: 10px; color: #7b8794; display: block; }
+  .live-to b { word-break: break-word; }
+  .live table { width: 100%; border-collapse: collapse; }
+  .live th { background: var(--tone); color: #fff; text-align: left; font-size: 11px; padding: 7px 9px; transition: background .3s; }
+  .live td { padding: 9px; border-bottom: 1px solid #e8ecf1; word-break: break-word; }
+  .live th.n, .live td.n { text-align: right; white-space: nowrap; }
+  .live-tot { margin: 12px 0 0 auto; width: 62%; display: grid; gap: 4px; }
+  .live-tot div { display: flex; justify-content: space-between; gap: 10px; }
+  .live-tot .g { background: var(--tone); color: #fff; font-weight: 800; padding: 7px 10px; border-radius: 4px; font-size: 14.5px; transition: background .3s; }
+  .live-foot { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 10px 12px; border: 1px solid #dfe4ea; border-radius: 8px; font-size: 11.5px; color: #5f6b7a; }
+  .live-qr { width: 46px; height: 46px; flex-shrink: 0; border-radius: 4px; background: conic-gradient(#111 25%, #fff 0 50%, #111 0 75%, #fff 0) 0 0 / 9px 9px, #fff; box-shadow: inset 0 0 0 4px #fff, 0 0 0 1px #111; }
+  .live-foot b { color: var(--tone); display: block; text-transform: uppercase; letter-spacing: .04em; font-size: 10.5px; }
+  .live[data-layout=bandeau] .live-top { border-top: 0; background: var(--tone); margin: -26px -26px 14px; padding: 20px 26px; border-radius: 10px 10px 0 0; }
+  .live[data-layout=bandeau] .live-co, .live[data-layout=bandeau] .live-title strong, .live[data-layout=bandeau] .live-top small { color: #fff; }
+  .live[data-layout=elegant] { font-family: Georgia, 'Times New Roman', serif; }
+  .live[data-layout=elegant] .live-top { border-top: 1.5px solid var(--tone); border-bottom: 1.5px solid var(--tone); }
+  .live[data-layout=elegant] th { background: none; color: #1f2933; border-top: 1.5px solid var(--tone); border-bottom: 1.5px solid var(--tone); text-transform: uppercase; letter-spacing: .08em; }
+  .live[data-layout=elegant] .live-tot .g { background: none; color: var(--tone); border-top: 1.5px solid var(--tone); border-bottom: 1.5px solid var(--tone); border-radius: 0; }
+  .demo-note { font-size: 14.5px; color: var(--muted); margin: 4px 0 0; }
+
+  /* Sécurité vérifiée */
+  .trustgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 26px; }
+  .trustgrid div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; transition: transform .3s var(--ease), border-color .3s; }
+  .trustgrid div:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .trustgrid svg { color: var(--accent); margin-bottom: 10px; }
+  .trustgrid b { display: block; margin-bottom: 4px; } .trustgrid span { color: var(--muted); font-size: 15px; }
+  @media (max-width: 1040px) { .trustgrid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 860px) { .demo { grid-template-columns: 1fr; gap: 28px; } .live { transform: none; font-size: 12px; padding: 20px 18px 16px; } .live[data-layout=bandeau] .live-top { margin: -20px -18px 12px; padding: 16px 18px; } }
+  @media (max-width: 560px) { .live-tot { width: 100%; } .live-to { width: 100%; } .trustgrid { grid-template-columns: 1fr; } .demo-form .row2 { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { dialog.acces[open], .live.flash { animation: none !important; } .live { transform: none; transition: none; } }
+
   /* Nouveautés */
   .news { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
   @media (max-width: 1040px) { .news { grid-template-columns: repeat(2, 1fr); } }
@@ -752,9 +830,9 @@
       <a href="#offres">Offres</a>
       <a href="#telecharger">Télécharger</a>
       <a href="#faq">Questions</a>
-      <a class="btn btn-ghost login-mobile" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+      <a class="btn btn-ghost login-mobile" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
     </nav>
-    <a class="btn btn-ghost login" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+    <a class="btn btn-ghost login" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
     <a class="btn btn-primary try" href="#telecharger">Essai gratuit</a>
     <button class="menu-toggle" aria-controls="menu" aria-expanded="false" aria-label="Ouvrir le menu"><i data-icon="List"></i></button>
   </div>
@@ -991,6 +1069,69 @@
     </div>
   </section>
 
+  <section id="demo" class="alt">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Essayez tout de suite</div>
+        <h2>Votre première facture en dix secondes</h2>
+        <p>Saisissez, changez de modèle et de couleur : la facture se compose sous vos yeux, sans rien installer.</p>
+      </div>
+      <div class="demo">
+        <form class="demo-form reveal" id="demo-form" autocomplete="off">
+          <div class="row2">
+            <label>Votre société<input type="text" id="d-co" value="Ma Société SARL" maxlength="40"></label>
+            <label>Votre client<input type="text" id="d-cl" value="Société Exemple" maxlength="40"></label>
+          </div>
+          <label>Ce que vous vendez<input type="text" id="d-it" value="Installation et mise en service" maxlength="60"></label>
+          <div class="row2">
+            <label>Quantité<input type="number" id="d-q" value="2" min="1" max="9999" inputmode="numeric"></label>
+            <label>Prix unitaire HT (FCFA)<input type="number" id="d-p" value="150000" min="0" max="999999999" step="500" inputmode="numeric"></label>
+          </div>
+          <div>
+            <label id="d-ml">Modèle</label>
+            <div class="demo-chips" role="group" aria-labelledby="d-ml" id="d-layouts">
+              <button type="button" data-layout="moderne" aria-pressed="true">Moderne</button>
+              <button type="button" data-layout="bandeau" aria-pressed="false">Bandeau</button>
+              <button type="button" data-layout="elegant" aria-pressed="false">Élégant</button>
+            </div>
+          </div>
+          <div>
+            <label id="d-cll">Couleur</label>
+            <div class="demo-swatches" role="group" aria-labelledby="d-cll" id="d-colors">
+              <button type="button" style="--c:#1d6fd6" data-c="#1d6fd6" aria-pressed="true" aria-label="Bleu"></button>
+              <button type="button" style="--c:#047857" data-c="#047857" aria-pressed="false" aria-label="Vert"></button>
+              <button type="button" style="--c:#b45309" data-c="#b45309" aria-pressed="false" aria-label="Ocre"></button>
+              <button type="button" style="--c:#7c3aed" data-c="#7c3aed" aria-pressed="false" aria-label="Violet"></button>
+              <button type="button" style="--c:#be123c" data-c="#be123c" aria-pressed="false" aria-label="Rouge"></button>
+              <button type="button" style="--c:#1f2933" data-c="#1f2933" aria-pressed="false" aria-label="Noir"></button>
+            </div>
+          </div>
+          <a class="btn btn-primary" href="#telecharger"><i data-icon="RocketLaunch"></i>Créer mes vraies factures gratuitement</a>
+          <p class="demo-note">Dans l'application : six modèles, votre logo, votre cachet, le montant en lettres et l'envoi par e-mail ou SMS.</p>
+        </form>
+        <div class="demo-stage reveal">
+          <div class="live" id="live" data-layout="moderne" aria-live="polite">
+            <div class="live-top">
+              <div><div class="live-co" id="l-co">Ma Société SARL</div><small>Ouagadougou, Burkina Faso</small></div>
+              <div class="live-title"><strong>FACTURE</strong><small>FAC-2026-0001</small><small id="l-date"></small></div>
+            </div>
+            <div class="live-to"><small>Facturé à</small><b id="l-cl">Société Exemple</b></div>
+            <table>
+              <thead><tr><th>Désignation</th><th class="n">Qté</th><th class="n">P.U. HT</th><th class="n">Total HT</th></tr></thead>
+              <tbody><tr><td id="l-it">Installation et mise en service</td><td class="n" id="l-q">2</td><td class="n" id="l-p">150 000</td><td class="n" id="l-ht">300 000</td></tr></tbody>
+            </table>
+            <div class="live-tot">
+              <div><span>Total HT</span><span id="l-tht">300 000 FCFA</span></div>
+              <div><span>TVA 18 %</span><span id="l-tva">54 000 FCFA</span></div>
+              <div class="g"><span>Total TTC</span><span id="l-ttc">354 000 FCFA</span></div>
+            </div>
+            <div class="live-foot"><span class="live-qr" aria-hidden="true"></span><span><b>Document authentique</b>Votre client scanne ce code pour vérifier le numéro, la date et le montant.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="documents">
     <div class="wrap docs-show">
       <div class="docs-stage reveal" aria-hidden="true"><div class="docs-fan">
@@ -1023,14 +1164,14 @@
         <p>Le logiciel évolue chaque mois, avec la réglementation et vos retours. L'application vous prévient quand une version est prête.</p>
       </div>
       <div class="news stagger">
+        <div class="new reveal"><span class="ver">0.9</span><div class="ic t3"><i data-icon="Sparkle" data-size="26"></i></div><h3>L'assistant du jour</h3><p>Dès l'ouverture : factures en retard, devis sans suite, stock bas, déclarations à déposer, avec le chemin pour les traiter.</p></div>
+        <div class="new reveal"><span class="ver">0.9</span><div class="ic t1"><i data-icon="Link" data-size="26"></i></div><h3>Votre espace en un lien</h3><p>Saisissez l'adresse de votre société dans le navigateur : l'application vous accueille à son nom, avec son logo.</p></div>
+        <div class="new reveal"><span class="ver">0.8</span><div class="ic t2"><i data-icon="ShieldCheck" data-size="26"></i></div><h3>Sécurité renforcée</h3><p>Secrets chiffrés, sociétés cloisonnées, protection contre la force brute et tests d'intrusion rejoués à chaque version.</p></div>
         <div class="new reveal"><span class="ver">0.8</span><div class="ic t4"><i data-icon="HardDrives" data-size="26"></i></div><h3>Serveur dans vos locaux</h3><p>Un poste de l'entreprise partage la base sur le réseau ; les autres s'y connectent et une copie part en ligne.</p></div>
         <div class="new reveal"><span class="ver">0.8</span><div class="ic t1"><i data-icon="Devices" data-size="26"></i></div><h3>Licence au nombre de postes</h3><p>Vous payez les postes réellement utilisés. La liste des appareils connectés se gère depuis l'application.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t3"><i data-icon="Percent" data-size="26"></i></div><h3>Taxes du Burkina Faso</h3><p>TVA, retenues à la source, prélèvement, timbre : prêtes à activer, avec l'explication de chacune.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t2"><i data-icon="CalendarCheck" data-size="26"></i></div><h3>Échéancier des déclarations</h3><p>Chaque mois, ce qu'il faut déclarer, pour quel montant et avant quelle date, calculé depuis vos écritures.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t5"><i data-icon="EnvelopeSimple" data-size="26"></i></div><h3>Votre adresse d'envoi</h3><p>Devis, factures et relances partent de votre propre adresse e-mail : Gmail, Outlook ou la messagerie de votre domaine.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t6"><i data-icon="QrCode" data-size="26"></i></div><h3>Modèles et QR code</h3><p>Six modèles de documents, PDF fidèle à l'écran et code d'authenticité que votre client vérifie en le scannant.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t1"><i data-icon="BellRinging" data-size="26"></i></div><h3>Mise à jour signalée</h3><p>Une fenêtre annonce la nouvelle version et ce qu'elle apporte. Rien ne s'installe sans votre accord.</p></div>
-        <div class="new reveal"><span class="ver">0.7</span><div class="ic t4"><i data-icon="Sparkle" data-size="26"></i></div><h3>Interface plus vivante</h3><p>Écran de connexion animé, transitions soignées, nouvel avatar : plus agréable, sans rien ralentir.</p></div>
+        <div class="new reveal"><span class="ver">0.8</span><div class="ic t6"><i data-icon="Signature" data-size="26"></i></div><h3>Signature et cachet</h3><p>Chaque document porte ses zones de signature : vides pour signer à la main, ou avec votre signature et votre cachet.</p></div>
+        <div class="new reveal"><span class="ver">0.7</span><div class="ic t3"><i data-icon="Percent" data-size="26"></i></div><h3>Taxes du Burkina Faso</h3><p>TVA, retenues à la source, prélèvement, timbre : prêtes à activer, avec un échéancier mensuel des déclarations.</p></div>
+        <div class="new reveal"><span class="ver">0.7</span><div class="ic t5"><i data-icon="QrCode" data-size="26"></i></div><h3>Modèles et QR code</h3><p>Six modèles de documents, PDF fidèle à l'écran et code d'authenticité que votre client vérifie en le scannant.</p></div>
       </div>
     </div>
   </section>
@@ -1278,6 +1419,12 @@
         <div class="reveal"><i data-icon="ClockCounterClockwise" data-weight="fill"></i><span>Journal d'activité : qui a fait quoi, et quand</span></div>
         <div class="reveal"><i data-icon="Export" data-weight="fill"></i><span>Export Excel et PDF à tout moment, même après l'essai</span></div>
       </div>
+      <div class="trustgrid stagger">
+        <div class="reveal"><i data-icon="Key" data-size="30"></i><b>Secrets chiffrés</b><span>Mots de passe de messagerie, clés et jetons sont chiffrés en AES-256 : illisibles même dans une sauvegarde.</span></div>
+        <div class="reveal"><i data-icon="Database" data-size="30"></i><b>Une base par société</b><span>En hébergement, vos données ne côtoient celles de personne : base, utilisateur et mot de passe distincts.</span></div>
+        <div class="reveal"><i data-icon="Bug" data-size="30"></i><b>Tests d'intrusion</b><span>Accès sans droit, injections, force brute : les mêmes attaques sont rejouées avant chaque nouvelle version.</span></div>
+        <div class="reveal"><i data-icon="Fingerprint" data-size="30"></i><b>Comptes protégés</b><span>Blocage après plusieurs mots de passe erronés, sessions fermées à distance, journal de chaque action.</span></div>
+      </div>
     </div>
   </section>
 
@@ -1333,7 +1480,7 @@
           <p>Essayez gratuitement pendant 30 jours, ou demandez une démonstration et un devis. Nous vous répondons rapidement.</p>
           <div class="cta">
             <a class="btn btn-primary" href="#telecharger"><i data-icon="DownloadSimple"></i>Essayer gratuitement</a>
-            <a class="btn btn-outline-white" href="/app/"><i data-icon="SignIn"></i>Se connecter</a>
+            <a class="btn btn-outline-white" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
           </div>
         </div>
         <div class="contact-list" id="contact-list"></div>
@@ -1350,7 +1497,7 @@
 </footer>
 
 <div class="mobile-cta" role="region" aria-label="Actions rapides">
-  <a class="btn btn-ghost" href="/app/">Se connecter</a>
+  <a class="btn btn-ghost" href="/app/" data-acces>Se connecter</a>
   <a class="btn btn-primary" href="#telecharger">Essai gratuit</a>
 </div>
 
@@ -1781,6 +1928,129 @@
         }, { threshold: .35 }).observe(stage)
       }
     }
+  })()
+</script>
+<dialog class="acces" id="acces" aria-labelledby="acces-t">
+  <div class="acces-in">
+    <div class="acces-head">
+      <div><h2 id="acces-t">Accéder à mon espace</h2><p>Saisissez l'adresse ou l'identifiant fourni avec votre accès.</p></div>
+      <button type="button" class="acces-x" id="acces-x" aria-label="Fermer">×</button>
+    </div>
+    <form id="acces-f" novalidate>
+      <label>Adresse ou identifiant de votre société
+        <input id="acces-i" type="text" placeholder="ma_societe" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url">
+      </label>
+      <p class="acces-msg" id="acces-m" role="status"></p>
+      <button class="btn btn-primary" style="width:100%" id="acces-b">Ouvrir mon espace</button>
+    </form>
+    <div class="acces-recent" id="acces-r" hidden><small>Ouvertes récemment sur cet appareil</small></div>
+    <div class="acces-alt">Pas encore de société en ligne ? <a class="link" href="/app/">Ouvrir la version d'essai</a></div>
+  </div>
+</dialog>
+<script>
+  // Accès à mon espace : adresse ou identifiant de la société → son application, à son nom
+  (function () {
+    var dlg = document.getElementById('acces')
+    if (!dlg || !dlg.showModal) return
+    var input = document.getElementById('acces-i'), msg = document.getElementById('acces-m'), btn = document.getElementById('acces-b'), list = document.getElementById('acces-r')
+    function say(text, kind) { msg.textContent = text; msg.className = 'acces-msg' + (kind ? ' ' + kind : '') }
+    function target(raw) {
+      var v = String(raw || '').trim().replace(/\/+$/, '')
+      if (!v) return null
+      if (/^[a-z][a-z0-9_]{2,30}$/.test(v)) return location.origin + '/t/' + v
+      if (!/^https?:\/\//i.test(v)) v = 'https://' + v
+      try { var u = new URL(v); return u.protocol + '//' + u.host + u.pathname.replace(/\/+$/, '') } catch (e) { return null }
+    }
+    function open(base) {
+      btn.disabled = true
+      say('Recherche de votre société…')
+      fetch(base + '/api/status').then(function (r) { return r.json() }).then(function (st) {
+        if (!st || !st.ok || !st.data || st.data.app !== 'IAM INVOICER') throw new Error('x')
+        return fetch(base + '/api/brand').then(function (r) { return r.json() }).catch(function () { return null }).then(function (b) {
+          say(b && b.ok && b.data && b.data.name ? 'Ouverture de ' + b.data.name + '…' : 'Ouverture…', 'ok')
+          location.href = base + (st.data.web || '/') + '?bienvenue=1'
+        })
+      }).catch(function () {
+        btn.disabled = false
+        say("Aucune société à cette adresse. Vérifiez l'adresse reçue avec votre accès.", 'err')
+      })
+    }
+    document.getElementById('acces-f').addEventListener('submit', function (e) {
+      e.preventDefault()
+      var base = target(input.value)
+      if (!base) return say("Saisissez l'adresse ou l'identifiant de votre société.", 'err')
+      open(base)
+    })
+    document.getElementById('acces-x').addEventListener('click', function () { dlg.close() })
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close() })
+    function recents() {
+      var items = []
+      try { items = JSON.parse(localStorage.getItem('iam.recent') || '[]') } catch (e) {}
+      Array.prototype.slice.call(list.querySelectorAll('a')).forEach(function (a) { a.remove() })
+      items = (Array.isArray(items) ? items : []).filter(function (r) { return r && typeof r.url === 'string' && typeof r.name === 'string' && /^https?:\/\//.test(r.url) }).slice(0, 4)
+      list.hidden = !items.length
+      items.forEach(function (r) {
+        var a = document.createElement('a'), b = document.createElement('b'), sp = document.createElement('span'), em = document.createElement('em')
+        a.className = 'acces-co'
+        a.href = r.url + '/'
+        a.addEventListener('click', function (e) { e.preventDefault(); open(r.url) })
+        b.textContent = r.name.slice(0, 1).toUpperCase()
+        sp.textContent = r.name
+        em.textContent = r.url.replace(/^https?:\/\//, '')
+        sp.appendChild(em)
+        a.appendChild(b); a.appendChild(sp)
+        list.appendChild(a)
+      })
+    }
+    Array.prototype.slice.call(document.querySelectorAll('[data-acces]')).forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault()
+        recents()
+        say('')
+        btn.disabled = false
+        dlg.showModal()
+        input.focus()
+      })
+    })
+  })()
+
+  // Démonstration : la facture suit la saisie
+  ;(function () {
+    var live = document.getElementById('live')
+    if (!live) return
+    var $ = function (id) { return document.getElementById(id) }
+    var fmt = function (n) { return Math.round(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') }
+    var d = new Date()
+    $('l-date').textContent = ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear()
+    function num(el, max) { var n = Number(el.value); return isFinite(n) && n > 0 ? Math.min(n, max) : 0 }
+    function render() {
+      var q = num($('d-q'), 9999), p = num($('d-p'), 999999999), ht = q * p, tva = Math.round(ht * 0.18)
+      $('l-co').textContent = $('d-co').value.trim() || 'Votre société'
+      $('l-cl').textContent = $('d-cl').value.trim() || 'Votre client'
+      $('l-it').textContent = $('d-it').value.trim() || 'Votre prestation'
+      $('l-q').textContent = fmt(q)
+      $('l-p').textContent = fmt(p)
+      $('l-ht').textContent = fmt(ht)
+      $('l-tht').textContent = fmt(ht) + ' FCFA'
+      $('l-tva').textContent = fmt(tva) + ' FCFA'
+      $('l-ttc').textContent = fmt(ht + tva) + ' FCFA'
+    }
+    function flash() { live.classList.remove('flash'); void live.offsetWidth; live.classList.add('flash') }
+    $('demo-form').addEventListener('input', render)
+    $('demo-form').addEventListener('submit', function (e) { e.preventDefault() })
+    function group(id, apply) {
+      var box = $(id)
+      box.addEventListener('click', function (e) {
+        var b = e.target.closest('button')
+        if (!b) return
+        Array.prototype.slice.call(box.querySelectorAll('button')).forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)) })
+        apply(b)
+        flash()
+      })
+    }
+    group('d-layouts', function (b) { live.dataset.layout = b.dataset.layout })
+    group('d-colors', function (b) { live.style.setProperty('--tone', b.dataset.c) })
+    render()
   })()
 </script>
 </body>

@@ -45,6 +45,10 @@ interface ErpBridge {
   status(): Promise<AppStatus>
   /** Version plus récente disponible pour cet appareil, sinon null. */
   checkUpdate?(): Promise<{ current: string; latest: string; url: string | null; reload?: boolean } | null>
+  /** Web et mobile : nom et logo de la société servie par le serveur (avant connexion). */
+  brand?(url?: string): Promise<{ name: string; logo: string; color: string; city: string } | null>
+  /** Web et mobile : sociétés récemment ouvertes sur cet appareil. */
+  recent?(): { url: string; name: string; at: string }[]
   /** Ouvre une adresse https dans le navigateur du système. */
   openExternal?(url: string): Promise<unknown>
   login(username: string, password: string): Promise<Result>

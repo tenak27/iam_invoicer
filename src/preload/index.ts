@@ -32,6 +32,7 @@ const bridge = {
   pickImage: () => ipcRenderer.invoke('file.pickImage'),
   backup: () => ipcRenderer.invoke('backup.create'),
   restore: () => ipcRenderer.invoke('backup.restore'),
+  brand: (url?: string) => ipcRenderer.invoke('app.brand', url),
   enterprise: {
     get: () => ipcRenderer.invoke('enterprise.get'),
     save: (input: unknown) => ipcRenderer.invoke('enterprise.save', input),

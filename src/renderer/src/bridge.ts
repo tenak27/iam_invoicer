@@ -10,6 +10,26 @@ const URL_KEY = 'iam.serverUrl'
 const TOKEN_KEY = 'iam.token'
 const USER_KEY = 'iam.lastUser'
 const DEVICE_KEY = 'iam.device'
+// Sociétés récemment ouvertes sur cet appareil (commun à toutes les adresses du domaine)
+const RECENT_KEY = 'iam.recent'
+export interface RecentCompany { url: string; name: string; at: string }
+
+function readRecent(): RecentCompany[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    return Array.isArray(list) ? list.filter((r) => r && typeof r.url === 'string' && typeof r.name === 'string').slice(0, 6) : []
+  } catch {
+    return []
+  }
+}
+function rememberRecent(url: string, name: string) {
+  try {
+    const list = [{ url, name: name.slice(0, 80), at: new Date().toISOString() }, ...readRecent().filter((r) => r.url !== url)].slice(0, 6)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list))
+  } catch {
+    /* stockage indisponible */
+  }
+}
 
 // Plusieurs clients hébergés sur un même domaine (/t/<client>/) : données de l'appareil séparées par client.
 const SCOPE = (() => {
@@ -168,8 +188,18 @@ function createHttpBridge(): ErpBridge {
       return { ...st, dbReady: true, dbError: null, version: r.data.version, user: r.data.user }
     },
 
-    login: async (username, password) =>
-      keepToken(await request('POST', '/api/login', { username, password, device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() })),
+    async login(username, password) {
+      const r = keepToken(await request('POST', '/api/login', { username, password, device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() }))
+      // Société retenue pour y revenir en un clic
+      if (r.ok) void this.brand!().then((b) => b?.name && baseUrl() && rememberRecent(baseUrl()!, b.name))
+      return r
+    },
+    /** Nom et logo de la société servie à cette adresse (connus avant la connexion). */
+    async brand(url?: string) {
+      const r = await request<{ name: string; logo: string; color: string; city: string }>('GET', '/api/brand', undefined, url ? normalizeUrl(url) : baseUrl())
+      return r.ok && r.data?.name ? r.data : null
+    },
+    recent: () => readRecent().filter((r) => r.url !== baseUrl()),
     setup: async (input) => keepToken(await request('POST', '/api/setup', { ...(input as object), device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() })),
     async logout() {
       await request('POST', '/api/logout', {})
@@ -192,6 +222,14 @@ function createHttpBridge(): ErpBridge {
     },
     async saveDbConfig(cfg: any) {
       const url = normalizeUrl(cfg.url)
+      if (servedByServer) {
+        // Navigateur : chaque serveur (et chaque société hébergée) sert sa propre application.
+        // On s'y rend, au lieu de garder une adresse que cette page ne pourrait pas utiliser.
+        if (url === baseUrl()) return void location.reload()
+        const st = await request<{ web?: string }>('GET', '/api/status', undefined, url)
+        location.href = url + (st.ok && st.data?.web ? st.data.web : '/') + '?bienvenue=1'
+        return
+      }
       if (url !== baseUrl()) {
         token = null
         store.set(TOKEN_KEY, null)

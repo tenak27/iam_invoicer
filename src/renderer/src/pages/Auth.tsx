@@ -29,13 +29,13 @@ export function AuthBackdrop() {
   )
 }
 
-function AuthCard(props: { title: string; subtitle?: string; children: React.ReactNode; wide?: boolean }) {
+function AuthCard(props: { title: string; subtitle?: string; children: React.ReactNode; wide?: boolean; logo?: string }) {
   return (
     <div className="auth-screen">
       <AuthBackdrop />
       <div className={`auth-card ${props.wide ? 'auth-wide' : ''}`}>
         <div className="auth-brand">
-          <BrandMark size={46} />
+          {props.logo ? <img className="auth-company-logo" src={props.logo} alt="" /> : <BrandMark size={46} />}
           <div>
             <div className="auth-title">{props.title}</div>
             {props.subtitle && <div className="muted">{props.subtitle}</div>}
@@ -49,7 +49,9 @@ function AuthCard(props: { title: string; subtitle?: string; children: React.Rea
 
 const MODE_TEXT: Record<DataMode, string> = { local: 'ce poste', server: 'serveur réseau', remote: 'en ligne' }
 
-export function LoginScreen({ onLogin, dbMode, serverUrl }: { onLogin: (u: User) => void; dbMode: DataMode; serverUrl: string | null }) {
+export function LoginScreen({ onLogin, dbMode, serverUrl, brand }: { onLogin: (u: User) => void; dbMode: DataMode; serverUrl: string | null; brand?: { name: string; logo?: string } | null }) {
+  // Navigateur et mobile : sociétés déjà ouvertes sur cet appareil, pour y revenir en un clic
+  const recent = window.erp.recent?.() ?? []
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -62,7 +64,7 @@ export function LoginScreen({ onLogin, dbMode, serverUrl }: { onLogin: (u: User)
     if (user) onLogin(user)
   }
   return (
-    <AuthCard title="IAM INVOICER" subtitle="Connexion">
+    <AuthCard title={brand?.name || 'IAM INVOICER'} subtitle={brand?.name ? 'Connexion · IAM INVOICER' : 'Connexion'} logo={brand?.logo}>
       <form onSubmit={submit} className="stack">
         <Field label="Nom d'utilisateur">
           <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
@@ -77,6 +79,17 @@ export function LoginScreen({ onLogin, dbMode, serverUrl }: { onLogin: (u: User)
       <button className="link-btn auth-foot" onClick={() => setShowDb(true)}>
         {dbMode === 'remote' && serverUrl ? `Serveur : ${serverUrl.replace(/^https?:\/\//, '')}` : `Base de données : ${MODE_TEXT[dbMode]}`} — modifier
       </button>
+      {recent.length > 0 && (
+        <div className="auth-recent">
+          <span className="muted small">Vos autres sociétés</span>
+          {recent.slice(0, 4).map((r) => (
+            <button key={r.url} type="button" className="auth-recent-item" onClick={() => run(() => window.erp.saveDbConfig({ mode: 'remote', url: r.url }))}>
+              <span className="auth-recent-mark" aria-hidden="true">{r.name.slice(0, 1).toUpperCase()}</span>
+              <span><strong>{r.name}</strong><small>{r.url.replace(/^https?:\/\//, '')}</small></span>
+            </button>
+          ))}
+        </div>
+      )}
       {showDb && (
         <Modal title={isDesktop() ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide>
           <DbConfigForm />
@@ -180,6 +193,7 @@ export function DbConfigForm() {
   const desktop = isDesktop()
   const f = useForm<any>({ mode: desktop ? 'local' : 'remote', url: '', host: '', port: '5432', database: 'iam_erp', user: 'postgres', password: '' })
   const [busy, setBusy] = useState(false)
+  const [found, setFound] = useState<{ name: string; logo?: string; city?: string } | null>(null)
   useEffect(() => {
     window.erp.getDbConfig().then((cfg) => f.setValues((v: any) => ({ ...v, ...cfg, port: String(cfg.port ?? v.port) })))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,6 +210,7 @@ export function DbConfigForm() {
     await run(async () => {
       const version = await unwrap(window.erp.testDbConfig(cfg()))
       notify(typeof version === 'string' ? `Connexion réussie (serveur version ${version}).` : 'Connexion réussie.', 'success')
+      if (mode === 'remote') setFound((await window.erp.brand?.(f.values.url).catch(() => null)) ?? null)
     })
     setBusy(false)
   }
@@ -203,6 +218,12 @@ export function DbConfigForm() {
     setBusy(true)
     // On vérifie le serveur avant d'enregistrer, pour ne pas bloquer l'application sur une mauvaise adresse.
     const ok = mode === 'local' || (await run(() => unwrap(window.erp.testDbConfig(cfg())))) !== undefined
+    if (ok && mode === 'remote') {
+      // Accueil au nom de la société à la prochaine ouverture (voir App.tsx)
+      try {
+        localStorage.setItem('iam.bienvenue', '1')
+      } catch {}
+    }
     if (ok) await run(() => window.erp.saveDbConfig(cfg()))
     setBusy(false)
   }
@@ -225,8 +246,8 @@ export function DbConfigForm() {
         </div>
       )}
       {mode === 'remote' && (
-        <Field label="Adresse du serveur" hint="En ligne : facturation.iam.bf (https:// est ajouté). Serveur de l’entreprise : l’adresse affichée sur ce serveur, par exemple http://192.168.1.20:8080.">
-          <input value={f.values.url} onChange={(e) => f.set('url', e.target.value)} placeholder="facturation.iam.bf" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} />
+        <Field label="Adresse du serveur" hint="Base en ligne : l’adresse fournie avec votre accès, par exemple invoice.iamtechnology.store/t/ma_societe (https:// est ajouté). Serveur de l’entreprise : l’adresse affichée sur ce serveur, par exemple http://192.168.1.20:8080.">
+          <input value={f.values.url} onChange={(e) => { f.set('url', e.target.value); setFound(null) }} placeholder="invoice.iamtechnology.store/t/ma_societe" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} />
         </Field>
       )}
       {mode === 'server' && (
@@ -236,6 +257,12 @@ export function DbConfigForm() {
           <Field label="Base"><input {...f.bind('database')} /></Field>
           <Field label="Utilisateur" span={2}><input {...f.bind('user')} /></Field>
           <Field label="Mot de passe" span={2}><input type="password" {...f.bind('password')} /></Field>
+        </div>
+      )}
+      {mode === 'remote' && found && (
+        <div className="found-company" role="status">
+          {found.logo ? <img src={found.logo} alt="" /> : <span className="auth-recent-mark" aria-hidden="true">{found.name.slice(0, 1).toUpperCase()}</span>}
+          <div><strong>{found.name}</strong><div className="muted small">Base trouvée{found.city ? ` · ${found.city}` : ''}. Cliquez sur « {desktop ? 'Enregistrer et redémarrer' : 'Se connecter au serveur'} » pour l’ouvrir.</div></div>
         </div>
       )}
       <div className="form-actions">

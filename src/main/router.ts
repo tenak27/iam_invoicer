@@ -30,6 +30,7 @@ import * as licensing from './services/licensing'
 import * as analytics from './services/analytics'
 import * as roles from './services/roles'
 import * as recurring from './services/recurring'
+import { listAssistant } from './services/assistant'
 import { isReadAction, isVendorAdmin, VENDOR_ADMIN } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -77,6 +78,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
     }
   },
   'licence.status': { access: 'user', fn: licence.getLicence },
+  // Points du jour : filtrés dans le service selon les droits de chacun
+  'assistant.list': { access: 'user', fn: listAssistant },
   'roles.get': { access: 'user', fn: roles.getRoles },
   'recurring.list': { access: 'sales', fn: recurring.listRecurring },
   'recurring.save': { access: 'sales', fn: recurring.saveRecurring },

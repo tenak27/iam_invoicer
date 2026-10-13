@@ -5,7 +5,7 @@ import { homedir, hostname } from 'node:os'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { configureVendorKey } from './services/licensing'
-import { openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
+import { normalizeServerUrl, openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
 import { openDb, restoreLocal } from './db'
 import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig } from './autoBackup'
 import type { PrintFormat } from './printing'
@@ -347,6 +347,19 @@ function registerIpc(): void {
       return true
     })
   )
+  // Nom et logo de la société d'un serveur (avant connexion) : écran de bienvenue, test d'une adresse
+  ipcMain.handle('app.brand', async (_e, url?: string) => {
+    try {
+      const cfg = readConfig()
+      const base = url ? normalizeServerUrl(url) : cfg.mode === 'remote' ? cfg.url : null
+      if (!base) return null
+      const r = await fetch(base + '/api/brand', { signal: AbortSignal.timeout(8_000) })
+      const j: any = await r.json()
+      return j?.ok && j.data?.name ? { name: String(j.data.name), logo: /^data:image\//.test(j.data.logo ?? '') ? j.data.logo : '', color: /^#[0-9a-fA-F]{6}$/.test(j.data.color ?? '') ? j.data.color : '', city: String(j.data.city ?? '') } : null
+    } catch {
+      return null
+    }
+  })
   ipcMain.handle('db.saveConfig', async (_e, cfg: AppConfig) => {
     // Mot de passe du serveur du bureau : chiffré par le système avant d'être écrit
     const stored = cfg.mode === 'server' && cfg.password ? { ...cfg, password: osVault.protect(cfg.password) } : cfg
