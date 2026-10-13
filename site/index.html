@@ -6,7 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IAM INVOICER — Le logiciel de gestion des entreprises du Burkina Faso | IAM Technology</title>
 <meta name="description" content="IAM INVOICER : devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA, paie et déclarations. Sur ordinateur, téléphone et navigateur, même sans Internet. Essai gratuit de 30 jours.">
-<meta name="theme-color" content="#0a1f44">
+<meta name="theme-color" content="#050b1f">
+<meta name="color-scheme" content="dark">
 <meta property="og:title" content="IAM INVOICER — Toute votre gestion, même sans Internet">
 <meta property="og:description" content="Facturation, caisse, stock, dépenses, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
 <meta property="og:type" content="website">
@@ -19,22 +20,16 @@
      bleu de confiance, orange réservé à l'action, vert pour ce qui est acquis ;
      Plus Jakarta Sans, un mot en Instrument Serif italique par titre ; grille en « bento ». */
   :root {
-    --navy: #0a1f44; --blue: #1d4ed8; --blue-2: #3b82f6; --blue-soft: #e8efff;
-    --cta: #ea580c; --cta-2: #c2410c; --on-cta: #fff;
-    --green: #059669; --gold: #f5b301; --red: #dc2626;
-    --bg: #f7f9fc; --surface: #fff; --ink: #0b1220; --text: #334155; --muted: #5b6b82; --line: #e3e8f0; --soft: #eef2f8;
+    color-scheme: dark;
+    --navy: #0a1f44; --blue: #6ea8ff; --blue-2: #9cc4ff; --blue-soft: #13224d;
+    --cta: #ff8a3d; --cta-2: #f26a1b; --on-cta: #1a0b02;
+    --green: #34d399; --gold: #ffc94a; --red: #ff8a7a; --violet: #b18cff; --teal: #3ddbd9;
+    --bg: #050b1f; --surface: #0b1533; --ink: #f2f6ff; --text: #c9d6f2; --muted: #8fa3cc; --line: #1c2b55; --soft: #101d42;
     --r: 20px; --r-sm: 12px; --nav: 72px;
-    --shadow: 0 1px 2px rgba(11, 18, 32, .05), 0 12px 32px -16px rgba(11, 18, 32, .22);
-    --shadow-lg: 0 40px 80px -40px rgba(10, 31, 68, .5);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 14px 34px -16px rgba(0, 0, 0, .85);
+    --shadow-lg: 0 40px 80px -40px rgba(0, 0, 0, .95);
     --ease: cubic-bezier(.2, .8, .2, 1); --back: cubic-bezier(.34, 1.45, .64, 1);
     --serif: 'Instrument Serif', Georgia, serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --blue: #7fa8ff; --blue-2: #a5c1ff; --blue-soft: #16223d; --cta: #fb7a3c; --cta-2: #ff935c; --on-cta: #1a0b02; --green: #34d399;
-      --bg: #070c18; --surface: #0f172a; --ink: #f1f5f9; --text: #cbd5e1; --muted: #94a3b8; --line: #1f2a44; --soft: #131c33;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 12px 32px -16px rgba(0, 0, 0, .8); --shadow-lg: 0 40px 80px -40px rgba(0, 0, 0, .9);
-    }
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav) + 16px); -webkit-text-size-adjust: 100%; }
@@ -100,7 +95,7 @@
   .hero-in { position: relative; text-align: center; display: grid; justify-items: center; }
   .pill { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 26px; text-decoration: none !important; }
   .pill b { background: var(--blue); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; letter-spacing: .04em; }
-  @media (prefers-color-scheme: dark) { .pill b { color: #06122b; } }
+  @media all { .pill b { color: #06122b; } }
   .hero h1 { max-width: 15ch; }
   .hero .lead { margin-top: 24px; max-width: 640px; font-size: clamp(18px, 1.9vw, 21px); color: var(--muted); }
   .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
@@ -153,7 +148,7 @@
   .node p { font-size: 14.5px; color: var(--muted); line-height: 1.45; }
   .node.live { border-color: var(--blue); box-shadow: 0 0 0 5px color-mix(in srgb, var(--blue) 14%, transparent), var(--shadow); }
   .node.live .ico { background: var(--blue); color: #fff; transform: scale(1.12) rotate(-6deg); }
-  @media (prefers-color-scheme: dark) { .node.live .ico { color: #06122b; } }
+  @media all { .node.live .ico { color: #06122b; } }
   .node.first { border-color: var(--navy); }
 
   /* Bento */
@@ -491,7 +486,7 @@
   .motion .story-steps li.done .ico { background: var(--green); color: #fff; }
   .motion .story-steps li.now button { opacity: 1; border-color: var(--blue); background: var(--blue-soft); transform: translateX(10px); box-shadow: var(--shadow); }
   .motion .story-steps li.now .ico { background: var(--blue); color: #fff; transform: scale(1.1) rotate(-6deg); }
-  @media (prefers-color-scheme: dark) { .motion .story-steps li.now .ico { color: #06122b; } }
+  @media all { .motion .story-steps li.now .ico { color: #06122b; } }
   .motion .story-scene { display: grid; position: relative; height: min(100%, 520px); border-radius: 30px; overflow: hidden; background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--blue) 26%, transparent), transparent 60%), radial-gradient(90% 80% at 0% 100%, color-mix(in srgb, var(--cta) 16%, transparent), transparent 60%), var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
   .motion .story-bar { display: block; position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); transform-origin: left; transform: scaleX(var(--p, 0)); }
   .panel { grid-area: 1 / 1; min-width: 0; display: grid; place-items: center; padding: 30px; opacity: 0; transform: translateY(40px) scale(.94); transition: opacity .5s var(--ease), transform .7s var(--ease); pointer-events: none; }
@@ -587,6 +582,132 @@
   @media (hover: none) { .cursor { display: none; } }
   @media (prefers-reduced-motion: reduce) { .intro, .cursor, #fx { display: none !important; } .rot > span { transition: none; } .panel { transition: none; } }
 
+  /* ══ Le parcours nocturne ══ */
+  body { background: radial-gradient(1200px 700px at 50% -10%, #12306f 0%, transparent 60%), var(--bg); }
+  .alt { background: linear-gradient(180deg, #081029, #0b1533); }
+  .hero { min-height: 100svh; padding: calc(var(--nav) + 56px) 0 0; background: linear-gradient(180deg, #0b2a78 0%, #0a1f58 34%, #07143a 62%, #050b1f 100%); display: grid; align-content: start; }
+  .hero::before { display: none; }
+  .hero-in { z-index: 3; padding-bottom: clamp(250px, 36vh, 400px); }
+  .hero h1 em { color: #ffd58a; }
+  .hero .lead { color: #d3e0ff; }
+  .scene { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .scene svg { position: absolute; left: 50%; bottom: 0; width: max(100%, 1440px); height: auto; min-height: 62%; transform: translateX(-50%); }
+  .scene .l1 { transform: translate(var(--mx1, 0), var(--sy1, 0)); } .scene .l2 { transform: translate(var(--mx2, 0), var(--sy2, 0)); } .scene .l3 { transform: translate(var(--mx3, 0), var(--sy3, 0)); }
+  .scene .moon { animation: moon 9s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+  @keyframes moon { to { opacity: .82; transform: scale(1.05); } }
+  .scene .shim { animation: shim 5s ease-in-out infinite; } .scene .shim.b { animation-delay: -2.5s; }
+  @keyframes shim { 50% { opacity: .15; transform: translateX(26px); } }
+  .scene .portal { animation: portal 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes portal { 50% { opacity: .7; transform: scale(1.06); } }
+  .scene .ring { animation: spin 22s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame .9s ease-in-out infinite alternate; }
+  @keyframes flame { 0% { transform: scale(1, 1) rotate(-3deg); } 50% { transform: scale(.9, 1.12) rotate(2deg); } 100% { transform: scale(1.06, .94) rotate(-1deg); } }
+  .halo { animation: halo 1.6s ease-in-out infinite alternate; }
+  @keyframes halo { to { opacity: .55; } }
+  .crystal { transform-box: fill-box; transform-origin: center; animation: float 6s ease-in-out infinite; }
+  .crystal.b { animation-duration: 8s; animation-delay: -3s; } .crystal.c { animation-duration: 7s; animation-delay: -5s; }
+  @keyframes float { 50% { transform: translateY(-18px) rotate(4deg); } }
+  .scroll-sign { white-space: nowrap; position: absolute; z-index: 4; left: 50%; bottom: 26px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border-radius: 12px; background: #7a5230; color: #ffe9c7; font-weight: 800; font-size: 13.5px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none !important; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .25), 0 10px 24px -8px rgba(0, 0, 0, .8); animation: sign 3.2s ease-in-out infinite; }
+  .scroll-sign::before { content: ''; position: absolute; left: 50%; top: 100%; width: 8px; height: 22px; margin-left: -4px; background: #5c3b20; border-radius: 0 0 3px 3px; }
+  @keyframes sign { 50% { transform: translateX(-50%) translateY(6px) rotate(-1.5deg); } }
+
+  /* Le chemin et ses niveaux */
+  .quest { position: relative; padding-bottom: 40px; }
+  .quest-path { position: absolute; inset: 0; pointer-events: none; }
+  .quest-path svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .quest-path path { fill: none; stroke: rgba(110, 168, 255, .16); stroke-width: 2; stroke-dasharray: 2 12; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .stone { position: absolute; width: 46px; height: 20px; margin: -10px 0 0 -23px; border-radius: 50%; background: linear-gradient(180deg, #2a3f7e, #16264f); box-shadow: 0 6px 0 #0a1433, 0 14px 18px -6px rgba(0, 0, 0, .7); transform: scale(var(--s, 1)); transition: background .5s, box-shadow .5s, transform .5s var(--back); }
+  .stone.lit { background: linear-gradient(180deg, #a8d1ff, #4f8ef0); box-shadow: 0 6px 0 #1b3a86, 0 0 22px 4px rgba(110, 168, 255, .55); transform: scale(calc(var(--s, 1) * 1.12)); }
+  .walker { position: absolute; z-index: 2; width: 76px; height: 76px; margin: -66px 0 0 -38px; transition: left .35s linear, top .35s linear; filter: drop-shadow(0 0 16px rgba(255, 178, 80, .85)); }
+  .walker svg { width: 100%; height: 100%; overflow: visible; animation: hop .7s ease-in-out infinite alternate; }
+  @keyframes hop { to { transform: translateY(-5px); } }
+  .level { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 6vw, 96px); align-items: center; min-height: 440px; padding: 30px 0; }
+  .level:nth-of-type(even) .cave { order: 2; }
+  .cave { --glow: #6ea8ff; position: relative; justify-self: center; width: min(340px, 86%); aspect-ratio: 1.25; }
+  .cave svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 30px 30px rgba(0, 0, 0, .6)); }
+  .cave .mouth { fill: var(--glow); filter: url(#soft); transform-box: fill-box; transform-origin: center; animation: breathe 3.6s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: .68; transform: scale(.96); } }
+  .cave .spark { fill: #fff; opacity: 0; animation: spark 3s ease-in-out infinite; animation-delay: calc(var(--i) * -.7s); }
+  @keyframes spark { 0%, 100% { opacity: 0; transform: translateY(0); } 50% { opacity: .95; transform: translateY(-12px); } }
+  .cave::after { content: ''; position: absolute; left: 12%; right: 12%; bottom: -4%; height: 26%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent); filter: blur(12px); opacity: .55; transition: opacity .5s; }
+  .level:hover .cave::after, .level.reached .cave::after { opacity: 1; }
+  .level:hover .cave .mouth { animation-duration: 1.4s; }
+  .lvl-sign { position: absolute; left: -4%; bottom: 6%; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 10px; background: linear-gradient(180deg, #5f8fd6, #3d67b0); color: #fff; font-weight: 800; font-size: 13.5px; letter-spacing: .12em; text-transform: uppercase; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .25), 0 10px 20px -8px rgba(0, 0, 0, .8); transform-origin: 50% 0; transform: rotate(-4deg); animation: swing 4.5s ease-in-out infinite; white-space: nowrap; }
+  .level:nth-of-type(even) .lvl-sign { left: auto; right: -4%; animation-delay: -2s; }
+  .lvl-sign i { width: 8px; height: 8px; border-radius: 50%; background: #ffc94a; box-shadow: 0 0 10px 3px rgba(255, 201, 74, .8); }
+  .lvl-sign::after { content: ''; position: absolute; left: 50%; top: 100%; width: 7px; height: 26px; margin-left: -3px; background: #2a437f; border-radius: 0 0 3px 3px; }
+  .lvl-sign.final { background: linear-gradient(180deg, #ffb35c, #f26a1b); color: #1a0b02; }
+  @keyframes swing { 50% { transform: rotate(3deg); } }
+  .level-text { max-width: 480px; }
+  .level:nth-of-type(odd) .level-text { justify-self: start; } .level:nth-of-type(even) .level-text { justify-self: end; }
+  .level-text .kind { display: inline-flex; align-items: center; gap: 10px; color: var(--glow-c, var(--blue)); font-weight: 800; }
+  .level-text .kind svg { filter: drop-shadow(0 0 10px currentColor); }
+  .level-text h3 { font-size: clamp(26px, 3vw, 36px); margin: 10px 0 12px; letter-spacing: -.02em; }
+  .level-text p { color: var(--text); font-size: 17.5px; }
+  .level-text ul { list-style: none; margin: 16px 0 22px; padding: 0; display: grid; gap: 8px; font-weight: 600; color: var(--ink); font-size: 15.5px; }
+  .level-text li { display: flex; gap: 10px; align-items: flex-start; }
+  .level-text li svg { color: var(--green); flex-shrink: 0; margin-top: 4px; }
+  .btn-quest { background: #14275e; color: #dfe9ff; border-color: #2a4391; text-transform: uppercase; letter-spacing: .08em; font-size: 13.5px; min-height: 46px; padding: 8px 20px; border-radius: 999px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
+  .btn-quest:hover { background: #1c3682; border-color: var(--blue); transform: translateY(-2px); }
+  .js .level .cave, .js .level .level-text { opacity: 0; transition: opacity .8s var(--ease), transform .9s var(--back); }
+  .js .level .cave { transform: scale(.7) translateY(40px); } .js .level .level-text { transform: translateY(30px); }
+  .js .level.reached .cave, .js .level.reached .level-text { opacity: 1; transform: none; }
+  .js .level.reached .level-text { transition-delay: .15s; }
+  .firefly { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffe08a; box-shadow: 0 0 12px 4px rgba(255, 214, 110, .7); animation: fly var(--t, 9s) ease-in-out infinite alternate, blink 2.4s ease-in-out infinite; animation-delay: var(--dl, 0s); pointer-events: none; }
+  @keyframes fly { to { transform: translate(var(--fx, 60px), var(--fy, -80px)); } }
+  @keyframes blink { 50% { opacity: .15; } }
+  .hud { position: fixed; z-index: 58; left: 18px; bottom: 22px; display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 12px; border-radius: 16px; background: rgba(11, 21, 51, .86); backdrop-filter: blur(12px); border: 1px solid #2a4391; box-shadow: var(--shadow); color: var(--ink); font-size: 14px; font-weight: 700; opacity: 0; transform: translateY(20px); transition: opacity .35s, transform .35s var(--ease); pointer-events: none; }
+  .hud.on { opacity: 1; transform: none; }
+  .hud b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(180deg, #ffb35c, #f26a1b); color: #1a0b02; font-size: 16px; }
+  .hud span { display: grid; gap: 5px; } .hud small { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .hud u { display: block; width: 130px; height: 6px; border-radius: 99px; background: #1c2b55; overflow: hidden; text-decoration: none; }
+  .hud u i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #6ea8ff, #34d399); transform-origin: left; transform: scaleX(var(--xp, 0)); transition: transform .3s linear; }
+
+  /* La carte de l'aventure */
+  .map { position: relative; max-width: 1040px; margin-inline: auto; padding: 40px clamp(18px, 4vw, 48px) 34px; background: linear-gradient(90deg, #17327a 0 20%, #1c3d92 20% 40%, #17327a 40% 60%, #1c3d92 60% 80%, #17327a 80%); border-radius: 10px; box-shadow: var(--shadow-lg), inset 0 0 0 2px rgba(255, 255, 255, .06); clip-path: polygon(0 5%, 20% 0, 40% 5%, 60% 0, 80% 5%, 100% 0, 100% 95%, 80% 100%, 60% 95%, 40% 100%, 20% 95%, 0 100%); transform: perspective(1400px) rotateX(10deg); transform-origin: 50% 100%; transition: transform .8s var(--ease); }
+  .map:hover, .map:focus-within { transform: none; }
+  .map h3 { text-align: center; font-size: 22px; margin: 18px 0 26px; }
+  .map-route { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .map-route::before { content: ''; position: absolute; left: 10%; right: 10%; top: 31px; border-top: 3px dotted rgba(255, 255, 255, .32); }
+  .pin { position: relative; display: grid; justify-items: center; gap: 8px; padding: 0 4px 10px; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; text-align: center; min-height: 44px; }
+  .pin .dot { position: relative; z-index: 1; width: 62px; height: 62px; border-radius: 50% 50% 50% 50% / 46% 46% 54% 54%; display: grid; place-items: center; background: var(--c); color: #06122b; box-shadow: 0 0 0 5px #17327a, 0 10px 22px -8px rgba(0, 0, 0, .8); transition: transform .45s var(--back), box-shadow .3s; }
+  .pin b { color: var(--c); font-size: 14.5px; letter-spacing: .1em; text-transform: uppercase; }
+  .pin small { font-size: 13.5px; color: #c9d6f2; line-height: 1.35; }
+  .pin:hover .dot { transform: translateY(-6px) scale(1.06); }
+  .pin[aria-pressed=true] .dot { transform: translateY(-12px) scale(1.2); box-shadow: 0 0 0 5px #17327a, 0 0 30px 6px color-mix(in srgb, var(--c) 70%, transparent); animation: pin 1.4s ease-in-out infinite; }
+  @keyframes pin { 50% { transform: translateY(-20px) scale(1.2); } }
+  .pin .here { display: none; color: #ffc94a; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .pin[aria-pressed=true] .here { display: block; }
+  .map-note { margin: 22px auto 14px; max-width: 640px; text-align: center; min-height: 54px; color: #e6eeff; font-size: 16.5px; }
+  .map-note b { color: #ffc94a; }
+
+  /* Appel final : le camp */
+  .camp { display: flex; align-items: flex-end; justify-content: center; gap: 18px; margin-top: 26px; }
+  .camp svg { width: 96px; height: auto; overflow: visible; }
+
+  @media (max-width: 1040px) {
+    .level { grid-template-columns: 1fr; gap: 6px; min-height: 0; padding: 26px 0 26px 56px; }
+    .level:nth-of-type(even) .cave { order: 0; }
+    .cave { width: min(250px, 74%); justify-self: start; }
+    .level-text, .level:nth-of-type(even) .level-text { justify-self: start; }
+    .lvl-sign, .level:nth-of-type(even) .lvl-sign { left: auto; right: -6%; }
+    .map { transform: none; clip-path: none; border-radius: 20px; }
+    .map-route { grid-template-columns: 1fr; gap: 4px; }
+    .map-route::before { left: 31px; right: auto; top: 30px; bottom: 30px; border-top: 0; border-left: 3px dotted rgba(255, 255, 255, .32); }
+    .pin { grid-template-columns: 62px 1fr; justify-items: start; text-align: left; align-items: center; column-gap: 16px; padding: 8px 0; }
+    .pin .dot { grid-row: span 3; }
+    .pin[aria-pressed=true] .dot { transform: scale(1.12); animation: none; }
+    .hud { left: 12px; bottom: 82px; }
+    .hero-in { padding-bottom: 300px; }
+    .scene svg { min-height: 0; height: 430px; width: 1000px; }
+    .hud u { width: 90px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .walker, .hud, .firefly { display: none; }
+    .js .level .cave, .js .level .level-text { opacity: 1; transform: none; }
+    .map { transform: none; }
+  }
+
   /* Apparition au défilement */
   .js .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d, 0) * 80ms); }
   .js .rv.in { opacity: 1; transform: none; }
@@ -655,7 +776,7 @@
   <div class="nav">
     <a class="brand" href="#" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" alt="" width="34" height="34">IAM <span>INVOICER</span></a>
     <nav class="links" id="menu" aria-label="Navigation principale">
-      <a href="#fonctions">Fonctionnalités</a>
+      <a href="#parcours">Le parcours</a>
       <a href="#demo">Démonstration</a>
       <a href="#offres">Offres</a>
       <a href="#telecharger">Télécharger</a>
@@ -670,193 +791,141 @@
 <main id="contenu">
   <section class="hero" id="hero">
     <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="scene" aria-hidden="true">
+      <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <radialGradient id="lake" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#8fd0ff"/><stop offset=".45" stop-color="#2f74e0"/><stop offset="1" stop-color="#0b2a78" stop-opacity="0"/></radialGradient>
+          <radialGradient id="pglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#d6f0ff"/><stop offset=".5" stop-color="#6ea8ff" stop-opacity=".7"/><stop offset="1" stop-color="#6ea8ff" stop-opacity="0"/></radialGradient>
+          <radialGradient id="torch" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd58a" stop-opacity=".9"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
+          <linearGradient id="cry" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9e6ff"/><stop offset="1" stop-color="#2f74e0"/></linearGradient>
+          <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+          <symbol id="pine" viewBox="0 0 40 70"><path d="M20 0 L33 24 H26 L37 44 H28 L40 62 H0 L12 44 H3 L14 24 H7 Z" fill="#0d2550"/><path d="M20 0 L26 12 L20 16 L14 12 Z M26 24 L31 34 L24 36 Z M28 44 L33 54 L26 56 Z" fill="#cfe6ff" opacity=".55"/><rect x="17" y="60" width="6" height="10" fill="#0a1838"/></symbol>
+        </defs>
+        <circle class="moon" cx="1130" cy="120" r="150" fill="url(#pglow)" opacity=".5"/>
+        <g class="l1">
+          <path d="M-40 470 L130 250 L230 350 L330 210 L470 400 L590 270 L700 420 L850 220 L960 360 L1080 240 L1230 400 L1340 300 L1480 420 L1480 760 L-40 760 Z" fill="#17347e"/>
+          <path d="M130 250 L168 300 L138 290 L112 312 Z M330 210 L372 268 L336 252 L300 274 Z M850 220 L890 274 L856 262 L820 284 Z M1080 240 L1116 292 L1084 280 L1052 300 Z" fill="#cfe6ff" opacity=".8"/>
+        </g>
+        <g class="l2">
+          <path d="M-40 560 L90 430 L220 520 L360 400 L500 520 L640 460 L800 530 L940 420 L1100 520 L1250 440 L1480 540 L1480 760 L-40 760 Z" fill="#10286a"/>
+          <ellipse cx="760" cy="560" rx="360" ry="62" fill="url(#lake)"/>
+          <path class="shim" d="M560 552 h90 M720 572 h120 M880 548 h70" stroke="#d6f0ff" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+          <path class="shim b" d="M620 580 h70 M800 556 h60" stroke="#d6f0ff" stroke-width="2.5" stroke-linecap="round" opacity=".4"/>
+          <use href="#pine" x="130" y="430" width="48" height="84"/><use href="#pine" x="184" y="456" width="34" height="60"/><use href="#pine" x="1180" y="420" width="52" height="92"/><use href="#pine" x="1250" y="452" width="36" height="62"/><use href="#pine" x="1010" y="470" width="30" height="52"/><use href="#pine" x="320" y="470" width="30" height="52"/>
+          <g transform="translate(470 520)">
+            <ellipse cx="0" cy="44" rx="104" ry="24" fill="#2c4a99"/><ellipse cx="0" cy="36" rx="88" ry="18" fill="#4467b8"/>
+            <circle class="portal" cx="0" cy="-28" r="96" fill="url(#pglow)"/>
+            <circle class="ring" cx="0" cy="-28" r="58" fill="none" stroke="#d6f0ff" stroke-width="12" stroke-dasharray="84 18" stroke-linecap="round"/>
+            <circle cx="0" cy="-28" r="36" fill="#0b2a78"/>
+            <image href="assets/logo-mark.svg" x="-27" y="-55" width="54" height="54"/>
+          </g>
+        </g>
+        <g class="crystal"><path d="M250 150 l22 34 -22 52 -22 -52 z" fill="url(#cry)"/><path d="M250 150 l0 86 -22 -52 z" fill="#fff" opacity=".25"/></g>
+        <g class="crystal b"><path d="M1260 210 l16 26 -16 40 -16 -40 z" fill="url(#cry)"/></g>
+        <g class="crystal c"><path d="M980 300 l11 18 -11 28 -11 -28 z" fill="url(#cry)" opacity=".8"/></g>
+        <g class="l3">
+          <path d="M-40 760 L-40 640 C120 600 300 660 470 640 C560 630 600 690 720 690 C860 690 900 640 1040 650 C1200 660 1320 610 1480 640 L1480 760 Z" fill="#081233"/>
+          <path d="M560 760 C580 690 650 660 720 660 C800 660 860 692 880 760 Z" fill="#050b1f"/>
+          <circle class="halo" cx="786" cy="566" r="120" fill="url(#torch)"/>
+          <g transform="translate(720 596)">
+            <path d="M-26 66 C-28 18 -18 -6 0 -6 C18 -6 28 18 26 66 Z" fill="#030817"/>
+            <circle cx="0" cy="-24" r="19" fill="#030817"/>
+            <path d="M-20 -30 C-18 -50 18 -50 20 -30 C10 -38 -10 -38 -20 -30 Z" fill="#e2a81f"/><circle cx="19" cy="-40" r="7" fill="#1fa463"/>
+            <path d="M18 18 L60 -22" stroke="#030817" stroke-width="10" stroke-linecap="round"/>
+            <path d="M58 -18 L70 -60" stroke="#5c3b20" stroke-width="6" stroke-linecap="round"/>
+            <g class="flame"><path d="M70 -60 C56 -78 66 -96 72 -108 C76 -94 90 -84 84 -66 C80 -56 74 -56 70 -60 Z" fill="#ff8a3d"/><path d="M72 -64 C64 -76 70 -86 74 -94 C76 -84 84 -78 80 -68 C78 -62 74 -62 72 -64 Z" fill="#ffd58a"/></g>
+            <rect x="-40" y="2" width="30" height="22" rx="4" fill="#fff" opacity=".9" transform="rotate(-12 -25 13)"/><circle cx="-19" cy="14" r="5" fill="#1fa463"/>
+          </g>
+          <use href="#pine" x="40" y="590" width="66" height="116"/><use href="#pine" x="1330" y="580" width="70" height="122"/><use href="#pine" x="1250" y="620" width="44" height="78"/>
+        </g>
+      </svg>
+    </div>
     <div class="wrap hero-in">
-      <a class="pill rv" href="#fonctions"><b>Nouveau</b>Dépenses, expressions de besoin et validations<i data-icon="ArrowRight"></i></a>
+      <a class="pill rv" href="#parcours"><b>Nouveau</b>Dépenses, expressions de besoin et validations<i data-icon="ArrowRight"></i></a>
       <h1 id="h1" aria-label="Toute votre gestion, même sans Internet."><span class="h1-line" aria-hidden="true">Toute votre gestion,</span><br><em class="rot" id="rot" aria-hidden="true"><span class="on">même sans Internet.</span><span>sur votre téléphone.</span><span>conforme au Burkina Faso.</span><span>sans rien ressaisir.</span></em></h1>
-      <p class="lead rv" style="--d:2">Devis, factures, caisse, stock, dépenses, comptabilité SYSCOHADA et paie dans un seul logiciel, pensé pour les entreprises du Burkina Faso. Sur ordinateur, téléphone et navigateur.</p>
+      <p class="lead rv" style="--d:2">IAM INVOICER vous guide de la première facture au bilan : caisse, stock, dépenses, comptabilité SYSCOHADA et paie, pour les entreprises du Burkina Faso.</p>
       <div class="cta rv" style="--d:3" id="hero-cta">
-        <a class="btn btn-cta" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Essayer gratuitement 30 jours</span></a>
-        <a class="btn btn-ghost" href="#demo"><i data-icon="Play" data-size="18" data-weight="fill"></i>Créer une facture en 10 secondes</a>
-      </div>
-      <ul class="proof rv" style="--d:4">
-        <li><i data-icon="CheckCircle" data-size="18" data-weight="fill"></i>Sans carte bancaire</li>
-        <li><i data-icon="CheckCircle" data-size="18" data-weight="fill"></i>Fonctionne hors connexion</li>
-        <li><i data-icon="CheckCircle" data-size="18" data-weight="fill"></i>Taxes et déclarations du Burkina Faso</li>
-        <li><i data-icon="CheckCircle" data-size="18" data-weight="fill"></i>Mobile money intégré</li>
-      </ul>
-      <div class="stage rv" style="--d:5" aria-hidden="true">
-        <div class="screen" id="screen">
-          <div class="screen-bar"><i></i><i></i><i></i><span>IAM INVOICER — Tableau de bord</span></div>
-          <img src="assets/captures/tableau-de-bord.png" alt="" width="1600" height="940" fetchpriority="high">
-        </div>
-        <div class="phone"><img src="assets/captures/mobile.png" alt="" width="390" height="820" loading="lazy"></div>
-        <div class="chip c1" id="feed"><span class="ico"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i></span><span><strong id="feed-t">Facture FAC-2026-0142</strong><span id="feed-s">validée à l'instant</span></span></div>
-        <div class="chip c2"><span class="ico"><i data-icon="Wallet" data-size="22" data-weight="fill"></i></span><span><strong>+ 354 000 FCFA</strong>reçus par Orange Money</span></div>
-        <div class="chip c3"><span class="ico"><i data-icon="WifiSlash" data-size="22" data-weight="fill"></i></span><span><strong>Hors connexion</strong>3 saisies en attente d'envoi</span></div>
+        <a class="btn btn-cta" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Commencer l'aventure — 30 jours gratuits</span></a>
+        <a class="btn btn-glass" href="#demo"><i data-icon="Play" data-size="18" data-weight="fill"></i>Créer une facture en 10 secondes</a>
       </div>
     </div>
+    <a class="scroll-sign" href="#parcours">Suivez le chemin<i data-icon="ArrowDown"></i></a>
   </section>
 
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <span><i data-icon="Receipt" data-size="22"></i>Devis et factures</span><span><i data-icon="CashRegister" data-size="22"></i>Caisse</span><span><i data-icon="Package" data-size="22"></i>Stock multi-dépôts</span><span><i data-icon="ShoppingCart" data-size="22"></i>Achats</span><span><i data-icon="Coins" data-size="22"></i>Dépenses</span><span><i data-icon="ClipboardText" data-size="22"></i>Expressions de besoin</span><span><i data-icon="Calculator" data-size="22"></i>Comptabilité SYSCOHADA</span><span><i data-icon="Stamp" data-size="22"></i>Déclarations fiscales</span><span><i data-icon="IdentificationBadge" data-size="22"></i>Paie et RH</span><span><i data-icon="Handshake" data-size="22"></i>CRM</span><span><i data-icon="Kanban" data-size="22"></i>Projets</span><span><i data-icon="Bank" data-size="22"></i>Immobilisations</span><span><i data-icon="ChartBar" data-size="22"></i>Rapports</span>
-      <span><i data-icon="Receipt" data-size="22"></i>Devis et factures</span><span><i data-icon="CashRegister" data-size="22"></i>Caisse</span><span><i data-icon="Package" data-size="22"></i>Stock multi-dépôts</span><span><i data-icon="ShoppingCart" data-size="22"></i>Achats</span><span><i data-icon="Coins" data-size="22"></i>Dépenses</span><span><i data-icon="ClipboardText" data-size="22"></i>Expressions de besoin</span><span><i data-icon="Calculator" data-size="22"></i>Comptabilité SYSCOHADA</span><span><i data-icon="Stamp" data-size="22"></i>Déclarations fiscales</span><span><i data-icon="IdentificationBadge" data-size="22"></i>Paie et RH</span><span><i data-icon="Handshake" data-size="22"></i>CRM</span><span><i data-icon="Kanban" data-size="22"></i>Projets</span><span><i data-icon="Bank" data-size="22"></i>Immobilisations</span><span><i data-icon="ChartBar" data-size="22"></i>Rapports</span>
-    </div>
-  </div>
-
-  <section id="solution">
-    <div class="wrap">
-      <div class="head rv">
-        <div class="eyebrow">Une seule saisie</div>
-        <h2>Vous facturez. <em>Le reste suit tout seul.</em></h2>
-        <p>Fini les fichiers Excel éparpillés et les fins de mois difficiles : chaque vente met à jour le stock, la comptabilité et vos déclarations, sans rien ressaisir.</p>
-      </div>
-      <div class="story" id="story">
-        <div class="story-pin">
-          <ol class="story-steps" id="story-steps">
-            <li><button type="button"><span class="ico"><i data-icon="Receipt" data-size="24"></i></span><span><b>1 · La facture</b><small>Validée en un clic, numérotée, avec son QR code.</small></span></button></li>
-            <li><button type="button"><span class="ico"><i data-icon="Package" data-size="24"></i></span><span><b>2 · Le stock</b><small>Quantités et coût moyen ajustés dans le bon dépôt.</small></span></button></li>
-            <li><button type="button"><span class="ico"><i data-icon="Wallet" data-size="24"></i></span><span><b>3 · L'encaissement</b><small>Espèces, Orange Money, Moov Money, Wave, virement.</small></span></button></li>
-            <li><button type="button"><span class="ico"><i data-icon="Calculator" data-size="24"></i></span><span><b>4 · La comptabilité</b><small>Écritures SYSCOHADA passées automatiquement.</small></span></button></li>
-            <li><button type="button"><span class="ico"><i data-icon="Stamp" data-size="24"></i></span><span><b>5 · La déclaration</b><small>TVA et retenues du mois prêtes avant le 20.</small></span></button></li>
-          </ol>
-          <div class="story-scene" aria-hidden="true">
-            <div class="panel"><div class="pcard">
-              <h4><span>Facture FAC-2026-0142</span><span>Davycas International</span></h4><span class="seal">VALIDÉE</span>
-              <div class="line" style="--k:1"><span>Ciment 50 kg × 20</span><b>130 000</b></div>
-              <div class="line" style="--k:2"><span>Installation et mise en service</span><b>290 000</b></div>
-              <div class="line" style="--k:3"><span>TVA 18 %</span><b>75 600</b></div>
-              <div class="total" style="--k:4"><span>Total TTC</span><span>495 600 FCFA</span></div>
-            </div></div>
-            <div class="panel"><div class="pcard">
-              <h4><span>Stock · Dépôt principal</span><span>Mis à jour</span></h4>
-              <div class="pstock" style="--k:1"><span>Ciment 50 kg<span class="minus">−20</span></span><u><b style="--from:82%;--to:76%"></b></u><span>390</span></div>
-              <div class="pstock" style="--k:2"><span>Fer à béton 12</span><u><b style="--from:38%;--to:38%;background:#f59e0b"></b></u><span>96</span></div>
-              <div class="pstock" style="--k:3"><span>Peinture 20 L</span><u><b style="--from:9%;--to:9%;background:#dc2626"></b></u><span>4</span></div>
-              <div class="line" style="--k:4"><span>Coût moyen pondéré recalculé</span><b>5 850</b></div>
-            </div></div>
-            <div class="panel"><div class="pcard ppay">
-              <span class="ring"><i data-icon="CheckCircle" data-size="48" data-weight="fill"></i></span>
-              <span style="--k:1;font-weight:700;color:#64748b">Règlement reçu</span>
-              <span class="amount" style="--k:2"><span data-roll="495600">495 600</span> FCFA</span>
-              <span class="via" style="--k:3"><span>Espèces</span><span class="sel">Orange Money</span><span>Wave</span><span>Virement</span></span>
-            </div></div>
-            <div class="panel"><div class="pcard">
-              <h4><span>Journal des ventes</span><span>Automatique</span></h4>
-              <div class="pledger">
-                <div style="--k:1"><b>411</b><span>Client Davycas</span><span>495 600</span><span></span></div>
-                <div style="--k:2"><b>701</b><span>Ventes de marchandises</span><span></span><span>420 000</span></div>
-                <div style="--k:3"><b>4431</b><span>TVA facturée</span><span></span><span>75 600</span></div>
-                <div class="balance" style="--k:4"><span>Écriture équilibrée</span><span>495 600 = 495 600</span></div>
-              </div>
-            </div></div>
-            <div class="panel"><div class="pcard pdecl">
-              <h4><span>Déclaration du mois</span><span>Prête</span></h4>
-              <div class="line" style="--k:1"><span>TVA collectée</span><b>75 600</b></div>
-              <div class="line" style="--k:2"><span>TVA déductible</span><b>32 400</b></div>
-              <div style="--k:3"><small style="color:#64748b;font-weight:700">TVA nette à reverser</small><div class="big"><span data-roll="43200">43 200</span> FCFA</div></div>
-              <div class="due" style="--k:4"><i data-icon="CalendarCheck" data-size="24"></i>À déposer avant le 20 du mois suivant.</div>
-            </div></div>
-            <span class="story-bar"></span>
-          </div>
-        </div>
-      </div>
-      <div class="stats rv" style="margin-top:44px">
-        <div class="stat"><b><span data-count="14">14</span></b><span>modules, de la facture au bilan</span></div>
-        <div class="stat"><b><span data-count="5">5</span></b><span>plateformes : Windows, Mac, Android, iPhone, navigateur</span></div>
-        <div class="stat"><b><span data-count="12">12</span></b><span>rôles prêts à l'emploi, du caissier au directeur</span></div>
-        <div class="stat"><b><span data-count="30">30</span><small>jours</small></b><span>d'essai gratuit, tous modules ouverts</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="fonctions" class="alt">
+  <section id="parcours" class="quest-sec">
     <div class="wrap">
       <div class="head center rv">
-        <div class="eyebrow">Fonctionnalités</div>
-        <h2>Un vrai ERP, <em>simple</em> comme un carnet de factures</h2>
-        <p>Commencez par la facturation. Ajoutez la caisse, le stock, les achats ou la paie quand vous en avez besoin : tout est déjà relié.</p>
+        <div class="eyebrow">Le parcours</div>
+        <h2>Six niveaux, <em>de la première facture au bilan</em></h2>
+        <p>Suivez le chemin : chaque étape de votre gestion s'allume sur votre passage. Commencez au niveau qui vous concerne.</p>
       </div>
-      <div class="bento">
-        <article class="tile s7 rv">
-          <span class="tag"><i data-icon="Receipt"></i>Ventes</span>
-          <h3>Devis, factures et avoirs à votre image</h3>
-          <p>Six modèles de documents, votre logo, votre cachet et votre signature. Le devis devient bon de livraison puis facture en un clic.</p>
-          <div class="art"><div class="mini-doc" style="position:relative">
-            <div class="top"><span>Votre société</span><span>FACTURE</span></div><span class="stamp">VALIDÉE</span>
-            <div class="row" style="margin-top:22px"><span>Installation et mise en service</span><b>300 000</b></div>
-            <div class="row"><span>Maintenance annuelle</span><b>120 000</b></div>
-            <div class="tot"><span>Total TTC</span><span>495 600 FCFA</span></div>
-          </div></div>
-        </article>
-        <article class="tile dark s5 rv" style="--d:1">
-          <span class="tag"><i data-icon="CashRegister"></i>Caisse</span>
-          <h3>Encaissez partout, par tous les moyens</h3>
-          <p>Point de vente tactile, tickets, sessions de caisse et clôture avec écart contrôlé.</p>
-          <div class="art pay">
-            <div><i style="--c:#ff7900"></i>Orange Money<b>125 000</b></div>
-            <div><i style="--c:#34d399"></i>Espèces<b>78 500</b></div>
-            <div><i style="--c:#60a5fa"></i>Wave · Moov Money<b>40 000</b></div>
+      <div class="quest" id="quest">
+        <div class="quest-path" aria-hidden="true"><svg id="quest-svg" preserveAspectRatio="none"><path id="quest-line" d=""/></svg><span class="walker" id="walker"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="rgba(255,178,80,.22)"/><path d="M17 47 C16 30 20 22 27 22 C34 22 38 30 37 47 Z" fill="#dbe9ff"/><path d="M17 47 C16.5 40 17 34 19 29 L35 29 C37 34 37.500 40 37 47 Z" fill="#3d67b0"/><circle cx="27" cy="15" r="7.5" fill="#8d5a3a"/><path d="M19 13 C20 5 34 5 35 13 C31 10 23 10 19 13 Z" fill="#e2a81f"/><path d="M36 30 L46 18" stroke="#5c3b20" stroke-width="3.2" stroke-linecap="round"/><path class="flame" d="M46 18 C41 12 45 6 47 2 C48 7 53 10 51 16 C50 19 47 19 46 18 Z" fill="#ff8a3d"/></svg></span></div>
+        <article class="level" id="niv-facturer" data-name="Facturer" style="--glow-c:#6ea8ff">
+          <div class="cave" style="--glow:#6ea8ff"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#6ea8ff" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 01</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="Receipt" data-size="30" data-weight="fill"></i>Facturer</span>
+            <h3>Des devis et des factures à votre image</h3>
+            <p>Six modèles, votre logo, votre cachet et votre signature. Le devis devient bon de livraison puis facture en un clic, avec un QR code que votre client vérifie.</p>
+            <ul><li><i data-icon="Check"></i>Devis, factures, avoirs, factures récurrentes</li><li><i data-icon="Check"></i>Taxes du Burkina Faso en un interrupteur</li><li><i data-icon="Check"></i>Envoi par e-mail et SMS, relances</li></ul>
+            <a class="btn btn-quest" href="#demo">Créer une facture<i data-icon="CaretRight"></i></a>
           </div>
         </article>
-        <article class="tile s4 rv">
-          <span class="tag"><i data-icon="Package"></i>Stock</span>
-          <h3>Jamais en rupture par surprise</h3>
-          <p>Plusieurs dépôts, lots, inventaires et seuils d'alerte.</p>
-          <div class="art stock">
-            <div>Ciment 50 kg<u><b style="--w:82%"></b></u><span>410</span></div>
-            <div>Fer à béton 12<u><b style="--w:38%;--c:#f59e0b"></b></u><span>96</span></div>
-            <div>Peinture 20 L<u><b style="--w:9%;--c:#dc2626"></b></u><span>4</span></div>
+        <article class="level" id="niv-encaisser" data-name="Encaisser" style="--glow-c:#ffb35c">
+          <div class="cave" style="--glow:#ffb35c"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#ffb35c" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 02</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="CashRegister" data-size="30" data-weight="fill"></i>Encaisser</span>
+            <h3>Encaissez partout, par tous les moyens</h3>
+            <p>Point de vente tactile, tickets, sessions de caisse et clôture avec écart contrôlé. Chaque règlement est rattaché à sa facture.</p>
+            <ul><li><i data-icon="Check"></i>Espèces, Orange Money, Moov Money, Wave</li><li><i data-icon="Check"></i>Virement, chèque, carte</li><li><i data-icon="Check"></i>Créances et retards signalés chaque matin</li></ul>
+            <a class="btn btn-quest" href="#apercu">Voir les écrans<i data-icon="CaretRight"></i></a>
           </div>
         </article>
-        <article class="tile s8 rv" style="--d:1">
-          <span class="tag"><i data-icon="ClipboardText"></i>Dépenses et achats · nouveau</span>
-          <h3>Chaque dépense passe par le bon circuit</h3>
-          <p>Un collaborateur exprime un besoin ou saisit une dépense depuis son téléphone. Le responsable vise, les finances valident, les achats commandent : chacun voit ce qui l'attend.</p>
-          <div class="art steps">
-            <div class="ok"><i>✓</i>Expression de besoin — 3 ordinateurs portables<small>Awa, commerciale</small></div>
-            <div class="ok"><i>✓</i>Visa du responsable<small>Chef de service</small></div>
-            <div class="now"><i>3</i>Validation financière<small>En attente du DAF</small></div>
-            <div><i>4</i>Bon de commande<small>Service achats</small></div>
+        <article class="level" id="niv-stock" data-name="Stocker" style="--glow-c:#3ddbd9">
+          <div class="cave" style="--glow:#3ddbd9"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#3ddbd9" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 03</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="Package" data-size="30" data-weight="fill"></i>Stocker</span>
+            <h3>Jamais en rupture par surprise</h3>
+            <p>Chaque vente et chaque réception ajustent le stock et le coût moyen, dans le bon dépôt.</p>
+            <ul><li><i data-icon="Check"></i>Plusieurs dépôts, transferts, lots</li><li><i data-icon="Check"></i>Inventaires et seuils d’alerte</li><li><i data-icon="Check"></i>Valeur du stock à tout moment</li></ul>
+            <a class="btn btn-quest" href="#apercu">Voir les écrans<i data-icon="CaretRight"></i></a>
           </div>
         </article>
-        <article class="tile s6 rv">
-          <span class="tag"><i data-icon="Calculator"></i>Comptabilité</span>
-          <h3>SYSCOHADA révisé, sans être comptable</h3>
-          <p>Journaux, grand livre, balance, compte de résultat et bilan se construisent à partir de vos ventes, achats et dépenses.</p>
-          <div class="art ledger">
-            <div><span>Compte</span><span>Libellé</span><span>Débit</span><span>Crédit</span></div>
-            <div><b>411</b><span>Client Davycas</span><span>495 600</span><span></span></div>
-            <div><b>701</b><span>Ventes de marchandises</span><span></span><span>420 000</span></div>
-            <div><b>4431</b><span>TVA facturée</span><span></span><span>75 600</span></div>
+        <article class="level" id="niv-depenses" data-name="Dépenser" style="--glow-c:#b18cff">
+          <div class="cave" style="--glow:#b18cff"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#b18cff" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 04</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="ClipboardText" data-size="30" data-weight="fill"></i>Dépenser</span>
+            <h3>Plus aucune dépense sans accord</h3>
+            <p>Un collaborateur exprime un besoin ou saisit une dépense. Le responsable vise, les finances valident, les achats commandent : chacun voit ce qui l’attend.</p>
+            <ul><li><i data-icon="Check"></i>Dépenses avec photo du justificatif</li><li><i data-icon="Check"></i>Expressions de besoin jusqu’au bon de commande</li><li><i data-icon="Check"></i>Douze rôles, du caissier au directeur</li></ul>
+            <a class="btn btn-quest" href="#metiers">Choisir mon métier<i data-icon="CaretRight"></i></a>
           </div>
         </article>
-        <article class="tile s6 rv" style="--d:1">
-          <span class="tag"><i data-icon="ChartBar"></i>Rapports</span>
-          <h3>Vos chiffres, vivants et lisibles</h3>
-          <p>Graphiques interactifs : chiffre d'affaires par mois, par client, marges par article, TVA. Un survol donne la valeur exacte.</p>
-          <div class="art bars"><i style="--h:34%;--i:0"></i><i style="--h:48%;--i:1"></i><i style="--h:41%;--i:2"></i><i style="--h:62%;--i:3"></i><i style="--h:55%;--i:4"></i><i style="--h:74%;--i:5"></i><i style="--h:66%;--i:6"></i><i style="--h:88%;--i:7"></i><i style="--h:79%;--i:8"></i><i style="--h:100%;--i:9"></i></div>
+        <article class="level" id="niv-compta" data-name="Comptabiliser" style="--glow-c:#34d399">
+          <div class="cave" style="--glow:#34d399"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#34d399" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 05</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="Calculator" data-size="30" data-weight="fill"></i>Comptabiliser</span>
+            <h3>SYSCOHADA, sans être comptable</h3>
+            <p>Les écritures se passent toutes seules à partir de vos ventes, achats, dépenses et paies. Journaux, grand livre, balance et bilan sont prêts.</p>
+            <ul><li><i data-icon="Check"></i>TVA et retenues du mois, à déposer avant le 20</li><li><i data-icon="Check"></i>Paie, CNSS et IUTS calculés</li><li><i data-icon="Check"></i>Rapports en graphiques interactifs</li></ul>
+            <a class="btn btn-quest" href="#offres">Voir les offres<i data-icon="CaretRight"></i></a>
+          </div>
         </article>
-        <article class="tile s4 rv">
-          <span class="tag"><i data-icon="Stamp"></i>Fiscalité</span>
-          <h3>Les taxes du Burkina Faso, déjà réglées</h3>
-          <ul><li><i data-icon="Check"></i>TVA 18 %, retenues à la source</li><li><i data-icon="Check"></i>Prélèvement, timbre</li><li><i data-icon="Check"></i>Échéancier mensuel des déclarations</li></ul>
-        </article>
-        <article class="tile s4 rv" style="--d:1">
-          <span class="tag"><i data-icon="IdentificationBadge"></i>Paie et RH</span>
-          <h3>Bulletins et déclarations sociales</h3>
-          <ul><li><i data-icon="Check"></i>Salariés, contrats, congés</li><li><i data-icon="Check"></i>CNSS et IUTS calculés</li><li><i data-icon="Check"></i>Paie comptabilisée</li></ul>
-        </article>
-        <article class="tile s4 rv" style="--d:2">
-          <span class="tag"><i data-icon="UsersThree"></i>Équipe</span>
-          <h3>Un rôle pour chacun</h3>
-          <ul><li><i data-icon="Check"></i>Directeur, DAF, comptable, acheteur…</li><li><i data-icon="Check"></i>Droits modifiables par module</li><li><i data-icon="Check"></i>Journal de chaque action</li></ul>
+        <article class="level" id="niv-final" data-name="Se lancer" style="--glow-c:#ff8a3d">
+          <div class="cave" style="--glow:#ff8a3d"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#ff8a3d" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign final"><i></i>Niveau final</span></div>
+          <div class="level-text">
+            <span class="kind"><i data-icon="RocketLaunch" data-size="30" data-weight="fill"></i>Se lancer</span>
+            <h3>À vous de jouer</h3>
+            <p>Installez IAM INVOICER sur votre ordinateur ou votre téléphone. Trente jours d’essai, tous les modules ouverts, et vos données conservées quand vous passez à une licence.</p>
+            <ul><li><i data-icon="Check"></i>Windows, Mac, Android, iPhone, navigateur</li><li><i data-icon="Check"></i>Fonctionne sans Internet</li><li><i data-icon="Check"></i>Une équipe à Ouagadougou pour vous accompagner</li></ul>
+            <a class="btn btn-quest" href="#telecharger">Télécharger<i data-icon="CaretRight"></i></a>
+          </div>
         </article>
       </div>
     </div>
   </section>
 
-  <section id="demo">
+  <section id="demo" class="alt">
     <div class="wrap">
       <div class="head rv">
         <div class="eyebrow">Essayez tout de suite</div>
@@ -915,31 +984,6 @@
             <div class="live-foot"><span class="live-qr" aria-hidden="true"></span><span><b>Document authentique</b>Votre client scanne ce code pour vérifier le numéro, la date et le montant.</span></div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="circuits" class="alt">
-    <div class="wrap circuit">
-      <div class="rv">
-        <div class="eyebrow">Circuits de validation</div>
-        <h2>Plus aucune dépense <em>sans accord.</em></h2>
-        <p style="margin-top:18px;font-size:19px;color:var(--muted)">Dépenses et demandes d'achat suivent un parcours clair. Personne ne valide sa propre demande, et chaque décision est tracée.</p>
-        <ul class="circuit-list">
-          <li><i data-icon="PaperPlaneTilt"></i><div><strong>Le collaborateur demande</strong><span>Depuis son téléphone, avec la photo du justificatif.</span></div></li>
-          <li><i data-icon="SealCheck"></i><div><strong>Le responsable vise, les finances valident</strong><span>Un rejet renvoie la demande à son auteur, avec le motif.</span></div></li>
-          <li><i data-icon="Calculator"></i><div><strong>Le paiement est comptabilisé</strong><span>L'écriture est passée sur le bon compte de charge, sans ressaisie.</span></div></li>
-        </ul>
-      </div>
-      <div class="track rv" style="--d:1" id="track" role="img" aria-label="Exemple : une expression de besoin franchit ses étapes, de la demande à la clôture.">
-        <div class="track-head"><strong>EB-2026-0014 · Postes du service commercial</strong><span class="badge" id="track-badge"><i></i><span>En cours</span></span></div>
-        <ol>
-          <li><span class="n">1</span><span><b>Expression du besoin</b><small>Awa, commerciale · 1 365 000 FCFA estimés</small></span><em>Envoyée</em></li>
-          <li><span class="n">2</span><span><b>Visa du responsable</b><small>Chef de service</small></span><em>Visée</em></li>
-          <li><span class="n">3</span><span><b>Validation financière</b><small>Directeur administratif et financier</small></span><em>Validée</em></li>
-          <li><span class="n">4</span><span><b>Bon de commande</b><small>Service achats · fournisseur choisi</small></span><em>Commandée</em></li>
-          <li><span class="n">5</span><span><b>Réception et clôture</b><small>Besoin satisfait</small></span><em>Clôturée</em></li>
-        </ol>
       </div>
     </div>
   </section>
@@ -1036,6 +1080,27 @@
           <ul class="job-mods" id="job-mods"></ul>
           <div class="job-offer"><span>Offre conseillée<b id="job-offer"></b></span><a class="btn btn-cta" href="#telecharger"><i data-icon="RocketLaunch"></i>Essayer gratuitement</a></div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="carte">
+    <div class="wrap">
+      <div class="head center rv">
+        <div class="eyebrow">La carte de l'aventure</div>
+        <h2>Opérationnel <em>en une matinée</em></h2>
+        <p>Cinq étapes pour passer de vos fichiers Excel à une gestion qui tourne. Touchez une étape pour voir ce qui s'y passe.</p>
+      </div>
+      <div class="map rv" id="map">
+        <h3>Votre itinéraire</h3>
+        <div class="map-route" role="group" aria-label="Étapes de la mise en route">
+          <button type="button" class="pin" style="--c:#b18cff" aria-pressed="true" data-note="<b>Installer.</b> Téléchargez l'application pour votre ordinateur ou votre téléphone, ou ouvrez-la dans le navigateur. Aucune carte bancaire."><span class="dot"><i data-icon="DownloadSimple" data-size="28"></i></span><b>Installer</b><small>Ordinateur, téléphone ou navigateur</small><span class="here">Vous êtes ici</span></button>
+          <button type="button" class="pin" style="--c:#6ea8ff" aria-pressed="false" data-note="<b>Créer la société.</b> Logo, IFU, régime de TVA, devise : l'application se règle sur votre pays et vos taxes."><span class="dot"><i data-icon="Buildings" data-size="28"></i></span><b>Paramétrer</b><small>Société, logo, taxes</small><span class="here">Vous êtes ici</span></button>
+          <button type="button" class="pin" style="--c:#ffc94a" aria-pressed="false" data-note="<b>Importer.</b> Reprenez clients, fournisseurs, articles et stocks depuis vos fichiers Excel, avec un compte rendu ligne par ligne."><span class="dot"><i data-icon="FileXls" data-size="28"></i></span><b>Importer</b><small>Vos données Excel</small><span class="here">Vous êtes ici</span></button>
+          <button type="button" class="pin" style="--c:#34d399" aria-pressed="false" data-note="<b>Facturer.</b> Devis, factures, caisse : vous vendez le jour même, et le stock comme la comptabilité suivent."><span class="dot"><i data-icon="Receipt" data-size="28"></i></span><b>Facturer</b><small>Le jour même</small><span class="here">Vous êtes ici</span></button>
+          <button type="button" class="pin" style="--c:#ff8a3d" aria-pressed="false" data-note="<b>Piloter.</b> Tableau de bord, rapports et déclarations : vous savez chaque matin où en est l'entreprise."><span class="dot"><i data-icon="ChartBar" data-size="28"></i></span><b>Piloter</b><small>Rapports et déclarations</small><span class="here">Vous êtes ici</span></button>
+        </div>
+        <p class="map-note" id="map-note" aria-live="polite"></p>
       </div>
     </div>
   </section>
@@ -1185,6 +1250,7 @@
           <a class="btn btn-glass" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
         </div>
         <div class="contact" id="contact-list"></div>
+        <div class="camp" aria-hidden="true"><svg viewBox="0 0 96 110"><circle class="halo" cx="48" cy="62" r="46" fill="url(#torch)"/><path d="M30 34 h36 l6 10 H24 Z" fill="#3a2a1a"/><rect x="28" y="44" width="40" height="46" rx="8" fill="#22140a" stroke="#7a5230" stroke-width="3"/><rect x="36" y="52" width="24" height="30" rx="5" fill="#ffd58a"/><path class="flame" d="M48 78 C40 70 46 62 49 56 C51 63 57 67 54 75 C53 79 50 80 48 78 Z" fill="#ff8a3d"/><path d="M40 34 C40 18 56 18 56 34" fill="none" stroke="#7a5230" stroke-width="4"/><rect x="24" y="90" width="48" height="8" rx="4" fill="#3a2a1a"/></svg></div>
       </div>
     </div>
   </section>
@@ -1201,6 +1267,7 @@
   <a class="btn btn-ghost" href="/app/" data-acces>Se connecter</a>
   <a class="btn btn-cta" href="#telecharger">Essai gratuit</a>
 </div>
+<div class="hud" id="hud" aria-hidden="true"><b id="hud-n">1</b><span><small id="hud-t">Niveau 01</small><u><i></i></u></span></div>
 <button type="button" class="to-top" id="to-top" aria-label="Revenir en haut de la page"><i data-icon="ArrowUp" data-size="22"></i></button>
 
 <dialog class="acces" id="acces" aria-labelledby="acces-t">
@@ -1259,26 +1326,6 @@
       })
     }, { threshold: .14 }) : null
     all('.rv').forEach(function (el) { io ? io.observe(el) : el.classList.add('in') })
-
-    // Héros : l'écran s'incline vers le pointeur ; fil d'activité
-    var hero = $('hero'), screen = $('screen')
-    if (hover && !reduce && matchMedia('(min-width: 961px)').matches) {
-      hero.addEventListener('pointermove', function (e) {
-        var r = hero.getBoundingClientRect()
-        screen.style.setProperty('--ry', (((e.clientX - r.left) / r.width - .5) * 7).toFixed(2) + 'deg')
-        screen.style.setProperty('--rx', (8 - ((e.clientY - r.top) / r.height - .5) * 6).toFixed(2) + 'deg')
-      })
-      hero.addEventListener('pointerleave', function () { screen.style.removeProperty('--ry'); screen.style.removeProperty('--rx') })
-    }
-    if (!reduce) {
-      var msgs = [['Facture FAC-2026-0142', "validée à l'instant"], ['Stock mis à jour', 'Ciment 50 kg : −20'], ['Écritures comptables', 'passées automatiquement'], ['Dépense approuvée', 'par le chef de service']], mi = 0
-      setInterval(function () {
-        if (document.hidden) return
-        mi = (mi + 1) % msgs.length
-        $('feed-t').textContent = msgs[mi][0]
-        $('feed-s').textContent = msgs[mi][1]
-      }, 2800)
-    }
 
     // Une saisie, tout suit : les étapes s'allument l'une après l'autre
     var flow = $('flow')
@@ -1643,7 +1690,7 @@
     var canvas = $('fx'), hero = $('hero')
     if (canvas && canvas.getContext) {
       var ctx = canvas.getContext('2d'), pts = [], W = 0, H = 0, mouse = { x: -999, y: -999 }, running = false, dpr = Math.min(window.devicePixelRatio || 1, 2)
-      var dark = matchMedia('(prefers-color-scheme: dark)').matches
+      var dark = true
       var size = function () {
         W = hero.offsetWidth; H = hero.offsetHeight
         canvas.width = W * dpr; canvas.height = H * dpr
@@ -1757,6 +1804,108 @@
     addEventListener('scroll', ask, { passive: true })
     addEventListener('resize', ask)
     frame()
+  })()
+</script>
+<script>
+  // Le parcours : chemin de pierres tracé entre les niveaux, marcheur qui avance avec le défilement,
+  // carte de l'aventure. Sans animation demandée, tout s'affiche d'emblée.
+  (function () {
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    var $ = function (id) { return document.getElementById(id) }
+    var all = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)) }
+
+    // Carte : une étape choisie à la fois
+    var pins = all('#map .pin'), note = $('map-note')
+    function pick(p) { pins.forEach(function (x) { x.setAttribute('aria-pressed', String(x === p)) }); note.innerHTML = p.dataset.note }
+    pins.forEach(function (p) { p.addEventListener('click', function () { pick(p) }) })
+    if (pins[0]) pick(pins[0])
+
+    var quest = $('quest'), levels = all('.level', quest)
+    if (!quest) return
+    if (reduce || !('IntersectionObserver' in window)) { levels.forEach(function (l) { l.classList.add('reached') }); return }
+
+    var svg = $('quest-svg'), line = $('quest-line'), walker = $('walker'), holder = svg.parentNode, stones = [], total = 0
+    function build() {
+      stones.forEach(function (st) { st.el.remove() })
+      stones = []
+      var W = quest.offsetWidth, H = quest.offsetHeight, narrow = W < 900
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H)
+      // Le chemin serpente d'un niveau à l'autre : il passe du côté du texte à celui de la grotte
+      var pts = [[narrow ? 24 : W * .5, 0]]
+      levels.forEach(function (l, i) {
+        var y = l.offsetTop + l.offsetHeight * .5
+        pts.push([narrow ? 24 : W * (i % 2 ? .64 : .36), y])
+      })
+      pts.push([narrow ? 24 : W * .5, H])
+      var d = 'M' + pts[0][0] + ' ' + pts[0][1]
+      for (var i = 1; i < pts.length; i++) { var a = pts[i - 1], b = pts[i], my = (a[1] + b[1]) / 2; d += ' C' + a[0] + ' ' + my + ' ' + b[0] + ' ' + my + ' ' + b[0] + ' ' + b[1] }
+      line.setAttribute('d', d)
+      total = line.getTotalLength()
+      var step = narrow ? 46 : 58
+      for (var at = 20, k = 0; at < total - 10; at += step, k++) {
+        var pt = line.getPointAtLength(at), el = document.createElement('span')
+        el.className = 'stone'
+        el.style.left = pt.x + 'px'; el.style.top = pt.y + 'px'
+        el.style.setProperty('--s', (narrow ? .6 : .8 + (k % 3) * .12).toFixed(2))
+        holder.insertBefore(el, walker)
+        stones.push({ el: el, at: at })
+      }
+      move()
+    }
+    var hud = $('hud'), hudN = $('hud-n'), hudT = $('hud-t'), current = -1
+    function move() {
+      var r = quest.getBoundingClientRect()
+      var p = Math.max(0, Math.min(1, (innerHeight * .55 - r.top) / r.height))
+      var at = p * total, pt = line.getPointAtLength(at)
+      walker.style.left = pt.x + 'px'; walker.style.top = pt.y + 'px'
+      stones.forEach(function (st) { st.el.classList.toggle('lit', st.at <= at) })
+      var idx = -1
+      levels.forEach(function (l, i) { if (pt.y >= l.offsetTop + l.offsetHeight * .18) idx = i })
+      levels.forEach(function (l, i) { if (i <= idx) l.classList.add('reached') })
+      var inside = r.top < innerHeight * .6 && r.bottom > innerHeight * .5
+      hud.classList.toggle('on', inside && idx >= 0)
+      hud.style.setProperty('--xp', p.toFixed(3))
+      if (idx !== current && idx >= 0) {
+        current = idx
+        hudN.textContent = idx + 1
+        hudT.textContent = (idx === levels.length - 1 ? 'Niveau final' : 'Niveau 0' + (idx + 1)) + ' · ' + levels[idx].dataset.name
+      }
+    }
+    var queued = false
+    function ask() { if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; move(); scene() }) } }
+
+    // Scène du héros : plans qui glissent à des vitesses différentes (jamais le texte)
+    var sceneEl = document.querySelector('.scene'), hero = $('hero')
+    function scene() {
+      if (!sceneEl || scrollY > innerHeight * 1.2) return
+      var y = scrollY
+      sceneEl.style.setProperty('--sy1', (y * .12).toFixed(1) + 'px')
+      sceneEl.style.setProperty('--sy2', (y * .06).toFixed(1) + 'px')
+      sceneEl.style.setProperty('--sy3', (y * -.04).toFixed(1) + 'px')
+    }
+    if (hero && matchMedia('(hover: hover)').matches) hero.addEventListener('pointermove', function (e) {
+      var nx = e.clientX / innerWidth - .5
+      sceneEl.style.setProperty('--mx1', (nx * -10).toFixed(1) + 'px')
+      sceneEl.style.setProperty('--mx2', (nx * -22).toFixed(1) + 'px')
+      sceneEl.style.setProperty('--mx3', (nx * -40).toFixed(1) + 'px')
+    })
+
+    // Lucioles autour du chemin
+    for (var f = 0; f < 16; f++) {
+      var fl = document.createElement('span')
+      fl.className = 'firefly'
+      fl.style.left = (4 + Math.random() * 92) + '%'; fl.style.top = (3 + Math.random() * 94) + '%'
+      fl.style.setProperty('--fx', ((Math.random() - .5) * 160).toFixed(0) + 'px'); fl.style.setProperty('--fy', ((Math.random() - .5) * 160).toFixed(0) + 'px')
+      fl.style.setProperty('--t', (7 + Math.random() * 7).toFixed(1) + 's'); fl.style.setProperty('--dl', (-Math.random() * 6).toFixed(1) + 's')
+      holder.appendChild(fl)
+    }
+
+    build()
+    addEventListener('scroll', ask, { passive: true })
+    var rt = null
+    addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(build, 180) })
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(build)
+    addEventListener('load', build)
   })()
 </script>
 </body>
