@@ -8,6 +8,7 @@ import { useQuery } from '../api'
 import { AreaChart, compact, Donut, Progress, Sparkline } from '../components/charts'
 import { CountUp, DashboardSkeleton } from '../components/motion'
 import { Mascot } from '../components/Mascot'
+import { Scenery } from '../components/Scenery'
 import { Empty, ErrorBox } from '../components/ui'
 import { useCan, useSession } from '../session'
 
@@ -122,6 +123,28 @@ export function Dashboard() {
     <div className="page dashboard">
       <h1 className="sr-only">Tableau de bord</h1>
       <div className="bento">
+        {/* Accueil animé */}
+        <section className="dcard hero span-12">
+          <Scenery className="hero-scene" />
+          <div className="hero-text">
+            <h2>{up ? `Bravo ${first} !` : `Bonjour ${first}`}</h2>
+            <p>{up ? 'Vos ventes progressent ce mois-ci.' : `Voici l'activité de ${company.name || 'votre société'}.`}</p>
+            <div className="hero-figure">{formatMoney(d.salesMonth)}</div>
+            <p className="hero-sub">Chiffre d'affaires HT du mois <Growth now={d.salesMonth} before={d.salesPrevMonth} /></p>
+            {canSales && <button className="btn btn-primary" onClick={() => nav('/docs/FAC')}>Voir les ventes <ArrowRight size={18} weight="bold" aria-hidden="true" /></button>}
+          </div>
+          <Mascot
+            className="hero-mascot"
+            mood={assistant.data?.some((i) => i.tone === 'danger') ? 'alert' : up ? 'happy' : 'calm'}
+            messages={[
+              ...(assistant.data ?? []).slice(0, 3).map((i) => i.title),
+              up ? 'Les ventes montent, bravo !' : `Bonjour ${first} !`,
+              'Ctrl K : tout retrouver en un instant.',
+              'Un devis validé se transforme en facture en un clic.'
+            ]}
+          />
+        </section>
+
         {/* Indicateurs clés en couleur */}
         <Kpi tone="blue" icon={ChartLineUp} label="Ventes HT du mois" value={d.salesMonth} spark={days}
           foot={<Growth now={d.salesMonth} before={d.salesPrevMonth} light />} />
@@ -153,29 +176,8 @@ export function Dashboard() {
           </section>
         )}
 
-        {/* Accueil animé */}
-        <section className="dcard hero span-5">
-          <div className="hero-text">
-            <h2>{up ? `Bravo ${first} !` : `Bonjour ${first}`}</h2>
-            <p>{up ? 'Vos ventes progressent ce mois-ci.' : `Voici l'activité de ${company.name || 'votre société'}.`}</p>
-            <div className="hero-figure">{formatMoney(d.salesMonth)}</div>
-            <p className="hero-sub">Chiffre d'affaires HT du mois <Growth now={d.salesMonth} before={d.salesPrevMonth} /></p>
-            {canSales && <button className="btn btn-primary" onClick={() => nav('/docs/FAC')}>Voir les ventes</button>}
-          </div>
-          <Mascot
-            className="hero-mascot"
-            mood={assistant.data?.some((i) => i.tone === 'danger') ? 'alert' : up ? 'happy' : 'calm'}
-            messages={[
-              ...(assistant.data ?? []).slice(0, 3).map((i) => i.title),
-              up ? 'Les ventes montent, bravo !' : `Bonjour ${first} !`,
-              'Ctrl K : tout retrouver en un instant.',
-              'Un devis validé se transforme en facture en un clic.'
-            ]}
-          />
-        </section>
-
         {/* Chiffre d'affaires 12 mois */}
-        <Card className="span-7" title="Chiffre d'affaires" sub={`Cumul de l'année : ${formatMoney(d.salesYear)} HT`}
+        <Card className="span-8" title="Chiffre d'affaires" sub={`Cumul de l'année : ${formatMoney(d.salesYear)} HT`}
           action={canSales ? <Link className="btn btn-sm btn-tonal" to="/reports">Rapports</Link> : undefined}>
           <AreaChart points={months} summary={`Chiffre d'affaires HT des 12 derniers mois. Cumul de l'année ${formatMoney(d.salesYear)}.`} />
         </Card>
@@ -196,45 +198,6 @@ export function Dashboard() {
                 ))}
               </ul>
             </>
-          )}
-        </Card>
-
-        {/* Créances, dettes, trésorerie */}
-        <Card className="span-4" title="Créances et trésorerie" sub="Montants restant dus et flux du mois">
-          <ul className="rows">
-            <li>
-              <Tint tone="primary" icon={ArrowDownLeft} size="sm" />
-              <div className="grow"><b>Créances clients</b><span>{d.overdue.length} facture(s) en retard</span></div>
-              <strong className="money">{formatMoney(d.receivable)}</strong>
-              <Progress value={(d.receivable / finMax) * 100} label="Créances clients" />
-            </li>
-            <li>
-              <Tint tone="warning" icon={ArrowUpRight} size="sm" />
-              <div className="grow"><b>Dettes fournisseurs</b><span>Factures fournisseurs non réglées</span></div>
-              <strong className="money">{formatMoney(d.payable)}</strong>
-              <Progress value={(d.payable / finMax) * 100} color="var(--c-warning)" label="Dettes fournisseurs" />
-            </li>
-            <li>
-              <Tint tone={treasury >= 0 ? 'success' : 'danger'} icon={Wallet} size="sm" />
-              <div className="grow"><b>Trésorerie du mois</b><span>Encaissé {compact(d.cashIn)} · décaissé {compact(d.cashOut)}</span></div>
-              <strong className={`money ${treasury < 0 ? 'neg' : ''}`}>{formatMoney(treasury)}</strong>
-              <Progress value={(Math.abs(treasury) / finMax) * 100} color={treasury >= 0 ? 'var(--c-success)' : 'var(--c-danger)'} label="Trésorerie du mois" />
-            </li>
-          </ul>
-        </Card>
-
-        {/* Articles populaires */}
-        <Card className="span-4" title="Articles les plus vendus" sub={`Année ${now.getFullYear()}, en chiffre d'affaires HT`}>
-          {d.topProducts.length === 0 ? <Empty>Aucune vente d'article cette année.</Empty> : (
-            <ul className="rows">
-              {d.topProducts.map((p: any) => (
-                <li key={p.id}>
-                  <Tint tone={p.kind === 'prestation' ? 'info' : 'primary'} icon={Package} size="sm" />
-                  <div className="grow"><b>{p.name}</b><span>{p.ref} · {formatQty(p.qty)} vendu(s)</span></div>
-                  <strong className="money">{formatMoney(p.sales)}</strong>
-                </li>
-              ))}
-            </ul>
           )}
         </Card>
 
@@ -284,8 +247,47 @@ export function Dashboard() {
           )}
         </Card>
 
+        {/* Créances, dettes, trésorerie */}
+        <Card className="span-4" title="Créances et trésorerie" sub="Montants restant dus et flux du mois">
+          <ul className="rows">
+            <li>
+              <Tint tone="primary" icon={ArrowDownLeft} size="sm" />
+              <div className="grow"><b>Créances clients</b><span>{d.overdue.length} facture(s) en retard</span></div>
+              <strong className="money">{formatMoney(d.receivable)}</strong>
+              <Progress value={(d.receivable / finMax) * 100} label="Créances clients" />
+            </li>
+            <li>
+              <Tint tone="warning" icon={ArrowUpRight} size="sm" />
+              <div className="grow"><b>Dettes fournisseurs</b><span>Factures fournisseurs non réglées</span></div>
+              <strong className="money">{formatMoney(d.payable)}</strong>
+              <Progress value={(d.payable / finMax) * 100} color="var(--c-warning)" label="Dettes fournisseurs" />
+            </li>
+            <li>
+              <Tint tone={treasury >= 0 ? 'success' : 'danger'} icon={Wallet} size="sm" />
+              <div className="grow"><b>Trésorerie du mois</b><span>Encaissé {compact(d.cashIn)} · décaissé {compact(d.cashOut)}</span></div>
+              <strong className={`money ${treasury < 0 ? 'neg' : ''}`}>{formatMoney(treasury)}</strong>
+              <Progress value={(Math.abs(treasury) / finMax) * 100} color={treasury >= 0 ? 'var(--c-success)' : 'var(--c-danger)'} label="Trésorerie du mois" />
+            </li>
+          </ul>
+        </Card>
+
+        {/* Articles populaires */}
+        <Card className="span-4" title="Articles les plus vendus" sub={`Année ${now.getFullYear()}, en chiffre d'affaires HT`}>
+          {d.topProducts.length === 0 ? <Empty>Aucune vente d'article cette année.</Empty> : (
+            <ul className="rows">
+              {d.topProducts.map((p: any) => (
+                <li key={p.id}>
+                  <Tint tone={p.kind === 'prestation' ? 'info' : 'primary'} icon={Package} size="sm" />
+                  <div className="grow"><b>{p.name}</b><span>{p.ref} · {formatQty(p.qty)} vendu(s)</span></div>
+                  <strong className="money">{formatMoney(p.sales)}</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
         {/* À surveiller */}
-        <Card className="span-6" title="À surveiller" sub="Retards de paiement et stock bas">
+        <Card className="span-4" title="À surveiller" sub="Retards de paiement et stock bas">
           {d.overdue.length === 0 && d.lowStock.length === 0 ? (
             <Empty>Rien à signaler : aucune facture en retard, aucun article sous le seuil.</Empty>
           ) : (
@@ -309,7 +311,7 @@ export function Dashboard() {
         </Card>
 
         {/* Statistiques */}
-        <Card className="span-6" title="Statistiques" sub={`Mois de ${MONTHS[now.getMonth()].toLowerCase()} ${now.getFullYear()}`}>
+        <Card className="span-12" title="Statistiques" sub={`Mois de ${MONTHS[now.getMonth()].toLowerCase()} ${now.getFullYear()}`}>
           <div className="stats">
             <div className="stat"><Tint tone="primary" icon={ChartLineUp} size="lg" /><div><strong>{compact(d.salesMonth)}</strong><span>Ventes HT</span></div></div>
             <div className="stat"><Tint tone="info" icon={Users} size="lg" /><div><strong>{formatNumber(d.counts.clients)}</strong><span>Clients</span></div></div>

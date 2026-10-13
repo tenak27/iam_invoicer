@@ -67,3 +67,13 @@ Le profil ui-ux-pro-max ci-dessus est adapté à la marque IAM :
 - GSAP n'est pas chargé : les presets du profil (cascade, apparition au défilement, parallaxe) sont reproduits en CSS et en JavaScript natif pour garder la page légère.
 
 - Contrôles faits : 375, 820, 1366 px, thèmes clair et sombre, aucun défilement horizontal, un seul `h1`, images avec `alt`.
+
+## Refonte « Ciel » (v0.14) : la page reprend le dessin de l'application
+
+Les sections plus haut décrivent les versions précédentes ; ce qui suit fait foi.
+
+- **Mêmes thèmes que l'application** : jetons `--p`, `--grad`, `--sky-*`, `--sc-*` dans `:root` (Ciel) et sous `html[data-palette='amethyste' | 'lavande']`. Aucune couleur de marque en dur ailleurs : utiliser `var(--p)`, `rgba(var(--p-rgb), …)`, `rgba(var(--shadow-rgb), …)`, `var(--grad-cta)`, `var(--grad-deep)`, `var(--grad-soft)`, `var(--soft)`.
+- **Section « Apparence »** (`#themes`) : trois cartes ; le choix recolore toute la page (fondu « View Transitions ») et s'enregistre sous `iam.palette`, la clé de l'application : sur le même domaine, l'application s'ouvre dans le thème choisi sur le site.
+- **Accueil** : ciel clair, texte sombre, paysage de l'application (collines, baobabs, soleil, nuages qui dérivent, léger glissement au défilement). La maquette reproduit le tableau de bord réel : menu clair, carte d'accueil avec Awa qui salue, quatre indicateurs à carré pastel, courbe et anneau.
+- **Typographie** : Plus Jakarta Sans, désormais aussi pour les titres de l'application.
+- **Écrans** : la galerie vient de `docs/formation/captures` ; après tout changement visuel de l'application, relancer `node tools/docs/captures.mjs <serveur de démonstration>` puis `npm run build:site`.

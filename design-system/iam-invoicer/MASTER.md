@@ -10,7 +10,28 @@ Profil ui-ux-pro-max : **Invoice & Billing Tool**, avec une grille modulaire (be
 
 Signature IAM : la bande tissée Faso Dan Fani (`.weave`), l'or de l'étoile pour le focus, et le personnage d'accueil animé (`components/Mascot.tsx`), une illustration originale.
 
+## Thèmes au choix (v0.14)
+
+L'utilisateur choisit son thème dans la barre du haut (bouton « Apparence », `ThemeMenu` dans `components/Topbar.tsx`) et sur les écrans de connexion. Le choix est propre à l'appareil (`theme.ts`, clés `iam.palette` et `iam.theme`). La racine porte toujours `data-palette` et `data-theme` (clair ou sombre, « automatique » résolu) : toute règle de thème s'écrit avec ces deux attributs.
+
+| Thème | Idée | Action | Fond | Menu |
+|---|---|---|---|---|
+| **Ciel** (par défaut) | Ciel lumineux, cartes blanches très arrondies | `#1b6ef3` | `#e8f1fd` | Blanc, entrée active en pastille bleu pâle |
+| **Améthyste** | Menu violet pleine hauteur, feuillage au pied | `#5b4a9e` | `#f1f0f8` | Violet ; l'entrée active prend la couleur de la page et la rejoint (coins concaves) |
+| **Lavande** | Pervenche très sobre (socle de la feuille de styles) | `#5a63c2` | `#eef0fa` | Blanc |
+
+Chaque thème a son mode sombre. Les trois partagent : les titres en Plus Jakarta Sans (`--display`, fichiers latins embarqués par `fonts.css`), les indicateurs compacts (icône dans un carré pastel à gauche, couleur `--k1` à `--k4`), la carte d'accueil illustrée (`components/Scenery.tsx` : ciel, soleil, nuages qui dérivent, collines et baobabs aux couleurs `--sky-*` et `--sc-*`, Awa posée sur la colline) et les écrans de connexion sur le même ciel.
+
+Ajouter un thème : une entrée dans `PALETTES` (`theme.ts`), un bloc de jetons clair et un bloc sombre **complets** dans l'acte 12 de `styles.css` (le bloc sombre doit redéfinir tous les jetons du bloc clair), puis les mêmes jetons dans `site/index.html`.
+
+## Première ouverture (ordinateur)
+
+Sur Windows et macOS, tant qu'aucune société n'existe sur le poste, l'application demande : **Créer une société** (base sur cet ordinateur) ou **Charger une base depuis le cloud** (adresse de la base en ligne, société retrouvée, redémarrage). Le serveur du bureau reste accessible par le lien du bas (`FirstRunScreen` dans `pages/Auth.tsx`).
+
 ## Couleurs
+
+Le tableau ci-dessous décrit le socle d'origine ; les valeurs en vigueur sont celles du thème choisi (voir plus haut).
+
 
 | Jeton | Clair | Sombre | Usage |
 |---|---|---|---|
@@ -39,7 +60,7 @@ Les contrastes du texte sont vérifiés à 4,5:1 au moins dans les deux thèmes.
 - **Graphiques** (`components/charts.tsx`) : aire lissée (tendance mensuelle), mini-courbe (14 jours), anneau (répartition par moyen de paiement) et barre de progression. Chacun a un résumé `aria-label` et des info-bulles `<title>`.
 - **Barre supérieure** (`components/Topbar.tsx`) :
   - recherche rapide `Ctrl+K` (pages et actions) ;
-  - thème Automatique, Clair ou Sombre ;
+  - apparence : thème (Ciel, Améthyste, Lavande) et mode Automatique, Clair ou Sombre ;
   - notifications (factures en retard, stock bas) ;
   - avatar animé (anneau conique qui tourne, pastille « en ligne » qui pulse) et son menu de compte.
 - **Menu latéral** : élément actif sous forme de pastille en dégradé bleu ombrée. Le menu se replie en icônes seules et la préférence est mémorisée.

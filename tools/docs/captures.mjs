@@ -9,7 +9,7 @@ const username = process.argv[3] ?? 'admin'
 const password = process.argv[4] ?? 'secret123'
 const dir = 'docs/formation/captures'
 mkdirSync(dir, { recursive: true })
-const CLEAN = '.toast, .toaster, .licence-bar { display: none !important; }'
+const CLEAN = '.toast, .toaster, .licence-bar, .welcome { display: none !important; }'
 
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' })
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce', deviceScaleFactor: 1 })

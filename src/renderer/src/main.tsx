@@ -5,6 +5,7 @@ import { installBridge } from './bridge'
 import { initTheme } from './theme'
 import { installMagnet, installReveal, installRipple, installSpotlight, installTilt } from './components/fx'
 import '@fontsource-variable/public-sans/index.css'
+import './fonts.css'
 import './styles.css'
 
 installBridge()

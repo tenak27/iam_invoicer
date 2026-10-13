@@ -15,6 +15,7 @@ import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
 import { useResponsiveTables } from './responsiveTables'
 import { useNavIndicator } from './fx'
+import { SidebarArt } from './Scenery'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
 type Section = { title?: string; tone: Tone; items: Item[] }
@@ -333,6 +334,7 @@ export function Layout({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
+        <SidebarArt />
         <div className="weave sidebar-weave" />
       </aside>
       <UpdatePrompt />

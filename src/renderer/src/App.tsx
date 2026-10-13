@@ -8,7 +8,7 @@ import { countryProfile } from '@shared/countries'
 import { ConfirmHost, notify, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
-import { DbConfigScreen, LoginScreen, SetupScreen } from './pages/Auth'
+import { DbConfigScreen, FirstRunScreen, LoginScreen, SetupScreen } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
 import { ImportPage } from './pages/Import'
 import { LicencePage } from './pages/Licence'
@@ -70,6 +70,9 @@ export default function App() {
   const [welcome, setWelcome] = useState<WelcomeInfo | null>(null)
   const [brand, setBrand] = useState<WelcomeInfo | null>(null)
   const closeWelcome = useCallback(() => setWelcome(null), [])
+  // Première ouverture sur ordinateur : créer une société ici, ou charger une base en ligne
+  const [startChoice, setStartChoice] = useState<'ask' | 'create'>('ask')
+  const askStart = window.erp.kind === 'desktop' && dbMode === 'local'
 
   /** Factures récurrentes arrivées à échéance : créées à la connexion. */
   const runRecurring = useCallback(async (u: User) => {
@@ -149,7 +152,8 @@ export default function App() {
       {welcome && <WelcomeSplash info={welcome} onDone={closeWelcome} />}
       {phase === 'loading' && <StartupScreen />}
       {phase === 'db-error' && <DbConfigScreen error={dbError} />}
-      {phase === 'setup' && <SetupScreen remote={dbMode === 'remote'} onDone={onLogin} />}
+      {phase === 'setup' && askStart && startChoice === 'ask' && <FirstRunScreen onCreate={() => setStartChoice('create')} />}
+      {phase === 'setup' && !(askStart && startChoice === 'ask') && <SetupScreen remote={dbMode === 'remote'} onDone={onLogin} onBack={askStart ? () => setStartChoice('ask') : undefined} />}
       {phase === 'login' && <LoginScreen onLogin={onLogin} dbMode={dbMode} serverUrl={serverUrl} brand={brand} />}
       {phase === 'ready' && user && company && (
         <SessionContext.Provider value={{ user, company, dbMode, serverUrl, logout, refreshCompany, licence, updateUser: (patch) => setUser((u) => (u ? { ...u, ...patch } : u)) }}>

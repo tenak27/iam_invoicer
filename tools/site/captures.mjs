@@ -7,7 +7,7 @@ const username = process.argv[3] ?? 'admin'
 const password = process.argv[4] ?? 'secret123'
 const dir = 'site/assets/captures'
 // Masque les éléments passagers (notifications, bandeau d'évaluation)
-const CLEAN = '.toast, .toaster, .licence-bar, .offline-bar { display: none !important; }'
+const CLEAN = '.toast, .toaster, .licence-bar, .offline-bar, .welcome { display: none !important; }'
 
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' })
 async function session(viewport, mobile = false) {

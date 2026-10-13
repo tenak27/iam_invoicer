@@ -5,14 +5,14 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Bell, CashRegister, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, SignOut, Sun, User, Warning,
+  Bell, CashRegister, Check, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, Palette as PaletteIcon, SignOut, Sun, User, Warning,
   type Icon
 } from '@phosphor-icons/react'
 import { can, ROLE_LABELS, type Module } from '@shared/domain'
 import { formatDate, formatMoney, formatQty } from '@shared/format'
 import { useQuery } from '../api'
 import { useSession } from '../session'
-import { applyTheme, useTheme } from '../theme'
+import { PALETTES, setPalette, setTheme, useAppearance, type ThemeChoice } from '../theme'
 import { flushSync } from 'react-dom'
 import { themeReveal } from './fx'
 
@@ -80,15 +80,48 @@ export function UserAvatar({ name, size = 38, online = true, photo, ring = true 
   )
 }
 
-export function ThemeCycle() {
-  const [theme, setTheme] = useTheme()
-  const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
-  const I = theme === 'light' ? Sun : theme === 'dark' ? Moon : Desktop
-  const label = { system: 'automatique', light: 'clair', dark: 'sombre' }[theme]
+const MODES: { id: ThemeChoice; label: string; icon: Icon }[] = [
+  { id: 'system', label: 'Auto', icon: Desktop },
+  { id: 'light', label: 'Clair', icon: Sun },
+  { id: 'dark', label: 'Sombre', icon: Moon }
+]
+
+/**
+ * Apparence : choix du thème de couleurs et du mode clair ou sombre. Le nouveau thème se
+ * dévoile en cercle depuis l'élément cliqué. `floating` : bouton posé dans un coin des
+ * écrans de connexion.
+ */
+export function ThemeMenu({ floating = false }: { floating?: boolean }) {
+  const { theme, palette } = useAppearance()
+  const pop = usePopover()
+  const change = (el: Element, fn: () => void) => themeReveal(el, () => flushSync(fn))
   return (
-    <button className="nav-icon-btn" onClick={(e) => themeReveal(e.currentTarget, () => { applyTheme(next); flushSync(() => setTheme(next)) })} title={`Thème : ${label}`} aria-label={`Thème ${label}, changer`}>
-      <I size={21} aria-hidden="true" />
-    </button>
+    <div className={`pop${floating ? ' theme-float' : ''}`} ref={pop.ref}>
+      <button className="nav-icon-btn" onClick={() => pop.setOpen(!pop.open)} aria-expanded={pop.open} aria-label="Apparence : thème et mode d'affichage" title="Apparence">
+        <PaletteIcon size={21} aria-hidden="true" />
+      </button>
+      {pop.open && (
+        <div className="pop-panel theme-panel" role="dialog" aria-label="Apparence">
+          <div className="pop-head"><strong>Apparence</strong></div>
+          <div className="theme-modes" role="radiogroup" aria-label="Mode d'affichage">
+            {MODES.map((m) => (
+              <button key={m.id} type="button" role="radio" aria-checked={theme === m.id} className={theme === m.id ? 'on' : ''} onClick={(e) => change(e.currentTarget, () => setTheme(m.id))}>
+                <m.icon size={18} aria-hidden="true" />{m.label}
+              </button>
+            ))}
+          </div>
+          <div className="theme-list" role="radiogroup" aria-label="Thème de couleurs">
+            {PALETTES.map((p) => (
+              <button key={p.id} type="button" role="radio" aria-checked={palette === p.id} className={`theme-opt${palette === p.id ? ' on' : ''}`} onClick={(e) => change(e.currentTarget, () => setPalette(p.id))}>
+                <span className="theme-thumb" aria-hidden="true" style={{ '--tb': p.swatch[0], '--ts': p.swatch[1], '--tp': p.swatch[2] } as CSSProperties}><i /><b /><b /><em /></span>
+                <span className="theme-name"><strong>{p.name}</strong><small>{p.hint}</small></span>
+                {palette === p.id && <Check className="theme-check" size={18} weight="bold" aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -250,7 +283,7 @@ export function Navbar({ entries, title, online, left }: { entries: NavEntry[]; 
         <kbd>Ctrl K</kbd>
       </button>
       <div className="navbar-actions">
-        <ThemeCycle />
+        <ThemeMenu />
         {can(user.role, 'dashboard') && <Notifications />}
         <UserMenu online={online} />
       </div>

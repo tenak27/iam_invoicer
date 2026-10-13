@@ -25,6 +25,11 @@ const toast = async () => (await page.locator('.toast').allTextContents()).join(
 
 // 1. Configuration initiale
 await page.getByText('Bienvenue dans IAM INVOICER').waitFor()
+// Première ouverture : créer une société sur ce poste, ou charger une base en ligne
+await page.getByRole('button', { name: /Charger une base depuis le cloud/ }).waitFor()
+await shot('premiere-ouverture')
+await page.getByRole('button', { name: /Créer une société/ }).click()
+await page.getByLabel('Raison sociale').waitFor()
 await shot('setup')
 await page.getByLabel('Adresse').fill('Ouaga 2000, avenue Pascal Zagré')
 await page.getByLabel('Ville').fill('Ouagadougou')

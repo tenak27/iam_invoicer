@@ -2,21 +2,26 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { run, unwrap } from '../api'
 import { Field, Modal, notify, useForm } from '../components/ui'
 import type { User } from '../session'
+import { ArrowLeft, ArrowRight, Buildings, CloudArrowDown, WifiHigh } from '@phosphor-icons/react'
 import { BrandMark } from '../components/Layout'
+import { Scenery } from '../components/Scenery'
+import { ThemeMenu } from '../components/Topbar'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
 import { countryDefaults, countryProfile, DEFAULT_COUNTRY } from '@shared/countries'
 const isDesktop = () => window.erp.kind === 'desktop'
 
 /**
- * Arrière-plan animé des écrans de connexion : halos de couleur qui dérivent, trame qui glisse
- * et petites pièces (facture, ticket, graphique, pièce de monnaie) qui montent lentement.
- * Purement décoratif : ignoré des lecteurs d'écran, figé si le système réduit les animations.
+ * Arrière-plan animé des écrans de connexion : ciel aux couleurs du thème, halos qui dérivent,
+ * paysage au pied de l'écran et petites pièces (facture, ticket, graphique, pièce de monnaie)
+ * qui montent lentement. Purement décoratif : ignoré des lecteurs d'écran, figé si le système
+ * réduit les animations.
  */
 export function AuthBackdrop() {
   return (
     <div className="auth-bg" aria-hidden="true">
       <i className="orb o1" /><i className="orb o2" /><i className="orb o3" /><i className="orb o4" />
       <span className="auth-grid" />
+      <Scenery className="auth-scene" />
       {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
         <span key={n} className={`auth-float f${n}`}>
           {n % 4 === 0 && <svg viewBox="0 0 48 60"><rect x="1.5" y="1.5" width="45" height="57" rx="5" /><path d="M10 14h16M10 26h28M10 34h28M10 42h18" /><rect x="30" y="10" width="9" height="9" rx="1.5" /></svg>}
@@ -33,6 +38,7 @@ function AuthCard(props: { title: string; subtitle?: string; children: React.Rea
   return (
     <div className="auth-screen">
       <AuthBackdrop />
+      <ThemeMenu floating />
       <div className={`auth-card ${props.wide ? 'auth-wide' : ''}`}>
         <div className="auth-brand">
           {props.logo ? <img className="auth-company-logo" src={props.logo} alt="" /> : <BrandMark size={46} />}
@@ -99,7 +105,93 @@ export function LoginScreen({ onLogin, dbMode, serverUrl, brand }: { onLogin: (u
   )
 }
 
-export function SetupScreen({ onDone, remote = false }: { onDone: (u: User) => void; remote?: boolean }) {
+/**
+ * Première ouverture sur ordinateur : créer une société sur ce poste, ou retrouver une base
+ * déjà en ligne. Le choix « serveur du bureau » reste accessible par le lien du bas.
+ */
+export function FirstRunScreen({ onCreate }: { onCreate: () => void }) {
+  const [cloud, setCloud] = useState(false)
+  const [advanced, setAdvanced] = useState(false)
+  return (
+    <AuthCard title="Bienvenue dans IAM INVOICER" subtitle={cloud ? 'Charger une base depuis le cloud' : 'Comment souhaitez-vous commencer ?'} wide>
+      {cloud ? <CloudConnect onBack={() => setCloud(false)} /> : (
+        <div className="start-grid">
+          <button type="button" className="start-card" onClick={onCreate}>
+            <span className="start-art start-new" aria-hidden="true"><Buildings size={40} weight="duotone" /></span>
+            <strong>Créer une société</strong>
+            <span className="start-text">Une nouvelle base sur cet ordinateur : votre société, puis votre compte administrateur. Fonctionne sans Internet.</span>
+            <span className="start-go">Commencer <ArrowRight size={18} weight="bold" aria-hidden="true" /></span>
+          </button>
+          <button type="button" className="start-card" onClick={() => setCloud(true)}>
+            <span className="start-art start-cloud" aria-hidden="true"><CloudArrowDown size={40} weight="duotone" /></span>
+            <strong>Charger une base depuis le cloud</strong>
+            <span className="start-text">Votre société existe déjà en ligne : saisissez son adresse pour retrouver vos données sur cet ordinateur.</span>
+            <span className="start-go">Se connecter <ArrowRight size={18} weight="bold" aria-hidden="true" /></span>
+          </button>
+        </div>
+      )}
+      {!cloud && (
+        <button type="button" className="link-btn auth-foot" onClick={() => setAdvanced(true)}>
+          <WifiHigh size={16} aria-hidden="true" /> Autre installation : serveur du bureau (réseau local)
+        </button>
+      )}
+      {advanced && (
+        <Modal title="Emplacement des données" onClose={() => setAdvanced(false)} wide>
+          <DbConfigForm />
+        </Modal>
+      )}
+    </AuthCard>
+  )
+}
+
+/** Adresse de la base en ligne : on la cherche, on montre la société trouvée, puis on l'ouvre. */
+function CloudConnect({ onBack }: { onBack: () => void }) {
+  const [url, setUrl] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [found, setFound] = useState<{ name: string; logo?: string; city?: string } | null>(null)
+  const [checked, setChecked] = useState(false)
+  const cfg = () => ({ mode: 'remote', url: url.trim() })
+  const search = async () => {
+    setBusy(true)
+    const version = await run(() => unwrap(window.erp.testDbConfig(cfg())))
+    if (version !== undefined) {
+      setFound((await window.erp.brand?.(url.trim()).catch(() => null)) ?? null)
+      setChecked(true)
+    }
+    setBusy(false)
+  }
+  const open = async () => {
+    setBusy(true)
+    // Accueil au nom de la société à la prochaine ouverture (voir App.tsx)
+    try {
+      localStorage.setItem('iam.bienvenue', '1')
+    } catch {}
+    await run(() => window.erp.saveDbConfig(cfg()))
+    setBusy(false)
+  }
+  return (
+    <form className="stack" onSubmit={(e) => { e.preventDefault(); if (checked) open(); else search() }}>
+      <Field label="Adresse de votre base en ligne" hint="L’adresse fournie avec votre accès, par exemple invoice.iamtechnology.store/t/ma_societe (https:// est ajouté).">
+        <input autoFocus value={url} onChange={(e) => { setUrl(e.target.value); setFound(null); setChecked(false) }} placeholder="invoice.iamtechnology.store/t/ma_societe" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} />
+      </Field>
+      {checked && (
+        <div className="found-company" role="status">
+          {found?.logo ? <img src={found.logo} alt="" /> : <span className="auth-recent-mark" aria-hidden="true">{(found?.name ?? '?').slice(0, 1).toUpperCase()}</span>}
+          <div>
+            <strong>{found?.name ?? 'Serveur trouvé'}</strong>
+            <div className="muted small">{found ? `Base trouvée${found.city ? ` · ${found.city}` : ''}.` : 'Aucune société n’y est encore configurée : vous la créerez après le redémarrage.'} L’application redémarre pour l’ouvrir, puis vous demande vos identifiants.</div>
+          </div>
+        </div>
+      )}
+      <div className="form-actions start-actions">
+        <button type="button" className="btn" onClick={onBack}><ArrowLeft size={18} aria-hidden="true" />Retour</button>
+        <button className="btn btn-primary" disabled={busy || !url.trim()}>{busy ? 'Un instant…' : checked ? 'Ouvrir cette base' : 'Rechercher ma base'}</button>
+      </div>
+    </form>
+  )
+}
+
+export function SetupScreen({ onDone, remote = false, onBack }: { onDone: (u: User) => void; remote?: boolean; onBack?: () => void }) {
   const f = useForm<any>({
     name: '',
     legal_form: 'SARL',
@@ -134,6 +226,7 @@ export function SetupScreen({ onDone, remote = false }: { onDone: (u: User) => v
   return (
     <AuthCard title="Bienvenue dans IAM INVOICER" subtitle="Première configuration : votre société et le compte administrateur" wide>
       <form onSubmit={submit}>
+        {onBack && <button type="button" className="link-btn start-back" onClick={onBack}><ArrowLeft size={16} aria-hidden="true" /> Revenir au choix de départ</button>}
         {remote && (
           <div className="grid grid-4" style={{ marginBottom: 6 }}>
             <Field label="Code d'activation" span={2} hint="Fourni avec l'adresse de votre base en ligne (ex. ABCD-EFGH-JKLM). Laissez vide sur votre propre serveur.">

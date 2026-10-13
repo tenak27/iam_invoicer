@@ -90,8 +90,8 @@ export function DashboardSkeleton() {
   return (
     <div className="page" aria-busy="true" aria-label="Chargement du tableau de bord">
       <div className="bento">
-        {[3, 3, 3, 3, 5, 7, 4, 4, 4].map((span, i) => (
-          <div key={i} className={`skeleton span-${span}`} style={{ height: i < 4 ? 150 : 260 }} />
+        {[12, 3, 3, 3, 3, 8, 4, 8, 4].map((span, i) => (
+          <div key={i} className={`skeleton span-${span}`} style={{ height: i === 0 ? 230 : i < 5 ? 130 : 260 }} />
         ))}
       </div>
     </div>
