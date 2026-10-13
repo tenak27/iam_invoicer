@@ -35,6 +35,7 @@ import { verifyDocument } from '../main/services/documents'
 import { getSettings } from '../main/services/settings'
 import { checkSeat } from '../main/services/licence'
 import { iosManifest, listDownloads } from './downloads'
+import { clientIp as ipOf, contentSecurityPolicy, fileCsp, Limiter, securityHeaders } from './security'
 
 export interface ServerOptions {
   db: Db
@@ -51,6 +52,10 @@ export interface ServerOptions {
   publicPath?: string
   /** Code d'activation exigé à la première configuration (client hébergé). */
   setupCode?: () => Promise<string | null>
+  /** Serveur placé derrière un proxy (nginx, Caddy) : l'adresse du visiteur vient de X-Forwarded-For. */
+  trustProxy?: boolean
+  /** Requêtes d'API par minute et par adresse avant refus (3 000 par défaut). */
+  ratePerMinute?: number
 }
 
 /** Code d'activation saisi : majuscules, sans espaces ni tirets superflus. */
@@ -86,21 +91,17 @@ class HttpError extends Error {
   }
 }
 
-/** Limite les essais de mot de passe : 10 échecs par adresse IP et par quart d'heure. */
+/** Limite les essais (mot de passe, code) : 10 échecs par adresse IP et par quart d'heure. */
 class LoginLimiter {
-  private failures = new Map<string, { n: number; since: number }>()
+  private failures = new Limiter(10)
   check(ip: string) {
-    const f = this.failures.get(ip)
-    if (f && Date.now() - f.since > 15 * 60_000) this.failures.delete(ip)
-    else if (f && f.n >= 10) throw new HttpError(429, 'Trop de tentatives de connexion. Réessayez dans 15 minutes.')
+    if (this.failures.blocked(ip)) throw new HttpError(429, 'Trop de tentatives de connexion. Réessayez dans 15 minutes.')
   }
   fail(ip: string) {
-    const f = this.failures.get(ip) ?? { n: 0, since: Date.now() }
-    f.n++
-    this.failures.set(ip, f)
+    this.failures.hit(ip)
   }
   success(ip: string) {
-    this.failures.delete(ip)
+    this.failures.reset(ip)
   }
 }
 
@@ -108,6 +109,10 @@ export function createHandler(opts: ServerOptions) {
   const { db } = opts
   const limiter = new LoginLimiter()
   const verifyLimiter = new LoginLimiter()
+  // Essais répartis sur de nombreuses adresses contre un même compte : 30 échecs par quart d'heure
+  const accountLimiter = new Limiter(30)
+  // Rafales : 3 000 requêtes d'API par minute et par adresse (un bureau entier derrière une même adresse passe)
+  const flood = new Limiter(opts.ratePerMinute && opts.ratePerMinute > 0 ? opts.ratePerMinute : 3000, 60_000)
   // Liens d'impression à usage unique, valables 2 minutes.
   const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; origin: string; expires: number }>()
 
@@ -133,8 +138,13 @@ export function createHandler(opts: ServerOptions) {
   }
 
   const bearer = (req: IncomingMessage) => /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1] ?? null
-  const clientIp = (req: IncomingMessage) =>
-    String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || req.socket.remoteAddress || ''
+  const clientIp = (req: IncomingMessage) => ipOf(req, opts.trustProxy)
+
+  /** Page HTML produite par le serveur : politique de contenu calculée sur ses propres scripts. */
+  const sendHtml = (res: ServerResponse, html: string, frame: 'DENY' | 'SAMEORIGIN' = 'DENY') => {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': frame, 'Content-Security-Policy': contentSecurityPolicy(html) })
+    res.end(html)
+  }
 
   async function session(req: IncomingMessage): Promise<SessionUser> {
     const user = await resolveToken(db, bearer(req))
@@ -175,14 +185,18 @@ export function createHandler(opts: ServerOptions) {
       const ip = clientIp(req)
       limiter.check(ip)
       const body = await readJson(req)
+      const account = 'u:' + String(body.username ?? '').trim().toLowerCase().slice(0, 80)
+      if (accountLimiter.blocked(account)) throw new HttpError(429, 'Trop de tentatives sur ce compte. Réessayez dans 15 minutes.')
       let user: SessionUser
       try {
         user = await login(db, body.username, body.password)
       } catch (e) {
         limiter.fail(ip)
+        accountLimiter.hit(account)
         throw e
       }
       limiter.success(ip)
+      accountLimiter.reset(account)
       // Licence au poste : un nouvel appareil n'entre que s'il reste une place
       const label = String(body.device ?? req.headers['user-agent'] ?? '')
       const deviceId = /^[A-Za-z0-9_-]{8,64}$/.test(String(body.device_id ?? '')) ? String(body.device_id) : null
@@ -216,17 +230,18 @@ export function createHandler(opts: ServerOptions) {
       const body = await readJson(req)
       const name = String(body.name ?? '')
       // Les appels publics (configuration initiale) passent sans jeton.
-      const user = await resolveToken(db, bearer(req))
+      const token = bearer(req)
+      const user = await resolveToken(db, token)
       if (!user && name !== 'auth.needsSetup') throw new HttpError(401, 'Session expirée, veuillez vous reconnecter.')
       // Liens de signature : par défaut, l'adresse publique est celle par laquelle on joint ce serveur.
-      if (name === 'signatures.request' && body.args && !body.args.baseUrl) body.args.baseUrl = publicOrigin(req)
+      if (name === 'signatures.request' && body.args && typeof body.args === 'object' && !Array.isArray(body.args) && !body.args.baseUrl) body.args.baseUrl = publicOrigin(req)
       // Hors ligne : une opération rejouée à la resynchronisation n'est exécutée qu'une fois.
       const opId = typeof body.opId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.opId) ? body.opId : null
       if (opId && user) {
         const done = await db.one<{ result: string }>('SELECT result FROM client_ops WHERE op_id = $1 AND user_id = $2', [opId, user.id])
         if (done) return send(res, 200, { ...JSON.parse(done.result), replayed: true })
       }
-      const result = await call({ db, user, origin: publicOrigin(req) }, name, body.args)
+      const result = await call({ db, user, origin: publicOrigin(req), token }, name, body.args)
       if (opId && user && result.ok) {
         await db.query('INSERT INTO client_ops (op_id, user_id, name, result) VALUES ($1, $2, $3, $4) ON CONFLICT (op_id) DO NOTHING', [opId, user.id, name, JSON.stringify(result)])
       }
@@ -274,8 +289,7 @@ export function createHandler(opts: ServerOptions) {
     const doc = asked ? await verifyDocument(db, asked) : null
     // Codes inconnus comptés : on ne devine pas un code par essais successifs
     if (asked && !doc) verifyLimiter.fail(ip)
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY' })
-    res.end(verifyPageHtml({ company: await getSettings(db), doc, asked: asked.slice(0, 40), action: `${opts.publicPath ?? ''}/verify` }))
+    sendHtml(res, verifyPageHtml({ company: await getSettings(db), doc, asked: asked.slice(0, 40), action: `${opts.publicPath ?? ''}/verify` }))
   }
 
   async function signPage(res: ServerResponse, token: string) {
@@ -295,8 +309,7 @@ export function createHandler(opts: ServerOptions) {
       if (!(e instanceof AppError)) throw e
       throw new HttpError(404, e.message)
     }
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY' })
-    res.end(page)
+    sendHtml(res, page)
   }
 
   async function printPage(res: ServerResponse, ticket: string) {
@@ -305,8 +318,7 @@ export function createHandler(opts: ServerOptions) {
     if (!t || t.expires < Date.now()) throw new HttpError(410, "Ce lien d'impression a expiré. Relancez l'impression depuis l'application.")
     const p = await printable({ db, user: t.user, origin: t.origin }, t.id, t.format, false)
     const auto = '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})</script>'
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
-    res.end(p.html.replace('</body>', `${auto}</body>`))
+    sendHtml(res, p.html.replace('</body>', `${auto}</body>`), 'SAMEORIGIN')
   }
 
   function serveStatic(req: IncomingMessage, res: ServerResponse, path: string, base = opts.webRoot, spa = true, download = false) {
@@ -331,6 +343,7 @@ export function createHandler(opts: ServerOptions) {
       'Content-Type': MIME[ext] ?? 'application/octet-stream',
       // Les fichiers compilés portent une empreinte dans leur nom : cache long, sauf les pages et les installateurs.
       'Cache-Control': ext === '.html' || download ? 'no-cache' : 'public, max-age=31536000, immutable',
+      ...(ext === '.html' ? { 'Content-Security-Policy': fileCsp(file) } : {}),
       ...(download ? { 'Content-Disposition': `attachment; filename="${encodeURIComponent(file.split(sep).pop()!)}"`, 'Content-Length': String(statSync(file).size) } : {})
     })
     if (req.method === 'HEAD') return res.end()
@@ -340,9 +353,12 @@ export function createHandler(opts: ServerOptions) {
   return async function handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? '/', 'http://localhost')
     const path = url.pathname
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-    res.setHeader('Referrer-Policy', 'no-referrer')
+    securityHeaders(req, res)
     if (path.startsWith('/api/')) {
+      if (flood.hit(clientIp(req))) {
+        res.setHeader('Retry-After', '60')
+        return send(res, 429, { ok: false, error: 'Trop de requêtes. Patientez une minute.' })
+      }
       res.setHeader('Access-Control-Allow-Origin', opts.corsOrigin ?? '*')
       res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -376,6 +392,8 @@ export function createHandler(opts: ServerOptions) {
       return serveStatic(req, res, path, site, true)
     } catch (e) {
       if (res.headersSent) return res.end()
+      // Requête refusée avant d'être lue en entier : la connexion n'est pas réutilisée
+      if (e instanceof HttpError && e.status === 413) res.setHeader('Connection', 'close')
       if (e instanceof HttpError) return send(res, e.status, { ok: false, error: e.message })
       if (e instanceof AppError) return send(res, 200, { ok: false, error: e.message })
       console.error(`[${req.method} ${path}]`, e)

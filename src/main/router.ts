@@ -1,6 +1,7 @@
 // Point d'entrée unique des appels de l'interface : contrôle de session et de
 // droits, puis appel du service. Indépendant d'Electron pour être testable.
 
+import { randomBytes } from 'node:crypto'
 import { can, DOC_TYPES, type DocType, type Module } from '@shared/domain'
 import { AppError, fail, type Ctx } from './services/context'
 import * as auth from './services/auth'
@@ -133,7 +134,13 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'products.save': { access: 'products', fn: products.saveProduct },
 
   'documents.list': {
-    access: async (_c, a) => sideModule((a?.types ?? [])[0]),
+    access: async (_c, a) => {
+      const types: DocType[] = Array.isArray(a?.types) ? a.types : []
+      if (!types.length || types.some((t) => !Object.hasOwn(DOC_TYPES, String(t)))) fail('Type de document inconnu.')
+      // Ventes et achats ne se mélangent pas : sinon le droit sur l'un ouvrirait la liste de l'autre
+      if (new Set(types.map(sideModule)).size > 1) fail('Types de documents incompatibles.')
+      return sideModule(types[0])
+    },
     fn: documents.listDocuments
   },
   'documents.get': { access: docModule, fn: documents.getDocument },
@@ -292,10 +299,25 @@ const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.ge
 
 export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
   try {
-    const route = routes[name]
-    if (!route) fail(`Action inconnue : ${name}`)
-    // Matrice des droits de la société (rôles personnalisés)
-    await roles.loadRolePermissions(ctx.db)
+    // Matrice des droits de la société (rôles personnalisés), propre à la base de cette requête
+    return await roles.withRolePermissions(ctx.db, () => dispatch(ctx, name, args))
+  } catch (e) {
+    if (e instanceof AppError) return { ok: false, error: e.message }
+    // Valeur que la base refuse (identifiant qui n'est pas un nombre, date impossible…) : demande invalide, pas une panne
+    if (['22P02', '22003', '22007', '22008', '22001'].includes(String((e as any)?.code))) return { ok: false, error: 'Valeur invalide dans la demande.' }
+    // Le détail (requête SQL, chemin de fichier…) reste dans le journal du serveur
+    const ref = randomBytes(4).toString('hex')
+    console.error(`[${name}] incident ${ref}`, e)
+    return { ok: false, error: `Erreur technique (référence ${ref}). Réessayez ; si le problème persiste, communiquez cette référence à l'assistance.` }
+  }
+}
+
+async function dispatch(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
+  {
+    // Les services attendent un objet : toute autre forme (texte, nombre, liste) vaut « aucun argument »
+    if (args === null || typeof args !== 'object' || Array.isArray(args)) args = {}
+    const route = Object.hasOwn(routes, String(name)) ? routes[name] : undefined
+    if (!route) fail(`Action inconnue : ${String(name).slice(0, 60)}`)
     if (route.access !== 'public') {
       if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
       let mod: Module | null = null
@@ -314,11 +336,6 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
         await licence.enforceTrialQuota(ctx.db, name, args)
       }
     }
-    return { ok: true, data: await route.fn(ctx, args ?? {}) }
-  } catch (e) {
-    if (e instanceof AppError) return { ok: false, error: e.message }
-    console.error(`[${name}]`, e)
-    const msg = e instanceof Error ? e.message : String(e)
-    return { ok: false, error: `Erreur technique : ${msg}` }
+    return { ok: true, data: await route.fn(ctx, args) }
   }
 }

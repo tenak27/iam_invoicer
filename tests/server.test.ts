@@ -116,8 +116,8 @@ describe('Serveur web (synchronisation via un domaine)', () => {
   })
 
   it('désactiver un compte le déconnecte de tous ses appareils', async () => {
-    const u = await rpc('users.save', { username: 'ali', full_name: 'Ali', role: 'commercial', password: 'motdepasse' })
-    const t = (await post('/api/login', { username: 'ali', password: 'motdepasse' }, '')).body.data.token
+    const u = await rpc('users.save', { username: 'ali', full_name: 'Ali', role: 'commercial', password: 'motdepasse9' })
+    const t = (await post('/api/login', { username: 'ali', password: 'motdepasse9' }, '')).body.data.token
     await rpc('users.save', { id: u.id, username: 'ali', full_name: 'Ali', role: 'commercial', active: false })
     expect((await post('/api/call', { name: 'settings.get' }, t)).status).toBe(401)
   })

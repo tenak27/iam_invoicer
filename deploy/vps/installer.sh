@@ -79,12 +79,14 @@ DOMAIN=$DOMAIN
 DB_PASSWORD=$(openssl rand -hex 24)
 ADMIN_TOKEN=$(openssl rand -hex 32)
 SETUP_CODE=$(gen_code)
+SECRETS_KEY=$(openssl rand -hex 32)
 IAM_PORT=8090
 IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:latest
 EOF
 else
   sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" "$ENV"
   grep -q '^ADMIN_TOKEN=.\+' "$ENV" || { sed -i '/^ADMIN_TOKEN=/d' "$ENV"; echo "ADMIN_TOKEN=$(openssl rand -hex 32)" >> "$ENV"; }
+  grep -q '^SECRETS_KEY=.\+' "$ENV" || { sed -i '/^SECRETS_KEY=/d' "$ENV"; echo "SECRETS_KEY=$(openssl rand -hex 32)" >> "$ENV"; }
   grep -q '^IAM_PORT=' "$ENV" || echo "IAM_PORT=8090" >> "$ENV"
   grep -q '^SETUP_CODE=.\+' "$ENV" || { sed -i '/^SETUP_CODE=/d' "$ENV"; echo "SETUP_CODE=$(gen_code)" >> "$ENV"; }
   grep -q '^IAM_IMAGE=' "$ENV" || echo "IAM_IMAGE=ghcr.io/tenak27/iam-invoicer:latest" >> "$ENV"

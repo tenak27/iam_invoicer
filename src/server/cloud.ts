@@ -37,6 +37,8 @@ import { resolveToken } from '../main/services/tokens'
 import { adminPageHtml } from './adminPage'
 import { createHandler, type ServerOptions } from './app'
 import { SLUG, type TenantManager, type TenantRow } from './tenants'
+import { clientIp, Limiter, securityHeaders } from './security'
+import { sealAll } from '../main/secretbox'
 
 type Handler = (req: IncomingMessage, res: ServerResponse) => Promise<unknown>
 
@@ -84,7 +86,7 @@ async function readSnapshot(req: IncomingMessage): Promise<Snapshot> {
   }
   try {
     const raw = Buffer.concat(chunks)
-    return JSON.parse((req.headers['content-encoding'] === 'gzip' ? gunzipSync(raw, { maxOutputLength: 1024 * 1024 * 1024 }) : raw).toString('utf8'))
+    return JSON.parse((req.headers['content-encoding'] === 'gzip' ? gunzipSync(raw, { maxOutputLength: 400 * 1024 * 1024 }) : raw).toString('utf8'))
   } catch {
     throw Object.assign(new Error('Copie illisible.'), { status: 400 })
   }
@@ -94,25 +96,21 @@ export function createCloudHandler(opts: CloudOptions): Handler {
   const { manager } = opts
   const handlers = new Map<string, { handler: Handler; password: string }>()
   const adminKey = opts.adminToken && opts.adminToken.length >= 32 ? Buffer.from(opts.adminToken) : null
-  const failures = new Map<string, { n: number; since: number }>()
+  const failures = new Limiter(10)
 
-  const ipOf = (req: IncomingMessage) => String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || req.socket.remoteAddress || ''
+  const ipOf = (req: IncomingMessage) => clientIp(req, opts.shared.trustProxy)
 
   /** Éditeur authentifié : par le jeton du serveur, ou par son compte de la base principale. */
   async function adminOf(req: IncomingMessage): Promise<{ by: 'jeton' | 'compte'; user: SessionUser | null } | null> {
     if (!adminKey) return null
     const ip = ipOf(req)
-    const f = failures.get(ip)
-    if (f && Date.now() - f.since > 15 * 60_000) failures.delete(ip)
-    else if (f && f.n >= 10) throw Object.assign(new Error('Trop de tentatives. Réessayez dans 15 minutes.'), { status: 429 })
+    if (failures.blocked(ip)) throw Object.assign(new Error('Trop de tentatives. Réessayez dans 15 minutes.'), { status: 429 })
     const bearer = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1] ?? ''
     const got = Buffer.from(bearer)
     if (got.length === adminKey.length && timingSafeEqual(got, adminKey)) return { by: 'jeton', user: null }
     const user = bearer && opts.rootDb ? await resolveToken(opts.rootDb, bearer) : null
     if (user && isVendorAdmin(user)) return { by: 'compte', user }
-    const g = failures.get(ip) ?? { n: 0, since: Date.now() }
-    g.n++
-    failures.set(ip, g)
+    failures.hit(ip)
     return null
   }
 
@@ -202,6 +200,8 @@ export function createCloudHandler(opts: CloudOptions): Handler {
       const db = await manager.db(t)
       if (!inner || db !== innerDb) {
         innerDb = db
+        // Secrets encore en clair dans cette base : chiffrés à sa première ouverture
+        void sealAll(db).catch((e) => console.warn(`Chiffrement des secrets de ${t.slug} : ${e?.message ?? e}`))
         inner = createHandler({
           ...opts.shared,
           db,
@@ -220,6 +220,7 @@ export function createCloudHandler(opts: CloudOptions): Handler {
     const url = new URL(req.url ?? '/', 'http://localhost')
     const path = url.pathname
     try {
+      if (path.startsWith('/api/admin/') || path.startsWith('/admin') || path.startsWith('/t/')) securityHeaders(req, res)
       if (path.startsWith('/api/admin/')) return await admin(req, res, path, url)
       // Console de l'éditeur : page seule, toutes les données passent par /api/admin/
       if (path === '/admin') {
@@ -263,14 +264,10 @@ export function createCloudHandler(opts: CloudOptions): Handler {
       if (rest === '/api/mirror') {
         if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Méthode non autorisée.' })
         const ip = ipOf(req)
-        const f = failures.get(ip)
-        if (f && Date.now() - f.since > 15 * 60_000) failures.delete(ip)
-        else if (f && f.n >= 10) return json(res, 429, { ok: false, error: 'Trop de tentatives. Réessayez dans 15 minutes.' })
+        if (failures.blocked(ip)) return json(res, 429, { ok: false, error: 'Trop de tentatives. Réessayez dans 15 minutes.' })
         const key = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1] ?? ''
         if (!manager.syncKeyMatches(t, key)) {
-          const g = failures.get(ip) ?? { n: 0, since: Date.now() }
-          g.n++
-          failures.set(ip, g)
+          failures.hit(ip)
           return json(res, 401, { ok: false, error: 'Clé de synchronisation refusée : demandez-en une nouvelle à IAM Technology.' })
         }
         return json(res, 200, { ok: true, data: await manager.receiveMirror(slug, await readSnapshot(req)) })
@@ -280,8 +277,10 @@ export function createCloudHandler(opts: CloudOptions): Handler {
     } catch (e: any) {
       if (res.headersSent) return void res.end()
       const status = Number(e?.status) || (e instanceof AppError || /inconnu|invalide|obligatoire|déjà utilisé|Confirmez|introuvable|Versions différentes|Instantané|illisible/.test(String(e?.message)) ? 400 : 500)
+      // Le détail d'une erreur interne (base, fichiers) reste dans le journal du serveur
+      if (status === 413) res.setHeader('Connection', 'close')
       if (status === 500) console.error(`[cloud ${req.method} ${path}]`, e)
-      return json(res, status, { ok: false, error: status === 500 ? `Erreur du serveur : ${e?.message ?? e}` : String(e?.message ?? e) })
+      return json(res, status, { ok: false, error: status === 500 ? 'Erreur interne du serveur.' : String(e?.message ?? e) })
     }
   }
 }

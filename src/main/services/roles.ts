@@ -1,12 +1,17 @@
 // Matrice des rôles et des droits : la société choisit les modules de chaque rôle.
 // L'administrateur garde tous les droits (impossible de se retirer l'accès).
 
-import { PERMISSIONS, ROLE_LABELS, setRolePermissions, type Module, type Role } from '@shared/domain'
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { PERMISSIONS, ROLE_LABELS, setPermissionResolver, type Module, type Role } from '@shared/domain'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 
 const KEY = 'role_permissions'
-const cache = new WeakMap<Db, number>()
+type Overrides = Partial<Record<Role, Module[]>>
+const cache = new WeakMap<Db, { at: number; value: Overrides }>()
+// Matrice de la requête en cours : chaque appel du routeur travaille avec celle de SA base
+const scope = new AsyncLocalStorage<Overrides>()
+setPermissionResolver(() => scope.getStore())
 
 async function readOverrides(db: Db): Promise<Partial<Record<Role, Module[]>>> {
   const row = await db.one<{ value: string }>('SELECT value FROM settings WHERE key = $1', [KEY])
@@ -17,12 +22,18 @@ async function readOverrides(db: Db): Promise<Partial<Record<Role, Module[]>>> {
   }
 }
 
-/** Charge la matrice de la société (rafraîchie toutes les 5 secondes au plus). */
-export async function loadRolePermissions(db: Db) {
-  const at = cache.get(db)
-  if (at && Date.now() - at < 5000) return
-  setRolePermissions(await readOverrides(db))
-  cache.set(db, Date.now())
+/** Matrice de la société (relue toutes les 5 secondes au plus). */
+async function overridesFor(db: Db): Promise<Overrides> {
+  const hit = cache.get(db)
+  if (hit && Date.now() - hit.at < 5000) return hit.value
+  const value = await readOverrides(db)
+  cache.set(db, { at: Date.now(), value })
+  return value
+}
+
+/** Exécute fn avec les droits de la société de cette base, sans effet sur les autres requêtes. */
+export async function withRolePermissions<T>(db: Db, fn: () => Promise<T>): Promise<T> {
+  return scope.run(await overridesFor(db), fn)
 }
 
 export async function getRoles(ctx: Ctx) {
@@ -40,7 +51,7 @@ export async function saveRoles(ctx: Ctx, input: { current: Partial<Record<Role,
   const out: Partial<Record<Role, Module[]>> = {}
   if (input?.current) {
     for (const [role, modules] of Object.entries(input.current) as [Role, Module[]][]) {
-      if (!(role in PERMISSIONS)) fail(`Rôle inconnu : ${role}`)
+      if (!Object.hasOwn(PERMISSIONS, role)) fail(`Rôle inconnu : ${role}`)
       if (role === 'admin') continue
       if (!Array.isArray(modules)) fail('Matrice invalide.')
       const clean = [...new Set(modules.filter((m) => all.includes(m)))]
@@ -50,7 +61,6 @@ export async function saveRoles(ctx: Ctx, input: { current: Partial<Record<Role,
   }
   await ctx.db.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [KEY, JSON.stringify(out)])
   cache.delete(ctx.db)
-  await loadRolePermissions(ctx.db)
   await audit(ctx.db, ctx, 'modification', 'roles', null, input?.current ? 'matrice personnalisée' : 'droits par défaut')
   return getRoles(ctx)
 }

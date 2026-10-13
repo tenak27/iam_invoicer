@@ -81,7 +81,7 @@ ${state === 'ok' ? `<script>
     if(name.length<2){err.textContent='Indiquez votre nom et prénom.';return}
     if(!dirty){err.textContent='Veuillez signer dans le cadre.';return}
     b.disabled=true;err.textContent='';
-    fetch('/api/public/sign/${token}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,image:c.toDataURL('image/png')})})
+    fetch('../api/public/sign/${token}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,image:c.toDataURL('image/png')})})
       .then(function(r){return r.json()}).then(function(r){
         if(!r.ok){err.textContent=r.error;b.disabled=false;return}
         document.getElementById('zone').innerHTML='<div class="done"><svg viewBox="0 0 52 52" class="check"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg><h2>Merci, document signé</h2><p class="muted">${esc(company.name)} a été informé de votre signature.</p></div>';

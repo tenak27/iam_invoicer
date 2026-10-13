@@ -35,6 +35,11 @@ export async function revokeToken(db: Db, token: string): Promise<void> {
   await db.query('DELETE FROM auth_sessions WHERE token_hash = $1', [hash(token)])
 }
 
+/** Ferme les autres sessions d'un utilisateur : après un changement de mot de passe, seul l'appareil utilisé reste connecté. */
+export async function revokeOthers(db: Db, userId: number, keep: string | null | undefined): Promise<void> {
+  await db.query('DELETE FROM auth_sessions WHERE user_id = $1 AND token_hash <> $2', [userId, keep ? hash(keep) : ''])
+}
+
 /** Déconnecte tous les appareils d'un utilisateur (mot de passe changé, compte désactivé). */
 export async function revokeUser(db: Db, userId: number): Promise<void> {
   await db.query('DELETE FROM auth_sessions WHERE user_id = $1', [userId])

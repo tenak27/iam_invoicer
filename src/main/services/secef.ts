@@ -15,6 +15,7 @@ import QRCode from 'qrcode'
 import type { Db } from '../db'
 import { fail, type Ctx } from './context'
 import { getSecret, getSettings } from './settings'
+import { assertPublicHost, outboundRestricted } from '../outbound'
 
 let httpFetch: typeof fetch = (...a) => fetch(...a)
 export function setSecefFetch(f: typeof fetch) {
@@ -73,8 +74,9 @@ export async function certify(db: Db, ctx: Ctx, docId: number): Promise<void> {
   }
   const call = async (method: string, path: string, body?: unknown) => {
     let res: Response
+    await assertPublicHost(s.secef_url, 'Serveur SECeF')
     try {
-      res = await httpFetch(s.secef_url.replace(/\/+$/, '') + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(20_000) })
+      res = await httpFetch(s.secef_url.replace(/\/+$/, '') + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(20_000), ...(outboundRestricted() ? { redirect: 'error' as const } : {}) })
     } catch (e) {
       fail(`Certification SECeF impossible : serveur injoignable (${e instanceof Error ? e.message : e}).`)
     }

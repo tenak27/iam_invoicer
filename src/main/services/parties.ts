@@ -64,9 +64,12 @@ export async function saveParty(ctx: Ctx, input: any) {
     if (input.id) {
       await db.query(
         `UPDATE parties SET name=$1, contact=$2, phone=$3, email=$4, address=$5, city=$6, tax_id=$7, rccm=$8,
-         payment_terms=$9, notes=$10, active=$11 WHERE id=$12`,
-        [...Object.values(fields), input.id]
-      )
+         payment_terms=$9, notes=$10, active=$11 WHERE id=$12 AND kind=$13 RETURNING id`,
+        [...Object.values(fields), input.id, kind]
+      ).then((r) => {
+        // Le droit vérifié porte sur ce type de tiers : pas de modification d'un fournisseur avec le droit « clients »
+        if (!r.length) fail('Fiche introuvable.')
+      })
       await audit(db, ctx, 'modification', kind, input.id, name)
       return { id: input.id as number }
     }

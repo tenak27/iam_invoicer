@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell } from 'electron'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { setSecretKeyProvider } from './secretbox'
 import { homedir, hostname } from 'node:os'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
@@ -105,9 +106,53 @@ function pushSyncState() {
   if (backend instanceof RemoteBackend && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('offline.changed', backend.state())
 }
 
+/**
+ * Secrets écrits sur le disque de ce poste (mot de passe du serveur du bureau, clé de
+ * synchronisation, clé de chiffrement des secrets de la base) : chiffrés par le système
+ * (DPAPI sous Windows, Trousseau sous macOS). Sans chiffrement disponible, ils restent en clair.
+ */
+const OS_PREFIX = 'os:v1:'
+const osVault = {
+  protect(plain: string): string {
+    try {
+      if (plain && safeStorage.isEncryptionAvailable()) return OS_PREFIX + safeStorage.encryptString(plain).toString('base64')
+    } catch {}
+    return plain
+  },
+  reveal(stored: string): string {
+    if (!stored?.startsWith(OS_PREFIX)) return stored ?? ''
+    try {
+      return safeStorage.decryptString(Buffer.from(stored.slice(OS_PREFIX.length), 'base64'))
+    } catch {
+      diag('Secret illisible sur ce poste (session Windows ou trousseau différent) : à ressaisir.')
+      return ''
+    }
+  }
+}
+
+/** Clé de chiffrement des secrets de la base locale : tirée au hasard, gardée par le système. */
+function localSecretKey(): Buffer | null {
+  const file = join(app.getPath('userData'), 'secrets.key')
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return null
+    if (existsSync(file)) {
+      const hex = osVault.reveal(readFileSync(file, 'utf8').trim())
+      return /^[0-9a-f]{64}$/.test(hex) ? Buffer.from(hex, 'hex') : null
+    }
+    const key = randomBytes(32)
+    writeFileSync(file, osVault.protect(key.toString('hex')), { mode: 0o600 })
+    return key
+  } catch (e) {
+    diag(`Clé de chiffrement des secrets indisponible : ${e instanceof Error ? e.message : e}`)
+    return null
+  }
+}
+setSecretKeyProvider(localSecretKey)
+
 function readConfig(): AppConfig {
   try {
-    return JSON.parse(readFileSync(configPath(), 'utf8')).db
+    const db = JSON.parse(readFileSync(configPath(), 'utf8')).db
+    return db?.mode === 'server' && db.password ? { ...db, password: osVault.reveal(db.password) } : db
   } catch {
     return { mode: 'local' }
   }
@@ -160,7 +205,7 @@ async function connect(): Promise<void> {
     await enterprise?.stop().catch(() => {})
     enterprise = backend?.db
       ? new Enterprise({
-          configPath: enterprisePath(), db: () => backend?.db ?? null, version: app.getVersion(), webRoot: join(__dirname, '../renderer'),
+          configPath: enterprisePath(), db: () => backend?.db ?? null, version: app.getVersion(), webRoot: join(__dirname, '../renderer'), codec: osVault,
           onChange: () => mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents.send('enterprise.changed')
         })
       : null
@@ -303,7 +348,9 @@ function registerIpc(): void {
     })
   )
   ipcMain.handle('db.saveConfig', async (_e, cfg: AppConfig) => {
-    writeFileSync(configPath(), JSON.stringify({ db: cfg }, null, 2))
+    // Mot de passe du serveur du bureau : chiffré par le système avant d'être écrit
+    const stored = cfg.mode === 'server' && cfg.password ? { ...cfg, password: osVault.protect(cfg.password) } : cfg
+    writeFileSync(configPath(), JSON.stringify({ db: stored }, null, 2), { mode: 0o600 })
     app.relaunch()
     app.exit(0)
   })
@@ -553,10 +600,19 @@ function createWindow(): void {
     backgroundColor: '#f3f5f8',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      contextIsolation: true
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: true
     }
   })
+  // La fenêtre n'affiche que l'application : aucune navigation vers une autre page, aucune
+  // autorisation (caméra, micro, position, notifications) accordée à son contenu.
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (url !== mainWindow?.webContents.getURL()) e.preventDefault()
+  })
+  mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, done) => done(permission === 'clipboard-sanitized-write'))
+  mainWindow.webContents.on('will-attach-webview', (e) => e.preventDefault())
   mainWindow.once('ready-to-show', () => {
     diag('Fenêtre prête.')
     mainWindow?.maximize()

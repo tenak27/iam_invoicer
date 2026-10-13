@@ -24,16 +24,21 @@ export interface EnterpriseConfig {
 
 export const DEFAULT_ENTERPRISE: EnterpriseConfig = { serve: false, port: 8080, cloudUrl: '', cloudKey: '', cloudMinutes: 15 }
 
-export function readEnterpriseConfig(path: string): EnterpriseConfig {
+/** Protection de la clé de synchronisation sur le disque (chiffrement du système) ; identité par défaut. */
+export interface SecretCodec { protect: (plain: string) => string; reveal: (stored: string) => string }
+const PLAIN: SecretCodec = { protect: (s) => s, reveal: (s) => s }
+
+export function readEnterpriseConfig(path: string, codec: SecretCodec = PLAIN): EnterpriseConfig {
   try {
-    return { ...DEFAULT_ENTERPRISE, ...JSON.parse(readFileSync(path, 'utf8')) }
+    const cfg = { ...DEFAULT_ENTERPRISE, ...JSON.parse(readFileSync(path, 'utf8')) }
+    return { ...cfg, cloudKey: codec.reveal(String(cfg.cloudKey ?? '')) }
   } catch {
     return { ...DEFAULT_ENTERPRISE }
   }
 }
 
-export function writeEnterpriseConfig(path: string, cfg: EnterpriseConfig) {
-  writeFileSync(path, JSON.stringify(cfg, null, 2))
+export function writeEnterpriseConfig(path: string, cfg: EnterpriseConfig, codec: SecretCodec = PLAIN) {
+  writeFileSync(path, JSON.stringify({ ...cfg, cloudKey: cfg.cloudKey ? codec.protect(cfg.cloudKey) : '' }, null, 2), { mode: 0o600 })
 }
 
 export interface EnterpriseState {
@@ -62,8 +67,8 @@ export class Enterprise {
   private cfg: EnterpriseConfig
   readonly mirror: MirrorLoop
 
-  constructor(private opts: { configPath: string; db: () => Db | null; version: string; webRoot: string; onChange?: () => void }) {
-    this.cfg = readEnterpriseConfig(opts.configPath)
+  constructor(private opts: { configPath: string; db: () => Db | null; version: string; webRoot: string; onChange?: () => void; codec?: SecretCodec }) {
+    this.cfg = readEnterpriseConfig(opts.configPath, opts.codec)
     this.mirror = new MirrorLoop(opts.db, opts.onChange)
   }
 
@@ -92,7 +97,7 @@ export class Enterprise {
       cloudMinutes: Math.min(1440, Math.max(1, Number(input.cloudMinutes ?? this.cfg.cloudMinutes) || 15))
     }
     if (!this.cfg.cloudUrl) this.cfg.cloudKey = ''
-    writeEnterpriseConfig(this.opts.configPath, this.cfg)
+    writeEnterpriseConfig(this.opts.configPath, this.cfg, this.opts.codec)
     await this.listen()
     this.mirror.configure({ url: this.cfg.cloudUrl, key: this.cfg.cloudKey, minutes: this.cfg.cloudMinutes })
     return this.state()
@@ -111,7 +116,11 @@ export class Enterprise {
       this.error = "Fichiers de l'application web introuvables sur ce poste."
       return
     }
-    const server = createServer(createHandler({ db, version: this.opts.version, webRoot: this.opts.webRoot }))
+    const server = createServer({ connectionsCheckingInterval: 5_000 }, createHandler({ db, version: this.opts.version, webRoot: this.opts.webRoot }))
+    // Connexions lentes ou abandonnées : libérées sans attendre
+    server.headersTimeout = 20_000
+    server.requestTimeout = 200_000
+    server.maxHeadersCount = 100
     await new Promise<void>((resolve) => {
       server.once('error', (e: any) => {
         this.error = e?.code === 'EADDRINUSE' ? `Le port ${this.cfg.port} est déjà utilisé par un autre programme : choisissez-en un autre.` : `Démarrage du serveur impossible : ${e?.message ?? e}`

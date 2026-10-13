@@ -9,6 +9,7 @@
 
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import pg from 'pg'
+import { isSealed, seal, secretKeyAvailable, unseal } from '../main/secretbox'
 import { TIERS } from '@shared/licence'
 import { openDb, type Db } from '../main/db'
 import { decodeLicence, forgetLicenceStatus, licenceStatus, MIRROR_KEY } from '../main/services/licence'
@@ -168,6 +169,11 @@ export class TenantManager {
     // Copie en ligne d'un serveur d'entreprise : empreinte de la clé de synchronisation, date du dernier envoi reçu
     await this.control.query('ALTER TABLE cloud_tenants ADD COLUMN IF NOT EXISTS sync_key_hash TEXT')
     await this.control.query('ALTER TABLE cloud_tenants ADD COLUMN IF NOT EXISTS mirrored_at TIMESTAMPTZ')
+    // Mots de passe des bases encore en clair : chiffrés dès qu'une clé (SECRETS_KEY) est installée
+    if (secretKeyAvailable()) {
+      for (const r of await this.control.query<{ slug: string; db_password: string }>('SELECT slug, db_password FROM cloud_tenants'))
+        if (!isSealed(r.db_password)) await this.control.query('UPDATE cloud_tenants SET db_password = $2 WHERE slug = $1', [r.slug, seal(r.db_password)])
+    }
   }
 
   /** Nouvelle clé de synchronisation (remplace la précédente) : affichée une seule fois, seule son empreinte est gardée. */
@@ -210,7 +216,9 @@ export class TenantManager {
 
   async get(slug: string): Promise<TenantRow | null> {
     if (!SLUG.test(slug)) return null
-    return (await this.control.one<TenantRow>('SELECT * FROM cloud_tenants WHERE slug = $1', [slug])) ?? null
+    const row = await this.control.one<TenantRow>('SELECT * FROM cloud_tenants WHERE slug = $1', [slug])
+    // Mot de passe de la base : chiffré dans la table, en clair seulement en mémoire
+    return row ? { ...row, db_password: unseal(row.db_password) } : null
   }
 
   async create(input: { name: string; slug?: string; contact?: string; licence_key?: string; licence_number?: string; notes?: string }): Promise<CreatedTenant> {
@@ -236,7 +244,7 @@ export class TenantManager {
       this.open.set(slug, { db: Promise.resolve(db), used: Date.now(), password })
       await this.control.query(
         `INSERT INTO cloud_tenants (slug, name, db_name, db_user, db_password, setup_code, contact, licence_number, notes) VALUES ($1,$2,$3,$3,$4,$5,$6,$7,$8)`,
-        [slug, name, dbName, password, setupCode, input.contact?.trim() || null, input.licence_number?.trim() || null, input.notes?.trim() || null]
+        [slug, name, dbName, seal(password), setupCode, input.contact?.trim() || null, input.licence_number?.trim() || null, input.notes?.trim() || null]
       )
     } catch (e) {
       await this.close(slug)
@@ -272,7 +280,7 @@ export class TenantManager {
     const t = await this.must(slug)
     const password = newPassword()
     await this.prov.setPassword(t.db_name, password)
-    await this.control.query('UPDATE cloud_tenants SET db_password = $2 WHERE slug = $1', [slug, password])
+    await this.control.query('UPDATE cloud_tenants SET db_password = $2 WHERE slug = $1', [slug, seal(password)])
     await this.close(slug)
     return { db_password: password }
   }

@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
+import { randomBytes, scrypt, scryptSync, timingSafeEqual } from 'node:crypto'
 import type { Role } from '@shared/domain'
 import { ROLE_LABELS } from '@shared/domain'
 import { VENDOR_ADMIN } from '@shared/licence'
@@ -6,7 +6,7 @@ import type { Db } from '../db'
 import { audit, fail, str, type Ctx, type SessionUser } from './context'
 import { checkUserQuota } from './licence'
 import { saveSettings, type CompanySettings } from './settings'
-import { revokeUser } from './tokens'
+import { revokeOthers, revokeUser } from './tokens'
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex')
@@ -14,15 +14,30 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, stored: string): boolean {
-  const [salt, hash] = stored.split(':')
-  if (!salt || !hash) return false
+  const [salt, hash] = String(stored ?? '').split(':')
+  if (!salt || !hash || typeof password !== 'string') return false
   const expected = Buffer.from(hash, 'hex')
+  if (!expected.length) return false
   const actual = scryptSync(password, salt, expected.length)
   return timingSafeEqual(expected, actual)
 }
 
+/** Même vérification sans bloquer le serveur pendant le calcul (connexions simultanées). */
+function verifyPasswordAsync(password: string, stored: string): Promise<boolean> {
+  const [salt, hash] = String(stored ?? '').split(':')
+  const expected = Buffer.from(hash ?? '', 'hex')
+  if (!salt || !expected.length || typeof password !== 'string') return Promise.resolve(false)
+  return new Promise((resolve) => scrypt(password, salt, expected.length, (err, actual) => resolve(!err && timingSafeEqual(expected, actual))))
+}
+
+// Identifiant inconnu : on calcule quand même, pour que le temps de réponse ne révèle pas quels comptes existent
+const DUMMY_HASH = hashPassword(randomBytes(12).toString('hex'))
+const COMMON = new Set(['password', 'motdepasse', '12345678', '123456789', '1234567890', 'azertyui', 'azertyuiop', 'qwertyui', 'qwertyuiop', '00000000', '11111111', 'admin123', 'admin1234', 'iaminvoicer'])
+
 function checkPassword(p: string): void {
-  if (p.length < 6) fail('Le mot de passe doit contenir au moins 6 caractères.')
+  if (typeof p !== 'string' || p.length < 8) fail('Le mot de passe doit contenir au moins 8 caractères.')
+  if (p.length > 200) fail('Mot de passe trop long (200 caractères au plus).')
+  if (COMMON.has(p.toLowerCase())) fail('Ce mot de passe est trop courant : choisissez-en un autre.')
 }
 
 function checkRole(role: string): asserts role is Role {
@@ -57,7 +72,8 @@ export async function login(db: Db, username: string, password: string): Promise
     'SELECT id, username, full_name, role, password_hash, active FROM users WHERE username = $1',
     [str(username).toLowerCase()]
   )
-  if (!row || !verifyPassword(password, row.password_hash)) fail('Identifiant ou mot de passe incorrect.')
+  const good = await verifyPasswordAsync(String(password ?? '').slice(0, 1000), row?.password_hash ?? DUMMY_HASH)
+  if (!row || !good) fail('Identifiant ou mot de passe incorrect.')
   if (!row.active) fail('Ce compte est désactivé.')
   await audit(db, { db, user: row }, 'connexion', 'utilisateur', row.id)
   return { id: row.id, username: row.username, full_name: row.full_name, role: row.role }
@@ -130,8 +146,11 @@ export async function saveUser(
 
 export async function changeOwnPassword(ctx: Ctx, input: { current: string; next: string }) {
   const row = await ctx.db.one('SELECT password_hash FROM users WHERE id = $1', [ctx.user!.id])
-  if (!row || !verifyPassword(input.current, row.password_hash)) fail('Mot de passe actuel incorrect.')
+  if (!row || !(await verifyPasswordAsync(String(input?.current ?? ''), row.password_hash))) fail('Mot de passe actuel incorrect.')
   checkPassword(input.next)
   await ctx.db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashPassword(input.next), ctx.user!.id])
+  // Un mot de passe changé parce qu'il a fuité doit fermer les sessions ouvertes ailleurs
+  await revokeOthers(ctx.db, ctx.user!.id, ctx.token)
+  await audit(ctx.db, ctx, 'modification', 'mot_de_passe', ctx.user!.id)
   return true
 }

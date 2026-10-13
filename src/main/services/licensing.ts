@@ -9,6 +9,7 @@
 import { createPrivateKey, createPublicKey, sign, type KeyObject } from 'node:crypto'
 import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { seal, unseal } from '../secretbox'
 import type { Module } from '@shared/domain'
 import { LICENCE_PUBLIC_KEY, MODULE_NAMES, TIERS, type LicencePayload, type Tier } from '@shared/licence'
 import { todayISO } from '@shared/format'
@@ -198,10 +199,10 @@ export async function importRegistry(ctx: Ctx) {
 // jamais renvoyés à l'interface. Les appels passent par ce processus, pas par le navigateur.
 
 async function secret(ctx: Ctx, key: string): Promise<string> {
-  return (await ctx.db.one<{ value: string }>('SELECT value FROM secrets WHERE key = $1', [key]))?.value ?? ''
+  return unseal((await ctx.db.one<{ value: string }>('SELECT value FROM secrets WHERE key = $1', [key]))?.value)
 }
 async function setSecret(ctx: Ctx, key: string, value: string) {
-  await ctx.db.query('INSERT INTO secrets (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, value])
+  await ctx.db.query('INSERT INTO secrets (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, seal(value)])
 }
 
 function cloudUrl(raw: string): string {

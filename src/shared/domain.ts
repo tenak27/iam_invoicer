@@ -52,10 +52,19 @@ export function setRolePermissions(overrides: Partial<Record<Role, Module[]>> | 
   roleOverrides = overrides ?? {}
 }
 
+/**
+ * Serveur : la matrice dépend de la base servie par la requête en cours. Le routeur fournit
+ * ici de quoi la retrouver ; sans cela, deux sociétés hébergées partageraient la même matrice.
+ */
+let scoped: (() => Partial<Record<Role, Module[]>> | undefined) | null = null
+export function setPermissionResolver(fn: (() => Partial<Record<Role, Module[]>> | undefined) | null) {
+  scoped = fn
+}
+
 /** Modules accessibles à un rôle : matrice de la société, sinon droits par défaut. L'administrateur a toujours tout. */
 export function permissionsOf(role: Role): Module[] {
   if (role === 'admin') return PERMISSIONS.admin
-  return roleOverrides[role] ?? PERMISSIONS[role] ?? []
+  return (scoped?.() ?? roleOverrides)[role] ?? PERMISSIONS[role] ?? []
 }
 
 export function can(role: Role, module: Module): boolean {

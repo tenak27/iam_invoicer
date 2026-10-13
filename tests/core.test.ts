@@ -29,9 +29,9 @@ beforeAll(async () => {
     password: 'secret123'
   })
   admin = { db, user }
-  await ok(admin, 'users.save', { username: 'awa', full_name: 'Awa', role: 'commercial', password: 'motdepasse' })
+  await ok(admin, 'users.save', { username: 'awa', full_name: 'Awa', role: 'commercial', password: 'motdepasse9' })
   const { login } = await import('../src/main/services/auth')
-  commercial = { db, user: await login(db, 'awa', 'motdepasse') }
+  commercial = { db, user: await login(db, 'awa', 'motdepasse9') }
 })
 
 afterAll(async () => {

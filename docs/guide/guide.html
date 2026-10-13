@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.8.0</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.8.1</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -261,7 +261,7 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.8.0 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.8.1 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
   <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
   <table>
     <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
@@ -388,8 +388,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.8.0.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.8.0.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.8.1.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.8.1.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -422,10 +422,10 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.0-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.0-x64.dmg</code></td></tr>
-      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.8.0-arm64-macos-ancien.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.8.0-x64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.1-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.8.1-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.8.1-arm64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.8.1-x64-macos-ancien.dmg</code></td></tr>
     </tbody>
   </table>
   <div class="box warn"><b class="t">La version de macOS compte</b><p>La version principale refuse de s'ouvrir sur macOS 12 ou plus ancien (« Vous ne pouvez pas utiliser cette version de l'application avec cette version de macOS »). Menu Pomme → <b>À propos de ce Mac</b> indique la version : sous macOS 13, prenez un fichier « macos-ancien ».</p></div>
@@ -750,10 +750,13 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <table>
     <thead><tr><th style="width:30%">Mesure intégrée</th><th>Détail</th></tr></thead>
     <tbody>
-      <tr><td>Mots de passe</td><td>Chiffrés avec scrypt, jamais stockés en clair.</td></tr>
-      <tr><td>Sessions</td><td>Jetons valables 30 jours, révoqués à la déconnexion ou à la désactivation du compte.</td></tr>
-      <tr><td>Tentatives de connexion</td><td>Après 10 mots de passe erronés, nouvel essai possible au bout de 15 minutes (serveur en ligne).</td></tr>
-      <tr><td>Secrets</td><td>Mots de passe SMTP, clés SMS et jeton SECeF stockés à part, jamais renvoyés à l'interface.</td></tr>
+      <tr><td>Mots de passe</td><td>Hachés avec scrypt, jamais stockés en clair. 8 caractères au minimum, mots de passe courants refusés.</td></tr>
+      <tr><td>Sessions</td><td>Jetons valables 30 jours (seule leur empreinte est stockée), révoqués à la déconnexion ou à la désactivation du compte. Changer son mot de passe ferme ses sessions sur les autres appareils.</td></tr>
+      <tr><td>Tentatives de connexion</td><td>Après 10 mots de passe erronés depuis une adresse, ou 30 sur un même compte, nouvel essai possible au bout de 15 minutes. Au-delà de 3 000 requêtes par minute, une adresse est mise en attente (<code>API_RATE_PER_MINUTE</code>).</td></tr>
+      <tr><td>Secrets chiffrés</td><td>Mots de passe SMTP, clés SMS, jeton SECeF, jeton d'administration et mots de passe des bases hébergées : chiffrés en AES-256-GCM avec la clé <code>SECRETS_KEY</code> du serveur, jamais renvoyés à l'interface, jamais copiés vers la base en ligne. Sur un poste : clé de synchronisation et mot de passe du serveur du bureau chiffrés par Windows (DPAPI) ou le Trousseau macOS.</td></tr>
+      <tr><td>Sociétés hébergées</td><td>Une base PostgreSQL par société, droits et rôles cloisonnés, réglages d'une société (passerelle SMS, SMTP, SECeF) interdits d'accès au réseau interne du serveur.</td></tr>
+      <tr><td>Pages web</td><td>Politique de contenu (CSP) : seuls les scripts du logiciel s'exécutent. En-têtes anti-cadre, HTTPS strict (HSTS). Les erreurs internes ne sont jamais détaillées à l'écran : une référence renvoie au journal du serveur.</td></tr>
+      <tr><td>Tests d'intrusion</td><td>Rejoués à chaque version : accès sans session, changement de société, élévation de droits, injections SQL et de scripts, parcours de fichiers, force brute, requêtes malformées.</td></tr>
       <tr><td>Impression</td><td>Liens d'impression à usage unique.</td></tr>
       <tr><td>Droits</td><td>Contrôle par rôle sur le serveur, pas seulement dans l'interface. Journal d'activité.</td></tr>
     </tbody>
@@ -765,6 +768,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
     <li>Un compte par personne, jamais de compte partagé ; désactiver le compte d'un employé qui quitte l'entreprise le jour de son départ.</li>
     <li>Verrouillage automatique des postes et des téléphones.</li>
     <li>Sauvegardes chiffrées et stockées hors du serveur.</li>
+    <li><b>Conserver <code>SECRETS_KEY</code> à part de la base</b> (coffre de mots de passe). Sans elle, une sauvegarde restaurée ailleurs n'ouvre plus les secrets : il faut ressaisir les mots de passe de messagerie et, sur un serveur multi-sociétés, renouveler le mot de passe de chaque base depuis la console. Ne la changez pas sans cette précaution.</li>
     <li>Protection des données personnelles (clients, salariés) : accès limité aux rôles nécessaires. Respectez la loi burkinabè sur la protection des données personnelles et les recommandations de la CIL.</li>
   </ul>
 </section>
@@ -775,7 +779,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
   <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, l'IPA iOS et l'image Docker du serveur. Sur une étiquette de version, tous les installateurs sont publiés dans une Release GitHub, avec le fichier d'empreintes <code>SHA256SUMS.txt</code>.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.8.0 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.8.1 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
     <li><b>Résultats :</b> page <b>Releases</b> du dépôt (permanente), ou onglet <b>Artifacts</b> de l'exécution (90 jours).</li>
     <li><b>APK signé (publication) :</b> secrets <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>. Sans eux, l'APK est signé avec la clé de test : installable, mais une version signée autrement ne pourra pas le mettre à jour sans désinstallation.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>

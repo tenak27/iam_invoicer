@@ -13,6 +13,8 @@ export interface Ctx {
   user: SessionUser | null
   /** Adresse publique par laquelle la requête est arrivée (serveur web) : liens imprimés sur les documents. */
   origin?: string
+  /** Jeton de la session en cours (serveur web) : conservé quand on ferme les autres sessions. */
+  token?: string | null
 }
 
 /** Erreur destinée à être affichée telle quelle à l'utilisateur. */

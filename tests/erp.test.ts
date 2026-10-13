@@ -30,9 +30,9 @@ beforeAll(async () => {
   db = await openDb({ mode: 'local' })
   const user = await ok<SessionUser>({ db, user: null }, 'auth.setup', { company: { name: 'IAM Technology', tax_id: '00123456A' }, username: 'admin', full_name: 'Admin', password: 'secret123' })
   admin = { db, user }
-  await ok(admin, 'users.save', { username: 'awa', full_name: 'Awa RH', role: 'rh', password: 'motdepasse' })
+  await ok(admin, 'users.save', { username: 'awa', full_name: 'Awa RH', role: 'rh', password: 'motdepasse9' })
   const { login } = await import('../src/main/services/auth')
-  rh = { db, user: await login(db, 'awa', 'motdepasse') }
+  rh = { db, user: await login(db, 'awa', 'motdepasse9') }
   clientId = (await ok(admin, 'parties.save', { kind: 'client', name: 'ONEA' })).id
   supplierId = (await ok(admin, 'parties.save', { kind: 'supplier', name: 'Faso Distribution' })).id
   routerId = (await ok(admin, 'products.save', { kind: 'produit', name: 'Routeur 4G', sale_price: 60000, purchase_price: 40000, tva_rate: 18, tracking: 'serie' })).id

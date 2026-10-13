@@ -15,8 +15,8 @@ export interface Snapshot {
   tables: Record<string, Record<string, unknown>[]>
 }
 
-/** Propres à chaque base : jamais copiées. */
-const SKIP = new Set(['schema_version', 'auth_sessions', 'client_ops'])
+/** Propres à chaque base : jamais copiées. Les secrets (mots de passe de messagerie, jetons) ne quittent pas le serveur. */
+const SKIP = new Set(['schema_version', 'auth_sessions', 'client_ops', 'secrets'])
 
 interface Column { name: string; type: string; nullable: boolean; serial: boolean }
 interface Fk { table: string; column: string; parent: string }

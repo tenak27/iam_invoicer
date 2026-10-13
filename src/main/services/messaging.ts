@@ -8,6 +8,7 @@ import type { Db } from '../db'
 import { audit, fail, str, type Ctx } from './context'
 import { loadDocument } from './documents'
 import { getSecret, getSettings, type CompanySettings } from './settings'
+import { assertPublicHost, outboundRestricted } from '../outbound'
 
 // ---------- Points d'injection (tests) ----------
 
@@ -123,6 +124,7 @@ async function transportFor(db: Db) {
   if (!s.smtp_host) fail("Messagerie non configurée : renseignez le serveur SMTP dans « Société & paramètres ».")
   const from = s.smtp_from_email || s.smtp_user
   if (!EMAIL_RE.test(from)) fail("Adresse d'expédition invalide dans les paramètres de messagerie.")
+  await assertPublicHost(s.smtp_host, 'Serveur de messagerie')
   const transport = mailTransport({
     host: s.smtp_host,
     port: Number(s.smtp_port) || 587,
@@ -201,7 +203,9 @@ async function smsSend(db: Db, to: string, message: string): Promise<void> {
       .replace('{message}', encodeURIComponent(message))
       .replace('{sender}', encodeURIComponent(s.sms_sender))
       .replace('{key}', encodeURIComponent(secret))
-    await check(await httpFetch(url, { signal: AbortSignal.timeout(20_000) }), 'La passerelle SMS')
+    await assertPublicHost(url, 'Passerelle SMS')
+    // Serveur partagé : pas de redirection suivie (elle pourrait mener vers une adresse interne)
+    await check(await httpFetch(url, { signal: AbortSignal.timeout(20_000), ...(outboundRestricted() ? { redirect: 'error' as const } : {}) }), 'La passerelle SMS')
     return
   }
   if (s.sms_provider === 'twilio') {

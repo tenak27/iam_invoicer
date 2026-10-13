@@ -2,6 +2,7 @@ import type { DocLayout } from '@shared/domain'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 import { forgetLicenceStatus } from './licence'
+import { seal, unseal } from '../secretbox'
 
 export interface CompanySettings {
   name: string
@@ -149,7 +150,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
 
 export async function getSecret(db: Db, key: SecretKey): Promise<string> {
   const row = await db.one<{ value: string }>('SELECT value FROM secrets WHERE key = $1', [key])
-  return row?.value ?? ''
+  return unseal(row?.value)
 }
 
 /** Indique seulement quels secrets sont renseignés. */
@@ -163,7 +164,7 @@ export async function saveSecrets(ctx: Ctx, input: Partial<Record<SecretKey, str
     if (typeof input[key] !== 'string') continue
     await ctx.db.query(
       'INSERT INTO secrets (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
-      [key, input[key]]
+      [key, seal(input[key]!)]
     )
   }
   await audit(ctx.db, ctx, 'modification', 'secrets', null)

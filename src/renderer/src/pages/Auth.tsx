@@ -150,7 +150,7 @@ export function SetupScreen({ onDone, remote = false }: { onDone: (u: User) => v
         <div className="grid grid-4">
           <Field label="Nom complet"><input required {...f.bind('full_name')} /></Field>
           <Field label="Nom d'utilisateur"><input required {...f.bind('username')} /></Field>
-          <Field label="Mot de passe" hint="6 caractères minimum"><input type="password" required minLength={6} {...f.bind('password')} /></Field>
+          <Field label="Mot de passe" hint="8 caractères minimum"><input type="password" required minLength={8} {...f.bind('password')} /></Field>
           <Field label="Confirmation"><input type="password" required {...f.bind('password2')} /></Field>
         </div>
         <div className="form-actions">

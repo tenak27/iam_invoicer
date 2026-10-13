@@ -38,7 +38,8 @@ export function docMargins(company: CompanySettings) {
 }
 
 /** Texte pour une propriété CSS « content » (pied de page imprimé). */
-const cssString = (s: string) => '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\n\r]+/g, ' ') + '"'
+// « < », « > » et « & » en échappement CSS : sinon « </style> » dans une raison sociale fermerait la feuille de style et la suite deviendrait du HTML.
+const cssString = (s: string) => '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\n\r]+/g, ' ').replace(/[<>&]/g, (c) => '\\' + c.charCodeAt(0).toString(16) + ' ') + '"'
 
 /** Pied de page natif de Chromium (export PDF) avec numérotation des pages. */
 export function pdfFooterTemplate(company: CompanySettings): string {
@@ -143,7 +144,30 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   // Authenticité : QR code et code lisible, sur les documents validés (ou annulés) uniquement
   const auth: { code: string; qr: string; url: string | null } | null = company.doc_show_qr !== false && doc.auth?.code ? doc.auth : null
   const signatures: any[] = doc.signatures ?? []
-  const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || company.signature_image) && info.side === 'sale'
+  // Signature et cachet de la société : images posées sur les documents validés qu'elle émet (ventes et bons de commande)
+  const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || company.signature_image) && (info.side === 'sale' || type === 'BC')
+  // Zones de signature : toujours présentes, vides si personne n'a encore signé (à signer et tamponner à la main)
+  const OURS: Record<string, string> = { BL: 'Livré par', BR: 'Réceptionné par' }
+  const THEIRS: Record<string, [string, string]> = {
+    DEV: ['Bon pour accord du client', 'Date, signature et cachet'],
+    BL: ['Reçu par le client', 'Nom, date et signature'],
+    FAC: ['Le client', 'Signature et cachet'],
+    AV: ['Le client', 'Signature et cachet'],
+    BC: ['Le fournisseur', 'Signature et cachet'],
+    BR: ['Le livreur', 'Nom, date et signature']
+  }
+  const signBlock = !THEIRS[type] ? '' : `<div class="signs">
+    <div class="sigbox"><div class="t">${OURS[type] ? OURS[type] + ' — ' : 'Pour '}${esc(company.name)}</div>
+      ${showStamp && company.signature_image ? `<img class="sig" src="${company.signature_image}">` : ''}
+      ${showStamp && company.stamp ? `<img class="cachet" src="${company.stamp}">` : ''}
+      <div class="who">${company.signatory_name ? esc(company.signatory_name) + (company.signatory_title ? ' — ' + esc(company.signatory_title) : '') : 'Signature et cachet'}</div></div>
+    ${signatures.length
+      ? signatures.map((g: any) => `<div class="sigbox"><div class="t">${type === 'BL' ? 'Reçu par le client' : 'Bon pour accord du client'}</div>
+      <img class="sig" src="${g.image}">
+      <div><strong>${esc(g.signer_name)}</strong> — signé ${g.method === 'a_distance' ? 'en ligne' : 'sur place'} le ${esc(new Date(g.signed_at).toLocaleString('fr-FR'))}</div>
+      <div class="proof">Empreinte SHA-256 du contenu : ${esc(g.content_hash)}</div></div>`).join('')
+      : `<div class="sigbox"><div class="t">${THEIRS[type][0]}</div><div class="who">${THEIRS[type][1]}</div></div>`}
+  </div>`
 
   const rates = new Map<number, { base: number; tva: number }>()
   for (const l of doc.lines) {
@@ -249,8 +273,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .auth .muted { font-size: 7.5pt; }
   ${TEMPLATE_CSS[layout](c)}
   .signs { display: flex; justify-content: space-between; gap: 18px; margin-top: 24px; page-break-inside: avoid; }
-  .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px; min-height: 96px; font-size: 8.5pt; color: #5f6b7a; position: relative; }
+  .sigbox { flex: 1; border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 12px 26px; min-height: 104px; font-size: 8.5pt; color: #5f6b7a; position: relative; }
   .sigbox .t { text-transform: uppercase; letter-spacing: .4px; font-size: 7.5pt; }
+  .sigbox .who { position: absolute; left: 12px; right: 12px; bottom: 7px; }
+  .sigbox { display: flow-root; }
   .sigbox img.sig { max-height: 58px; max-width: 200px; display: block; margin: 4px 0; }
   .sigbox img.cachet { position: absolute; right: 10px; top: 10px; max-height: 78px; max-width: 120px; opacity: .9; }
   .sigbox .proof { font-size: 6.5pt; color: #8a94a3; word-break: break-all; }
@@ -328,22 +354,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   <div class="words">Arrêté${type === 'FAC' || type === 'FF' ? 'e' : ''} ${type === 'DEV' ? 'le présent devis' : type === 'BC' ? 'le présent bon de commande' : type === 'AV' ? 'le présent avoir' : 'la présente facture'} à la somme de : <strong>${esc(amountInWords(doc.total_ttc, countryProfile(company.country_code, company.country).currencyWords))}</strong> TTC.</div>
   ` : doc.notes ? `<div class="muted" style="margin-top:14px"><strong>Observations</strong><br>${nl2br(doc.notes)}</div>` : ''}
 
-  ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours. Bon pour accord : date, signature et cachet du client.</p>' : ''}
+  ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours.</p>' : ''}
   ${type === 'FAC' && company.bank_account ? `<p class="muted" style="margin-top:14px">Règlement par virement : ${esc(company.bank_name)} — ${esc(company.bank_account)}</p>` : ''}
-  ${signatures.length > 0 || showStamp
-    ? `<div class="signs">
-        ${showStamp ? `<div class="sigbox"><div class="t">Pour ${esc(company.name)}</div>
-          ${company.signature_image ? `<img class="sig" src="${company.signature_image}">` : ''}
-          ${company.stamp ? `<img class="cachet" src="${company.stamp}">` : ''}
-          <div>${esc(company.signatory_name)}${company.signatory_title ? ' — ' + esc(company.signatory_title) : ''}</div></div>` : ''}
-        ${signatures.map((g: any) => `<div class="sigbox"><div class="t">${type === 'BL' ? 'Reçu par le client' : 'Bon pour accord du client'}</div>
-          <img class="sig" src="${g.image}">
-          <div><strong>${esc(g.signer_name)}</strong> — signé ${g.method === 'a_distance' ? 'en ligne' : 'sur place'} le ${esc(new Date(g.signed_at).toLocaleString('fr-FR'))}</div>
-          <div class="proof">Empreinte SHA-256 du contenu : ${esc(g.content_hash)}</div></div>`).join('')}
-      </div>`
-    : type === 'BL' || type === 'BR' || type === 'DEV' || type === 'BC'
-      ? `<div class="sign"><div>${type === 'BL' ? 'Livré par' : type === 'BR' ? 'Réceptionné par' : 'Pour ' + esc(company.name)}</div><div>${type === 'BL' ? 'Reçu par le client (nom, date, signature)' : type === 'BR' ? 'Livreur' : type === 'DEV' ? 'Bon pour accord du client' : 'Signature et cachet'}</div></div>`
-      : ''}
+  ${signBlock}
   ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
   ${auth ? `<div class="auth">${qrSvg(auth.qr, 84)}<div><div class="t">Document authentique</div><div>Code : <span class="code">${esc(auth.code)}</span></div><div class="muted">${auth.url ? `Scannez ce code, ou saisissez-le sur ${esc(auth.url.replace(/^https?:\/\//, '').replace(/\/verify\/.*$/, '/verify'))}, pour vérifier ce document.` : `Scannez ce code pour lire le numéro, la date et le montant enregistrés par ${esc(company.name)}.`}</div></div></div>` : ''}
   ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}
