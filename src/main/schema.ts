@@ -845,5 +845,26 @@ export const MIGRATIONS: string[] = [
     ('131', 'Résultat net : bénéfice'),
     ('139', 'Résultat net : perte')
   ON CONFLICT (number) DO NOTHING
+  `,
+  // v15 : verrou de sécurité des exercices (codes à usage unique, essais manqués)
+  `
+  CREATE TABLE fiscal_challenges (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    ref TEXT NOT NULL DEFAULT '',
+    code_hash TEXT NOT NULL,
+    attempts INT NOT NULL DEFAULT 0,
+    used_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX fiscal_challenges_user_idx ON fiscal_challenges(user_id, action, ref);
+  CREATE TABLE fiscal_auth_failures (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX fiscal_auth_failures_user_idx ON fiscal_auth_failures(user_id, at)
   `
 ]

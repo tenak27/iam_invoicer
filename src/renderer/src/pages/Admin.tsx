@@ -51,6 +51,9 @@ export function CompanySettingsPage() {
   const [tab, setTab] = useState<SettingsTab>('societe')
   const [showDb, setShowDb] = useState(false)
   const [smtpPassword, setSmtpPassword] = useState('')
+  const [mailTo, setMailTo] = useState('')
+  const [mailCheck, setMailCheck] = useState<{ ok: boolean; text: string } | null>(null)
+  const [mailBusy, setMailBusy] = useState('')
   const [smsSecret, setSmsSecret] = useState('')
   const [secefToken, setSecefToken] = useState('')
   const [drawSig, setDrawSig] = useState(false)
@@ -72,6 +75,7 @@ export function CompanySettingsPage() {
       return true
     }, 'Paramètres enregistrés.')
     if (r) {
+      setMailCheck(null)
       setSmtpPassword('')
       setSmsSecret('')
       setSecefToken('')
@@ -84,10 +88,25 @@ export function CompanySettingsPage() {
     if (img) f.set(key, img)
   }
   const test = async (channel: 'email' | 'sms') => {
-    const to = channel === 'email' ? v.smtp_from_email || v.email : v.phone
-    if (!to) return notify(channel === 'email' ? "Renseignez d'abord une adresse d'expédition." : "Renseignez d'abord le téléphone de la société (onglet Société).", 'error')
+    const to = channel === 'email' ? mailTo.trim() || v.smtp_from_email || v.smtp_user || v.email : v.phone
+    if (!to) return notify(channel === 'email' ? "Indiquez l'adresse qui doit recevoir l'essai." : "Renseignez d'abord le téléphone de la société (onglet Société).", 'error')
+    setMailBusy('test')
     await save()
-    await run(() => api('messages.test', { channel, to }), channel === 'email' ? `E-mail d'essai envoyé à ${to}.` : `SMS d'essai envoyé au ${to}.`)
+    await run(() => api('messages.test', { channel, to }), channel === 'email' ? `E-mail d'essai envoyé à ${to}. Vérifiez aussi le dossier des indésirables.` : `SMS d'essai envoyé au ${to}.`)
+    setMailBusy('')
+  }
+  // Le port décide du chiffrement : 465 = SSL dès la connexion, 587 = STARTTLS
+  const setPort = (raw: string) => {
+    const port = raw.replace(/\D/g, '').slice(0, 5)
+    f.setValues({ ...v, smtp_port: port, smtp_secure: port === '465' ? true : port === '587' || port === '25' || port === '2525' ? false : v.smtp_secure })
+  }
+  /** Contrôle la connexion avec les valeurs affichées, sans rien enregistrer ni envoyer. */
+  const verifyMail = async () => {
+    setMailBusy('verify')
+    setMailCheck(null)
+    const r = await window.erp.call('messages.verify', { smtp_host: v.smtp_host, smtp_port: Number(v.smtp_port) || 587, smtp_secure: !!v.smtp_secure, smtp_user: v.smtp_user, smtp_from_email: v.smtp_from_email, smtp_password: smtpPassword || undefined })
+    setMailBusy('')
+    setMailCheck(r.ok ? { ok: true, text: `Connexion réussie à ${(r.data as any).host}, port ${(r.data as any).port} (${(r.data as any).encryption})${(r.data as any).auth ? ', identifiant accepté' : ''}. Enregistrez, puis envoyez un e-mail d'essai.` } : { ok: false, text: r.error })
   }
   const ImageField = ({ k, label, hint }: { k: string; label: string; hint: string }) => (
     <div className="field">
@@ -239,17 +258,21 @@ export function CompanySettingsPage() {
             <div className="mail-providers" role="group" aria-label="Fournisseur de messagerie">
               {MAIL_PROVIDERS.map((p) => (
                 <button key={p.name} type="button" className={`btn btn-sm ${v.smtp_host === p.host ? 'btn-tonal' : ''}`} aria-pressed={v.smtp_host === p.host}
-                  onClick={() => f.setValues({ ...v, smtp_host: p.host, smtp_port: p.port, smtp_secure: p.secure })}>{p.name}</button>
+                  onClick={() => { setMailCheck(null); f.setValues({ ...v, smtp_host: p.host, smtp_port: String(p.port), smtp_secure: p.secure }) }}>{p.name}</button>
               ))}
             </div>
             {MAIL_PROVIDERS.find((p) => p.host === v.smtp_host)?.hint && <p className="muted small mail-hint">{MAIL_PROVIDERS.find((p) => p.host === v.smtp_host)!.hint}</p>}
             <div className="grid grid-4">
               <Field label="Serveur SMTP" span={2}><input {...f.bind('smtp_host')} placeholder="smtp.gmail.com" autoCapitalize="off" /></Field>
-              <Field label="Port"><input inputMode="numeric" {...f.bind('smtp_port')} /></Field>
-              <label className="inline check" style={{ alignSelf: 'end' }}>
-                <input type="checkbox" checked={!!v.smtp_secure} onChange={(e) => f.set('smtp_secure', e.target.checked)} /> SSL direct (port 465)
-              </label>
-              <Field label="Identifiant" span={2}><input {...f.bind('smtp_user')} autoComplete="off" autoCapitalize="off" /></Field>
+              <Field label="Port" hint="587 ou 465"><input inputMode="numeric" value={v.smtp_port ?? ''} onChange={(e) => setPort(e.target.value)} /></Field>
+              <Field label="Chiffrement">
+                <select value={String(v.smtp_port) === '465' || (v.smtp_secure && !['587', '25', '2525'].includes(String(v.smtp_port))) ? 'ssl' : 'starttls'}
+                  onChange={(e) => f.setValues({ ...v, smtp_secure: e.target.value === 'ssl', smtp_port: e.target.value === 'ssl' ? (String(v.smtp_port) === '587' ? '465' : v.smtp_port) : (String(v.smtp_port) === '465' ? '587' : v.smtp_port) })}>
+                  <option value="starttls">STARTTLS (port 587)</option>
+                  <option value="ssl">SSL/TLS (port 465)</option>
+                </select>
+              </Field>
+              <Field label="Identifiant" span={2} hint="En général, l'adresse complète de la boîte."><input {...f.bind('smtp_user')} autoComplete="off" autoCapitalize="off" spellCheck={false} /></Field>
               <Field label="Mot de passe" span={2} hint={secrets?.smtp_password ? 'Enregistré. Laisser vide pour le conserver.' : 'Non renseigné.'}>
                 <input type="password" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)} autoComplete="new-password" />
               </Field>
@@ -258,7 +281,13 @@ export function CompanySettingsPage() {
               <Field label="Réponses envoyées à" span={2} hint="Facultatif : si vos clients doivent répondre à une autre adresse."><input type="email" {...f.bind('smtp_reply_to')} placeholder={v.smtp_from_email || 'contact@iam.bf'} /></Field>
               <Field label="Copie cachée de chaque envoi" span={2} hint="Facultatif : pour garder une trace dans votre boîte."><input type="email" {...f.bind('smtp_bcc')} placeholder="archives@iam.bf" /></Field>
             </div>
-            <div className="form-actions"><button className="btn" onClick={() => test('email')}>Envoyer un e-mail d'essai</button></div>
+            {mailCheck && <p className={mailCheck.ok ? 'mail-check ok' : 'mail-check bad'} role="status">{mailCheck.text}</p>}
+            <div className="mail-test">
+              <button className="btn" onClick={verifyMail} disabled={!!mailBusy || !v.smtp_host}>{mailBusy === 'verify' ? 'Connexion en cours…' : 'Tester la connexion'}</button>
+              <Field label="Envoyer l'essai à"><input type="email" value={mailTo} onChange={(e) => setMailTo(e.target.value)} placeholder={v.smtp_from_email || v.smtp_user || v.email || 'vous@exemple.com'} /></Field>
+              <button className="btn btn-primary" onClick={() => test('email')} disabled={!!mailBusy || !v.smtp_host}>{mailBusy === 'test' ? 'Envoi en cours…' : "Enregistrer et envoyer l'essai"}</button>
+            </div>
+            <p className="muted small">« Tester la connexion » vérifie le serveur, le port et le mot de passe saisis, sans rien enregistrer ni envoyer. Les envois et leurs éventuelles erreurs figurent dans Communication → Journal des envois.</p>
           </div>
         </div>
       )}

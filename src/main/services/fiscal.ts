@@ -9,6 +9,7 @@ import { can } from '@shared/domain'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, str, type Ctx } from './context'
+import { assertFiscalAuth, type GuardAuth } from './fiscalGuard'
 import { isCharge, isProduct } from './statements'
 
 export interface FiscalYear {
@@ -63,7 +64,7 @@ export async function listFiscalYears(ctx: Ctx) {
 }
 
 /** Ouverture d'un exercice : périodes sans chevauchement, à la suite les unes des autres. */
-export async function openFiscalYear(ctx: Ctx, input: { label?: string; start_date: string; end_date: string }) {
+export async function openFiscalYear(ctx: Ctx, input: { label?: string; start_date: string; end_date: string; auth?: GuardAuth }) {
   if (!can(ctx.user!.role, 'finance')) fail("L'ouverture d'un exercice demande le droit « Validation financière ».")
   const start = str(input?.start_date)
   const end = str(input?.end_date)
@@ -72,6 +73,11 @@ export async function openFiscalYear(ctx: Ctx, input: { label?: string; start_da
   const days = (Date.parse(end) - Date.parse(start)) / 86_400_000 + 1
   if (days > 731) fail('Un exercice ne peut pas dépasser deux ans.')
   const label = str(input.label).slice(0, 40) || (start.slice(0, 4) === end.slice(0, 4) ? start.slice(0, 4) : `${start.slice(0, 4)}-${end.slice(0, 4)}`)
+  // Les refus évidents passent avant le verrou : inutile de consommer un code pour des dates impossibles
+  if (await ctx.db.one('SELECT 1 FROM fiscal_years WHERE label = $1', [label])) fail(`Un exercice « ${label} » existe déjà.`)
+  const clash = await ctx.db.one<{ label: string }>('SELECT label FROM fiscal_years WHERE start_date <= $2 AND end_date >= $1 LIMIT 1', [start, end])
+  if (clash) fail(`Ces dates chevauchent l'exercice ${clash.label}.`)
+  await assertFiscalAuth(ctx, 'open', null, input.auth)
   return ctx.db.tx(async (db) => {
     if (await db.one('SELECT 1 FROM fiscal_years WHERE label = $1', [label])) fail(`Un exercice « ${label} » existe déjà.`)
     const clash = await db.one<{ label: string }>('SELECT label FROM fiscal_years WHERE start_date <= $2 AND end_date >= $1 LIMIT 1', [start, end])
@@ -143,13 +149,14 @@ export async function previewClosing(ctx: Ctx, args: { id: number }) {
  * Clôture : une écriture datée du dernier jour solde chaque compte de charges et de produits ;
  * la différence va au compte 131 (bénéfice) ou 139 (perte). La période est ensuite verrouillée.
  */
-export async function closeFiscalYear(ctx: Ctx, args: { id: number; confirm?: string; open_next?: boolean }) {
+export async function closeFiscalYear(ctx: Ctx, args: { id: number; confirm?: string; open_next?: boolean; auth?: GuardAuth }) {
   if (!can(ctx.user!.role, 'finance')) fail("La clôture d'un exercice demande le droit « Validation financière ».")
   const preview = await previewClosing(ctx, args)
   if (preview.year.status !== 'ouvert') fail('Cet exercice est déjà clôturé.')
   const blocking = preview.checks.find((c) => c.blocking && !c.ok)
   if (blocking) fail(`Clôture impossible : ${blocking.label}`)
   if (str(args.confirm) !== preview.year.label) fail(`Pour confirmer, saisissez le nom de l'exercice : ${preview.year.label}.`)
+  await assertFiscalAuth(ctx, 'close', preview.year.id, args.auth)
 
   return ctx.db.tx(async (db) => {
     const y = await mustYear(db, args.id, true)
@@ -184,10 +191,11 @@ export async function closeFiscalYear(ctx: Ctx, args: { id: number; confirm?: st
 }
 
 /** Réouverture du dernier exercice clôturé (administrateur) : l'écriture de clôture est retirée. */
-export async function reopenFiscalYear(ctx: Ctx, args: { id: number; reason?: string }) {
+export async function reopenFiscalYear(ctx: Ctx, args: { id: number; reason?: string; auth?: GuardAuth }) {
   if (ctx.user!.role !== 'admin') fail('Seul un administrateur peut rouvrir un exercice clôturé.')
   const reason = str(args?.reason).slice(0, 300)
   if (reason.length < 5) fail('Indiquez le motif de la réouverture : il est inscrit au journal d’activité.')
+  await assertFiscalAuth(ctx, 'reopen', (await mustYear(ctx.db, args.id)).id, args.auth)
   return ctx.db.tx(async (db) => {
     const y = await mustYear(db, args.id, true)
     if (y.status !== 'cloture') fail("Cet exercice n'est pas clôturé.")
@@ -201,8 +209,9 @@ export async function reopenFiscalYear(ctx: Ctx, args: { id: number; reason?: st
 }
 
 /** Suppression d'un exercice ouvert sans écriture (erreur de saisie des dates). */
-export async function deleteFiscalYear(ctx: Ctx, args: { id: number }) {
+export async function deleteFiscalYear(ctx: Ctx, args: { id: number; auth?: GuardAuth }) {
   if (!can(ctx.user!.role, 'finance')) fail("La suppression d'un exercice demande le droit « Validation financière ».")
+  await assertFiscalAuth(ctx, 'delete', (await mustYear(ctx.db, args?.id)).id, args.auth)
   return ctx.db.tx(async (db) => {
     const y = await mustYear(db, args?.id, true)
     if (y.status !== 'ouvert') fail('Un exercice clôturé ne se supprime pas.')

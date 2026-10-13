@@ -44,6 +44,12 @@ function checkRole(role: string): asserts role is Role {
   if (!(role in ROLE_LABELS)) fail('Rôle inconnu.')
 }
 
+/** Vérifie le mot de passe d'un compte actif (confirmation d'une opération sensible). */
+export async function checkUserPassword(db: Db, userId: number, password: string): Promise<boolean> {
+  const row = await db.one<{ password_hash: string }>('SELECT password_hash FROM users WHERE id = $1 AND active', [userId])
+  return verifyPasswordAsync(String(password ?? '').slice(0, 1000), row?.password_hash ?? DUMMY_HASH).then((good) => good && !!row)
+}
+
 export async function needsSetup(db: Db): Promise<boolean> {
   const row = await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM users')
   return (row?.n ?? 0) === 0

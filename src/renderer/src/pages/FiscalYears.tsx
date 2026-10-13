@@ -1,12 +1,13 @@
 // Exercices comptables : ouverture, contrôles avant clôture, clôture et réouverture.
 
 import { useState } from 'react'
-import { ArrowCounterClockwise, CalendarCheck, CalendarPlus, CheckCircle, LockSimple, LockSimpleOpen, Trash, Warning, XCircle } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, CalendarCheck, CalendarPlus, CheckCircle, LockSimple, LockSimpleOpen, ShieldCheck, Trash, Warning, XCircle } from '@phosphor-icons/react'
 import { formatDate, formatMoney, todayISO } from '@shared/format'
 import { api, run, useQuery } from '../api'
 import { KpiStrip } from '../components/KpiStrip'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, useForm } from '../components/ui'
 import { WfBadge } from '../components/Workflow'
+import { authReady, emptyAuth, GUARD_LABELS, GuardFields, GuardModal, type Guard, type GuardAuth } from '../components/FiscalGuard'
 
 interface Year { id: number; label: string; start_date: string; end_date: string; status: 'ouvert' | 'cloture'; result: number | null; closed_at: string | null; closed_by_name?: string | null }
 
@@ -21,6 +22,9 @@ export function FiscalYearsPage() {
   const [opening, setOpening] = useState(false)
   const [closing, setClosing] = useState<Year | null>(null)
   const [reopening, setReopening] = useState<Year | null>(null)
+  const [deleting, setDeleting] = useState<Year | null>(null)
+  const [guarding, setGuarding] = useState(false)
+  const { data: guard, reload: reloadGuard } = useQuery<Guard>('fiscalGuard.get')
   const years: Year[] = data?.years ?? []
   const rights = data?.rights ?? { close: false, reopen: false }
   const current = years.find((y) => y.id === data?.current) ?? null
@@ -77,7 +81,7 @@ export function FiscalYearsPage() {
                         <RowActions actions={[
                           { label: 'Contrôler et clôturer', icon: LockSimple, hidden: y.status !== 'ouvert' || !rights.close, onClick: () => setClosing(y) },
                           { label: 'Rouvrir', icon: ArrowCounterClockwise, hidden: y.status !== 'cloture' || !rights.reopen, onClick: () => setReopening(y) },
-                          { label: 'Supprimer', icon: Trash, tone: 'danger', hidden: y.status !== 'ouvert' || !rights.close, onClick: async () => { if (await confirmDialog(`Supprimer l'exercice ${y.label} ?`, { detail: 'Possible seulement s’il ne contient aucune écriture.', danger: true })) if (await run(() => api('fiscal.delete', { id: y.id }), 'Exercice supprimé.')) reload() } }
+                          { label: 'Supprimer', icon: Trash, tone: 'danger', hidden: y.status !== 'ouvert' || !rights.close, onClick: () => setDeleting(y) }
                         ]} />
                       </td>
                     </tr>
@@ -86,39 +90,54 @@ export function FiscalYearsPage() {
               </table>
             </div>
           )}
+          {guard && (
+            <div className="card guard-card">
+              <span className="guard-ic"><ShieldCheck size={26} weight="duotone" aria-hidden="true" /></span>
+              <div>
+                <h3>Opérations protégées</h3>
+                <p className="muted">Ouvrir, clôturer, rouvrir ou supprimer un exercice demande : <strong>{GUARD_LABELS[guard.mode].toLowerCase()}</strong>{guard.mode === 'email' ? ` (${guard.email})` : ''}. Cinq essais manqués suspendent ces opérations quinze minutes.</p>
+              </div>
+              {guard.admin && <button className="btn" onClick={() => setGuarding(true)}>Régler la protection</button>}
+            </div>
+          )}
           <p className="muted small">La clôture passe une écriture au dernier jour de l'exercice : les comptes de charges et de produits sont soldés, et le résultat est porté au compte 131 (bénéfice) ou 139 (perte). L'affectation du résultat, décidée par les associés, se saisit ensuite en opérations diverses. Faites valider la clôture par votre comptable.</p>
         </>
       )}
-      {opening && <OpenModal suggestion={data.suggestion} onClose={() => setOpening(false)} onDone={() => { setOpening(false); reload() }} />}
-      {closing && <CloseModal year={closing} onClose={() => setClosing(null)} onDone={() => { setClosing(null); reload() }} />}
-      {reopening && <ReopenModal year={reopening} onClose={() => setReopening(null)} onDone={() => { setReopening(null); reload() }} />}
+      {opening && <OpenModal guard={guard} suggestion={data.suggestion} onClose={() => setOpening(false)} onDone={() => { setOpening(false); reload() }} />}
+      {closing && <CloseModal guard={guard} year={closing} onClose={() => setClosing(null)} onDone={() => { setClosing(null); reload() }} />}
+      {reopening && <ReopenModal guard={guard} year={reopening} onClose={() => setReopening(null)} onDone={() => { setReopening(null); reload() }} />}
+      {deleting && <DeleteModal guard={guard} year={deleting} onClose={() => setDeleting(null)} onDone={() => { setDeleting(null); reload() }} />}
+      {guarding && guard && <GuardModal guard={guard} onClose={() => setGuarding(false)} onDone={() => { setGuarding(false); reloadGuard() }} />}
     </div>
   )
 }
 
-function OpenModal({ suggestion, onClose, onDone }: { suggestion: { label: string; start_date: string; end_date: string }; onClose: () => void; onDone: () => void }) {
+function OpenModal({ guard, suggestion, onClose, onDone }: { guard?: Guard; suggestion: { label: string; start_date: string; end_date: string }; onClose: () => void; onDone: () => void }) {
   const f = useForm<any>({ ...suggestion })
-  const go = async () => { if (await run(() => api('fiscal.open', f.values), `Exercice ${f.values.label || ''} ouvert.`)) onDone() }
+  const [auth, setAuth] = useState<GuardAuth>(emptyAuth)
+  const go = async () => { if (await run(() => api('fiscal.open', { ...f.values, auth }), `Exercice ${f.values.label || ''} ouvert.`)) onDone() }
   return (
-    <Modal title="Ouvrir un exercice" onClose={onClose} footer={<><button className="btn btn-ghost" onClick={onClose}>Annuler</button><button className="btn btn-primary" onClick={go}><CalendarPlus size={18} aria-hidden="true" />Ouvrir l'exercice</button></>}>
+    <Modal title="Ouvrir un exercice" onClose={onClose} footer={<><button className="btn btn-ghost" onClick={onClose}>Annuler</button><button className="btn btn-primary" onClick={go} disabled={!authReady(guard, auth)}><CalendarPlus size={18} aria-hidden="true" />Ouvrir l'exercice</button></>}>
       <div className="grid grid-2">
         <Field label="Nom de l'exercice" span={2} hint="Par exemple 2026, ou 2026-2027 pour un exercice à cheval sur deux années."><input autoFocus {...f.bind('label')} /></Field>
         <Field label="Premier jour"><input type="date" {...f.bind('start_date')} /></Field>
         <Field label="Dernier jour"><input type="date" {...f.bind('end_date')} /></Field>
       </div>
       <p className="muted small">Les exercices se suivent sans se chevaucher. Le premier exercice d'une société peut durer plus de douze mois.</p>
+      <GuardFields guard={guard} action="open" auth={auth} onChange={setAuth} />
     </Modal>
   )
 }
 
-function CloseModal({ year, onClose, onDone }: { year: Year; onClose: () => void; onDone: () => void }) {
+function CloseModal({ guard, year, onClose, onDone }: { guard?: Guard; year: Year; onClose: () => void; onDone: () => void }) {
+  const [auth, setAuth] = useState<GuardAuth>(emptyAuth)
   const { data, error } = useQuery<any>('fiscal.preview', { id: year.id }, [year.id])
   const [confirm, setConfirm] = useState('')
   const [next, setNext] = useState(true)
   const [busy, setBusy] = useState(false)
   const go = async () => {
     setBusy(true)
-    const r = await run(() => api<any>('fiscal.close', { id: year.id, confirm, open_next: next }))
+    const r = await run(() => api<any>('fiscal.close', { id: year.id, confirm, open_next: next, auth }))
     setBusy(false)
     if (r) {
       onDone()
@@ -128,7 +147,7 @@ function CloseModal({ year, onClose, onDone }: { year: Year; onClose: () => void
   return (
     <Modal title={`Clôturer l'exercice ${year.label}`} onClose={onClose} wide footer={<>
       <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Annuler</button>
-      <button className="btn btn-danger" onClick={go} disabled={busy || !data?.canClose || confirm.trim() !== year.label}><LockSimple size={18} aria-hidden="true" />Clôturer définitivement</button>
+      <button className="btn btn-danger" onClick={go} disabled={busy || !data?.canClose || confirm.trim() !== year.label || !authReady(guard, auth)}><LockSimple size={18} aria-hidden="true" />Clôturer définitivement</button>
     </>}>
       {error ? <ErrorBox error={error} /> : !data ? <Loading /> : (
         <>
@@ -151,19 +170,33 @@ function CloseModal({ year, onClose, onDone }: { year: Year; onClose: () => void
             <Field label={`Pour confirmer, saisissez « ${year.label} »`}><input value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" disabled={!data.canClose} /></Field>
             <label className="check-row" style={{ alignSelf: 'end', minHeight: 44 }}><input type="checkbox" checked={next} onChange={(e) => setNext(e.target.checked)} /> Ouvrir l'exercice suivant dans la foulée</label>
           </div>
+          {data.canClose && <GuardFields guard={guard} action="close" id={year.id} auth={auth} onChange={setAuth} />}
         </>
       )}
     </Modal>
   )
 }
 
-function ReopenModal({ year, onClose, onDone }: { year: Year; onClose: () => void; onDone: () => void }) {
+function ReopenModal({ guard, year, onClose, onDone }: { guard?: Guard; year: Year; onClose: () => void; onDone: () => void }) {
   const [reason, setReason] = useState('')
-  const go = async () => { if (await run(() => api('fiscal.reopen', { id: year.id, reason }), `Exercice ${year.label} rouvert : l'écriture de clôture est retirée.`)) onDone() }
+  const [auth, setAuth] = useState<GuardAuth>(emptyAuth)
+  const go = async () => { if (await run(() => api('fiscal.reopen', { id: year.id, reason, auth }), `Exercice ${year.label} rouvert : l'écriture de clôture est retirée.`)) onDone() }
   return (
-    <Modal title={`Rouvrir l'exercice ${year.label}`} onClose={onClose} footer={<><button className="btn btn-ghost" onClick={onClose}>Annuler</button><button className="btn btn-danger" onClick={go}><ArrowCounterClockwise size={18} aria-hidden="true" />Rouvrir l'exercice</button></>}>
+    <Modal title={`Rouvrir l'exercice ${year.label}`} onClose={onClose} footer={<><button className="btn btn-ghost" onClick={onClose}>Annuler</button><button className="btn btn-danger" onClick={go} disabled={reason.trim().length < 5 || !authReady(guard, auth)}><ArrowCounterClockwise size={18} aria-hidden="true" />Rouvrir l'exercice</button></>}>
       <p className="muted">La période redevient modifiable et l'écriture de clôture est supprimée. À réserver à la correction d'une erreur, avant le dépôt des états financiers.</p>
       <Field label="Motif de la réouverture" hint="Inscrit au journal d'activité."><textarea rows={3} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
+      <GuardFields guard={guard} action="reopen" id={year.id} auth={auth} onChange={setAuth} />
+    </Modal>
+  )
+}
+
+function DeleteModal({ guard, year, onClose, onDone }: { guard?: Guard; year: Year; onClose: () => void; onDone: () => void }) {
+  const [auth, setAuth] = useState<GuardAuth>(emptyAuth)
+  const go = async () => { if (await run(() => api('fiscal.delete', { id: year.id, auth }), 'Exercice supprimé.')) onDone() }
+  return (
+    <Modal title={`Supprimer l'exercice ${year.label}`} onClose={onClose} footer={<><button className="btn btn-ghost" onClick={onClose}>Annuler</button><button className="btn btn-danger" onClick={go} disabled={!authReady(guard, auth)}><Trash size={18} aria-hidden="true" />Supprimer</button></>}>
+      <p className="muted">Possible seulement si l'exercice ne contient aucune écriture : à réserver à une erreur de saisie des dates.</p>
+      <GuardFields guard={guard} action="delete" id={year.id} auth={auth} onChange={setAuth} />
     </Modal>
   )
 }

@@ -12,7 +12,7 @@ import { assertPublicHost, outboundRestricted } from '../outbound'
 
 // ---------- Points d'injection (tests) ----------
 
-type MailTransportFactory = (opts: any) => { sendMail(msg: any): Promise<any> }
+type MailTransportFactory = (opts: any) => { sendMail(msg: any): Promise<any>; verify?(): Promise<any>; close?(): void }
 let mailTransport: MailTransportFactory = (opts) => nodemailer.createTransport(opts)
 let httpFetch: typeof fetch = (...a) => fetch(...a)
 
@@ -119,20 +119,97 @@ function emailHtml(body: string, company: CompanySettings): string {
 </div>`
 }
 
-async function transportFor(db: Db) {
-  const s = await getSettings(db)
-  if (!s.smtp_host) fail("Messagerie non configurée : renseignez le serveur SMTP dans « Société & paramètres ».")
-  const from = s.smtp_from_email || s.smtp_user
-  if (!EMAIL_RE.test(from)) fail("Adresse d'expédition invalide dans les paramètres de messagerie.")
-  await assertPublicHost(s.smtp_host, 'Serveur de messagerie')
-  const transport = mailTransport({
-    host: s.smtp_host,
-    port: Number(s.smtp_port) || 587,
-    secure: !!s.smtp_secure,
-    auth: s.smtp_user ? { user: s.smtp_user, pass: await getSecret(db, 'smtp_password') } : undefined,
-    connectionTimeout: 15_000
-  })
+type SmtpSettings = Pick<CompanySettings, 'smtp_host' | 'smtp_port' | 'smtp_secure' | 'smtp_user'>
+
+/** Nom du serveur tel qu'on le saisit souvent : « smtp.exemple.com:587 », « ssl://smtp.exemple.com »… */
+export function smtpHost(raw: string): string {
+  return str(raw).replace(/^[a-z]+:\/\//i, '').replace(/[/\s].*$/, '').replace(/:\d+$/, '').toLowerCase()
+}
+
+/**
+ * Options de connexion. Le chiffrement se déduit du port, pour qu'une case mal cochée ne bloque pas
+ * l'envoi : 465 = SSL dès la connexion ; 587, 25 et 2525 = STARTTLS. Un mot de passe ne part jamais en clair.
+ */
+export function smtpOptions(s: SmtpSettings, pass: string) {
+  const host = smtpHost(s.smtp_host)
+  const port = Number(s.smtp_port) || 587
+  const secure = port === 465 ? true : port === 587 || port === 25 || port === 2525 ? false : !!s.smtp_secure
+  const user = str(s.smtp_user)
+  return {
+    host, port, secure,
+    requireTLS: !secure && !!user,
+    auth: user ? { user, pass } : undefined,
+    connectionTimeout: 15_000, greetingTimeout: 15_000, socketTimeout: 30_000,
+    tls: { minVersion: 'TLSv1.2', servername: host }
+  }
+}
+
+/** Traduit une erreur du serveur de messagerie en explication utile. */
+export function explainMailError(e: unknown, s?: SmtpSettings): string {
+  const err = e as { code?: string; responseCode?: number; response?: string; message?: string; command?: string }
+  const msg = String(err?.message ?? e)
+  const port = Number(s?.smtp_port) || 587
+  const code = err?.code ?? ''
+  const rc = err?.responseCode ?? 0
+  if (code === 'EAUTH' || rc === 535 || rc === 534 || /Invalid login|authentication failed|Username and Password not accepted/i.test(msg))
+    return "le serveur refuse l'identifiant ou le mot de passe. Vérifiez l'adresse complète de la boîte ; chez Gmail et Yahoo, il faut un « mot de passe d'application », pas le mot de passe habituel."
+  if (code === 'ENOTFOUND' || code === 'EDNS' || code === 'EAI_AGAIN' || /getaddrinfo/i.test(msg)) return "serveur introuvable. Vérifiez le nom du serveur SMTP et la connexion Internet de ce poste."
+  if (/wrong version number|SSL routines|ssl3_get_record/i.test(msg)) return `le chiffrement ne correspond pas au port ${port}. Utilisez le port 465 (SSL) ou le port 587 (STARTTLS).`
+  if (/certificate|self.signed|CERT_|altnames/i.test(msg) || code === 'ESOCKET' && /cert/i.test(msg)) return "le certificat de sécurité du serveur n'est pas valide (expiré, auto-signé ou émis pour un autre nom). Utilisez le nom de serveur indiqué par votre hébergeur."
+  if (/STARTTLS|requireTLS/i.test(msg)) return `le serveur n'offre pas de connexion chiffrée sur le port ${port}. Essayez le port 465.`
+  if (code === 'ETIMEDOUT' || code === 'ECONNREFUSED' || code === 'ECONNECTION' || code === 'ECONNRESET' || code === 'EHOSTUNREACH' || /timeout|Greeting never received/i.test(msg))
+    return `connexion impossible au port ${port}. Vérifiez le port (587 ou 465), le pare-feu et que votre fournisseur d'accès ne bloque pas l'envoi d'e-mails.`
+  if (rc === 550 || rc === 553 || rc === 554 || code === 'EENVELOPE' || /sender|from address|not owned|relay/i.test(msg))
+    return `le serveur refuse l'expéditeur ou le destinataire (${(err?.response || msg).slice(0, 160)}). L'adresse d'expédition doit être celle de la boîte utilisée pour se connecter.`
+  if (rc === 421 || rc === 450 || rc === 451 || rc === 452) return `le serveur est momentanément indisponible ou limite les envois (${(err?.response || msg).slice(0, 160)}). Réessayez dans quelques minutes.`
+  return msg.slice(0, 240)
+}
+
+async function transportFor(db: Db, override?: Partial<SmtpSettings> & { smtp_password?: string }, needSender = true) {
+  const s = { ...(await getSettings(db)), ...(override ?? {}) }
+  if (!smtpHost(s.smtp_host)) fail("Messagerie non configurée : renseignez le serveur SMTP dans « Société et paramètres », onglet « E-mail d’envoi ».")
+  const from = str(s.smtp_from_email) || str(s.smtp_user)
+  if (needSender && !EMAIL_RE.test(from)) fail("Adresse d'expédition invalide : renseignez l'adresse de l'expéditeur dans les paramètres de messagerie.")
+  await assertPublicHost(smtpHost(s.smtp_host), 'Serveur de messagerie')
+  const pass = override?.smtp_password || (await getSecret(db, 'smtp_password'))
+  if (str(s.smtp_user) && !pass) fail('Mot de passe de la messagerie non renseigné.')
+  const transport = mailTransport(smtpOptions(s, pass))
   return { transport, from: s.smtp_from_name ? `"${s.smtp_from_name.replace(/"/g, '')}" <${from}>` : from, settings: s }
+}
+
+/**
+ * Contrôle la connexion et l'authentification, sans rien envoyer. Les valeurs du formulaire
+ * peuvent être testées avant d'être enregistrées.
+ */
+export async function verifySmtp(ctx: Ctx, input: { smtp_host?: string; smtp_port?: number; smtp_secure?: boolean; smtp_user?: string; smtp_from_email?: string; smtp_password?: string } = {}) {
+  const override: any = {}
+  for (const k of ['smtp_host', 'smtp_user', 'smtp_from_email', 'smtp_password'] as const) if (typeof input?.[k] === 'string' && input[k]) override[k] = str(input[k])
+  if (input?.smtp_port) override.smtp_port = Number(input.smtp_port) || 587
+  if (typeof input?.smtp_secure === 'boolean') override.smtp_secure = input.smtp_secure
+  const { transport, settings } = await transportFor(ctx.db, override, false)
+  const o = smtpOptions(settings, '')
+  try {
+    await transport.verify?.()
+  } catch (e) {
+    fail(`Connexion refusée : ${explainMailError(e, settings)}`)
+  } finally {
+    transport.close?.()
+  }
+  return { ok: true, host: o.host, port: o.port, encryption: o.secure ? 'SSL/TLS' : 'STARTTLS', auth: !!o.auth }
+}
+
+/** Message de sécurité (code à usage unique) : envoyé sans copie, et son contenu n'est pas conservé au journal. */
+export async function sendSecurityEmail(ctx: Ctx, to: string, subject: string, body: string) {
+  const { transport, from, settings } = await transportFor(ctx.db)
+  const entry = { channel: 'email' as const, to, subject: 'Code de sécurité', body: '(contenu non conservé)', kind: 'securite' }
+  try {
+    await transport.sendMail({ from, to, subject, text: body, html: emailHtml(body, settings) })
+  } catch (e) {
+    const error = explainMailError(e, settings)
+    await log(ctx.db, ctx, { ...entry, ok: false, error })
+    fail(`Le code n'a pas pu être envoyé : ${error}`)
+  }
+  await log(ctx.db, ctx, { ...entry, ok: true })
 }
 
 export interface Attachment {
@@ -168,7 +245,7 @@ export async function sendEmail(
       attachments: (input.attachments ?? []).map((a) => ({ filename: a.filename, content: Buffer.from(a.content, 'base64'), contentType: a.contentType }))
     })
   } catch (e) {
-    const error = e instanceof Error ? e.message : String(e)
+    const error = explainMailError(e, settings)
     await log(ctx.db, ctx, { channel: 'email', to: recipients.join(', '), subject, body, ok: false, error, documentId: input.documentId, partyId, kind: input.kind ?? 'manuel' })
     fail(`Échec de l'envoi de l'e-mail : ${error}`)
   }

@@ -2563,3 +2563,24 @@ body { background: radial-gradient(1100px 620px at 100% -20%, rgba(var(--primary
 .assistant-item { background: var(--surface-2); }
 .wf-facts > div, .fy-checks li { background: var(--surface-2); border-color: transparent; }
 .fy-bar span { background: var(--c-primary); }
+
+/* ── Verrou de sécurité des exercices, essai de messagerie (v0.13) ── */
+.guard { margin: 18px 0 0; padding: 16px 18px 18px; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface-2); min-width: 0; }
+.guard legend { display: inline-flex; align-items: center; gap: 8px; padding: 0 8px; font-weight: 700; font-size: 13.5px; color: var(--c-primary); }
+.guard-code { font-variant-numeric: tabular-nums; letter-spacing: .32em; font-weight: 700; font-size: 18px; text-align: center; }
+.guard-send { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 12px; }
+.guard-step { margin-top: 18px; }
+.guard-totp { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: start; }
+.guard-totp img, .guard-qr-wait { width: 180px; height: 180px; border-radius: var(--r-md); border: 1px solid var(--line); background: #fff; }
+.guard-totp ol { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); }
+.guard-totp code { font-size: 13px; padding: 2px 6px; border-radius: 6px; background: var(--surface-3); word-break: break-all; }
+.guard-card { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.guard-card > div { flex: 1; min-width: 240px; }
+.guard-card h3 { margin-bottom: 4px; }
+.guard-ic { width: 52px; height: 52px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--c-primary); box-shadow: inset 0 0 0 2px rgba(var(--primary-rgb), .3); }
+.mail-test { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.mail-test .field { flex: 1; min-width: 220px; margin: 0; }
+.mail-check { margin: 16px 0 0; padding: 12px 16px; border-radius: var(--r-md); font-weight: 600; line-height: 1.45; }
+.mail-check.ok { background: color-mix(in srgb, var(--green, #16a34a) 12%, var(--surface)); color: color-mix(in srgb, var(--green, #16a34a) 70%, var(--text)); }
+.mail-check.bad { background: color-mix(in srgb, var(--red, #dc2626) 10%, var(--surface)); color: color-mix(in srgb, var(--red, #dc2626) 75%, var(--text)); }
+@media (max-width: 640px) { .guard-totp { grid-template-columns: 1fr; justify-items: start; } }

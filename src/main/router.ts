@@ -34,6 +34,7 @@ import { listAssistant } from './services/assistant'
 import * as expenses from './services/expenses'
 import * as requests from './services/requests'
 import * as fiscal from './services/fiscal'
+import * as fiscalGuard from './services/fiscalGuard'
 import { isReadAction, isVendorAdmin, VENDOR_ADMIN } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -210,6 +211,10 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'fiscal.close': { access: 'accounting', fn: fiscal.closeFiscalYear },
   'fiscal.reopen': { access: 'accounting', fn: fiscal.reopenFiscalYear },
   'fiscal.delete': { access: 'accounting', fn: fiscal.deleteFiscalYear },
+  'fiscalGuard.get': { access: 'accounting', fn: fiscalGuard.getGuard },
+  'fiscalGuard.challenge': { access: 'accounting', fn: fiscalGuard.challenge },
+  'fiscalGuard.totp': { access: 'accounting', fn: fiscalGuard.totpStart },
+  'fiscalGuard.save': { access: 'accounting', fn: fiscalGuard.saveGuard },
 
   'settings.secrets': { access: 'settings', fn: secretStatus },
   'settings.saveSecrets': { access: 'settings', fn: saveSecrets },
@@ -222,6 +227,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'messages.sendDocument': { access: docOrMessages, fn: messaging.sendDocument },
   'messages.sendSms': { access: docOrMessages, fn: messaging.sendSms },
   'messages.test': { access: 'settings', fn: messaging.sendTest },
+  'messages.verify': { access: 'settings', fn: messaging.verifySmtp },
   'messages.log': { access: 'messages', fn: messaging.listLog },
   'messages.remind': { access: docOrMessages, fn: messaging.remind },
   'messages.remindAll': { access: 'messages', fn: messaging.remindAll },

@@ -15,13 +15,16 @@ let comptable: Ctx
 let commercial: Ctx
 let client = 0
 let y25 = 0
+const PASSWORDS: Record<string, string> = { admin: 'secret123', compta: 'motdepasse9', vente: 'motdepasse9' }
+const signed = (ctx: Ctx, name: string, args: any) =>
+  /^fiscal\.(open|close|reopen|delete)$/.test(name) && ctx.user && !args?.auth ? { ...args, auth: { password: PASSWORDS[ctx.user.username] } } : args
 const ok = async <T = any>(ctx: Ctx, name: string, args?: unknown): Promise<T> => {
-  const r = await call(ctx, name, args)
+  const r = await call(ctx, name, signed(ctx, name, args))
   if (!r.ok) throw new Error(r.error)
   return r.data as T
 }
 const refused = async (ctx: Ctx, name: string, args?: unknown) => {
-  const r = await call(ctx, name, args)
+  const r = await call(ctx, name, signed(ctx, name, args))
   return r.ok ? '' : r.error
 }
 const invoice = (date: string, price: number) => ok<any>(admin, 'documents.save', { type: 'FAC', party_id: client, validate: true, date, taxes: [], lines: [{ description: 'Prestation', quantity: 1, unit_price: price, tva_rate: 18 }] })
