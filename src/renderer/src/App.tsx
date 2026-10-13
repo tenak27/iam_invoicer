@@ -36,6 +36,7 @@ import { BudgetPage } from './pages/Budget'
 import { homeFor } from './components/Layout'
 import { ExpensesPage } from './pages/Expenses'
 import { RequestsPage } from './pages/Requests'
+import { FiscalYearsPage } from './pages/FiscalYears'
 import { LicensingPage } from './pages/Licensing'
 
 type Phase = 'loading' | 'db-error' | 'setup' | 'login' | 'ready'
@@ -178,6 +179,7 @@ export default function App() {
                 <Route path="/compta/balance" element={<Balance />} />
                 <Route path="/compta/resultat" element={<IncomeStatement />} />
                 <Route path="/compta/comptes" element={<Accounts />} />
+                <Route path="/compta/exercices" element={<FiscalYearsPage />} />
                 <Route path="/compta/bilan" element={<BalanceSheet />} />
                 <Route path="/declarations" element={<Declarations />} />
                 <Route path="/messages" element={<MessagesLog />} />

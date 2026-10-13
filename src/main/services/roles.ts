@@ -47,6 +47,8 @@ export async function getRoles(ctx: Ctx) {
 }
 
 export async function saveRoles(ctx: Ctx, input: { current: Partial<Record<Role, Module[]>> | null }) {
+  // La matrice décide de ce que chacun peut faire : elle ne se modifie que par un administrateur
+  if (ctx.user?.role !== 'admin') fail('Seul un administrateur peut modifier les droits des rôles.')
   const all = PERMISSIONS.admin
   const out: Partial<Record<Role, Module[]>> = {}
   if (input?.current) {

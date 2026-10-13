@@ -5,6 +5,7 @@
 // stock mis à jour) → éventuellement annulé. Les factures et avoirs validés ne
 // s'annulent pas : on corrige une facture par un avoir.
 
+import { assertPeriodOpen } from './fiscal'
 import { randomBytes } from 'node:crypto'
 import { DOC_TYPES, lineHT, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } from '@shared/taxes'
@@ -298,6 +299,7 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
     if (!doc) fail('Document introuvable.')
     if (doc.status !== 'brouillon') fail('Ce document est déjà validé.')
     const type = doc.type as DocType
+    if (type !== 'DEV' && type !== 'BC') await assertPeriodOpen(db, doc.date)
     const info = DOC_TYPES[type]
     const lines = await db.query('SELECT * FROM document_lines WHERE document_id = $1 ORDER BY position', [doc.id])
     if (lines.length === 0) fail('Ajoutez au moins une ligne avant de valider.')
@@ -347,6 +349,7 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
     const doc = await db.one('SELECT * FROM documents WHERE id = $1 FOR UPDATE', [args.id])
     if (!doc) fail('Document introuvable.')
     if (doc.status !== 'valide') fail('Seul un document validé peut être annulé.')
+    if (doc.type !== 'DEV' && doc.type !== 'BC') await assertPeriodOpen(db, doc.date)
     if (doc.type === 'FAC' || doc.type === 'AV')
       fail('Une facture ou un avoir validé ne peut pas être annulé : établissez un avoir.')
     const pay = await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM payments WHERE document_id = $1 AND method <> $2', [doc.id, WITHHOLDING_METHOD])

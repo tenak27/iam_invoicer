@@ -109,13 +109,17 @@ export async function saveUser(
   const username = str(input.username).toLowerCase()
   if (!/^[a-z0-9._-]{2,}$/.test(username)) fail("Nom d'utilisateur invalide (lettres, chiffres, . _ - ; 2 caractères minimum).")
   checkRole(input.role)
+  const isAdmin = ctx.user?.role === 'admin'
+  if (!isAdmin && (input.role === 'admin' || input.role === 'licences')) fail('Seul un administrateur peut attribuer ce rôle.')
   // Licence : nombre d'utilisateurs actifs
   if (input.active !== false) await checkUserQuota(ctx.db, input.id)
   if (input.id) {
     if (input.id === ctx.user?.id && (input.role !== 'admin' || input.active === false))
       fail('Vous ne pouvez pas retirer vos propres droits administrateur.')
     // Compte de l'éditeur (attribution des licences) : modifiable par lui seul, identifiant fixe
-    const target = await ctx.db.one<{ username: string }>('SELECT username FROM users WHERE id = $1', [input.id])
+    const target = await ctx.db.one<{ username: string; role: string }>('SELECT username, role FROM users WHERE id = $1', [input.id])
+    if (!target) fail('Utilisateur introuvable.')
+    if (!isAdmin && (target.role === 'admin' || target.role === 'licences')) fail('Seul un administrateur peut modifier ce compte.')
     if (target?.username === VENDOR_ADMIN) {
       if (input.id !== ctx.user?.id) fail(`Le compte « ${VENDOR_ADMIN} » ne peut être modifié que par son titulaire.`)
       if (username !== VENDOR_ADMIN) fail(`L'identifiant du compte « ${VENDOR_ADMIN} » ne peut pas être changé.`)

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IAM INVOICER — Le logiciel de gestion des entreprises du Burkina Faso | IAM Technology</title>
 <meta name="description" content="IAM INVOICER : devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA, paie et déclarations. Sur ordinateur, téléphone et navigateur, même sans Internet. Essai gratuit de 30 jours.">
-<meta name="theme-color" content="#050b1f">
+<meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta property="og:title" content="IAM INVOICER — Toute votre gestion, même sans Internet">
 <meta property="og:description" content="Facturation, caisse, stock, dépenses, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
@@ -14,7 +14,7 @@
 <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* Landing page IAM INVOICER — système de design :
      bleu de confiance, orange réservé à l'action, vert pour ce qui est acquis ;
@@ -708,6 +708,186 @@
     .map { transform: none; }
   }
 
+  /* ══ Orbe : noir, ambre, particules ══ */
+  :root {
+    --blue: #f58a3c; --blue-2: #ffb37a; --blue-soft: #1d130b; --navy: #0b0b0c;
+    --cta: #f26a1b; --cta-2: #d9560c; --on-cta: #fff; --green: #7ee0a8; --gold: #ffc27a;
+    --bg: #050505; --surface: #0d0d0e; --ink: #ffffff; --text: #c8c8cc; --muted: #8b8b92; --line: #222225; --soft: #151517;
+    --display: 'Michroma', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 20px 50px -30px rgba(0, 0, 0, .9);
+    --shadow-lg: 0 50px 100px -50px rgba(0, 0, 0, 1);
+  }
+  body { background: var(--bg); }
+  h1, h2, .display { font-family: var(--display); text-transform: uppercase; font-weight: 400; letter-spacing: .01em; line-height: 1.16; }
+  h1 { font-size: clamp(27px, 3.7vw, 52px); }
+  h2 { font-size: clamp(22px, 2.9vw, 38px); }
+  h3 { font-weight: 600; letter-spacing: -.01em; }
+  h1 em, h2 em { font-family: inherit; font-style: normal; color: #77777c; }
+  .night h2 em, .final h2 em, .hero h1 em { color: #77777c; }
+  .eyebrow { color: var(--muted); font-size: 12px; letter-spacing: .14em; font-weight: 600; }
+  .eyebrow::before { content: '[ '; width: auto; height: auto; background: none; }
+  .eyebrow::after, .head.center .eyebrow::after { content: ' ]'; width: auto; height: auto; background: none; }
+  .alt { background: #080808; border-color: var(--line); }
+  .read { background: linear-gradient(90deg, #f26a1b, #ffc27a); }
+  .intro { background: #050505; }
+  .intro::after { background: linear-gradient(90deg, #f26a1b, #ffc27a); }
+  .cursor { border-color: rgba(245, 138, 60, .7); background: rgba(245, 138, 60, .08); }
+  #orb { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  main, footer, header.top { position: relative; z-index: 1; }
+  header.top { position: sticky; z-index: 60; }
+  section { background: transparent; }
+  .alt, .night { background: rgba(8, 8, 8, .78); backdrop-filter: blur(2px); }
+
+  /* Navigation : discrète, en capitales */
+  .nav { background: rgba(8, 8, 8, .55); border-color: rgba(255, 255, 255, .08); box-shadow: none; border-radius: 16px; }
+  .brand { font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+  .brand span { color: #77777c; font-weight: 400; }
+  nav.links a { text-transform: uppercase; font-size: 11px; letter-spacing: .1em; color: #a9a9af; font-weight: 600; white-space: nowrap; padding: 8px 9px; }
+  nav.links a::after { content: ' ↗'; color: #77777c; }
+  nav.links a:hover { background: none; color: #fff; }
+
+  /* Boutons */
+  .btn { border-radius: 999px; font-weight: 600; font-size: 14.5px; }
+  .btn-cta { background: linear-gradient(180deg, #f58a3c, #e2620f); box-shadow: 0 14px 30px -14px rgba(242, 106, 27, .9), inset 0 1px 0 rgba(255, 255, 255, .25); }
+  .btn-ghost, .btn-glass, .btn-quest { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .12); color: #e9e9ec; backdrop-filter: blur(8px); text-transform: none; letter-spacing: 0; font-size: 14.5px; }
+  .btn-ghost:hover, .btn-glass:hover, .btn-quest:hover { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .28); }
+  .btn-bracket { position: relative; border-radius: 0; background: rgba(255, 255, 255, .1); border: 0; color: #fff; padding: 12px 22px; min-height: 48px; }
+  .btn-bracket::before, .btn-bracket::after { content: ''; position: absolute; inset: -5px; pointer-events: none; background:
+    linear-gradient(#fff, #fff) left top / 9px 1px no-repeat, linear-gradient(#fff, #fff) left top / 1px 9px no-repeat,
+    linear-gradient(#fff, #fff) right top / 9px 1px no-repeat, linear-gradient(#fff, #fff) right top / 1px 9px no-repeat,
+    linear-gradient(#fff, #fff) left bottom / 9px 1px no-repeat, linear-gradient(#fff, #fff) left bottom / 1px 9px no-repeat,
+    linear-gradient(#fff, #fff) right bottom / 9px 1px no-repeat, linear-gradient(#fff, #fff) right bottom / 1px 9px no-repeat; transition: inset .3s var(--ease); }
+  .btn-bracket::after { display: none; }
+  .btn-bracket:hover { background: rgba(255, 255, 255, .18); transform: none; }
+  .btn-bracket:hover::before { inset: -9px; }
+
+  /* Héros */
+  .hero { min-height: 100svh; padding: 0; background: none; display: block; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; left: 50%; top: -34vh; width: min(1100px, 130vw); height: 70vh; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(255, 196, 120, .95), rgba(242, 106, 27, .55) 38%, rgba(242, 106, 27, 0) 72%); filter: blur(20px); pointer-events: none; animation: glow 7s ease-in-out infinite alternate; }
+  @keyframes glow { to { opacity: .78; transform: translateX(-50%) scale(1.06); } }
+  .hero-grid { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255, 255, 255, .5) 1px, transparent 1.5px) 0 0 / 150px 150px; opacity: .14; mask-image: radial-gradient(70% 60% at 50% 55%, #000, transparent); pointer-events: none; }
+  .hero-in { position: relative; z-index: 3; min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, .75fr); align-items: end; justify-items: start; gap: 40px; text-align: left; padding: calc(var(--nav) + 60px) 0 150px; }
+  .tagline { position: absolute; left: 0; top: calc(var(--nav) + 60px); color: #a9a9af; font-size: 11.5px; letter-spacing: .14em; }
+  .hero h1 { max-width: none; text-shadow: none; }
+  .hero h1 .star { display: inline-block; color: #fff; margin-right: .18em; animation: star 5s ease-in-out infinite; }
+  @keyframes star { 50% { transform: rotate(90deg) scale(.8); opacity: .7; } }
+  .rot { justify-items: start; padding-left: 0; }
+  .hero-side { display: grid; gap: 18px; align-self: end; padding-bottom: 6px; }
+  .hero-side .mark { display: flex; justify-content: space-between; color: #a9a9af; font-size: 12px; letter-spacing: .12em; }
+  .hero-side .mark b { font-family: var(--display); font-weight: 400; font-size: 20px; color: #fff; letter-spacing: .1em; }
+  .hero .lead { margin: 0; font-size: 15.5px; color: #c8c8cc; max-width: 360px; }
+  .hero .cta { justify-content: flex-start; margin: 4px 0 0; gap: 22px; align-items: center; }
+  .hero .cta .plain { color: #e9e9ec; font-weight: 600; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+  .platforms { position: absolute; z-index: 3; left: 0; right: 0; bottom: 34px; text-align: center; color: #8b8b92; font-size: 13px; }
+  .platforms ul { list-style: none; margin: 16px auto 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 44px; color: #8b8b92; font-weight: 700; font-size: 16px; }
+  .platforms li { display: inline-flex; align-items: center; gap: 9px; transition: color .3s; }
+  .platforms li:hover { color: #fff; }
+
+  /* À propos : chiffres */
+  .about-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .acard { position: relative; overflow: hidden; min-height: 250px; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(160deg, #141415, #0b0b0c); padding: 20px; display: flex; flex-direction: column; color: #c8c8cc; transition: transform .4s var(--ease), border-color .3s; }
+  .acard:hover { transform: translateY(-6px); border-color: #3a3a3e; }
+  .acard small { font-size: 13px; color: #e9e9ec; text-transform: uppercase; letter-spacing: .06em; }
+  .acard b { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 3.4vw, 42px); color: #fff; margin-top: auto; line-height: 1.1; }
+  .acard p { margin-top: 10px; font-size: 14.5px; max-width: 30ch; }
+  .acard.hot { background: linear-gradient(160deg, #c8641f, #a94f12); border-color: #d97a35; color: #ffe9d6; }
+  .acard.hot p { color: #ffe1c8; }
+  .acard.lines::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 44px); mask-image: linear-gradient(180deg, #000, transparent 70%); }
+  .statement { display: grid; grid-template-columns: 1fr minmax(0, 360px); gap: 30px; align-items: end; margin-top: 70px; }
+  .statement hr { border: 0; border-top: 1px solid #2a2a2d; margin: 0 0 12px; width: 100%; }
+  .statement p { font-family: var(--display); text-transform: uppercase; font-size: clamp(18px, 2.2vw, 27px); line-height: 1.25; color: #fff; }
+  .statement p span { color: #77777c; }
+
+  /* Fonctionnalités : cartes sombres à illustration filaire */
+  .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .fcard { position: relative; overflow: hidden; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(180deg, #121213, #0a0a0b); padding: 22px; display: flex; flex-direction: column; gap: 8px; min-height: 420px; transition: transform .45s var(--ease), border-color .3s; }
+  .fcard::after { content: ''; position: absolute; inset: 0; background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(245, 138, 60, .16), transparent 60%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .fcard:hover { transform: translateY(-6px); border-color: #3a3a3e; }
+  .fcard:hover::after { opacity: 1; }
+  .fcard h3 { font-size: 19px; color: #fff; }
+  .fcard p { font-size: 14.5px; color: #a9a9af; max-width: 38ch; }
+  .wire { position: relative; flex: 1; margin: 18px 0 14px; display: grid; place-items: center; }
+  .wire svg { width: 100%; max-width: 260px; height: auto; overflow: visible; }
+  .wire .st { fill: none; stroke: #3a3a3e; stroke-width: 1.4; transition: stroke .4s; }
+  .wire .fill { fill: #1b1b1d; stroke: #3a3a3e; stroke-width: 1.4; }
+  .wire .hot { fill: #f58a3c; }
+  .wire .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .fcard.in .wire .draw { animation: draw 1.6s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 120ms); }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .fcard:hover .wire .st { stroke: #6a6a70; }
+  .fcard .btn { align-self: center; min-height: 44px; padding: 8px 18px; font-size: 13.5px; }
+
+  /* Sections existantes passées au noir et à l'ambre */
+  .tile, .card, .tier, .dl, .faq details, .doc, .web-strip, .node, .track, .trustgrid div { background: linear-gradient(180deg, #121213, #0b0b0c); border-color: var(--line); }
+  .tier.best { background: linear-gradient(165deg, #c8641f, #8f3f0a); border-color: #d97a35; color: #ffe9d6; }
+  .tier.best .for { color: #ffd9bd; } .tier.best li svg { color: #fff; } .tier .flag { background: #fff; color: #8f3f0a; }
+  .tier.best .btn-cta { background: #fff; color: #8f3f0a; box-shadow: none; }
+  .tier li svg, .proof svg, .circuit-list svg { color: var(--blue); }
+  .night { background: rgba(8, 8, 8, .8); }
+  .night::before { background: radial-gradient(600px 380px at 86% 0%, rgba(242, 106, 27, .2), transparent 70%); }
+  .night .eyebrow { color: var(--muted); } .night .head p, .night p { color: #a9a9af; }
+  .job-out { background: linear-gradient(155deg, #171718, #0b0b0c); border: 1px solid var(--line); }
+  .job-out::before { background: radial-gradient(closest-side, rgba(242, 106, 27, .4), transparent); }
+  .job-offer b { color: var(--blue); } .job-mods li::before { background: var(--blue); box-shadow: 0 0 0 4px rgba(245, 138, 60, .25); }
+  .job-list button { background: #0d0d0e; } .job-list button[aria-pressed=true] { background: #1d130b; }
+  .map { background: linear-gradient(90deg, #131314 0 20%, #18181a 20% 40%, #131314 40% 60%, #18181a 60% 80%, #131314 80%); }
+  .pin .dot { box-shadow: 0 0 0 5px #131314, 0 10px 22px -8px rgba(0, 0, 0, .8); }
+  .pin[aria-pressed=true] .dot { box-shadow: 0 0 0 5px #131314, 0 0 30px 6px color-mix(in srgb, var(--c) 70%, transparent); }
+  .map-note b, .pin .here { color: var(--blue); }
+  .dl-reco { background: linear-gradient(120deg, #1a1a1c, #8f3f0a); }
+  .dl .ic, .card .ico { background: #1d130b; color: var(--blue); }
+  .dl.is-reco { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(245, 138, 60, .16); } .reco-tag { background: var(--blue); color: #1a0b02; }
+  .chips button { background: #0d0d0e; } .chips button[aria-pressed=true] { background: #fff; color: #050505; border-color: #fff; }
+  input[type=text], input[type=number] { background: #0d0d0e; border-color: #2a2a2d; }
+  .tour-tabs button[aria-selected=true] { background: #131314; border-color: #2a2a2d; }
+  .tour-tabs button[aria-selected=true] svg { color: var(--blue); } .tour-tabs button[aria-selected=true]::after { background: var(--blue); }
+  .tour-view { background: #131314; border: 1px solid var(--line); }
+  .trial { background: #1d130b; border-color: rgba(245, 138, 60, .3); } .trial svg { color: var(--blue); }
+  .faq summary::after { background: #1d130b; color: var(--blue); }
+  .sn { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); }
+  .net .sw { background: #f58a3c; } .net[aria-checked=false] .sw { background: #55555a; }
+  dialog.acces { background: #0d0d0e; } .acces-co { background: #131314; } .acces-co b { background: linear-gradient(135deg, #2a2a2d, #f26a1b); }
+  .mobile-cta { background: rgba(8, 8, 8, .9); } .to-top { background: #131314; }
+
+  /* Pied : horizon ambré, reliefs et grand nom */
+  .foot { position: relative; overflow: hidden; margin-top: 60px; padding: 70px 0 0; border-radius: 28px 28px 0 0; background: linear-gradient(180deg, #050505 0%, #3a1a07 34%, #c8641f 58%, #c8641f 62%, #1b1b1c 62%); min-height: 720px; }
+  .foot-top { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 40px; }
+  .foot-brand { font-family: var(--display); font-size: clamp(24px, 3vw, 38px); color: #fff; text-transform: uppercase; }
+  .foot p.say { margin: 12px 0 22px; max-width: 430px; color: #e6e6e9; font-size: 17px; }
+  .foot .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .foot-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .foot-cols h4 { margin: 0 0 12px; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: #c8c8cc; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, .14); }
+  .foot-cols a { display: block; color: #fff; padding: 7px 0; font-size: 15px; min-height: 36px; }
+  .hills { position: absolute; left: 0; right: 0; top: 330px; width: 100%; height: 300px; z-index: 1; }
+  .foot-acces { position: relative; z-index: 3; width: min(430px, calc(100% - 32px)); margin: 150px auto 0; padding: 18px; border-radius: 18px; background: rgba(30, 30, 32, .62); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, .12); }
+  .foot-acces label { display: block; color: #fff; font-weight: 600; font-size: 15px; margin-bottom: 12px; }
+  .foot-acces .row { display: flex; gap: 6px; padding: 5px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(0, 0, 0, .35); }
+  .foot-acces input { flex: 1; min-width: 0; border: 0; background: none; padding: 8px 14px; min-height: 44px; color: #fff; border-radius: 999px; }
+  .foot-acces input:focus { box-shadow: none; }
+  .foot-acces .btn { min-height: 44px; padding: 8px 20px; }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+  .foot-links a, .foot-links span { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, .06); color: #c8c8cc; font-size: 13.5px; }
+  .wordmark { position: relative; z-index: 2; margin: 46px 0 0; text-align: center; font-family: var(--display); text-transform: uppercase; font-size: clamp(34px, 9.4vw, 150px); line-height: .9; white-space: nowrap; color: transparent; background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .02)); -webkit-background-clip: text; background-clip: text; user-select: none; }
+  .foot-end { position: relative; z-index: 3; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 0 110px; color: #c8c8cc; font-size: 14px; }
+  footer { padding: 0; }
+
+  @media (max-width: 1040px) {
+    .hero-in { grid-template-columns: 1fr; align-content: end; gap: 26px; padding-bottom: 190px; }
+    .about-cards, .fgrid { grid-template-columns: 1fr 1fr; }
+    .statement, .foot-top { grid-template-columns: 1fr; }
+    nav.links a::after { display: none; }
+    nav.links { background: #0d0d0e; }
+  }
+  @media (max-width: 720px) {
+    .about-cards, .fgrid { grid-template-columns: 1fr; }
+    .fcard { min-height: 0; } .acard { min-height: 200px; }
+    .platforms ul { gap: 10px 22px; font-size: 14px; }
+    .foot-cols { grid-template-columns: 1fr 1fr; } .foot { min-height: 0; } .foot-acces { margin-top: 90px; }
+    .hills { top: 520px; }
+  }
+  @media (max-width: 720px) { #orb { opacity: .5; } }
+  @media (prefers-reduced-motion: reduce) { #orb { display: none; } .fcard .wire .draw { stroke-dashoffset: 0; } }
+
   /* Apparition au défilement */
   .js .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d, 0) * 80ms); }
   .js .rv.in { opacity: 1; transform: none; }
@@ -769,6 +949,7 @@
 <span class="read" aria-hidden="true"></span>
 <span class="cursor" id="cursor" aria-hidden="true"></span>
 <a class="skip" href="#contenu">Aller au contenu</a>
+<canvas id="orb" aria-hidden="true"></canvas>
 <span hidden id="ic-dl"><i data-icon="DownloadSimple"></i></span>
 <span hidden id="ic-phone"><i data-icon="DeviceMobile"></i></span>
 
@@ -776,7 +957,7 @@
   <div class="nav">
     <a class="brand" href="#" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" alt="" width="34" height="34">IAM <span>INVOICER</span></a>
     <nav class="links" id="menu" aria-label="Navigation principale">
-      <a href="#parcours">Le parcours</a>
+      <a href="#fonctions">Fonctionnalités</a>
       <a href="#demo">Démonstration</a>
       <a href="#offres">Offres</a>
       <a href="#telecharger">Télécharger</a>
@@ -789,143 +970,95 @@
 </header>
 
 <main id="contenu">
-  <section class="hero" id="hero">
-    <canvas id="fx" aria-hidden="true"></canvas>
-    <div class="scene" aria-hidden="true">
-      <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice">
-        <defs>
-          <radialGradient id="lake" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#8fd0ff"/><stop offset=".45" stop-color="#2f74e0"/><stop offset="1" stop-color="#0b2a78" stop-opacity="0"/></radialGradient>
-          <radialGradient id="pglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#d6f0ff"/><stop offset=".5" stop-color="#6ea8ff" stop-opacity=".7"/><stop offset="1" stop-color="#6ea8ff" stop-opacity="0"/></radialGradient>
-          <radialGradient id="torch" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd58a" stop-opacity=".9"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
-          <linearGradient id="cry" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9e6ff"/><stop offset="1" stop-color="#2f74e0"/></linearGradient>
-          <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
-          <symbol id="pine" viewBox="0 0 40 70"><path d="M20 0 L33 24 H26 L37 44 H28 L40 62 H0 L12 44 H3 L14 24 H7 Z" fill="#0d2550"/><path d="M20 0 L26 12 L20 16 L14 12 Z M26 24 L31 34 L24 36 Z M28 44 L33 54 L26 56 Z" fill="#cfe6ff" opacity=".55"/><rect x="17" y="60" width="6" height="10" fill="#0a1838"/></symbol>
-        </defs>
-        <circle class="moon" cx="1130" cy="120" r="150" fill="url(#pglow)" opacity=".5"/>
-        <g class="l1">
-          <path d="M-40 470 L130 250 L230 350 L330 210 L470 400 L590 270 L700 420 L850 220 L960 360 L1080 240 L1230 400 L1340 300 L1480 420 L1480 760 L-40 760 Z" fill="#17347e"/>
-          <path d="M130 250 L168 300 L138 290 L112 312 Z M330 210 L372 268 L336 252 L300 274 Z M850 220 L890 274 L856 262 L820 284 Z M1080 240 L1116 292 L1084 280 L1052 300 Z" fill="#cfe6ff" opacity=".8"/>
-        </g>
-        <g class="l2">
-          <path d="M-40 560 L90 430 L220 520 L360 400 L500 520 L640 460 L800 530 L940 420 L1100 520 L1250 440 L1480 540 L1480 760 L-40 760 Z" fill="#10286a"/>
-          <ellipse cx="760" cy="560" rx="360" ry="62" fill="url(#lake)"/>
-          <path class="shim" d="M560 552 h90 M720 572 h120 M880 548 h70" stroke="#d6f0ff" stroke-width="3" stroke-linecap="round" opacity=".5"/>
-          <path class="shim b" d="M620 580 h70 M800 556 h60" stroke="#d6f0ff" stroke-width="2.5" stroke-linecap="round" opacity=".4"/>
-          <use href="#pine" x="130" y="430" width="48" height="84"/><use href="#pine" x="184" y="456" width="34" height="60"/><use href="#pine" x="1180" y="420" width="52" height="92"/><use href="#pine" x="1250" y="452" width="36" height="62"/><use href="#pine" x="1010" y="470" width="30" height="52"/><use href="#pine" x="320" y="470" width="30" height="52"/>
-          <g transform="translate(470 520)">
-            <ellipse cx="0" cy="44" rx="104" ry="24" fill="#2c4a99"/><ellipse cx="0" cy="36" rx="88" ry="18" fill="#4467b8"/>
-            <circle class="portal" cx="0" cy="-28" r="96" fill="url(#pglow)"/>
-            <circle class="ring" cx="0" cy="-28" r="58" fill="none" stroke="#d6f0ff" stroke-width="12" stroke-dasharray="84 18" stroke-linecap="round"/>
-            <circle cx="0" cy="-28" r="36" fill="#0b2a78"/>
-            <image href="assets/logo-mark.svg" x="-27" y="-55" width="54" height="54"/>
-          </g>
-        </g>
-        <g class="crystal"><path d="M250 150 l22 34 -22 52 -22 -52 z" fill="url(#cry)"/><path d="M250 150 l0 86 -22 -52 z" fill="#fff" opacity=".25"/></g>
-        <g class="crystal b"><path d="M1260 210 l16 26 -16 40 -16 -40 z" fill="url(#cry)"/></g>
-        <g class="crystal c"><path d="M980 300 l11 18 -11 28 -11 -28 z" fill="url(#cry)" opacity=".8"/></g>
-        <g class="l3">
-          <path d="M-40 760 L-40 640 C120 600 300 660 470 640 C560 630 600 690 720 690 C860 690 900 640 1040 650 C1200 660 1320 610 1480 640 L1480 760 Z" fill="#081233"/>
-          <path d="M560 760 C580 690 650 660 720 660 C800 660 860 692 880 760 Z" fill="#050b1f"/>
-          <circle class="halo" cx="786" cy="566" r="120" fill="url(#torch)"/>
-          <g transform="translate(720 596)">
-            <path d="M-26 66 C-28 18 -18 -6 0 -6 C18 -6 28 18 26 66 Z" fill="#030817"/>
-            <circle cx="0" cy="-24" r="19" fill="#030817"/>
-            <path d="M-20 -30 C-18 -50 18 -50 20 -30 C10 -38 -10 -38 -20 -30 Z" fill="#e2a81f"/><circle cx="19" cy="-40" r="7" fill="#1fa463"/>
-            <path d="M18 18 L60 -22" stroke="#030817" stroke-width="10" stroke-linecap="round"/>
-            <path d="M58 -18 L70 -60" stroke="#5c3b20" stroke-width="6" stroke-linecap="round"/>
-            <g class="flame"><path d="M70 -60 C56 -78 66 -96 72 -108 C76 -94 90 -84 84 -66 C80 -56 74 -56 70 -60 Z" fill="#ff8a3d"/><path d="M72 -64 C64 -76 70 -86 74 -94 C76 -84 84 -78 80 -68 C78 -62 74 -62 72 -64 Z" fill="#ffd58a"/></g>
-            <rect x="-40" y="2" width="30" height="22" rx="4" fill="#fff" opacity=".9" transform="rotate(-12 -25 13)"/><circle cx="-19" cy="14" r="5" fill="#1fa463"/>
-          </g>
-          <use href="#pine" x="40" y="590" width="66" height="116"/><use href="#pine" x="1330" y="580" width="70" height="122"/><use href="#pine" x="1250" y="620" width="44" height="78"/>
-        </g>
-      </svg>
-    </div>
+  <section class="hero" id="hero" data-orb="50,40,1">
+    <div class="hero-grid" aria-hidden="true"></div>
     <div class="wrap hero-in">
-      <a class="pill rv" href="#parcours"><b>Nouveau</b>Dépenses, expressions de besoin et validations<i data-icon="ArrowRight"></i></a>
-      <h1 id="h1" aria-label="Toute votre gestion, même sans Internet."><span class="h1-line" aria-hidden="true">Toute votre gestion,</span><br><em class="rot" id="rot" aria-hidden="true"><span class="on">même sans Internet.</span><span>sur votre téléphone.</span><span>conforme au Burkina Faso.</span><span>sans rien ressaisir.</span></em></h1>
-      <p class="lead rv" style="--d:2">IAM INVOICER vous guide de la première facture au bilan : caisse, stock, dépenses, comptabilité SYSCOHADA et paie, pour les entreprises du Burkina Faso.</p>
-      <div class="cta rv" style="--d:3" id="hero-cta">
-        <a class="btn btn-cta" href="#telecharger" id="hero-dl"><i data-icon="DownloadSimple"></i><span>Commencer l'aventure — 30 jours gratuits</span></a>
-        <a class="btn btn-glass" href="#demo"><i data-icon="Play" data-size="18" data-weight="fill"></i>Créer une facture en 10 secondes</a>
+      <span class="tagline rv">[ IAM TECHNOLOGY · OUAGADOUGOU ]</span>
+      <div>
+        <div class="eyebrow rv">Gestion d'entreprise</div>
+        <h1 id="h1" aria-label="Toute votre gestion, même sans Internet."><span class="h1-line" aria-hidden="true">Toute votre</span><br><span aria-hidden="true"><span class="star">✦</span><span class="h1-line">gestion,</span></span><br><em class="rot" id="rot" aria-hidden="true"><span class="on">sans Internet.</span><span>sur mobile.</span><span>aux normes.</span><span>sans ressaisie.</span></em></h1>
+      </div>
+      <div class="hero-side rv" style="--d:2">
+        <div class="mark"><b>( IAM )</b><span>[ 001 / 006 ]</span></div>
+        <p class="lead">IAM INVOICER réunit factures, caisse, stock, dépenses, comptabilité SYSCOHADA et paie dans un seul logiciel, pensé pour les entreprises du Burkina Faso.</p>
+        <div class="cta" id="hero-cta">
+          <a class="btn btn-bracket" href="#telecharger" id="hero-dl"><span>Essayer 30 jours</span></a>
+          <a class="plain" href="#demo">Voir la démo<i data-icon="ArrowUpRight"></i></a>
+        </div>
       </div>
     </div>
-    <a class="scroll-sign" href="#parcours">Suivez le chemin<i data-icon="ArrowDown"></i></a>
+    <div class="platforms rv" style="--d:4">Disponible sur tous vos appareils
+      <ul><li><i data-icon="WindowsLogo" data-size="22" data-weight="fill"></i>Windows</li><li><i data-icon="AppleLogo" data-size="22" data-weight="fill"></i>macOS</li><li><i data-icon="AndroidLogo" data-size="22" data-weight="fill"></i>Android</li><li><i data-icon="DeviceMobile" data-size="22" data-weight="fill"></i>iPhone</li><li><i data-icon="Globe" data-size="22" data-weight="fill"></i>Navigateur</li><li><i data-icon="WifiSlash" data-size="22" data-weight="fill"></i>Hors connexion</li></ul>
+    </div>
   </section>
 
-  <section id="parcours" class="quest-sec">
+  <section id="apropos" data-orb="50,12,.13">
     <div class="wrap">
       <div class="head center rv">
-        <div class="eyebrow">Le parcours</div>
-        <h2>Six niveaux, <em>de la première facture au bilan</em></h2>
-        <p>Suivez le chemin : chaque étape de votre gestion s'allume sur votre passage. Commencez au niveau qui vous concerne.</p>
+        <div class="eyebrow">À propos</div>
+        <h2>Transformer chaque vente <em>en décisions éclairées pour votre entreprise</em></h2>
       </div>
-      <div class="quest" id="quest">
-        <div class="quest-path" aria-hidden="true"><svg id="quest-svg" preserveAspectRatio="none"><path id="quest-line" d=""/></svg><span class="walker" id="walker"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="rgba(255,178,80,.22)"/><path d="M17 47 C16 30 20 22 27 22 C34 22 38 30 37 47 Z" fill="#dbe9ff"/><path d="M17 47 C16.5 40 17 34 19 29 L35 29 C37 34 37.500 40 37 47 Z" fill="#3d67b0"/><circle cx="27" cy="15" r="7.5" fill="#8d5a3a"/><path d="M19 13 C20 5 34 5 35 13 C31 10 23 10 19 13 Z" fill="#e2a81f"/><path d="M36 30 L46 18" stroke="#5c3b20" stroke-width="3.2" stroke-linecap="round"/><path class="flame" d="M46 18 C41 12 45 6 47 2 C48 7 53 10 51 16 C50 19 47 19 46 18 Z" fill="#ff8a3d"/></svg></span></div>
-        <article class="level" id="niv-facturer" data-name="Facturer" style="--glow-c:#6ea8ff">
-          <div class="cave" style="--glow:#6ea8ff"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#6ea8ff" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 01</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="Receipt" data-size="30" data-weight="fill"></i>Facturer</span>
-            <h3>Des devis et des factures à votre image</h3>
-            <p>Six modèles, votre logo, votre cachet et votre signature. Le devis devient bon de livraison puis facture en un clic, avec un QR code que votre client vérifie.</p>
-            <ul><li><i data-icon="Check"></i>Devis, factures, avoirs, factures récurrentes</li><li><i data-icon="Check"></i>Taxes du Burkina Faso en un interrupteur</li><li><i data-icon="Check"></i>Envoi par e-mail et SMS, relances</li></ul>
-            <a class="btn btn-quest" href="#demo">Créer une facture<i data-icon="CaretRight"></i></a>
-          </div>
+      <div class="about-cards">
+        <div class="acard lines rv"><small>Modules reliés</small><b><span data-count="14">14</span></b><p>De la facture au bilan : ce que vous saisissez une fois alimente tout le reste.</p></div>
+        <div class="acard rv" style="--d:1"><small>Rôles prêts à l'emploi</small><b><span data-count="12">12</span></b><p>Du caissier au directeur général, chacun ne voit que ce qui le concerne.</p></div>
+        <div class="acard hot rv" style="--d:2"><small>Essai gratuit</small><b><span data-count="30">30</span> jours</b><p>Tous les modules ouverts, sans carte bancaire. Vos données sont conservées ensuite.</p></div>
+      </div>
+      <div class="statement rv">
+        <hr>
+        <p>Conçu pour les entreprises d'ici, <span>avec les taxes, le mobile money et les coupures de réseau d'ici.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="fonctions" data-orb="16,58,.34">
+    <div class="wrap">
+      <div class="head rv">
+        <div class="eyebrow">Fonctionnalités</div>
+        <h2>Six briques, <em>un seul système</em></h2>
+        <p>Commencez par la facturation. Ajoutez la caisse, le stock, les achats ou la paie quand vous en avez besoin : tout est déjà relié.</p>
+      </div>
+      <div class="fgrid">
+        <article class="fcard rv" style="--d:0">
+          <h3>Devis et factures</h3>
+          <p>Six modèles à votre image, QR code d’authenticité, taxes du Burkina Faso en un interrupteur. Le devis devient facture en un clic.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><rect class="fill" x="40" y="14" width="160" height="168" rx="14"/><rect class="fill" x="52" y="2" width="160" height="168" rx="14" opacity=".6"/><path class="st draw" pathLength="1" style="--i:1" d="M64 60 H176 M64 84 H176 M64 108 H150 M64 132 H176"/><rect class="hot" x="120" y="146" width="56" height="16" rx="5"/></svg></div>
+          <a class="btn btn-ghost" href="#demo">Créer une facture<i data-icon="ArrowUpRight"></i></a>
         </article>
-        <article class="level" id="niv-encaisser" data-name="Encaisser" style="--glow-c:#ffb35c">
-          <div class="cave" style="--glow:#ffb35c"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#ffb35c" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 02</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="CashRegister" data-size="30" data-weight="fill"></i>Encaisser</span>
-            <h3>Encaissez partout, par tous les moyens</h3>
-            <p>Point de vente tactile, tickets, sessions de caisse et clôture avec écart contrôlé. Chaque règlement est rattaché à sa facture.</p>
-            <ul><li><i data-icon="Check"></i>Espèces, Orange Money, Moov Money, Wave</li><li><i data-icon="Check"></i>Virement, chèque, carte</li><li><i data-icon="Check"></i>Créances et retards signalés chaque matin</li></ul>
-            <a class="btn btn-quest" href="#apercu">Voir les écrans<i data-icon="CaretRight"></i></a>
-          </div>
+        <article class="fcard rv" style="--d:1">
+          <h3>Caisse et mobile money</h3>
+          <p>Point de vente tactile, tickets, sessions de caisse. Espèces, Orange Money, Moov Money, Wave, virement.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><rect class="fill" x="70" y="10" width="100" height="170" rx="18"/><circle class="st" cx="120" cy="74" r="30"/><path class="st draw" pathLength="1" style="--i:1" d="M106 74 l10 10 20 -22"/><rect class="hot" x="88" y="126" width="64" height="14" rx="7"/><path class="st draw" pathLength="1" style="--i:2" d="M92 152 H148"/></svg></div>
+          <a class="btn btn-ghost" href="#apercu">Voir les écrans<i data-icon="ArrowUpRight"></i></a>
         </article>
-        <article class="level" id="niv-stock" data-name="Stocker" style="--glow-c:#3ddbd9">
-          <div class="cave" style="--glow:#3ddbd9"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#3ddbd9" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 03</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="Package" data-size="30" data-weight="fill"></i>Stocker</span>
-            <h3>Jamais en rupture par surprise</h3>
-            <p>Chaque vente et chaque réception ajustent le stock et le coût moyen, dans le bon dépôt.</p>
-            <ul><li><i data-icon="Check"></i>Plusieurs dépôts, transferts, lots</li><li><i data-icon="Check"></i>Inventaires et seuils d’alerte</li><li><i data-icon="Check"></i>Valeur du stock à tout moment</li></ul>
-            <a class="btn btn-quest" href="#apercu">Voir les écrans<i data-icon="CaretRight"></i></a>
-          </div>
+        <article class="fcard rv" style="--d:2">
+          <h3>Stock multi-dépôts</h3>
+          <p>Chaque vente et chaque réception ajustent le stock et le coût moyen. Lots, inventaires et seuils d’alerte.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><path class="fill" d="M120 16 L200 56 V136 L120 176 L40 136 V56 Z"/><path class="st draw" pathLength="1" style="--i:1" d="M40 56 L120 96 L200 56 M120 96 V176"/><path class="st draw" pathLength="1" style="--i:2" d="M80 36 L160 76"/><circle class="hot" cx="120" cy="96" r="7"/></svg></div>
+          <a class="btn btn-ghost" href="#apercu">Voir les écrans<i data-icon="ArrowUpRight"></i></a>
         </article>
-        <article class="level" id="niv-depenses" data-name="Dépenser" style="--glow-c:#b18cff">
-          <div class="cave" style="--glow:#b18cff"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#b18cff" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 04</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="ClipboardText" data-size="30" data-weight="fill"></i>Dépenser</span>
-            <h3>Plus aucune dépense sans accord</h3>
-            <p>Un collaborateur exprime un besoin ou saisit une dépense. Le responsable vise, les finances valident, les achats commandent : chacun voit ce qui l’attend.</p>
-            <ul><li><i data-icon="Check"></i>Dépenses avec photo du justificatif</li><li><i data-icon="Check"></i>Expressions de besoin jusqu’au bon de commande</li><li><i data-icon="Check"></i>Douze rôles, du caissier au directeur</li></ul>
-            <a class="btn btn-quest" href="#metiers">Choisir mon métier<i data-icon="CaretRight"></i></a>
-          </div>
+        <article class="fcard rv" style="--d:0">
+          <h3>Dépenses et validations</h3>
+          <p>Un collaborateur demande, le responsable vise, les finances valident, les achats commandent. Tout est tracé.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><circle class="fill" cx="46" cy="96" r="22"/><circle class="fill" cx="120" cy="50" r="22"/><circle class="fill" cx="120" cy="142" r="22"/><circle class="fill" cx="196" cy="96" r="22"/><path class="st draw" pathLength="1" style="--i:1" d="M66 86 L100 62 M66 106 L100 130 M140 62 L176 86 M140 130 L176 106"/><path class="st" d="M38 96 l6 6 10 -12"/><circle class="hot" cx="196" cy="96" r="8"/></svg></div>
+          <a class="btn btn-ghost" href="#metiers">Choisir mon métier<i data-icon="ArrowUpRight"></i></a>
         </article>
-        <article class="level" id="niv-compta" data-name="Comptabiliser" style="--glow-c:#34d399">
-          <div class="cave" style="--glow:#34d399"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#34d399" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign"><i></i>Niveau 05</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="Calculator" data-size="30" data-weight="fill"></i>Comptabiliser</span>
-            <h3>SYSCOHADA, sans être comptable</h3>
-            <p>Les écritures se passent toutes seules à partir de vos ventes, achats, dépenses et paies. Journaux, grand livre, balance et bilan sont prêts.</p>
-            <ul><li><i data-icon="Check"></i>TVA et retenues du mois, à déposer avant le 20</li><li><i data-icon="Check"></i>Paie, CNSS et IUTS calculés</li><li><i data-icon="Check"></i>Rapports en graphiques interactifs</li></ul>
-            <a class="btn btn-quest" href="#offres">Voir les offres<i data-icon="CaretRight"></i></a>
-          </div>
+        <article class="fcard rv" style="--d:1">
+          <h3>Comptabilité SYSCOHADA</h3>
+          <p>Écritures automatiques, déclarations du mois, paie, ouverture et clôture d’exercice avec verrouillage de la période.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><rect class="fill" x="30" y="20" width="180" height="150" rx="14"/><path class="st draw" pathLength="1" style="--i:1" d="M30 56 H210 M96 20 V170 M152 20 V170"/><path class="st draw" pathLength="1" style="--i:2" d="M44 84 H82 M44 110 H82 M44 136 H82 M110 84 H140 M166 110 H196"/><rect class="hot" x="166" y="128" width="30" height="14" rx="4"/></svg></div>
+          <a class="btn btn-ghost" href="#offres">Voir les offres<i data-icon="ArrowUpRight"></i></a>
         </article>
-        <article class="level" id="niv-final" data-name="Se lancer" style="--glow-c:#ff8a3d">
-          <div class="cave" style="--glow:#ff8a3d"><svg viewBox="0 0 250 200" aria-hidden="true"><path d="M18 176 C8 120 30 70 70 46 C92 20 150 14 182 40 C226 60 246 118 232 176 Z" fill="#1a2f6b"/><path d="M40 176 C34 130 52 88 84 68 C104 48 150 46 172 66 C206 84 218 132 208 176 Z" fill="#22408e"/><path d="M70 46 C92 20 150 14 182 40 C150 30 104 32 70 46 Z" fill="#4467b8" opacity=".7"/><path class="mouth" d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z"/><path d="M82 176 C80 128 100 104 126 104 C152 104 172 128 170 176 Z" fill="#ff8a3d" opacity=".9"/><path d="M96 176 C96 140 110 122 126 122 C142 122 156 140 156 176 Z" fill="#fff" opacity=".28"/><circle class="spark" style="--i:0" cx="104" cy="150" r="2.4"/><circle class="spark" style="--i:1" cx="128" cy="136" r="2"/><circle class="spark" style="--i:2" cx="148" cy="156" r="2.6"/><circle class="spark" style="--i:3" cx="118" cy="166" r="1.8"/><path d="M6 180 C40 168 80 186 126 180 C170 174 214 186 246 178 L246 196 L6 196 Z" fill="#0d1c47"/><ellipse cx="54" cy="184" rx="20" ry="9" fill="#2a3f7e"/><ellipse cx="204" cy="186" rx="16" ry="7" fill="#2a3f7e"/></svg><span class="lvl-sign final"><i></i>Niveau final</span></div>
-          <div class="level-text">
-            <span class="kind"><i data-icon="RocketLaunch" data-size="30" data-weight="fill"></i>Se lancer</span>
-            <h3>À vous de jouer</h3>
-            <p>Installez IAM INVOICER sur votre ordinateur ou votre téléphone. Trente jours d’essai, tous les modules ouverts, et vos données conservées quand vous passez à une licence.</p>
-            <ul><li><i data-icon="Check"></i>Windows, Mac, Android, iPhone, navigateur</li><li><i data-icon="Check"></i>Fonctionne sans Internet</li><li><i data-icon="Check"></i>Une équipe à Ouagadougou pour vous accompagner</li></ul>
-            <a class="btn btn-quest" href="#telecharger">Télécharger<i data-icon="CaretRight"></i></a>
-          </div>
+        <article class="fcard rv" style="--d:2">
+          <h3>Rapports et pilotage</h3>
+          <p>Graphiques interactifs, points à traiter chaque matin, créances en retard : vous savez où en est l’entreprise.</p>
+          <div class="wire"><svg viewBox="0 0 240 190" aria-hidden="true"><rect class="fill" x="24" y="16" width="192" height="158" rx="14"/><path class="st" d="M44 150 H196"/><rect class="st" x="54" y="110" width="18" height="40" rx="3"/><rect class="st" x="84" y="92" width="18" height="58" rx="3"/><rect class="st" x="114" y="102" width="18" height="48" rx="3"/><rect class="hot" x="144" y="66" width="18" height="84" rx="3"/><rect class="st" x="174" y="80" width="18" height="70" rx="3"/><path class="st draw" pathLength="1" style="--i:2" d="M50 96 C80 70 110 90 130 60 S180 40 196 36"/></svg></div>
+          <a class="btn btn-ghost" href="#telecharger">Télécharger<i data-icon="ArrowUpRight"></i></a>
         </article>
       </div>
     </div>
   </section>
 
-  <section id="demo" class="alt">
+  <section id="demo" class="alt" data-orb="88,30,.2">
     <div class="wrap">
       <div class="head rv">
         <div class="eyebrow">Essayez tout de suite</div>
@@ -1009,7 +1142,7 @@
     </div>
   </section>
 
-  <section id="hors-ligne" class="night">
+  <section id="hors-ligne" class="night" data-orb="8,70,.22">
     <div class="wrap sync">
       <div class="rv">
         <div class="eyebrow">Sans Internet</div>
@@ -1105,7 +1238,7 @@
     </div>
   </section>
 
-  <section id="offres" class="alt">
+  <section id="offres" class="alt" data-orb="90,60,.18">
     <div class="wrap">
       <div class="head center rv">
         <div class="eyebrow">Offres</div>
@@ -1240,26 +1373,40 @@
     </div>
   </section>
 
-  <section id="contact">
-    <div class="wrap">
-      <div class="final rv">
-        <h2>Prêt à simplifier <em>votre gestion ?</em></h2>
-        <p>Essayez gratuitement pendant 30 jours, ou demandez une démonstration et un devis. Une équipe à Ouagadougou vous accompagne, de l'installation à la formation.</p>
-        <div class="cta">
-          <a class="btn btn-cta" href="#telecharger"><i data-icon="DownloadSimple"></i>Essayer gratuitement</a>
-          <a class="btn btn-glass" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
-        </div>
-        <div class="contact" id="contact-list"></div>
-        <div class="camp" aria-hidden="true"><svg viewBox="0 0 96 110"><circle class="halo" cx="48" cy="62" r="46" fill="url(#torch)"/><path d="M30 34 h36 l6 10 H24 Z" fill="#3a2a1a"/><rect x="28" y="44" width="40" height="46" rx="8" fill="#22140a" stroke="#7a5230" stroke-width="3"/><rect x="36" y="52" width="24" height="30" rx="5" fill="#ffd58a"/><path class="flame" d="M48 78 C40 70 46 62 49 56 C51 63 57 67 54 75 C53 79 50 80 48 78 Z" fill="#ff8a3d"/><path d="M40 34 C40 18 56 18 56 34" fill="none" stroke="#7a5230" stroke-width="4"/><rect x="24" y="90" width="48" height="8" rx="4" fill="#3a2a1a"/></svg></div>
-      </div>
-    </div>
-  </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span><span class="flagline" style="display:inline-block;vertical-align:middle;margin-right:12px"></span>© <span id="year"></span> IAM Technology · Ouagadougou, Burkina Faso</span>
-    <span><a href="/app/" data-acces>Se connecter</a> · <a href="#telecharger">Télécharger</a> · <a href="docs/IAM-INVOICER-Guide-installation.pdf">Guide d'installation</a> · <a href="#contact">Contact</a></span>
+<footer id="contact" data-orb="50,46,.5">
+  <div class="foot">
+    <svg class="hills" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 120 C120 90 200 60 300 84 C420 112 520 150 640 120 C760 90 800 40 880 60 C960 80 1040 140 1160 130 C1280 120 1360 80 1440 96 V300 H0 Z" fill="#2a2a2c"/>
+      <path d="M0 170 C160 140 260 190 420 170 C560 152 660 200 800 180 C940 160 1040 210 1200 190 C1320 176 1380 190 1440 180 V300 H0 Z" fill="#202022"/>
+      <path d="M0 230 C200 200 320 250 520 228 C700 208 820 256 1000 236 C1180 216 1300 250 1440 232 V300 H0 Z" fill="#161617"/>
+    </svg>
+    <div class="wrap foot-top">
+      <div>
+        <div class="foot-brand">IAM INVOICER</div>
+        <p class="say">Facturez, encaissez et comptabilisez dans un seul logiciel, avec une équipe à Ouagadougou pour vous accompagner de l'installation à la formation.</p>
+        <div class="cta">
+          <a class="btn btn-cta" href="#telecharger"><i data-icon="ArrowUpRight"></i>Essayer gratuitement</a>
+          <a class="btn btn-glass" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
+        </div>
+      </div>
+      <div class="foot-cols">
+        <div><h4>Produit</h4><a href="#fonctions">Fonctionnalités</a><a href="#demo">Démonstration</a><a href="#apercu">Écrans</a><a href="#offres">Offres</a></div>
+        <div><h4>Solutions</h4><a href="#metiers">Par métier</a><a href="#hors-ligne">Hors connexion</a><a href="#donnees">Hébergement</a><a href="#carte">Mise en route</a></div>
+        <div><h4>Ressources</h4><a href="#telecharger">Télécharger</a><a href="docs/IAM-INVOICER-Guide-installation.pdf">Guide</a><a href="#faq">Questions</a><a href="/app/">Application web</a></div>
+      </div>
+    </div>
+    <form class="foot-acces" id="foot-acces" novalidate>
+      <label for="foot-i">Accéder à mon espace</label>
+      <div class="row"><input id="foot-i" type="text" placeholder="Identifiant de votre société" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn btn-cta">Ouvrir</button></div>
+      <div class="foot-links contact" id="contact-list"></div>
+    </form>
+    <div class="wordmark" aria-hidden="true">IAM INVOICER</div>
+    <div class="wrap foot-end">
+      <span>© <span id="year"></span> IAM Technology · Ouagadougou, Burkina Faso</span>
+      <span>Conçu pour les entreprises d'Afrique de l'Ouest.</span>
+    </div>
   </div>
 </footer>
 
@@ -1531,7 +1678,7 @@
           if (!st || !st.ok || !st.data || st.data.app !== 'IAM INVOICER') throw new Error('x')
           return fetch(base + '/api/brand').then(function (r) { return r.json() }).catch(function () { return null }).then(function (b) {
             say(b && b.ok && b.data && b.data.name ? 'Ouverture de ' + b.data.name + '…' : 'Ouverture…', 'ok')
-            location.href = base + (st.data.web || '/') + '?bienvenue=1'
+            location.href = base + (/^\/[A-Za-z0-9_\/-]{0,40}$/.test(st.data.web || '') ? st.data.web : '/') + '?bienvenue=1'
           })
         }).catch(function () { go.disabled = false; say("Aucune société à cette adresse. Vérifiez l'adresse reçue avec votre accès.", 'err') })
       }
@@ -1906,6 +2053,92 @@
     addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(build, 180) })
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(build)
     addEventListener('load', build)
+  })()
+</script>
+<script>
+  // Sphère de particules : elle tourne, suit le défilement d'une section à l'autre (attribut data-orb =
+  // position horizontale %, verticale %, taille) et s'écarte légèrement du pointeur.
+  (function () {
+    var $ = function (id) { return document.getElementById(id) }
+    // Accès à mon espace depuis le pied de page : même parcours que la fenêtre
+    var fa = $('foot-acces')
+    if (fa) fa.addEventListener('submit', function (e) {
+      e.preventDefault()
+      var opener = document.querySelector('[data-acces]'), field = $('acces-i'), form = $('acces-f')
+      if (!opener || !field || !form) return void (location.href = '/app/')
+      opener.click()
+      field.value = $('foot-i').value
+      if (field.value.trim()) form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }))
+    })
+    // Halo des cartes
+    if (matchMedia('(hover: hover)').matches) Array.prototype.slice.call(document.querySelectorAll('.fcard')).forEach(function (c) {
+      c.addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px') })
+    })
+    var canvas = $('orb')
+    if (!canvas || !canvas.getContext || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    var ctx = canvas.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2), W = 0, H = 0
+    var N = innerWidth < 720 ? 1500 : 3200, pts = []
+    for (var i = 0; i < N; i++) {
+      // Répartition régulière sur la sphère (spirale de Fibonacci), légèrement bruitée
+      var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), a = i * 2.399963
+      var j = 1 + (Math.random() - .5) * .07
+      pts.push({ x: Math.cos(a) * r * j, y: y * j, z: Math.sin(a) * r * j, s: .8 + Math.random() * 1.6, t: Math.random() * 6.28 })
+    }
+    var stops = [], cur = { x: 50, y: 40, s: 1 }, mouse = { x: 0, y: 0 }, rot = 0, running = true
+    function size() {
+      W = innerWidth; H = innerHeight
+      canvas.width = W * dpr; canvas.height = H * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      stops = Array.prototype.slice.call(document.querySelectorAll('[data-orb]')).map(function (el) {
+        var v = el.dataset.orb.split(',').map(Number), b = el.getBoundingClientRect()
+        return { at: b.top + scrollY + b.height / 2, x: v[0], y: v[1], s: v[2] }
+      }).sort(function (p, q) { return p.at - q.at })
+    }
+    function target() {
+      var mid = scrollY + H / 2
+      if (!stops.length) return { x: 50, y: 40, s: 1 }
+      if (mid <= stops[0].at) return stops[0]
+      for (var k = 1; k < stops.length; k++) {
+        if (mid <= stops[k].at) {
+          var p = stops[k - 1], q = stops[k], f = (mid - p.at) / (q.at - p.at)
+          f = f * f * (3 - 2 * f)
+          return { x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f, s: p.s + (q.s - p.s) * f }
+        }
+      }
+      return stops[stops.length - 1]
+    }
+    function draw(now) {
+      if (!running) return
+      var t = target()
+      cur.x += (t.x - cur.x) * .06; cur.y += (t.y - cur.y) * .06; cur.s += (t.s - cur.s) * .06
+      rot += .0024
+      var R = Math.min(W, H) * .29 * cur.s, cx = W * cur.x / 100 + mouse.x * 14, cy = H * cur.y / 100 + mouse.y * 10
+      var sin = Math.sin(rot), cos = Math.cos(rot), tilt = .32, st = Math.sin(tilt), ct = Math.cos(tilt)
+      ctx.clearRect(0, 0, W, H)
+      for (var i = 0; i < N; i++) {
+        var p = pts[i]
+        var x = p.x * cos + p.z * sin, z = -p.x * sin + p.z * cos
+        var y = p.y * ct - z * st
+        z = p.y * st + z * ct
+        var depth = (z + 1) / 2
+        var tw = .6 + .4 * Math.sin(now * .002 + p.t)
+        // Ambre en haut, blanc en bas : la lumière vient d'en haut
+        var k = (y + 1) / 2
+        var red = 255, green = Math.round(150 + 105 * k), blue = Math.round(70 + 185 * k)
+        ctx.fillStyle = 'rgba(' + red + ',' + green + ',' + blue + ',' + Math.min(1, (.28 + .9 * depth) * tw).toFixed(3) + ')'
+        var sz = p.s * (.5 + depth * .9) * Math.max(.6, Math.min(1.5, cur.s + .5))
+        ctx.fillRect(cx + x * R, cy + y * R, sz, sz)
+      }
+      requestAnimationFrame(draw)
+    }
+    size()
+    addEventListener('resize', size)
+    addEventListener('load', size)
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(size)
+    setTimeout(size, 1500)
+    addEventListener('pointermove', function (e) { mouse.x = e.clientX / W - .5; mouse.y = e.clientY / H - .5 }, { passive: true })
+    document.addEventListener('visibilitychange', function () { running = !document.hidden; if (running) requestAnimationFrame(draw) })
+    requestAnimationFrame(draw)
   })()
 </script>
 </body>

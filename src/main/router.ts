@@ -33,6 +33,7 @@ import * as recurring from './services/recurring'
 import { listAssistant } from './services/assistant'
 import * as expenses from './services/expenses'
 import * as requests from './services/requests'
+import * as fiscal from './services/fiscal'
 import { isReadAction, isVendorAdmin, VENDOR_ADMIN } from '@shared/licence'
 
 type Handler = (ctx: Ctx, args: any) => Promise<unknown>
@@ -202,6 +203,14 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'accounting.missing': { access: 'accounting', fn: accounting.missingCount },
   'accounting.generateMissing': { access: 'accounting', fn: accounting.generateMissing },
 
+  // Exercices comptables : ouverture et clôture demandent en plus le droit « Validation financière »
+  'fiscal.list': { access: 'accounting', fn: fiscal.listFiscalYears },
+  'fiscal.preview': { access: 'accounting', fn: fiscal.previewClosing },
+  'fiscal.open': { access: 'accounting', fn: fiscal.openFiscalYear },
+  'fiscal.close': { access: 'accounting', fn: fiscal.closeFiscalYear },
+  'fiscal.reopen': { access: 'accounting', fn: fiscal.reopenFiscalYear },
+  'fiscal.delete': { access: 'accounting', fn: fiscal.deleteFiscalYear },
+
   'settings.secrets': { access: 'settings', fn: secretStatus },
   'settings.saveSecrets': { access: 'settings', fn: saveSecrets },
 
@@ -330,7 +339,7 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
   } catch (e) {
     if (e instanceof AppError) return { ok: false, error: e.message }
     // Valeur que la base refuse (identifiant qui n'est pas un nombre, date impossible…) : demande invalide, pas une panne
-    if (['22P02', '22003', '22007', '22008', '22001'].includes(String((e as any)?.code))) return { ok: false, error: 'Valeur invalide dans la demande.' }
+    if (['22P02', '22003', '22007', '22008', '22001', '23503', '23514'].includes(String((e as any)?.code))) return { ok: false, error: 'Valeur invalide dans la demande.' }
     // Le détail (requête SQL, chemin de fichier…) reste dans le journal du serveur
     const ref = randomBytes(4).toString('hex')
     console.error(`[${name}] incident ${ref}`, e)

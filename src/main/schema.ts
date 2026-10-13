@@ -821,5 +821,29 @@ export const MIGRATIONS: string[] = [
     at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
   CREATE INDEX workflow_events_ref_idx ON workflow_events(kind, ref_id)
+  `,
+  // v14 : exercices comptables (ouverture, clôture, verrou de période) et comptes de résultat à affecter
+  `
+  CREATE TABLE fiscal_years (
+    id SERIAL PRIMARY KEY,
+    label TEXT NOT NULL UNIQUE,
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ouvert' CHECK (status IN ('ouvert','cloture')),
+    result DOUBLE PRECISION,
+    closing_entry_id INT REFERENCES journal_entries(id) ON DELETE SET NULL,
+    opened_by INT REFERENCES users(id) ON DELETE SET NULL,
+    closed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    closed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CHECK (end_date > start_date)
+  );
+  CREATE INDEX fiscal_years_dates_idx ON fiscal_years(start_date, end_date);
+  INSERT INTO accounts (number, label) VALUES
+    ('121', 'Report à nouveau créditeur'),
+    ('129', 'Report à nouveau débiteur'),
+    ('131', 'Résultat net : bénéfice'),
+    ('139', 'Résultat net : perte')
+  ON CONFLICT (number) DO NOTHING
   `
 ]

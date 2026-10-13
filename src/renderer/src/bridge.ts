@@ -227,7 +227,8 @@ function createHttpBridge(): ErpBridge {
         // On s'y rend, au lieu de garder une adresse que cette page ne pourrait pas utiliser.
         if (url === baseUrl()) return void location.reload()
         const st = await request<{ web?: string }>('GET', '/api/status', undefined, url)
-        location.href = url + (st.ok && st.data?.web ? st.data.web : '/') + '?bienvenue=1'
+        const web = st.ok && typeof st.data?.web === 'string' && /^\/[A-Za-z0-9_\/-]{0,40}$/.test(st.data.web) ? st.data.web : '/'
+        location.href = url + web + '?bienvenue=1'
         return
       }
       if (url !== baseUrl()) {

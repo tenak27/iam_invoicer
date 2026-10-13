@@ -11,6 +11,7 @@ import { isCharge, isProduct } from './statements'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, num, str, type Ctx } from './context'
+import { assertPeriodOpen } from './fiscal'
 
 export interface EntryLine {
   account: string
@@ -47,6 +48,8 @@ export async function postEntry(db: Db, ctx: Ctx, input: EntryInput): Promise<nu
     .map((l) => ({ ...l, debit: round(l.debit ?? 0), credit: round(l.credit ?? 0) }))
     .filter((l) => l.debit !== 0 || l.credit !== 0)
   if (lines.length < 2) fail('Une écriture comporte au moins deux lignes.')
+  // Exercice clôturé : plus d'écriture sur la période (sauf l'écriture de clôture elle-même)
+  if (input.source !== 'fiscal_close') await assertPeriodOpen(db, input.date)
   const debit = lines.reduce((s, l) => s + l.debit, 0)
   const credit = lines.reduce((s, l) => s + l.credit, 0)
   if (Math.abs(debit - credit) > 0.005) fail(`Écriture déséquilibrée : débit ${debit}, crédit ${credit}.`)
@@ -78,6 +81,9 @@ export async function postEntry(db: Db, ctx: Ctx, input: EntryInput): Promise<nu
 }
 
 export async function removeSourceEntry(db: Db, source: string, sourceId: number): Promise<void> {
+  // Une écriture d'un exercice clôturé ne se retire pas (annulation d'une facture, d'un règlement…)
+  const e = await db.one<{ date: string }>('SELECT date FROM journal_entries WHERE source = $1 AND source_id = $2', [source, sourceId])
+  if (e) await assertPeriodOpen(db, e.date)
   await db.query('DELETE FROM journal_entries WHERE source = $1 AND source_id = $2', [source, sourceId])
 }
 
@@ -271,6 +277,7 @@ export async function incomeStatement(ctx: Ctx, args: { from?: string; to?: stri
     `SELECT a.number, a.label, SUM(l.debit - l.credit) AS balance
      FROM journal_lines l JOIN journal_entries e ON e.id = l.entry_id JOIN accounts a ON a.number = l.account
      WHERE (a.number LIKE '6%' OR a.number LIKE '7%' OR a.number LIKE '8%') AND ($1 = '' OR e.date >= $1) AND ($2 = '' OR e.date <= $2)
+       AND COALESCE(e.source, '') <> 'fiscal_close'
      GROUP BY a.number, a.label HAVING SUM(l.debit - l.credit) <> 0
      ORDER BY a.number`,
     [str(args.from), str(args.to)]
@@ -307,8 +314,9 @@ export async function saveManualEntry(ctx: Ctx, input: { journal?: string; date?
 
 export async function deleteManualEntry(ctx: Ctx, args: { id: number }) {
   return ctx.db.tx(async (db) => {
-    const e = await db.one('SELECT source, number FROM journal_entries WHERE id = $1', [args.id])
+    const e = await db.one('SELECT source, number, date FROM journal_entries WHERE id = $1', [args.id])
     if (!e) fail('Écriture introuvable.')
+    await assertPeriodOpen(db, e.date)
     if (e.source) fail('Écriture générée automatiquement : corrigez la pièce d’origine (avoir, suppression du règlement…).')
     await db.query('DELETE FROM journal_entries WHERE id = $1', [args.id])
     await audit(db, ctx, 'suppression', 'ecriture', args.id, e.number)

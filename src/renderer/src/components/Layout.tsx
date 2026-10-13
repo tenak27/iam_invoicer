@@ -101,6 +101,7 @@ const NAV: Section[] = [
       { to: '/compta/resultat', label: 'Compte de résultat', module: 'accounting', icon: ChartLineUp },
       { to: '/compta/bilan', label: 'Bilan', module: 'accounting', icon: Vault },
       { to: '/declarations', label: 'Déclarations', module: 'accounting', icon: Stamp },
+      { to: '/compta/exercices', label: 'Exercices et clôture', short: 'Exercices', module: 'accounting', icon: LockSimple },
       { to: '/compta/comptes', label: 'Plan comptable', module: 'accounting', icon: ListChecks }
     ]
   },

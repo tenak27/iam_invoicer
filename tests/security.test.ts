@@ -509,3 +509,25 @@ describe('Secrets', () => {
     expect((await must(s, s.admin, 'users.list')).length).toBeGreaterThan(4)
   })
 })
+
+describe('Élévation de droits par la gestion des comptes', () => {
+  it('avec le module « Utilisateurs », un non-administrateur ne crée ni ne modifie un administrateur, ni la matrice des droits', async () => {
+    const s = sites.b
+    // La société confie la gestion des comptes à ses commerciaux
+    await must(s, s.admin, 'roles.save', { current: { commercial: [...PERMISSIONS.commercial, 'users'] } })
+    const com = s.tokens.commercial
+    expect((await call(s, com, 'users.list')).json.ok).toBe(true)
+    expect((await call(s, com, 'users.save', { username: 'pirate', full_name: 'P', role: 'admin', password: PASS, active: true })).json.error).toMatch(/administrateur/)
+    const users = await must(s, s.admin, 'users.list')
+    const me = users.find((u: any) => u.username === 'commercial')
+    const boss = users.find((u: any) => u.username === 'admin')
+    expect((await call(s, com, 'users.save', { id: me.id, username: 'commercial', full_name: 'x', role: 'admin' })).json.error).toMatch(/administrateur/)
+    // Ni changer le mot de passe de l'administrateur pour prendre son compte
+    expect((await call(s, com, 'users.save', { id: boss.id, username: 'admin', full_name: 'Admin', role: 'admin', password: 'Pris-en-main-1' })).json.error).toMatch(/administrateur/)
+    expect((await http(`${s.base}/api/login`, { body: { username: 'admin', password: PASS }, headers: { 'X-Forwarded-For': '7.7.7.7' } })).json.ok).toBe(true)
+    expect((await call(s, com, 'roles.save', { current: { commercial: PERMISSIONS.admin } })).json.error).toMatch(/administrateur/)
+    // Il gère bien les autres comptes
+    expect((await call(s, com, 'users.save', { username: 'stagiaire', full_name: 'Stagiaire', role: 'employe', password: PASS, active: true })).json.ok).toBe(true)
+    await must(s, s.admin, 'roles.save', { current: null })
+  })
+})
