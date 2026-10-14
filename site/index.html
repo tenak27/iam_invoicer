@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<script>document.documentElement.classList.add('js');try{var p=localStorage.getItem('iam.palette');if(p==='amethyste'||p==='lavande')document.documentElement.setAttribute('data-palette',p)}catch(e){}</script>
+<script>document.documentElement.classList.add('js')</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IAM INVOICER — Le logiciel de gestion des entreprises du Burkina Faso | IAM Technology</title>
 <meta name="description" content="IAM INVOICER : devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA, paie et déclarations. Sur ordinateur, téléphone et navigateur, même sans Internet. Essai gratuit de 30 jours.">
-<meta name="theme-color" content="#1b6ef3">
+<meta name="theme-color" content="#0b3a66">
 <meta name="color-scheme" content="light">
 <meta property="og:title" content="IAM INVOICER — Toute votre gestion, même sans Internet">
 <meta property="og:description" content="Facturation, caisse, stock, dépenses, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
@@ -14,15 +14,15 @@
 <link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* ── Jetons ── */
   /* Mêmes thèmes que l'application (Ciel par défaut) : la racine porte data-palette. */
   :root {
-    --bg: #f1f7ff; --bg-2: #e3eefc; --surface: #fff; --ink: #0e1f40; --text: #22335a; --muted: #586a8d; --line: #dfeaf9; --soft: #f3f8ff;
-    --p: #1b6ef3; --p-rgb: 27, 110, 243; --p-dark: #1559cf; --p2: #6aa8ff; --p3: #bcd8ff; --pink: #19b3e6; --pink-rgb: 25, 179, 230; --deep: #0b1b3a; --shadow-rgb: 20, 60, 130;
+    --bg: #f1f7ff; --bg-2: #e3eefc; --surface: #fff; --ink: #0d2440; --text: #2e3f58; --muted: #56677f; --line: #dfeaf9; --soft: #f3f8ff;
+    --p: #1d6fd6; --p-rgb: 29, 111, 214; --p-dark: #0f4c86; --p2: #6ea8f0; --p3: #c4dbf6; --pink: #19b3e6; --pink-rgb: 25, 179, 230; --deep: #0b1b3a; --shadow-rgb: 20, 60, 130;
     --coral: #f2694f; --mint: #12a678; --sun: #d98a00; --sky: #2f86e8; --green: #12a678; --blue: var(--p);
-    --grad: linear-gradient(115deg, #1b6ef3, #2f86f5 55%, #0b93c4);
+    --grad: linear-gradient(115deg, #0f4c86, #1d6fd6);
     --grad-cta: linear-gradient(115deg, #1660dc, #1b6ef3 60%, #3d8bff);
     --grad-deep: radial-gradient(700px 420px at 10% 0%, #3d8bff, transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(25, 179, 230, .5), transparent 60%), linear-gradient(160deg, #0d3f9e, #1660dc 60%, #2f7df5);
     --grad-soft: linear-gradient(140deg, #dcebff, #e0f6fb);
@@ -30,25 +30,6 @@
     --sh: 0 1px 2px rgba(var(--shadow-rgb), .05), 0 18px 40px -22px rgba(var(--shadow-rgb), .35);
     --sh-2: 0 2px 4px rgba(var(--shadow-rgb), .06), 0 40px 80px -34px rgba(var(--shadow-rgb), .55);
     --r: 26px; --ease: cubic-bezier(.2, .8, .2, 1);
-  }
-  html[data-palette='amethyste'] {
-    --bg: #f6f4fc; --bg-2: #eceaf6; --ink: #2a2150; --text: #3c3460; --muted: #696190; --line: #e6e3f2; --soft: #f7f6fc;
-    --p: #5b4a9e; --p-rgb: 91, 74, 158; --p-dark: #4a3b88; --p2: #9484d4; --p3: #cfc7ee; --pink: #d9648f; --pink-rgb: 217, 100, 143; --deep: #211a45; --shadow-rgb: 60, 45, 120;
-    --grad: linear-gradient(115deg, #5b4a9e, #7c68c9 55%, #d9648f);
-    --grad-cta: linear-gradient(115deg, #4a3b88, #5b4a9e 60%, #7563bd);
-    --grad-deep: radial-gradient(700px 420px at 10% 0%, #7c6bc4, transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(217, 100, 143, .5), transparent 60%), linear-gradient(160deg, #3a2c75, #5b4a9e 60%, #7563bd);
-    --grad-soft: linear-gradient(140deg, #e7e2f8, #fbe6ee);
-    --sky-1: #d9d2f4; --sky-2: #e9e5f9; --sc-sun: #ffc94d; --sc-hill-far: #bdb1ea; --sc-hill-near: #8d7dcf; --sc-tree: #6c5cb6;
-    --mk-side: linear-gradient(180deg, #6858b0, #45367e); --mk-side-ink: #fff; --mk-side-text: #e2dcf7; --mk-on: var(--bg); --mk-kpi-edge: .35em solid var(--k);
-  }
-  html[data-palette='lavande'] {
-    --bg: #f5f6fd; --bg-2: #ebedf8; --ink: #23264a; --text: #3a3e68; --muted: #696e97; --line: #e7e9f5; --soft: #f6f7fd;
-    --p: #5a63c2; --p-rgb: 90, 99, 194; --p-dark: #4a53ad; --p2: #9299e0; --p3: #cdd1f3; --pink: #5b8fe0; --pink-rgb: 91, 143, 224; --deep: #1c1f45; --shadow-rgb: 60, 66, 130;
-    --grad: linear-gradient(115deg, #5a63c2, #6f78d6 55%, #4f86d8);
-    --grad-cta: linear-gradient(115deg, #4a53ad, #5a63c2 60%, #737cd6);
-    --grad-deep: radial-gradient(700px 420px at 10% 0%, #737cd6, transparent 60%), radial-gradient(700px 500px at 100% 100%, rgba(91, 143, 224, .5), transparent 60%), linear-gradient(160deg, #343a8a, #5a63c2 60%, #737cd6);
-    --grad-soft: linear-gradient(140deg, #e3e6fa, #e6f0fd);
-    --sky-1: #dadffa; --sky-2: #e9ecfc; --sc-sun: #ffd166; --sc-hill-far: #c5cbf1; --sc-hill-near: #a4acea; --sc-tree: #8891d6;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: 96px; -webkit-text-size-adjust: 100%; }
@@ -642,6 +623,368 @@
     .mock { --rx: 0deg; --sc: 1; }
     .hero::after, .play::before { display: none; }
   }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     Refonte « Voyage » (v0.14.1) : mise en page d'après le modèle fourni (panneau
+     déchiré, étapes numérotées, bandeau or, bords déchirés et vagues, cartes à image,
+     collage, grand mot détouré), aux couleurs d'IAM Technology : bleu nuit, bleu IAM,
+     or du tissage Faso Dan Fani, vert d'action.
+     ══════════════════════════════════════════════════════════════════════ */
+  :root {
+    --navy: #0b3a66; --navy-2: #0f4c86; --navy-3: #072a4b; --gold: #f2b01e; --gold-2: #ffc94a; --gold-text: #a96f00; --go: #1a7f45; --go-2: #146a39;
+    --cream: #fff8ea; --sky-bg: #eaf4fc;
+    --script: 'Kaushan Script', 'Brush Script MT', cursive;
+    --weave: repeating-linear-gradient(90deg, #0b4f8a 0 12px, #e2a81f 12px 17px, #f4f6fa 17px 18px, #178a55 18px 22px, #2f6db3 22px 33px, #f4f6fa 33px 34px, #e2a81f 34px 36px, #0b4f8a 36px 46px, #178a55 46px 48px, #f4f6fa 48px 49px, #2f6db3 49px 58px);
+  }
+  body { background: #fff; }
+  section { padding: clamp(64px, 8vw, 110px) 0; }
+  .script { font-family: var(--script); font-weight: 400; letter-spacing: 0; color: var(--gold-text); }
+  .head h2 { font-size: clamp(1.8rem, 3.8vw, 2.9rem); margin: 0 0 14px; }
+  .head h2 .script { font-size: 1.08em; }
+  .head p { max-width: 640px; }
+  .head.center p { margin-inline: auto; }
+
+  /* Boutons : action verte, bleu nuit, or */
+  .btn-cta { background: var(--go); color: #fff; box-shadow: 0 14px 28px -14px rgba(20, 106, 57, .9), inset 0 1px 0 rgba(255, 255, 255, .25); }
+  .btn-cta:hover { background: var(--go-2); box-shadow: 0 18px 34px -14px rgba(20, 106, 57, 1), inset 0 1px 0 rgba(255, 255, 255, .25); }
+  .btn-navy { background: var(--navy); color: #fff; box-shadow: 0 14px 28px -16px rgba(7, 42, 75, .9); }
+  .btn-navy:hover { background: var(--navy-3); }
+  .btn-gold { background: var(--gold); color: var(--navy-3); box-shadow: 0 14px 28px -16px rgba(120, 80, 0, .8); }
+  .btn-gold:hover { background: var(--gold-2); }
+  .btn-light { background: #fff; color: var(--navy); }
+  .btn-ghost { background: #fff; border-color: #dde5ef; color: var(--navy); }
+  .btn-ghost:hover { border-color: var(--navy-2); color: var(--navy-2); }
+  .btn svg { transition: transform .35s var(--ease); }
+  .btn:hover svg:last-child { transform: translateX(3px); }
+
+  /* Navigation : blanche sur le panneau, pleine au défilement */
+  .nav { top: 22px; }
+  .nav-in { width: min(1220px, 100% - 64px); background: transparent; border-color: transparent; color: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav.solid { top: 10px; }
+  .nav.solid .nav-in { background: rgba(255, 255, 255, .92); border-color: #fff; color: var(--navy); box-shadow: 0 16px 36px -22px rgba(7, 42, 75, .45); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .menu a { font-weight: 600; }
+  .menu a:hover, .nav-link:hover { background: rgba(255, 255, 255, .14); }
+  .nav.solid .menu a:hover, .nav.solid .nav-link:hover { background: #eef3f9; }
+  .menu-toggle { background: rgba(255, 255, 255, .16); }
+  .nav.solid .menu-toggle { background: #eef3f9; }
+  .read { background: linear-gradient(90deg, var(--gold), var(--go)); }
+
+  /* ── Accueil ── */
+  .hero { padding: 14px 14px 0; background: #fff; color: #fff; text-align: left; overflow: visible; isolation: isolate; }
+  .hero::before, .hero::after { display: none; }
+  .hero-panel { position: relative; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); min-height: min(760px, 92vh); border-radius: 34px; overflow: hidden; background: radial-gradient(700px 500px at 0% 0%, #155a9c, transparent 60%), linear-gradient(160deg, var(--navy-2), var(--navy) 55%, var(--navy-3)); }
+  .hero-panel::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, .09) 1.2px, transparent 1.4px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(90deg, #000, transparent 70%); mask-image: linear-gradient(90deg, #000, transparent 70%); pointer-events: none; }
+  .hero-copy { position: relative; z-index: 2; align-self: center; padding: 150px 40px 150px max(36px, calc((100vw - 1180px) / 2)); }
+  .hero-copy > .script { display: block; color: var(--gold); font-size: clamp(1.8rem, 3.6vw, 2.8rem); line-height: 1; margin-bottom: 4px; }
+  .hero h1 { color: #fff; margin: 0 0 22px; font-size: clamp(2.3rem, 5.6vw, 4.6rem); letter-spacing: -.035em; line-height: 1.02; max-width: none; text-align: left; }
+  .rot { height: 1.25em; }
+  .rot span { font-family: var(--script); font-weight: 400; letter-spacing: 0; background: none; color: var(--gold); -webkit-text-fill-color: currentColor; font-size: .86em; }
+  .hero .lede { margin: 0 0 30px; max-width: 540px; color: rgba(255, 255, 255, .88); text-align: left; }
+  .hero-cta { justify-content: flex-start; }
+  .btn-glass { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .35); color: #fff; }
+  .btn-glass:hover { background: rgba(255, 255, 255, .2); }
+  .play { background: var(--gold); color: var(--navy-3); }
+  .play::before { border-color: rgba(242, 176, 30, .55); }
+
+  /* Panneau or : bord déchiré, Awa, avion en papier, sceau tournant */
+  .hero-art { position: relative; background: radial-gradient(420px 380px at 70% 40%, var(--gold-2), transparent 70%), linear-gradient(170deg, var(--gold-2), var(--gold) 60%, #e39c0c); clip-path: polygon(100% 0%, 100% 100%, -0.59% 100.0%, 0.96% 97.5%, 1.69% 95.0%, 2.49% 92.5%, 2.79% 90.0%, 0.79% 87.5%, 1.66% 85.0%, 2.62% 82.5%, 2.40% 80.0%, 3.15% 77.5%, 3.06% 75.0%, 4.40% 72.5%, 3.41% 70.0%, 3.78% 67.5%, 2.70% 65.0%, 3.67% 62.5%, 3.81% 60.0%, 3.69% 57.5%, 5.49% 55.0%, 4.15% 52.5%, 4.90% 50.0%, 6.67% 47.5%, 7.09% 45.0%, 8.39% 42.5%, 8.74% 40.0%, 6.03% 37.5%, 8.42% 35.0%, 9.09% 32.5%, 7.09% 30.0%, 8.07% 27.5%, 7.70% 25.0%, 10.24% 22.5%, 10.02% 20.0%, 9.94% 17.5%, 9.19% 15.0%, 10.78% 12.5%, 10.83% 10.0%, 10.99% 7.5%, 12.76% 5.0%, 11.89% 2.5%, 11.85% 0.0%); margin-left: -60px; overflow: hidden; }
+  .hero-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(255, 255, 255, .12) 0 2px, transparent 2px 26px); }
+  .hero-art::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: var(--weave); opacity: .9; }
+  .hero-awa { position: absolute; z-index: 2; right: 12%; bottom: 4%; width: min(430px, 82%); height: auto; aspect-ratio: 1; filter: drop-shadow(0 30px 30px rgba(110, 60, 0, .35)); }
+  .flight { position: absolute; z-index: 1; left: 6%; top: 12%; width: 74%; height: auto; overflow: visible; }
+  .flight path { fill: none; stroke: rgba(7, 42, 75, .45); stroke-width: 2.5; stroke-dasharray: 8 10; stroke-linecap: round; animation: dash 18s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -400; } }
+  .plane { position: absolute; z-index: 2; left: 6%; top: 12%; width: 74%; aspect-ratio: 400 / 220; pointer-events: none; }
+  .plane svg { position: absolute; left: 0; top: 0; color: #fff; filter: drop-shadow(0 6px 8px rgba(7, 42, 75, .35)); offset-path: path('M10 200 C 90 120, 160 190, 230 110 S 340 40, 390 20'); offset-rotate: auto 45deg; animation: fly 7s cubic-bezier(.45, .05, .35, 1) infinite; }
+  @keyframes fly { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+  .cloud { position: absolute; z-index: 1; width: 120px; height: 34px; border-radius: 999px; background: rgba(255, 255, 255, .85); animation: drift-x 14s ease-in-out infinite alternate; }
+  .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; background: inherit; }
+  .cloud::before { width: 54px; height: 54px; left: 20px; top: -28px; }
+  .cloud::after { width: 40px; height: 40px; right: 22px; top: -18px; }
+  .cloud.c1 { right: 8%; top: 18%; }
+  .cloud.c2 { left: 22%; top: 46%; transform: scale(.7); opacity: .7; animation-duration: 19s; animation-direction: alternate-reverse; }
+  @keyframes drift-x { from { translate: -18px 0; } to { translate: 22px 0; } }
+  .seal { position: absolute; z-index: 3; left: 14%; bottom: 16%; width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: #fff; box-shadow: 0 20px 40px -18px rgba(7, 42, 75, .8), 0 0 0 8px rgba(255, 255, 255, .25); }
+  .seal svg { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); animation: spin-seal 16s linear infinite; }
+  .seal text { fill: var(--gold); font-size: 11.5px; font-weight: 800; letter-spacing: .14em; }
+  .seal b { font-size: 2.3rem; font-weight: 800; line-height: .9; text-align: center; }
+  .seal b small { display: block; font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+  @keyframes spin-seal { to { transform: rotate(360deg); } }
+
+  /* Barre d'informations sous le panneau */
+  .hero-bar { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: 6px 0; width: min(1080px, 100% - 48px); margin: -58px auto 0; padding: 14px 14px 14px 10px; border-radius: 22px; background: #fff; color: var(--text); box-shadow: 0 30px 60px -30px rgba(7, 42, 75, .45), 0 0 0 1px #edf1f6; }
+  .hero-bar > div { padding: 6px 22px; min-width: 0; }
+  .hero-bar > div + div { border-left: 1px solid #e6ecf3; }
+  .hero-bar small { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .hero-bar small svg { color: var(--go); }
+  .hero-bar b { display: block; margin-top: 2px; color: var(--navy); font-size: .97rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .js .hero .up { animation-delay: calc(var(--i, 0) * 110ms + 120ms); }
+
+  /* ── Trois étapes ── */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .step { text-align: left; padding: 24px 24px 26px; border-radius: 22px; background: #fff; box-shadow: 0 1px 2px rgba(7, 42, 75, .06), 0 22px 44px -28px rgba(7, 42, 75, .38); border: 1px solid #edf1f6; transition: transform .5s var(--ease), box-shadow .5s var(--ease), opacity .8s var(--ease); }
+  .step:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -30px rgba(7, 42, 75, .5); }
+  .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .step-n { width: 48px; height: 48px; margin: 0; border-radius: 14px; display: grid; place-items: center; background: var(--navy); color: #fff; font-size: 1.3rem; font-weight: 800; box-shadow: 0 12px 22px -12px rgba(7, 42, 75, .9); }
+  .step-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: var(--gold-text); border: 2px dashed var(--gold); transition: transform .8s var(--ease); }
+  .step:hover .step-ic { transform: rotate(180deg); }
+  .step:hover .step-ic svg { transform: rotate(-180deg); }
+  .step-ic svg { transition: transform .8s var(--ease); }
+  .step h3 { font-size: 1.2rem; margin-bottom: 8px; }
+  .step p { margin: 0; max-width: none; color: var(--muted); font-size: .96rem; }
+  .promo { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; margin-top: 30px; padding: 22px 30px; border-radius: 22px; background: linear-gradient(110deg, var(--gold), var(--gold-2)); color: var(--navy-3); box-shadow: 0 26px 50px -30px rgba(150, 95, 0, .9); }
+  .promo::after { content: ''; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; border: 26px solid rgba(255, 255, 255, .25); }
+  .promo-n { display: flex; align-items: baseline; gap: 8px; }
+  .promo-n b { font-size: clamp(3rem, 6vw, 4.4rem); font-weight: 800; line-height: .9; letter-spacing: -.04em; color: var(--navy); }
+  .promo-n small { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+  .promo-t { flex: 1; min-width: 240px; font-weight: 600; }
+  .promo-t .script { display: block; color: var(--navy); font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.1; }
+  .promo .btn { position: relative; z-index: 1; }
+
+  /* Bords déchirés (papier) et vagues */
+  .paper { position: relative; background: #f4f7fb; padding-block: clamp(90px, 10vw, 140px); }
+  .paper::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(11, 58, 102, .05) 1px, transparent 1.2px); background-size: 16px 16px; pointer-events: none; }
+  .tear { position: absolute; left: 0; width: 100%; height: 38px; fill: #fff; filter: drop-shadow(0 6px 5px rgba(7, 42, 75, .08)); z-index: 1; }
+  .tear-top { top: -1px; }
+  .tear-bottom { bottom: -1px; transform: scaleY(-1) scaleX(-1); filter: drop-shadow(0 -6px 5px rgba(7, 42, 75, .08)); }
+  .wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: clamp(50px, 6vw, 90px); fill: #fff; z-index: 1; }
+
+  /* ── Modules phares ── */
+  .feat { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+  .feat-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .feat-list .card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 14px; border-radius: 18px; border: 1px solid #fff; background: #fff; box-shadow: 0 16px 30px -24px rgba(7, 42, 75, .5); }
+  .feat-list .card::before { background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%), rgba(242, 176, 30, .16), transparent 70%); }
+  .fn { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: #eef3f9; color: var(--navy); font-weight: 800; border: 1.5px solid #d8e2ee; }
+  .feat-list li:hover .fn { background: var(--gold); border-color: var(--gold); }
+  .feat-list b { display: block; color: var(--ink); font-size: .97rem; line-height: 1.3; }
+  .feat-list small { display: block; margin-top: 3px; color: var(--muted); font-size: .84rem; line-height: 1.4; }
+  .chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chips-row span { padding: 7px 14px; border-radius: 999px; background: var(--navy); color: #fff; font-size: .82rem; font-weight: 700; }
+  .chips-row span:nth-child(3n+2) { background: var(--gold); color: var(--navy-3); }
+  .chips-row span:nth-child(3n) { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 1.5px #d8e2ee; }
+  .feat-art { position: relative; }
+  .feat-art::before { content: ''; position: absolute; inset: -6% -10% -6% 4%; z-index: -1; border-radius: 46% 54% 42% 58% / 55% 45% 55% 45%; background: radial-gradient(circle at 30% 30%, var(--gold-2), var(--gold) 70%); opacity: .9; animation: blob 14s ease-in-out infinite alternate; }
+  @keyframes blob { to { border-radius: 58% 42% 55% 45% / 42% 58% 42% 58%; transform: rotate(6deg) scale(1.03); } }
+  .feat-art .stage { margin: 0; width: 100%; }
+  .feat-art .mock { font-size: clamp(5.6px, .62vw, 9.4px); }
+  .feat-art .stage-note { color: var(--muted); }
+  .feat-art .fl-1 { left: -8%; top: 6%; } .feat-art .fl-2 { right: -4%; top: -6%; width: 240px; } .feat-art .fl-3 { left: -6%; bottom: 8%; } .feat-art .fl-4 { right: -2%; bottom: 12%; }
+
+  /* ── Offres sur le paysage ── */
+  .sky { position: relative; overflow: hidden; isolation: isolate; padding-bottom: clamp(120px, 14vw, 190px); background: linear-gradient(180deg, #fff 0%, var(--sky-bg) 30%, #d7eaf9 100%); }
+  .sky .scene { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; top: auto; width: 100%; height: 62%; translate: none; -webkit-mask-image: none; mask-image: none; }
+  .sky { --sky-1: #d7eaf9; --sc-sun: #ffcf4d; --sc-cloud: #fff; --sc-hill-far: #9cc6e8; --sc-hill-near: #4f9a6e; --sc-tree: #2f7650; }
+  .tiers { gap: 26px; }
+  .tier { padding: 12px 12px 26px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, .9); background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 30px 60px -32px rgba(7, 42, 75, .55); }
+  .tier-img { position: relative; height: 150px; margin-bottom: 18px; border-radius: 22px; overflow: hidden; background: #e6eef7; }
+  .tier-img img { width: 100%; height: 100%; object-fit: cover; object-position: top left; transition: transform 1.2s var(--ease); }
+  .tier:hover .tier-img img { transform: scale(1.08); }
+  .tier-body { padding: 0 14px; display: flex; flex-direction: column; flex: 1; }
+  .tier-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .tier h3 { font-size: 1.35rem; color: var(--navy); }
+  .tier .price { text-align: right; font-weight: 800; color: var(--navy); line-height: 1.1; white-space: nowrap; }
+  .tier .price small { display: block; font-weight: 600; font-size: .78rem; color: var(--muted); }
+  .tier .for { margin: 2px 0 10px; }
+  .tier .who { background: #eef3f9; color: var(--navy); }
+  .tier ul { margin: 18px 0 22px; }
+  .tier li svg { background: color-mix(in srgb, var(--go) 14%, #fff); color: var(--go); }
+  .tier .btn { align-self: center; min-width: 70%; }
+  .tier.best { background: rgba(255, 255, 255, .96); color: var(--text); border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold), 0 40px 80px -34px rgba(7, 42, 75, .7); transform: translateY(-14px); }
+  .tier.best:hover { transform: translateY(-20px); }
+  .tier.best h3 { color: var(--navy); } .tier.best .for { color: var(--muted); }
+  .tier.best .who { background: var(--gold); color: var(--navy-3); }
+  .tier.best li svg { background: color-mix(in srgb, var(--go) 14%, #fff); color: var(--go); }
+  .flag { top: 22px; right: 22px; z-index: 2; background: var(--gold); color: var(--navy-3); box-shadow: 0 8px 18px -8px rgba(110, 60, 0, .8); }
+  .trial { position: relative; z-index: 1; margin-top: 34px; }
+  .trial svg { color: var(--go); }
+
+  /* ── Pourquoi IAM INVOICER : collage ── */
+  .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: clamp(26px, 4vw, 56px); align-items: center; }
+  .collage { position: relative; aspect-ratio: 1.15; }
+  .collage img { position: absolute; object-fit: cover; object-position: top left; box-shadow: 0 30px 60px -30px rgba(7, 42, 75, .6); background: #e6eef7; }
+  .col-a { left: 0; top: 8%; width: 40%; height: 70%; border-radius: 26px; }
+  .col-b { left: 24%; top: 14%; width: 56%; aspect-ratio: 1; border-radius: 50%; border: 8px solid #fff; z-index: 2; }
+  .col-c { right: 0; top: 30%; width: 34%; height: 62%; border-radius: 26px; }
+  .collage::before { content: ''; position: absolute; left: 20%; bottom: 0; width: 64%; height: 30%; border-radius: 50%; background: var(--gold); opacity: .25; filter: blur(30px); }
+  .col-plane { position: absolute; z-index: 3; right: 6%; top: 0; color: var(--navy); animation: bob 5s ease-in-out infinite; }
+  .about-copy h2 { font-size: clamp(1.7rem, 3.2vw, 2.5rem); margin-bottom: 14px; }
+  .about-copy > p { color: var(--muted); margin-bottom: 22px; }
+  .about-pts { display: grid; gap: 14px; margin-bottom: 26px; }
+  .about-pts > div { display: flex; gap: 14px; align-items: flex-start; padding: 14px; border-radius: 18px; background: #f4f7fb; }
+  .about-pts .tile { --k: var(--navy-2); width: 50px; height: 50px; margin: 0; flex: none; border-radius: 15px; }
+  .about-pts b { display: block; color: var(--ink); }
+  .about-pts small { color: var(--muted); font-size: .9rem; }
+  .about-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 22px; }
+  .about-foot .os { display: inline-flex; align-items: center; }
+  .about-foot .os span { width: 36px; height: 36px; margin-left: -8px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: #fff; border: 3px solid #fff; }
+  .about-foot .os span:first-child { margin-left: 0; }
+  .about-foot .os em { margin-left: 10px; font-style: normal; font-size: .82rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+  .vert { writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; gap: 10px; color: var(--navy); }
+  .vert b { font-size: clamp(3rem, 6vw, 5rem); font-weight: 800; line-height: 1; color: var(--gold-text); }
+  .vert span { font-weight: 800; text-transform: uppercase; letter-spacing: .12em; font-size: .86rem; }
+
+  /* ── Démonstration ── */
+  .cream { background: var(--cream); }
+  .demo-stage { background: linear-gradient(140deg, #ffe7b0, #fff3d6); }
+  .demo-stage::before { background-image: radial-gradient(rgba(169, 111, 0, .2) 1.2px, transparent 1.2px); }
+  .demo-form { border: 1px solid #f3e6c8; }
+  .chips button[aria-pressed='true'] { background: var(--navy); border-color: var(--navy); }
+
+  /* ── Pourquoi nous choisir : carte bleu nuit ── */
+  .why { position: relative; overflow: hidden; isolation: isolate; padding: clamp(28px, 4vw, 52px) clamp(18px, 3.4vw, 46px) clamp(70px, 8vw, 110px); border-radius: 36px; color: #fff; background: radial-gradient(600px 380px at 100% 0%, rgba(242, 176, 30, .22), transparent 60%), linear-gradient(160deg, var(--navy-2), var(--navy) 60%, var(--navy-3)); box-shadow: 0 50px 90px -50px rgba(7, 42, 75, .9); }
+  .why-hills { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; width: 100%; height: 120px; fill: rgba(255, 255, 255, .06); }
+  .why-hills .h2 { fill: rgba(242, 176, 30, .12); }
+  .why-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 22px; margin-bottom: 28px; }
+  .why h2 { color: #fff; font-size: clamp(1.8rem, 3.6vw, 2.8rem); }
+  .why .script { color: var(--gold); }
+  .why-head p { color: rgba(255, 255, 255, .82); margin-top: 8px; }
+  .why-stats { display: grid; grid-template-columns: repeat(4, auto); gap: 6px 26px; }
+  .why-stats b { display: block; font-size: 2rem; line-height: 1; color: var(--gold); font-weight: 800; }
+  .why-stats span { font-size: .84rem; color: rgba(255, 255, 255, .78); }
+  .vs { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); }
+  .vs-head .vs-us { background: var(--gold); color: var(--navy-3); }
+  .vs-them { background: rgba(0, 0, 0, .18); }
+  .vs-badge { background: #fff; color: var(--navy); }
+
+  /* ── Au quotidien ── */
+  .panel { border: 1px solid #edf1f6; box-shadow: 0 30px 60px -40px rgba(7, 42, 75, .5); }
+  .track li { background: #f4f7fb; }
+  .track li.now { box-shadow: var(--sh), inset 3px 0 0 var(--gold); }
+  .sync { background: linear-gradient(140deg, #e8f1fb, #fff3d6); }
+
+  /* ── Métiers ── */
+  .job-list button[aria-selected='true'] { background: var(--navy); border-color: var(--navy); }
+  .job-items li { background: #f4f7fb; }
+
+  /* ── Écrans : bandeau bleu nuit ── */
+  .navy { background: radial-gradient(800px 420px at 100% 0%, rgba(242, 176, 30, .16), transparent 60%), linear-gradient(170deg, var(--navy-2), var(--navy) 60%, var(--navy-3)); color: #fff; }
+  .navy h2 { color: #fff; } .navy .script { color: var(--gold); } .navy .head p { color: rgba(255, 255, 255, .82); }
+  .head-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 18px; margin-bottom: clamp(26px, 4vw, 40px); }
+  .head-row .head { margin-bottom: 0; }
+  .tour-tabs { background: rgba(255, 255, 255, .08); box-shadow: none; }
+  .tour-tabs button { color: rgba(255, 255, 255, .8); }
+  .tour-tabs button[aria-selected='true'] { background: var(--gold); color: var(--navy-3); }
+  .tour-tabs.auto button[aria-selected='true']::before { background: rgba(255, 255, 255, .35); }
+  .frame { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .14); box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .7); }
+  .frame-bar span { background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .8); }
+
+  /* ── Thèmes de l'application (le site garde les couleurs d'IAM) ── */
+  .theme[aria-checked='true'] { border-color: var(--tp); }
+
+  /* ── Téléchargements ── */
+  .dl-reco { background: linear-gradient(115deg, var(--navy-2), var(--navy)); box-shadow: 0 30px 60px -30px rgba(7, 42, 75, .9); }
+  .dl.is-reco { border-color: var(--gold); }
+  .reco-tag { background: var(--gold); color: var(--navy-3); }
+  .dl-top .ic { background: #eef3f9; color: var(--navy); }
+  summary::after { border-color: var(--navy-2); }
+  details.how summary { color: var(--navy-2); }
+  .web-strip svg, .doc svg { color: var(--navy-2); }
+
+  /* ── Questions : grand mot détouré ── */
+  #faq .head > .script { display: block; font-size: clamp(1.5rem, 3vw, 2.2rem); margin-bottom: -.4em; position: relative; z-index: 1; }
+  .outline { position: relative; margin: 0; font-size: clamp(3rem, 11vw, 8rem) !important; font-weight: 900; letter-spacing: .04em; line-height: 1; text-transform: uppercase; color: transparent; -webkit-text-stroke: 2px var(--navy); background: linear-gradient(90deg, var(--navy) 0 var(--fill, 0%), transparent var(--fill, 0%)); -webkit-background-clip: text; background-clip: text; transition: --fill 1.6s; }
+  .js .rv.in .outline, .rv.in .outline { animation: fill-word 2.4s var(--ease) .3s both; }
+  @keyframes fill-word { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
+  .outline { background-size: 0 100%; background-repeat: no-repeat; background-image: linear-gradient(var(--navy), var(--navy)); }
+  .faq details[open] { box-shadow: var(--sh-2), inset 4px 0 0 var(--gold); }
+  .faq summary::after { border-color: var(--gold-text); }
+
+  /* ── Contact ── */
+  .contact-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 0; border-radius: 34px; overflow: hidden; box-shadow: 0 40px 80px -46px rgba(7, 42, 75, .6); }
+  .contact-art { position: relative; min-height: 460px; overflow: hidden; background: linear-gradient(180deg, #bcdcf7, #e6f2fc 60%, #fff); --sc-sun: #ffcf4d; --sc-cloud: #fff; --sc-hill-far: #9cc6e8; --sc-hill-near: #4f9a6e; --sc-tree: #2f7650; }
+  .contact-art .scene { position: absolute; left: 0; right: 0; bottom: 0; top: auto; width: 100%; height: 60%; translate: none; -webkit-mask-image: none; mask-image: none; }
+  .contact-awa { position: absolute; right: 6%; bottom: 0; width: 60%; max-width: 300px; height: auto; aspect-ratio: 1; }
+  .contact-art p { position: absolute; left: 22px; right: 22px; bottom: 22px; z-index: 3; padding: 16px 18px; border-radius: 18px; background: rgba(7, 42, 75, .78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #fff; font-weight: 700; font-size: 1.15rem; line-height: 1.3; }
+  .contact-art p .script { display: block; color: var(--gold); font-size: 1.6rem; }
+  .contact-card { padding: clamp(24px, 4vw, 46px); background: var(--cream); }
+  .contact-card h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); margin-bottom: 8px; }
+  .contact-card > p { color: var(--muted); margin-bottom: 18px; }
+  .contact-card .contact { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 16px; font-size: .95rem; }
+  .contact-card .contact a { display: inline-flex; align-items: center; min-height: 44px; color: var(--navy-2); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .contact-card .contact span { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); }
+  .contact-card .foot-acces { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0 0 18px; padding: 18px; border-radius: 20px; background: #fff; border: 1px solid #f0e2c2; }
+  .contact-card .foot-acces label { color: var(--ink); font-weight: 800; }
+  .contact-card .foot-acces input { background: #fbfcfe; border-color: #dde5ef; color: var(--text); }
+  .contact-card .foot-acces input::placeholder { color: #8090a6; }
+  .contact-card .foot-acces input:focus { border-color: var(--navy-2); }
+  .contact-card .docs { margin-top: 0; grid-template-columns: 1fr 1fr; }
+  .contact-card .doc { padding: 14px 16px; border-radius: 18px; box-shadow: none; border: 1px solid #f0e2c2; }
+
+  /* ── Bande d'écrans ── */
+  .strip { padding: 40px 0 0; text-align: center; }
+  .strip-t { margin-bottom: 18px; color: var(--muted); }
+  .strip-t b { color: var(--navy); }
+  .strip-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; padding: 0 14px; }
+  .strip-row a { display: block; aspect-ratio: 1; border-radius: 18px; overflow: hidden; background: #e6eef7; }
+  .strip-row img { width: 100%; height: 100%; object-fit: cover; object-position: top left; transition: transform .9s var(--ease), filter .5s; }
+  .strip-row a:hover img { transform: scale(1.12) rotate(-2deg); }
+
+  /* ── Bandeau or ── */
+  .final { padding: 40px 0 0; }
+  .final-in { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; padding: 26px 34px; border-radius: 26px 26px 0 0; background: linear-gradient(105deg, var(--gold), var(--gold-2) 60%, var(--gold)); color: var(--navy-3); }
+  .final-in .script { color: var(--navy); font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1; }
+  .final-in p { flex: 1; min-width: 240px; font-weight: 600; }
+  .final-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* ── Pied de page ── */
+  footer { margin-top: 0; border-radius: 0; background: radial-gradient(800px 420px at 100% 0%, rgba(242, 176, 30, .14), transparent 62%), linear-gradient(170deg, var(--navy), var(--navy-3)); }
+  .foot-brand { display: flex; align-items: center; gap: 10px; }
+  .foot-brand img { padding: 4px; border-radius: 10px; background: #fff; }
+  .foot-cols h4 { color: var(--gold); }
+  .weave-band { height: 8px; margin-top: 44px; background: var(--weave); opacity: .85; }
+  .wordmark { margin-top: 26px; }
+  .foot-end { background: transparent; }
+
+  /* ── Petits écrans ── */
+  @media (max-width: 1040px) {
+    .nav-in { width: calc(100% - 28px); }
+    .menu { color: var(--navy); }
+    .hero-panel { grid-template-columns: 1fr; min-height: 0; }
+    .hero-copy { padding: 130px 26px 40px; }
+    .hero-art { margin: 0; min-height: 380px; clip-path: polygon(0.0% 4.55%, 2.5% 7.11%, 5.0% 7.10%, 7.5% 8.10%, 10.0% 4.11%, 12.5% 4.38%, 15.0% 3.88%, 17.5% 4.35%, 20.0% 7.40%, 22.5% 3.78%, 25.0% 6.19%, 27.5% 4.28%, 30.0% 4.77%, 32.5% 5.59%, 35.0% 8.03%, 37.5% 6.65%, 40.0% 3.09%, 42.5% 4.66%, 45.0% 3.88%, 47.5% 8.23%, 50.0% 7.86%, 52.5% 7.84%, 55.0% 7.96%, 57.5% 7.47%, 60.0% 8.70%, 62.5% 7.76%, 65.0% 4.54%, 67.5% 8.10%, 70.0% 5.92%, 72.5% 7.53%, 75.0% 6.38%, 77.5% 5.58%, 80.0% 5.19%, 82.5% 5.58%, 85.0% 4.88%, 87.5% 3.70%, 90.0% 7.92%, 92.5% 7.79%, 95.0% 8.91%, 97.5% 7.15%, 100.0% 6.33%, 100% 100%, 0% 100%); }
+    .hero-awa { right: 50%; translate: 50% 0; width: min(330px, 80%); bottom: 18px; }
+    .seal { left: 6%; bottom: 10%; width: 108px; height: 108px; } .seal b { font-size: 1.8rem; }
+    .hero-bar { grid-template-columns: 1fr 1fr; margin-top: -30px; }
+    .hero-bar > div:nth-child(3) { display: none; }
+    .hero-bar > .btn { grid-column: 1 / -1; }
+    .feat, .about { grid-template-columns: 1fr; }
+    .vert { writing-mode: horizontal-tb; transform: none; justify-content: center; }
+    .contact-wrap { grid-template-columns: 1fr; }
+    .strip-row { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } .tier.best { transform: none; } .why-stats { grid-template-columns: repeat(2, auto); } }
+  @media (max-width: 560px) {
+    .hero { padding: 8px 8px 0; }
+    .hero-panel { border-radius: 26px; }
+    .hero-bar { grid-template-columns: 1fr; width: calc(100% - 24px); }
+    .hero-bar > div + div { border-left: 0; border-top: 1px solid #e6ecf3; }
+    .feat-list { grid-template-columns: 1fr; }
+    .collage { aspect-ratio: 1; }
+    .promo { padding: 20px; }
+    .contact-card .docs { grid-template-columns: 1fr; }
+    .final-in { padding: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .plane, .flight path, .seal svg, .cloud, .feat-art::before, .col-plane { animation: none !important; }
+    .plane svg { animation: none !important; offset-distance: 60%; }
+    .outline { background-size: 100% 100% !important; }
+  }
+
+  /* Retouches */
+  .head h2 .script, .about-copy h2 .script, .why h2 .script, .contact-card h2 .script { margin-right: .16em; }
+  .why-stats b span { font-size: inherit; color: inherit; }
+  .contact-art { isolation: isolate; }
+  .contact-art .scene { z-index: 0; }
+  .contact-awa { z-index: 1; bottom: 96px; }
+  .contact-art p { z-index: 2; }
+  .feat-art { isolation: isolate; }
+  .paper, #apropos { overflow-x: clip; }
+  .feat-art .fl-3 { display: none; }
+  .feat-art .fl-1 { left: -10%; top: auto; bottom: 6%; }
+  /* Barre du haut lisible sur le bleu comme sur l'or ; sur téléphone, l'essai passe par la barre d'action du bas */
+  .nav.solid .nav-in { color: var(--navy); }
+  .nav-in { background: rgba(7, 42, 75, .35); border-color: rgba(255, 255, 255, .18); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  @media (max-width: 440px) { .nav-act .btn { display: none; } .nav-in { width: calc(100% - 20px); padding-left: 12px; } }
 </style>
 </head>
 <body id="top">
@@ -654,11 +997,11 @@
     <a class="brand" href="#top" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" width="36" height="36" alt=""><span>IAM <b>INVOICER</b></span></a>
     <nav class="menu" id="menu" aria-label="Sections">
       <a href="#fonctions">Fonctionnalités</a>
-      <a href="#etapes">Comment ça marche</a>
-      <a href="#demo">Démonstration</a>
-      <a href="#metiers">Métiers</a>
       <a href="#offres">Offres</a>
-      <a href="#faq">Questions</a>
+      <a href="#demo">Démonstration</a>
+      <a href="#apercu">Écrans</a>
+      <a href="#telecharger">Télécharger</a>
+      <a href="#contact">Contact</a>
     </nav>
     <div class="nav-act">
       <a class="nav-link" href="/app/" data-acces>Se connecter</a>
@@ -669,41 +1012,111 @@
 </header>
 
 <main id="contenu">
+  <!-- ═══ Accueil : panneau bleu nuit, déchirure, panneau or avec Awa ═══ -->
   <section class="hero" id="hero">
-    <span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
-    <span class="spark" style="left:9%;top:150px;--s:26px" aria-hidden="true"></span>
-    <span class="spark" style="left:21%;top:330px;--s:14px;--t:-1.2s" aria-hidden="true"></span>
-    <span class="spark" style="right:12%;top:170px;--s:18px;--t:-2s" aria-hidden="true"></span>
-    <span class="spark" style="right:24%;top:400px;--s:28px;--t:-.6s" aria-hidden="true"></span>
-    <span class="spark" style="left:46%;top:104px;--s:12px;--t:-2.6s" aria-hidden="true"></span>
-    <svg class="scene" id="scene" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-      <circle class="sc-sun-halo" cx="1010" cy="64" r="70"/><circle class="sc-sun" cx="1010" cy="64" r="34"/>
-      <g class="sc-cloud sc-cloud-1"><ellipse cx="150" cy="82" rx="62" ry="17"/><circle cx="128" cy="70" r="21"/><circle cx="160" cy="62" r="27"/><circle cx="190" cy="74" r="17"/></g>
-      <g class="sc-cloud sc-cloud-2"><ellipse cx="520" cy="40" rx="48" ry="13"/><circle cx="504" cy="31" r="16"/><circle cx="529" cy="25" r="20"/><circle cx="550" cy="34" r="12"/></g>
-      <g class="sc-cloud sc-cloud-3"><ellipse cx="1120" cy="132" rx="54" ry="14"/><circle cx="1102" cy="122" r="17"/><circle cx="1128" cy="115" r="22"/><circle cx="1152" cy="125" r="13"/></g>
-      <path class="sc-hill-far" d="M0 226 C165 182 321 198 495 214 C678 231 786 172 960 186 C1074 195 1152 214 1200 204 L1200 300 L0 300Z"/>
-      <g class="sc-tree" transform="translate(1086 146)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
-      <g class="sc-tree" transform="translate(84 170) scale(.72)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
-      <path class="sc-hill-near" d="M0 262 C210 226 393 250 600 258 C813 266 963 224 1200 244 L1200 300 L0 300Z"/>
-    </svg>
-    <div class="wrap">
-      <a class="pill up" href="#themes"><b>Nouveau</b>Trois thèmes au choix dans l'application<i data-icon="ArrowRight"></i></a>
-      <h1>
-        <span class="h1-line" style="--i:1"><span>Gérez votre entreprise</span></span>
-        <span class="rot up" id="rot" style="--i:2"><span class="on">sans paperasse.</span><span>sans double saisie.</span><span>même sans Internet.</span><span>sur votre téléphone.</span></span>
-      </h1>
-      <p class="lede up" style="--i:3">Devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA et paie : IAM INVOICER réunit toute la gestion des entreprises du Burkina Faso dans un seul logiciel.</p>
-      <div class="hero-cta up" style="--i:4">
-        <a class="btn btn-cta" id="hero-dl" href="#telecharger" data-magnet><i data-icon="DownloadSimple"></i><span>Télécharger gratuitement</span></a>
-        <a class="btn btn-ghost" href="#demo" data-magnet><span class="play"><i data-icon="Play" data-size="14" data-weight="fill"></i></span>Essayer la démonstration</a>
+    <div class="hero-panel">
+      <div class="hero-copy">
+        <span class="script up" style="--i:0">Simplifiez</span>
+        <h1>
+          <span class="h1-line" style="--i:1"><span>votre gestion</span></span>
+          <span class="rot up" id="rot" style="--i:2"><span class="on">sans paperasse.</span><span>sans double saisie.</span><span>même sans Internet.</span><span>sur votre téléphone.</span></span>
+        </h1>
+        <p class="lede up" style="--i:3">Devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA et paie : IAM INVOICER réunit toute la gestion des entreprises du Burkina Faso dans un seul logiciel.</p>
+        <div class="hero-cta up" style="--i:4">
+          <a class="btn btn-cta" id="hero-dl" href="#telecharger" data-magnet><i data-icon="DownloadSimple"></i><span>Télécharger gratuitement</span></a>
+          <a class="btn btn-glass" href="#demo" data-magnet><span class="play"><i data-icon="Play" data-size="14" data-weight="fill"></i></span>Démonstration</a>
+        </div>
       </div>
-      <div class="trustrow up" style="--i:5">
-        <span class="os" aria-hidden="true"><span><i data-icon="WindowsLogo" data-size="18" data-weight="fill"></i></span><span><i data-icon="AppleLogo" data-size="18" data-weight="fill"></i></span><span><i data-icon="AndroidLogo" data-size="18" data-weight="fill"></i></span><span><i data-icon="Globe" data-size="18" data-weight="bold"></i></span></span>
-        <span>Windows, macOS, Android, iPhone et navigateur</span>
-        <span class="ok"><i data-icon="CheckCircle" data-size="18" data-weight="fill"></i>Essai gratuit de 30 jours</span>
+      <div class="hero-art" aria-hidden="true">
+        <svg class="flight" viewBox="0 0 400 220"><path id="flight-path" d="M10 200 C 90 120, 160 190, 230 110 S 340 40, 390 20"/></svg>
+        <span class="plane"><i data-icon="PaperPlaneTilt" data-size="34" data-weight="fill"></i></span>
+        <span class="cloud c1"></span><span class="cloud c2"></span>
+        <svg class="hero-awa" aria-hidden="true" viewBox="0 0 200 200">
+                <defs>
+                  <pattern id="awa-fani-h" width="16" height="10" patternUnits="userSpaceOnUse"><rect width="16" height="10" fill="#1c2f52"/><rect x="0" width="4" height="10" fill="#e2a81f"/><rect x="6" width="2" height="10" fill="#f4f6fa"/><rect x="10" width="3" height="10" fill="#1fa463"/></pattern>
+                  <pattern id="awa-wrap-h" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="12" height="12" fill="#e2a81f"/><rect width="4" height="12" fill="#1fa463"/><rect x="7" width="2" height="12" fill="#0b4f8a"/></pattern>
+                </defs>
+                <ellipse class="awa-shadow" cx="100" cy="191" rx="52" ry="7"/>
+                <g class="awa-coin"><circle cx="166" cy="52" r="11" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="166" y="56.2" text-anchor="middle" font-size="11.5" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <g class="awa-coin"><circle cx="186" cy="96" r="8" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="186" y="99" text-anchor="middle" font-size="8.4" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <g class="awa-coin"><circle cx="150" cy="22" r="7" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="150" y="24.7" text-anchor="middle" font-size="7.4" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <path d="M36 36 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" fill="#e2a81f"/>
+                <g class="awa-all">
+                  <g class="awa-arm"><path d="M62 150 C50 136 42 120 38 104" stroke="#1c2f52" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="36" cy="96" r="9.5" fill="#8d5a3a"/><path d="M29 89 l-3 -6 M35 86 l-1 -7 M41 88 l2 -6" stroke="#8d5a3a" stroke-width="4" stroke-linecap="round"/></g>
+                  <path d="M50 192 C50 150 70 128 100 128 C130 128 150 150 150 192 Z" fill="url(#awa-fani-h)"/>
+                  <path d="M86 128 L100 146 L114 128 Z" fill="#7a4a2d"/><rect x="91" y="110" width="18" height="22" rx="7" fill="#7a4a2d"/>
+                  <circle cx="69" cy="95" r="6.5" fill="#7a4a2d"/><circle cx="131" cy="95" r="6.5" fill="#7a4a2d"/><circle cx="69" cy="104" r="3" fill="#e2a81f"/><circle cx="131" cy="104" r="3" fill="#e2a81f"/>
+                  <circle cx="100" cy="92" r="31" fill="#8d5a3a"/><circle cx="81" cy="104" r="5.5" fill="#e07a5f"/><circle cx="119" cy="104" r="5.5" fill="#e07a5f"/>
+                  <g class="awa-eye"><ellipse cx="88" cy="93" rx="6.4" ry="7.2" fill="#fff"/><circle cx="88" cy="93.5" r="3.6" fill="#1c1c28"/><circle cx="89.3" cy="92" r="1.2" fill="#fff"/></g>
+                  <g class="awa-eye"><ellipse cx="112" cy="93" rx="6.4" ry="7.2" fill="#fff"/><circle cx="112" cy="93.5" r="3.6" fill="#1c1c28"/><circle cx="113.3" cy="92" r="1.2" fill="#fff"/></g>
+                  <path d="M81 83 Q88 79 95 83 M105 83 Q112 79 119 83" stroke="#3b1f12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M88 104 Q100 121 112 104 Z" fill="#5a2416"/><path d="M92 105.5 Q100 110 108 105.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M66 90 C63 57 84 47 100 47 C118 47 139 57 134 90 C127 77 114 71 100 71 C86 71 73 77 66 90 Z" fill="url(#awa-wrap-h)"/>
+                  <ellipse cx="132" cy="59" rx="9" ry="8" fill="url(#awa-wrap-h)"/><path d="M137 61 C147 57 151 65 145 71 C142 67 140 65 137 65 Z" fill="#1fa463"/>
+                  <path d="M140 150 C140 162 134 170 128 174" stroke="#1c2f52" stroke-width="14" fill="none" stroke-linecap="round"/>
+                  <g transform="rotate(-8 128 160)"><rect x="102" y="139" width="52" height="40" rx="7" fill="#fff" stroke="#0b4f8a" stroke-width="3"/><rect x="109" y="146" width="22" height="4" rx="2" fill="#c9d8e8"/><rect x="109" y="154" width="16" height="4" rx="2" fill="#c9d8e8"/><circle cx="140" cy="164" r="8" fill="#1fa463"/><path d="M136 164 l3 3 5 -6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+                  <circle cx="127" cy="176" r="7.5" fill="#8d5a3a"/>
+                </g>
+              </svg>
+        <div class="seal">
+          <svg viewBox="0 0 120 120"><defs><path id="seal-ring" d="M60 60 m-46 0 a46 46 0 1 1 92 0 a46 46 0 1 1 -92 0"/></defs><text><textPath href="#seal-ring">ESSAI GRATUIT · TOUS MODULES · </textPath></text></svg>
+          <b>30<small>jours</small></b>
+        </div>
       </div>
+    </div>
+    <div class="hero-bar up" style="--i:5">
+      <div><small><i data-icon="Devices" data-size="18"></i>Plateformes</small><b>Windows, macOS, Android, iPhone, Web</b></div>
+      <div><small><i data-icon="SquaresFour" data-size="18"></i>Modules</small><b>Ventes, caisse, stock, compta, paie</b></div>
+      <div><small><i data-icon="MapPin" data-size="18"></i>Pour</small><b>Burkina Faso et zone OHADA</b></div>
+      <a class="btn btn-cta" href="#telecharger">Commencer<i data-icon="ArrowRight"></i></a>
+    </div>
+  </section>
 
-      <div class="stage up" id="stage" style="--i:6" aria-hidden="true">
+  <!-- ═══ Trois étapes + bandeau or ═══ -->
+  <section id="etapes">
+    <div class="wrap">
+      <div class="head center rv">
+        <h2>Trois étapes <span class="script">pour démarrer</span></h2>
+        <p>Pas de formation interminable : vous installez, vous reprenez vos données, vous facturez.</p>
+      </div>
+      <div class="steps" id="steps">
+        <div class="step rv"><div class="step-top"><span class="step-n">1</span><span class="step-ic"><i data-icon="DownloadSimple" data-size="26"></i></span></div><h3>Installez</h3><p>Sur votre ordinateur, votre téléphone ou directement dans le navigateur. L'essai démarre tout de suite.</p></div>
+        <div class="step rv" style="--d:1"><div class="step-top"><span class="step-n">2</span><span class="step-ic"><i data-icon="UploadSimple" data-size="26"></i></span></div><h3>Reprenez vos données</h3><p>Importez clients, articles, stock et plan comptable depuis Excel, puis ajoutez votre logo et votre cachet.</p></div>
+        <div class="step rv" style="--d:2"><div class="step-top"><span class="step-n">3</span><span class="step-ic"><i data-icon="Lightning" data-size="26"></i></span></div><h3>Facturez et pilotez</h3><p>Chaque document validé alimente la caisse, le stock, la comptabilité et vos tableaux de bord.</p></div>
+      </div>
+      <div class="promo rv">
+        <span class="promo-n"><b data-count="21">21</b><small>modules</small></span>
+        <span class="promo-t"><span class="script">Toute votre gestion</span>dans un seul logiciel, reliée à une seule base de données</span>
+        <a class="btn btn-navy" href="#offres">Voir les offres<i data-icon="ArrowRight"></i></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Modules phares : liste numérotée + maquette ═══ -->
+  <section id="fonctions" class="paper">
+    <svg class="tear tear-top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 L0 14 L20 8 L42 24 L53 6 L66 15 L77 20 L93 5 L105 17 L128 6 L145 6 L168 5 L181 11 L192 22 L214 5 L231 5 L245 13 L268 8 L281 22 L300 21 L315 7 L331 15 L344 21 L356 22 L367 23 L383 19 L406 14 L430 22 L454 15 L473 11 L488 11 L500 22 L519 20 L544 14 L568 13 L580 7 L606 17 L621 14 L635 19 L658 5 L670 21 L690 14 L711 23 L736 22 L760 6 L772 12 L797 6 L808 13 L832 13 L854 15 L864 18 L885 9 L898 19 L909 10 L928 8 L945 16 L967 19 L979 9 L1003 16 L1021 8 L1044 21 L1062 17 L1083 16 L1100 8 L1112 9 L1126 11 L1143 4 L1168 22 L1183 12 L1202 4 L1216 17 L1237 23 L1257 8 L1283 23 L1294 18 L1316 16 L1338 16 L1351 19 L1373 5 L1389 6 L1405 18 L1420 7 L1440 23 L1440 40Z"/></svg>
+    <div class="wrap feat">
+      <div class="feat-copy">
+        <div class="head rv">
+          <h2><span class="script">Modules</span> phares</h2>
+          <p>Chaque saisie alimente le reste : une facture validée met à jour le stock, la caisse et la comptabilité.</p>
+        </div>
+        <ol class="feat-list">
+          <li class="card rv"><span class="fn">1</span><span><b>Devis et factures</b><small>Six modèles à vos couleurs, montant en lettres, signature et cachet.</small></span></li>
+          <li class="card rv" style="--d:1"><span class="fn">2</span><span><b>Caisse et mobile money</b><small>Ventes au comptoir, espèces ou mobile money, ticket imprimé.</small></span></li>
+          <li class="card rv" style="--d:2"><span class="fn">3</span><span><b>Stock et achats</b><small>Entrées, sorties, inventaires, bons de commande.</small></span></li>
+          <li class="card rv" style="--d:3"><span class="fn">4</span><span><b>Comptabilité SYSCOHADA</b><small>Écritures générées, grand livre, bilan, clôture protégée.</small></span></li>
+          <li class="card rv"><span class="fn">5</span><span><b>Dépenses et besoins</b><small>Visa du responsable, validation des finances, paiement.</small></span></li>
+          <li class="card rv" style="--d:1"><span class="fn">6</span><span><b>RH et paie</b><small>Bulletins et déclarations sociales, reliés à la compta.</small></span></li>
+          <li class="card rv" style="--d:2"><span class="fn">7</span><span><b>Rôles et sécurité</b><small>Douze rôles prêts à l'emploi, droits par module.</small></span></li>
+          <li class="card rv" style="--d:3"><span class="fn">8</span><span><b>Rapports animés</b><small>Ventes, encaissements, marges, exportables.</small></span></li>
+        </ol>
+        <div class="chips-row rv" aria-label="Autres modules">
+          <span>CRM</span><span>Projets</span><span>Immobilisations</span><span>Budgets</span><span>Déclarations</span><span>E-mails et SMS</span><span>Multi-dépôts</span>
+        </div>
+      </div>
+      <div class="feat-art">
+      <div class="stage rv" id="stage" aria-hidden="true">
         <span class="orbe"></span>
         <div class="mock" id="mock">
           <div class="mk-side">
@@ -791,74 +1204,113 @@
         <div class="fl fl-4" data-depth="30"><div class="fl-row"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" style="stroke:var(--bg-2)"/><circle cx="18" cy="18" r="15" style="stroke:var(--p)" stroke-dasharray="72 100" pathLength="100"/></svg><span><b>TVA du mois</b><small>Déclaration préparée</small></span></div></div>
       </div>
       <p class="stage-note">Écran illustratif, données d'exemple.</p>
+      </div>
     </div>
+    <svg class="tear tear-bottom" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 L0 14 L20 8 L42 24 L53 6 L66 15 L77 20 L93 5 L105 17 L128 6 L145 6 L168 5 L181 11 L192 22 L214 5 L231 5 L245 13 L268 8 L281 22 L300 21 L315 7 L331 15 L344 21 L356 22 L367 23 L383 19 L406 14 L430 22 L454 15 L473 11 L488 11 L500 22 L519 20 L544 14 L568 13 L580 7 L606 17 L621 14 L635 19 L658 5 L670 21 L690 14 L711 23 L736 22 L760 6 L772 12 L797 6 L808 13 L832 13 L854 15 L864 18 L885 9 L898 19 L909 10 L928 8 L945 16 L967 19 L979 9 L1003 16 L1021 8 L1044 21 L1062 17 L1083 16 L1100 8 L1112 9 L1126 11 L1143 4 L1168 22 L1183 12 L1202 4 L1216 17 L1237 23 L1257 8 L1283 23 L1294 18 L1316 16 L1338 16 L1351 19 L1373 5 L1389 6 L1405 18 L1420 7 L1440 23 L1440 40Z"/></svg>
   </section>
 
-  <div class="band" aria-label="Modules du logiciel">
-    <div class="band-track" id="band">
-      <span class="tag" style="--k:var(--p)"><i data-icon="FileText"></i>Devis</span>
-      <span class="tag" style="--k:#f2694f"><i data-icon="Receipt"></i>Factures et avoirs</span>
-      <span class="tag" style="--k:#12a678"><i data-icon="CashRegister"></i>Caisse</span>
-      <span class="tag" style="--k:#d98a00"><i data-icon="DeviceMobile"></i>Mobile money</span>
-      <span class="tag" style="--k:#2f86e8"><i data-icon="Package"></i>Stock</span>
-      <span class="tag" style="--k:var(--p)"><i data-icon="Truck"></i>Achats et fournisseurs</span>
-      <span class="tag" style="--k:#f2694f"><i data-icon="Wallet"></i>Dépenses</span>
-      <span class="tag" style="--k:#12a678"><i data-icon="ClipboardText"></i>Expressions de besoin</span>
-      <span class="tag" style="--k:#d98a00"><i data-icon="Calculator"></i>Comptabilité SYSCOHADA</span>
-      <span class="tag" style="--k:#2f86e8"><i data-icon="Bank"></i>Déclarations fiscales</span>
-      <span class="tag" style="--k:var(--p)"><i data-icon="UsersThree"></i>RH et paie</span>
-      <span class="tag" style="--k:#f2694f"><i data-icon="Briefcase"></i>Projets</span>
-      <span class="tag" style="--k:#12a678"><i data-icon="ChartLineUp"></i>Rapports</span>
-    </div>
-  </div>
-
-  <section id="fonctions">
+  <!-- ═══ Offres : cartes à image sur le paysage, bas en vague ═══ -->
+  <section id="offres" class="sky">
+    <svg class="scene" id="scene" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <circle class="sc-sun-halo" cx="1010" cy="64" r="70"/><circle class="sc-sun" cx="1010" cy="64" r="34"/>
+      <g class="sc-cloud sc-cloud-1"><ellipse cx="150" cy="82" rx="62" ry="17"/><circle cx="128" cy="70" r="21"/><circle cx="160" cy="62" r="27"/><circle cx="190" cy="74" r="17"/></g>
+      <g class="sc-cloud sc-cloud-2"><ellipse cx="520" cy="40" rx="48" ry="13"/><circle cx="504" cy="31" r="16"/><circle cx="529" cy="25" r="20"/><circle cx="550" cy="34" r="12"/></g>
+      <g class="sc-cloud sc-cloud-3"><ellipse cx="1120" cy="132" rx="54" ry="14"/><circle cx="1102" cy="122" r="17"/><circle cx="1128" cy="115" r="22"/><circle cx="1152" cy="125" r="13"/></g>
+      <path class="sc-hill-far" d="M0 226 C165 182 321 198 495 214 C678 231 786 172 960 186 C1074 195 1152 214 1200 204 L1200 300 L0 300Z"/>
+      <g class="sc-tree" transform="translate(1086 146)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
+      <g class="sc-tree" transform="translate(84 170) scale(.72)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
+      <path class="sc-hill-near" d="M0 262 C210 226 393 250 600 258 C813 266 963 224 1200 244 L1200 300 L0 300Z"/>
+    </svg>
     <div class="wrap">
       <div class="head center rv">
-        <div class="eyebrow">Fonctionnalités</div>
-        <h2>Tout ce qu'il vous faut pour <em>gérer sereinement</em></h2>
-        <p>Chaque saisie alimente le reste : une facture validée met à jour le stock, la caisse et la comptabilité.</p>
+        <h2><span class="script">Une offre</span> pour chaque entreprise</h2>
+        <p>Commencez par l'essai gratuit. Passez à une licence quand vous êtes prêt, sans rien ressaisir.</p>
       </div>
-      <div class="cards">
-        <article class="card rv" style="--k:var(--p)"><div class="tile"><i data-icon="Receipt" data-size="30"></i></div><h3>Devis et factures</h3><p>Six modèles à vos couleurs, numérotation automatique, montant en lettres, signature et cachet.</p></article>
-        <article class="card rv" style="--k:#f2694f;--d:1"><div class="tile"><i data-icon="CashRegister" data-size="30"></i></div><h3>Caisse et mobile money</h3><p>Vendez au comptoir, encaissez en espèces ou par mobile money, imprimez le ticket.</p></article>
-        <article class="card rv" style="--k:#12a678;--d:2"><div class="tile"><i data-icon="Package" data-size="30"></i></div><h3>Stock et achats</h3><p>Entrées, sorties et inventaires. Le stock suit chaque vente et chaque bon de commande.</p></article>
-        <article class="card rv" style="--k:#d98a00;--d:3"><div class="tile"><i data-icon="Calculator" data-size="30"></i></div><h3>Comptabilité SYSCOHADA</h3><p>Écritures générées à la validation, grand livre, bilan, clôture d'exercice protégée par code.</p></article>
-        <article class="card rv" style="--k:#2f86e8"><div class="tile"><i data-icon="Wallet" data-size="30"></i></div><h3>Dépenses et besoins</h3><p>Chaque demande suit son circuit : visa du responsable, validation des finances, paiement.</p></article>
-        <article class="card rv" style="--k:#c04bd8;--d:1"><div class="tile"><i data-icon="UsersThree" data-size="30"></i></div><h3>RH et paie</h3><p>Salariés, bulletins de paie et déclarations sociales, reliés à la comptabilité.</p></article>
-        <article class="card rv" style="--k:#12a678;--d:2"><div class="tile"><i data-icon="ShieldCheck" data-size="30"></i></div><h3>Rôles et sécurité</h3><p>Douze rôles prêts à l'emploi, des droits par module, une double vérification pour les opérations sensibles.</p></article>
-        <article class="card rv" style="--k:#f2694f;--d:3"><div class="tile"><i data-icon="ChartLineUp" data-size="30"></i></div><h3>Rapports animés</h3><p>Ventes, encaissements, dépenses et marges en graphiques interactifs, exportables.</p></article>
+      <div class="tiers">
+        <div class="tier rv">
+          
+          <div class="tier-img"><img src="assets/galerie/caisse.jpg" alt="" loading="lazy"></div>
+          <div class="tier-body">
+            <div class="tier-row"><div><h3>Essentiel</h3><p class="for">Commerces et prestataires</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
+            <div class="who">2 utilisateurs</div>
+            <ul>
+              <li><i data-icon="Check"></i>Devis, factures, avoirs</li>
+              <li><i data-icon="Check"></i>Caisse et mobile money</li>
+              <li><i data-icon="Check"></i>Clients, articles, stock</li>
+              <li><i data-icon="Check"></i>Dépenses et validations</li>
+              <li><i data-icon="Check"></i>Paiements et rapports</li>
+            </ul>
+            <a class="btn btn-cta" href="#contact">Demander un devis</a>
+          </div>
+        </div>
+        <div class="tier best rv" style="--d:1">
+          <span class="flag">Le plus choisi</span>
+          <div class="tier-img"><img src="assets/galerie/tableau-de-bord.jpg" alt="" loading="lazy"></div>
+          <div class="tier-body">
+            <div class="tier-row"><div><h3>Pro</h3><p class="for">PME</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
+            <div class="who">5 utilisateurs</div>
+            <ul>
+              <li><i data-icon="Check"></i>Tout l'Essentiel</li>
+              <li><i data-icon="Check"></i>Achats, fournisseurs, expressions de besoin</li>
+              <li><i data-icon="Check"></i>Comptabilité SYSCOHADA et bilan</li>
+              <li><i data-icon="Check"></i>Déclarations TVA et retenues</li>
+              <li><i data-icon="Check"></i>E-mails et SMS</li>
+            </ul>
+            <a class="btn btn-cta" href="#contact">Demander un devis</a>
+          </div>
+        </div>
+        <div class="tier rv" style="--d:2">
+          
+          <div class="tier-img"><img src="assets/galerie/rh-paie.jpg" alt="" loading="lazy"></div>
+          <div class="tier-body">
+            <div class="tier-row"><div><h3>Entreprise</h3><p class="for">Groupes et multi-sites</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
+            <div class="who">Utilisateurs illimités</div>
+            <ul>
+              <li><i data-icon="Check"></i>Tout le Pro</li>
+              <li><i data-icon="Check"></i>RH et paie, déclarations sociales</li>
+              <li><i data-icon="Check"></i>CRM, projets, immobilisations, budgets</li>
+              <li><i data-icon="Check"></i>Application à votre nom et à votre logo</li>
+              <li><i data-icon="Check"></i>Serveur dans vos locaux, licence au poste</li>
+            </ul>
+            <a class="btn btn-cta" href="#contact">Demander un devis</a>
+          </div>
+        </div>
       </div>
-      <div class="stats rv">
-        <div class="stat" style="--k:var(--p)"><span class="ico"><i data-icon="Gift" data-size="26"></i></span><span><b><span data-count="30">30</span> jours</b><span>d'essai gratuit, tous modules ouverts</span></span></div>
-        <div class="stat" style="--k:#f2694f"><span class="ico"><i data-icon="UsersThree" data-size="26"></i></span><span><b data-count="12">12</b><span>rôles avec leurs droits déjà réglés</span></span></div>
-        <div class="stat" style="--k:#12a678"><span class="ico"><i data-icon="FileText" data-size="26"></i></span><span><b data-count="6">6</b><span>modèles de documents à vos couleurs</span></span></div>
-        <div class="stat" style="--k:#d98a00"><span class="ico"><i data-icon="Devices" data-size="26"></i></span><span><b data-count="5">5</b><span>plateformes, une seule base de données</span></span></div>
+      <div class="trial rv"><i data-icon="Info" data-size="24"></i><span><b>Essai gratuit de 30 jours, tous modules ouverts</b>, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Une licence lève les limites et conserve tout ce que vous avez saisi. Les prix dépendent de l'offre, de la durée et de l'hébergement : ils sont communiqués sur devis.</span></div>
+    </div>
+    <svg class="wave" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50 C 180 0, 360 0, 540 40 S 900 90, 1080 50 S 1350 10, 1440 40 V90 H0Z"/></svg>
+  </section>
+
+  <!-- ═══ Pourquoi IAM INVOICER : collage d'écrans, chiffre vertical ═══ -->
+  <section id="apropos">
+    <div class="wrap about">
+      <div class="collage rv" aria-hidden="true">
+        <img class="col-a" src="assets/galerie/caisse.jpg" alt="" loading="lazy">
+        <img class="col-b" src="assets/galerie/tableau-de-bord.jpg" alt="" loading="lazy">
+        <img class="col-c" src="assets/galerie/bilan.jpg" alt="" loading="lazy">
+        <span class="col-plane"><i data-icon="PaperPlaneTilt" data-size="40" data-weight="fill"></i></span>
       </div>
+      <div class="about-copy rv" style="--d:1">
+        <h2>Un logiciel <span class="script">pensé</span> pour l'Afrique de l'Ouest</h2>
+        <p>Taxes du Burkina Faso prêtes à activer, mobile money, montant en lettres, bilan SYSCOHADA : IAM INVOICER parle la langue de vos clients et de votre comptable.</p>
+        <div class="about-pts">
+          <div><span class="tile"><i data-icon="Headset" data-size="26"></i></span><span><b>Une équipe à Ouagadougou</b><small>De l'installation à la formation de vos équipes.</small></span></div>
+          <div><span class="tile"><i data-icon="SealCheck" data-size="26"></i></span><span><b>Conforme et vérifiable</b><small>Numéros uniques, QR code d'authenticité sur chaque document.</small></span></div>
+        </div>
+        <div class="about-foot">
+          <a class="btn btn-cta" href="#demo">Essayer maintenant<i data-icon="ArrowRight"></i></a>
+          <span class="os"><span><i data-icon="WindowsLogo" data-size="16" data-weight="fill"></i></span><span><i data-icon="AppleLogo" data-size="16" data-weight="fill"></i></span><span><i data-icon="AndroidLogo" data-size="16" data-weight="fill"></i></span><span><i data-icon="Globe" data-size="16" data-weight="bold"></i></span><em>5 plateformes,<br>une seule base</em></span>
+        </div>
+      </div>
+      <div class="vert rv" style="--d:2" aria-hidden="true"><b data-count="12">12</b><span>rôles prêts à l'emploi</span></div>
     </div>
   </section>
 
-  <section id="etapes" class="alt">
-    <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Comment ça marche</div>
-        <h2>Opérationnel en <em>trois étapes</em></h2>
-        <p>Pas de formation interminable : vous installez, vous reprenez vos données, vous facturez.</p>
-      </div>
-      <div class="steps" id="steps">
-        <svg class="steps-path" viewBox="0 0 800 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C130 -10 270 70 400 30 S670 -10 800 30"/><path class="run" id="steps-run" pathLength="1" d="M0 30 C130 -10 270 70 400 30 S670 -10 800 30"/></svg>
-        <div class="step rv"><div class="step-n">1</div><h3>Installez</h3><p>Sur votre ordinateur, votre téléphone ou directement dans le navigateur. L'essai démarre tout de suite.</p><span class="step-chip"><i data-icon="DownloadSimple"></i>Quelques minutes</span></div>
-        <div class="step rv" style="--d:2"><div class="step-n">2</div><h3>Reprenez vos données</h3><p>Importez clients, articles, stock et plan comptable depuis Excel, puis ajoutez votre logo et votre cachet.</p><span class="step-chip"><i data-icon="UploadSimple"></i>Depuis Excel ou CSV</span></div>
-        <div class="step rv" style="--d:4"><div class="step-n">3</div><h3>Facturez et pilotez</h3><p>Chaque document validé alimente la caisse, le stock, la comptabilité et vos tableaux de bord.</p><span class="step-chip"><i data-icon="Lightning"></i>Tout se met à jour</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="demo">
+  <!-- ═══ Démonstration ═══ -->
+  <section id="demo" class="cream">
     <div class="wrap">
       <div class="head rv">
-        <div class="eyebrow">Démonstration</div>
-        <h2>Créez votre première facture, <em>ici même</em></h2>
+        <h2>Créez votre première facture, <span class="script">ici même</span></h2>
         <p>Modifiez les champs : le document se met en forme et calcule la TVA sous vos yeux.</p>
       </div>
       <div class="demo">
@@ -917,61 +1369,41 @@
     </div>
   </section>
 
-  <section id="apercu" class="alt">
+  <!-- ═══ Pourquoi nous choisir : carte bleu nuit, chiffres, comparatif ═══ -->
+  <section id="comparatif">
     <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Écrans</div>
-        <h2>Le logiciel, <em>tel qu'il est</em></h2>
-        <p>De vraies captures de l'application, module par module.</p>
+      <div class="why rv">
+        <svg class="why-hills" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 C 160 30, 300 60, 460 50 S 760 10, 900 40 S 1120 70, 1200 40 V120 H0Z"/><path class="h2" d="M0 95 C 200 70, 380 100, 600 90 S 980 60, 1200 85 V120 H0Z"/></svg>
+        <div class="why-head">
+          <div>
+            <h2><span class="script">Pourquoi</span> IAM INVOICER ?</h2>
+            <p>Ce qui change le jour où toute la gestion passe dans un seul outil.</p>
+          </div>
+          <div class="why-stats">
+            <div><b><span data-count="30">30</span> j</b><span>d'essai gratuit</span></div>
+            <div><b data-count="12">12</b><span>rôles prêts</span></div>
+            <div><b data-count="6">6</b><span>modèles de documents</span></div>
+            <div><b data-count="5">5</b><span>plateformes</span></div>
+          </div>
+        </div>
+      <div class="vs" role="table" aria-label="Comparaison entre IAM INVOICER et une gestion sur tableur">
+        <span class="vs-badge" aria-hidden="true">VS</span>
+        <div class="vs-row vs-head rv" role="row"><span role="columnheader"></span><span class="vs-us" role="columnheader">IAM INVOICER</span><span class="vs-them" role="columnheader">Tableurs et cahiers</span></div>
+        <div class="vs-row rv" role="row"><span role="rowheader">Numéros de factures</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Automatiques, sans doublon</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Tenus à la main</span></div>
+        <div class="vs-row rv" style="--d:1" role="row"><span role="rowheader">TVA, retenues, timbre</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Calculés sur chaque document</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Formules à entretenir</span></div>
+        <div class="vs-row rv" style="--d:2" role="row"><span role="rowheader">Stock</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Mis à jour à chaque vente</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Recompté en fin de mois</span></div>
+        <div class="vs-row rv" style="--d:3" role="row"><span role="rowheader">Comptabilité</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Écritures SYSCOHADA générées</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Tout est ressaisi</span></div>
+        <div class="vs-row rv" style="--d:4" role="row"><span role="rowheader">Travail à plusieurs</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Un compte et des droits par personne</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Un fichier qui circule</span></div>
+        <div class="vs-row rv" style="--d:5" role="row"><span role="rowheader">Contrôle par le client</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>QR code d'authenticité</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Aucun moyen de vérifier</span></div>
       </div>
-      <div class="tour-tabs rv" id="tour-tabs" role="tablist" aria-label="Écrans du logiciel">
-        <button type="button" role="tab" aria-selected="true" aria-controls="tour-panel" data-img="tableau-de-bord"><b>Tableau de bord</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="facture"><b>Facture</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="caisse"><b>Caisse</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="stock"><b>Stock</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="bilan"><b>Bilan</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="rh-paie"><b>Paie</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="projet-taches"><b>Projets</b></button>
-        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="roles"><b>Rôles</b></button>
-      </div>
-      <div class="frame rv" id="tour-panel" role="tabpanel" data-tilt>
-        <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>IAM INVOICER</span></div>
-        <img id="tour-img" src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord — IAM INVOICER" width="1600" height="1000" loading="lazy">
       </div>
     </div>
   </section>
 
-  <section id="themes">
-    <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Apparence</div>
-        <h2>Trois thèmes, <em>à votre goût</em></h2>
-        <p>Ciel, Améthyste ou Lavande, en clair comme en sombre : dans l'application, le thème se change d'un clic depuis la barre du haut. Essayez ici, toute la page suit votre choix.</p>
-      </div>
-      <div class="themes" id="themes-list" role="radiogroup" aria-label="Thème de couleurs">
-        <button type="button" class="theme rv" role="radio" aria-checked="true" data-palette="ciel" style="--tb:#e8f1fd;--ts:#fff;--tl:#dbe7f8;--ta:#cfe1fd;--tp:#1b6ef3;--tp2:#1b6ef3;--tk1:#c9e1ff;--tk2:#e9f3ff;--ti:#0e1f40;--th:#86cba6">
-          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
-          <span class="th-name"><span><b>Ciel</b><small>Bleu lumineux, menu clair</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
-        </button>
-        <button type="button" class="theme rv" role="radio" aria-checked="false" data-palette="amethyste" style="--d:1;--tb:#f1f0f8;--ts:linear-gradient(180deg,#6858b0,#45367e);--tl:rgba(255,255,255,.3);--ta:#f1f0f8;--tj:-14%;--tr:999px 0 0 999px;--tp:#5b4a9e;--tp2:#fff;--tk1:#d9d2f4;--tk2:#eeebfa;--ti:#2a2150;--th:#8d7dcf;--te:inset 3px 0 0 #e2604f">
-          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
-          <span class="th-name"><span><b>Améthyste</b><small>Menu violet, cartes blanches</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
-        </button>
-        <button type="button" class="theme rv" role="radio" aria-checked="false" data-palette="lavande" style="--d:2;--tb:#eef0fa;--ts:#fff;--tl:#e3e5f5;--ta:#dcdff6;--tp:#5a63c2;--tp2:#5a63c2;--tk1:#dadffa;--tk2:#f0f1fd;--ti:#23264a;--th:#a4acea">
-          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
-          <span class="th-name"><span><b>Lavande</b><small>Pervenche douce, très sobre</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
-        </button>
-      </div>
-      <p class="themes-note rv">Votre choix est mémorisé sur cet appareil : l'application ouverte depuis ce site reprend le même thème.</p>
-    </div>
-  </section>
-
+  <!-- ═══ Au quotidien ═══ -->
   <section id="hors-ligne">
     <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Au quotidien</div>
-        <h2>Des validations claires, un travail <em>qui ne s'arrête pas</em></h2>
-      </div>
+      <div class="head center rv"><h2>Des validations claires, <span class="script">un travail qui continue</span></h2></div>
       <div class="duo">
         <div class="panel rv">
           <div class="tile" style="--k:#2f86e8"><i data-icon="Stamp" data-size="30"></i></div>
@@ -1005,34 +1437,12 @@
     </div>
   </section>
 
-  <section id="comparatif" class="violet">
-    <span class="spark" style="left:6%;top:70px;--s:22px" aria-hidden="true"></span>
-    <span class="spark" style="right:8%;top:120px;--s:16px;--t:-1.4s" aria-hidden="true"></span>
-    <span class="spark" style="right:18%;bottom:60px;--s:24px;--t:-2.2s" aria-hidden="true"></span>
-    <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Comparatif</div>
-        <h2>IAM INVOICER face aux <em>tableurs et cahiers</em></h2>
-        <p>Ce qui change le jour où toute la gestion passe dans un seul outil.</p>
-      </div>
-      <div class="vs" role="table" aria-label="Comparaison entre IAM INVOICER et une gestion sur tableur">
-        <span class="vs-badge" aria-hidden="true">VS</span>
-        <div class="vs-row vs-head rv" role="row"><span role="columnheader"></span><span class="vs-us" role="columnheader">IAM INVOICER</span><span class="vs-them" role="columnheader">Tableurs et cahiers</span></div>
-        <div class="vs-row rv" role="row"><span role="rowheader">Numéros de factures</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Automatiques, sans doublon</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Tenus à la main</span></div>
-        <div class="vs-row rv" style="--d:1" role="row"><span role="rowheader">TVA, retenues, timbre</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Calculés sur chaque document</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Formules à entretenir</span></div>
-        <div class="vs-row rv" style="--d:2" role="row"><span role="rowheader">Stock</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Mis à jour à chaque vente</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Recompté en fin de mois</span></div>
-        <div class="vs-row rv" style="--d:3" role="row"><span role="rowheader">Comptabilité</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Écritures SYSCOHADA générées</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Tout est ressaisi</span></div>
-        <div class="vs-row rv" style="--d:4" role="row"><span role="rowheader">Travail à plusieurs</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>Un compte et des droits par personne</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Un fichier qui circule</span></div>
-        <div class="vs-row rv" style="--d:5" role="row"><span role="rowheader">Contrôle par le client</span><span class="vs-us" role="cell"><i data-icon="CheckCircle" data-size="22" data-weight="fill"></i>QR code d'authenticité</span><span class="vs-them" role="cell"><i data-icon="XCircle" data-size="22" data-weight="fill"></i>Aucun moyen de vérifier</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="metiers">
+  <!-- ═══ Métiers ═══ -->
+  <section id="metiers" class="paper">
+    <svg class="tear tear-top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 L0 14 L20 8 L42 24 L53 6 L66 15 L77 20 L93 5 L105 17 L128 6 L145 6 L168 5 L181 11 L192 22 L214 5 L231 5 L245 13 L268 8 L281 22 L300 21 L315 7 L331 15 L344 21 L356 22 L367 23 L383 19 L406 14 L430 22 L454 15 L473 11 L488 11 L500 22 L519 20 L544 14 L568 13 L580 7 L606 17 L621 14 L635 19 L658 5 L670 21 L690 14 L711 23 L736 22 L760 6 L772 12 L797 6 L808 13 L832 13 L854 15 L864 18 L885 9 L898 19 L909 10 L928 8 L945 16 L967 19 L979 9 L1003 16 L1021 8 L1044 21 L1062 17 L1083 16 L1100 8 L1112 9 L1126 11 L1143 4 L1168 22 L1183 12 L1202 4 L1216 17 L1237 23 L1257 8 L1283 23 L1294 18 L1316 16 L1338 16 L1351 19 L1373 5 L1389 6 L1405 18 L1420 7 L1440 23 L1440 40Z"/></svg>
     <div class="wrap">
       <div class="head rv">
-        <div class="eyebrow">Métiers</div>
-        <h2>Un logiciel qui parle <em>votre métier</em></h2>
+        <h2>Un logiciel qui parle <span class="script">votre métier</span></h2>
         <p>Choisissez votre activité : voici ce que vous utiliserez dès le premier jour.</p>
       </div>
       <div class="jobs rv">
@@ -1040,60 +1450,66 @@
         <div class="job-view" id="job-view" role="tabpanel" aria-live="polite"><h3 id="job-title"></h3><p id="job-text"></p><ul class="job-items" id="job-items"></ul></div>
       </div>
     </div>
+    <svg class="tear tear-bottom" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 L0 14 L20 8 L42 24 L53 6 L66 15 L77 20 L93 5 L105 17 L128 6 L145 6 L168 5 L181 11 L192 22 L214 5 L231 5 L245 13 L268 8 L281 22 L300 21 L315 7 L331 15 L344 21 L356 22 L367 23 L383 19 L406 14 L430 22 L454 15 L473 11 L488 11 L500 22 L519 20 L544 14 L568 13 L580 7 L606 17 L621 14 L635 19 L658 5 L670 21 L690 14 L711 23 L736 22 L760 6 L772 12 L797 6 L808 13 L832 13 L854 15 L864 18 L885 9 L898 19 L909 10 L928 8 L945 16 L967 19 L979 9 L1003 16 L1021 8 L1044 21 L1062 17 L1083 16 L1100 8 L1112 9 L1126 11 L1143 4 L1168 22 L1183 12 L1202 4 L1216 17 L1237 23 L1257 8 L1283 23 L1294 18 L1316 16 L1338 16 L1351 19 L1373 5 L1389 6 L1405 18 L1420 7 L1440 23 L1440 40Z"/></svg>
   </section>
 
-  <section id="offres" class="alt">
+  <!-- ═══ Écrans : bandeau bleu nuit ═══ -->
+  <section id="apercu" class="navy">
     <div class="wrap">
-      <div class="head center rv">
-        <div class="eyebrow">Offres</div>
-        <h2>Une offre <em>claire</em> pour chaque taille d'entreprise</h2>
-        <p>Commencez par l'essai gratuit. Passez à une licence quand vous êtes prêt, sans rien ressaisir.</p>
+      <div class="head-row rv">
+        <div class="head">
+          <h2>Le logiciel <span class="script">tel qu'il est</span></h2>
+          <p>De vraies captures de l'application, module par module.</p>
+        </div>
+        <a class="btn btn-gold" href="#telecharger">Essayer gratuitement</a>
       </div>
-      <div class="tiers">
-        <div class="tier rv">
-          <h3>Essentiel</h3><p class="for">Commerces et prestataires</p><div class="who">2 utilisateurs</div>
-          <ul>
-            <li><i data-icon="Check"></i>Devis, factures, avoirs</li>
-            <li><i data-icon="Check"></i>Caisse et mobile money</li>
-            <li><i data-icon="Check"></i>Clients, articles, stock</li>
-            <li><i data-icon="Check"></i>Dépenses et validations</li>
-            <li><i data-icon="Check"></i>Paiements et rapports</li>
-          </ul>
-          <a class="btn btn-ghost" href="#contact">Demander un devis</a>
-        </div>
-        <div class="tier best rv" style="--d:1">
-          <span class="flag">Le plus choisi</span>
-          <h3>Pro</h3><p class="for">PME</p><div class="who">5 utilisateurs</div>
-          <ul>
-            <li><i data-icon="Check"></i>Tout l'Essentiel</li>
-            <li><i data-icon="Check"></i>Achats, fournisseurs, expressions de besoin</li>
-            <li><i data-icon="Check"></i>Comptabilité SYSCOHADA et bilan</li>
-            <li><i data-icon="Check"></i>Déclarations TVA et retenues</li>
-            <li><i data-icon="Check"></i>E-mails et SMS</li>
-          </ul>
-          <a class="btn btn-cta" href="#contact">Demander un devis</a>
-        </div>
-        <div class="tier rv" style="--d:2">
-          <h3>Entreprise</h3><p class="for">Groupes et multi-sites</p><div class="who">Utilisateurs illimités</div>
-          <ul>
-            <li><i data-icon="Check"></i>Tout le Pro</li>
-            <li><i data-icon="Check"></i>RH et paie, déclarations sociales</li>
-            <li><i data-icon="Check"></i>CRM, projets, immobilisations, budgets</li>
-            <li><i data-icon="Check"></i>Application à votre nom et à votre logo</li>
-            <li><i data-icon="Check"></i>Serveur dans vos locaux, licence au poste</li>
-          </ul>
-          <a class="btn btn-ghost" href="#contact">Demander un devis</a>
-        </div>
+      <div class="tour-tabs rv" id="tour-tabs" role="tablist" aria-label="Écrans du logiciel">
+        <button type="button" role="tab" aria-selected="true" aria-controls="tour-panel" data-img="tableau-de-bord"><b>Tableau de bord</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="facture"><b>Facture</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="caisse"><b>Caisse</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="stock"><b>Stock</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="bilan"><b>Bilan</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="rh-paie"><b>Paie</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="projet-taches"><b>Projets</b></button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="roles"><b>Rôles</b></button>
       </div>
-      <div class="trial rv"><i data-icon="Info" data-size="24"></i><span><b>Essai gratuit de 30 jours, tous modules ouverts</b>, avec des quantités limitées : 30 documents, 25 clients, 10 fournisseurs, 50 articles, 3 salariés et 2 utilisateurs. Une licence lève les limites et conserve tout ce que vous avez saisi. Les prix dépendent de l'offre, de la durée et de l'hébergement : ils sont communiqués sur devis.</span></div>
+      <div class="frame rv" id="tour-panel" role="tabpanel" data-tilt>
+        <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>IAM INVOICER</span></div>
+        <img id="tour-img" src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord — IAM INVOICER" width="1600" height="1000" loading="lazy">
+      </div>
     </div>
   </section>
 
-  <section id="telecharger">
+  <!-- ═══ Thèmes de l'application ═══ -->
+  <section id="themes">
+    <div class="wrap">
+      <div class="head center rv">
+        <h2>Trois thèmes <span class="script">à votre goût</span></h2>
+        <p>Ciel, Améthyste ou Lavande, en clair comme en sombre : dans l'application, le thème se change d'un clic depuis la barre du haut.</p>
+      </div>
+      <div class="themes" id="themes-list" role="radiogroup" aria-label="Thème de couleurs">
+        <button type="button" class="theme rv" role="radio" aria-checked="true" data-palette="ciel" style="--tb:#e8f1fd;--ts:#fff;--tl:#dbe7f8;--ta:#cfe1fd;--tp:#1b6ef3;--tp2:#1b6ef3;--tk1:#c9e1ff;--tk2:#e9f3ff;--ti:#0e1f40;--th:#86cba6">
+          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
+          <span class="th-name"><span><b>Ciel</b><small>Bleu lumineux, menu clair</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
+        </button>
+        <button type="button" class="theme rv" role="radio" aria-checked="false" data-palette="amethyste" style="--d:1;--tb:#f1f0f8;--ts:linear-gradient(180deg,#6858b0,#45367e);--tl:rgba(255,255,255,.3);--ta:#f1f0f8;--tj:-14%;--tr:999px 0 0 999px;--tp:#5b4a9e;--tp2:#fff;--tk1:#d9d2f4;--tk2:#eeebfa;--ti:#2a2150;--th:#8d7dcf;--te:inset 3px 0 0 #e2604f">
+          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
+          <span class="th-name"><span><b>Améthyste</b><small>Menu violet, cartes blanches</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
+        </button>
+        <button type="button" class="theme rv" role="radio" aria-checked="false" data-palette="lavande" style="--d:2;--tb:#eef0fa;--ts:#fff;--tl:#e3e5f5;--ta:#dcdff6;--tp:#5a63c2;--tp2:#5a63c2;--tk1:#dadffa;--tk2:#f0f1fd;--ti:#23264a;--th:#a4acea">
+          <span class="th-shot" aria-hidden="true"><span class="th-side"><i></i><i class="on"></i><i></i><i></i><i></i></span><span class="th-main"><i></i><b></b><span><i></i><i></i><i></i></span></span></span>
+          <span class="th-name"><span><b>Lavande</b><small>Pervenche douce, très sobre</small></span><span class="th-dot"><i data-icon="Check"></i></span></span>
+        </button>
+      </div>
+      <p class="themes-note rv">Cliquez sur un thème : l'application ouverte depuis ce site, sur cet appareil, s'affichera dans ce thème.</p>
+    </div>
+  </section>
+
+  <!-- ═══ Télécharger ═══ -->
+  <section id="telecharger" class="cream">
     <div class="wrap">
       <div class="head rv">
-        <div class="eyebrow">Télécharger</div>
-        <h2>Installez-le sur <em>tous vos appareils</em></h2>
+        <h2>Installez-le sur <span class="script">tous vos appareils</span></h2>
         <p>Une seule base de données pour tous vos postes, téléphones et tablettes.</p>
       </div>
       <div class="dl-reco" id="dl-reco" hidden>
@@ -1152,16 +1568,17 @@
       <details class="files" id="all-files" hidden><summary>Tous les fichiers et empreintes SHA-256</summary>
         <div class="table"><table class="t"><thead><tr><th>Fichier</th><th>Taille</th><th>Date</th><th>SHA-256</th><th></th></tr></thead><tbody id="all-files-body"></tbody></table></div>
       </details>
-      <div class="docs">
-        <a class="doc rv" href="docs/IAM-INVOICER-Guide-installation.pdf" download><i data-icon="BookOpenText" data-size="30"></i><div><b>Guide d'installation</b><span>Tous les systèmes, serveur, sauvegardes, sécurité (PDF)</span></div><i data-icon="DownloadSimple" data-size="22"></i></a>
-        <a class="doc rv" style="--d:1" href="docs/IAM-INVOICER-Manuel-de-formation.pdf" download><i data-icon="GraduationCap" data-size="30"></i><div><b>Manuel de formation</b><span>Parcours par rôle, captures d'écran et exercices (PDF)</span></div><i data-icon="DownloadSimple" data-size="22"></i></a>
-      </div>
       <p id="dl-version"></p>
     </div>
   </section>
-  <section id="faq" class="alt">
+
+  <!-- ═══ Questions : grand mot détouré ═══ -->
+  <section id="faq">
     <div class="wrap">
-      <div class="head center rv"><div class="eyebrow">Questions fréquentes</div><h2>Vous vous <em>demandez…</em></h2></div>
+      <div class="head center rv">
+        <span class="script">Vous vous demandez…</span>
+        <h2 class="outline" data-word="QUESTIONS">Questions</h2>
+      </div>
       <div class="faq">
         <details class="rv"><summary>Faut-il une connexion Internet ?</summary><p>Non pour l'utilisation courante. Sur ordinateur, vous pouvez travailler seul sur votre poste. Avec un serveur en ligne, chaque appareil continue de fonctionner sans réseau et envoie ses saisies au retour de la connexion.</p></details>
         <details class="rv"><summary>Le logiciel gère-t-il les taxes du Burkina Faso ?</summary><p>Oui : TVA à 18 %, retenues à la source, prélèvement et droit de timbre sont proposés prêts à activer, et un échéancier rappelle chaque mois les déclarations à déposer. Les taux restent modifiables : faites-les valider par votre comptable.</p></details>
@@ -1175,52 +1592,118 @@
       </div>
     </div>
   </section>
-  <section class="final">
-    <div class="wrap">
-      <div class="final-card rv">
-        <span class="halo" style="--w:520px" aria-hidden="true"></span><span class="halo h2" style="--w:860px" aria-hidden="true"></span>
-        <span class="spark" style="left:12%;top:22%;--s:22px" aria-hidden="true"></span><span class="spark" style="right:14%;top:30%;--s:16px;--t:-1.5s" aria-hidden="true"></span><span class="spark" style="right:22%;bottom:18%;--s:26px;--t:-2.4s" aria-hidden="true"></span>
-        <div class="rocket"><i data-icon="RocketLaunch" data-size="44"></i></div>
-        <h2>Prêt à simplifier votre gestion ?</h2>
-        <p>Installez IAM INVOICER et testez tous les modules pendant 30 jours. Vos données restent les vôtres.</p>
-        <div class="hero-cta">
-          <a class="btn btn-light" href="#telecharger" data-magnet><i data-icon="DownloadSimple"></i>Télécharger gratuitement</a>
-          <a class="btn btn-glass" href="#contact" data-magnet>Demander un devis<i data-icon="ArrowRight"></i></a>
+
+  <!-- ═══ Contact : image et formulaire ═══ -->
+  <section id="contact">
+    <div class="wrap contact-wrap">
+      <div class="contact-art rv">
+        <svg class="scene" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <circle class="sc-sun-halo" cx="1010" cy="64" r="70"/><circle class="sc-sun" cx="1010" cy="64" r="34"/>
+      <g class="sc-cloud sc-cloud-1"><ellipse cx="150" cy="82" rx="62" ry="17"/><circle cx="128" cy="70" r="21"/><circle cx="160" cy="62" r="27"/><circle cx="190" cy="74" r="17"/></g>
+      <g class="sc-cloud sc-cloud-2"><ellipse cx="520" cy="40" rx="48" ry="13"/><circle cx="504" cy="31" r="16"/><circle cx="529" cy="25" r="20"/><circle cx="550" cy="34" r="12"/></g>
+      <g class="sc-cloud sc-cloud-3"><ellipse cx="1120" cy="132" rx="54" ry="14"/><circle cx="1102" cy="122" r="17"/><circle cx="1128" cy="115" r="22"/><circle cx="1152" cy="125" r="13"/></g>
+      <path class="sc-hill-far" d="M0 226 C165 182 321 198 495 214 C678 231 786 172 960 186 C1074 195 1152 214 1200 204 L1200 300 L0 300Z"/>
+      <g class="sc-tree" transform="translate(1086 146)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
+      <g class="sc-tree" transform="translate(84 170) scale(.72)"><path d="M-9 60 C-7 34 -8 20 -4 6 L4 6 C8 20 7 34 9 60Z"/><path d="M-3 10 L-22 -8 M0 8 L-4 -16 M3 10 L20 -10" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="-24" cy="-12" r="11"/><circle cx="-4" cy="-22" r="13"/><circle cx="22" cy="-14" r="11"/></g>
+      <path class="sc-hill-near" d="M0 262 C210 226 393 250 600 258 C813 266 963 224 1200 244 L1200 300 L0 300Z"/>
+    </svg>
+        <svg class="contact-awa" aria-hidden="true" viewBox="0 0 200 200">
+                <defs>
+                  <pattern id="awa-fani-c" width="16" height="10" patternUnits="userSpaceOnUse"><rect width="16" height="10" fill="#1c2f52"/><rect x="0" width="4" height="10" fill="#e2a81f"/><rect x="6" width="2" height="10" fill="#f4f6fa"/><rect x="10" width="3" height="10" fill="#1fa463"/></pattern>
+                  <pattern id="awa-wrap-c" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="12" height="12" fill="#e2a81f"/><rect width="4" height="12" fill="#1fa463"/><rect x="7" width="2" height="12" fill="#0b4f8a"/></pattern>
+                </defs>
+                <ellipse class="awa-shadow" cx="100" cy="191" rx="52" ry="7"/>
+                <g class="awa-coin"><circle cx="166" cy="52" r="11" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="166" y="56.2" text-anchor="middle" font-size="11.5" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <g class="awa-coin"><circle cx="186" cy="96" r="8" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="186" y="99" text-anchor="middle" font-size="8.4" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <g class="awa-coin"><circle cx="150" cy="22" r="7" fill="#e2a81f" stroke="#b07d0e" stroke-width="2"/><text x="150" y="24.7" text-anchor="middle" font-size="7.4" font-weight="800" fill="#7a5600" font-family="Arial, sans-serif">F</text></g>
+                <path d="M36 36 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" fill="#e2a81f"/>
+                <g class="awa-all">
+                  <g class="awa-arm"><path d="M62 150 C50 136 42 120 38 104" stroke="#1c2f52" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="36" cy="96" r="9.5" fill="#8d5a3a"/><path d="M29 89 l-3 -6 M35 86 l-1 -7 M41 88 l2 -6" stroke="#8d5a3a" stroke-width="4" stroke-linecap="round"/></g>
+                  <path d="M50 192 C50 150 70 128 100 128 C130 128 150 150 150 192 Z" fill="url(#awa-fani-c)"/>
+                  <path d="M86 128 L100 146 L114 128 Z" fill="#7a4a2d"/><rect x="91" y="110" width="18" height="22" rx="7" fill="#7a4a2d"/>
+                  <circle cx="69" cy="95" r="6.5" fill="#7a4a2d"/><circle cx="131" cy="95" r="6.5" fill="#7a4a2d"/><circle cx="69" cy="104" r="3" fill="#e2a81f"/><circle cx="131" cy="104" r="3" fill="#e2a81f"/>
+                  <circle cx="100" cy="92" r="31" fill="#8d5a3a"/><circle cx="81" cy="104" r="5.5" fill="#e07a5f"/><circle cx="119" cy="104" r="5.5" fill="#e07a5f"/>
+                  <g class="awa-eye"><ellipse cx="88" cy="93" rx="6.4" ry="7.2" fill="#fff"/><circle cx="88" cy="93.5" r="3.6" fill="#1c1c28"/><circle cx="89.3" cy="92" r="1.2" fill="#fff"/></g>
+                  <g class="awa-eye"><ellipse cx="112" cy="93" rx="6.4" ry="7.2" fill="#fff"/><circle cx="112" cy="93.5" r="3.6" fill="#1c1c28"/><circle cx="113.3" cy="92" r="1.2" fill="#fff"/></g>
+                  <path d="M81 83 Q88 79 95 83 M105 83 Q112 79 119 83" stroke="#3b1f12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M88 104 Q100 121 112 104 Z" fill="#5a2416"/><path d="M92 105.5 Q100 110 108 105.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+                  <path d="M66 90 C63 57 84 47 100 47 C118 47 139 57 134 90 C127 77 114 71 100 71 C86 71 73 77 66 90 Z" fill="url(#awa-wrap-c)"/>
+                  <ellipse cx="132" cy="59" rx="9" ry="8" fill="url(#awa-wrap-c)"/><path d="M137 61 C147 57 151 65 145 71 C142 67 140 65 137 65 Z" fill="#1fa463"/>
+                  <path d="M140 150 C140 162 134 170 128 174" stroke="#1c2f52" stroke-width="14" fill="none" stroke-linecap="round"/>
+                  <g transform="rotate(-8 128 160)"><rect x="102" y="139" width="52" height="40" rx="7" fill="#fff" stroke="#0b4f8a" stroke-width="3"/><rect x="109" y="146" width="22" height="4" rx="2" fill="#c9d8e8"/><rect x="109" y="154" width="16" height="4" rx="2" fill="#c9d8e8"/><circle cx="140" cy="164" r="8" fill="#1fa463"/><path d="M136 164 l3 3 5 -6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+                  <circle cx="127" cy="176" r="7.5" fill="#8d5a3a"/>
+                </g>
+              </svg>
+        <p><span class="script">Bonjour !</span>Que puis-je faire pour vous aujourd'hui ?</p>
+      </div>
+      <div class="contact-card rv" style="--d:1">
+        <h2><span class="script">Écrivez-nous</span> ou ouvrez votre espace</h2>
+        <p>Une démonstration, un devis, une question sur l'installation : notre équipe vous répond.</p>
+        <div class="contact" id="contact-list"></div>
+        <form class="foot-acces" id="foot-acces" novalidate>
+          <label for="foot-i">Accéder à mon espace</label>
+          <div class="row"><input id="foot-i" type="text" placeholder="Identifiant de votre société" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn btn-cta">Ouvrir</button></div>
+        </form>
+        <div class="docs">
+          <a class="doc" href="docs/IAM-INVOICER-Guide-installation.pdf" download><i data-icon="BookOpenText" data-size="28"></i><div><b>Guide d'installation</b><span>PDF</span></div></a>
+          <a class="doc" href="docs/IAM-INVOICER-Manuel-de-formation.pdf" download><i data-icon="GraduationCap" data-size="28"></i><div><b>Manuel de formation</b><span>PDF</span></div></a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Galerie (bande d'images) ═══ -->
+  <section class="strip" aria-label="Écrans de l'application">
+    <p class="strip-t">Suivez l'application, <b>écran par écran</b></p>
+    <div class="strip-row">
+      <a href="#apercu"><img src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/facture.jpg" alt="Facture" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/caisse.jpg" alt="Caisse" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/stock.jpg" alt="Stock" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/bilan.jpg" alt="Bilan" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/rh-paie.jpg" alt="Paie" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/projet-taches.jpg" alt="Projets" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/roles.jpg" alt="Rôles" loading="lazy"></a>
+    </div>
+  </section>
+
+  <!-- ═══ Bandeau or ═══ -->
+  <section class="final">
+    <div class="wrap final-in rv">
+      <span class="script">Essai gratuit !</span>
+      <p>Installez IAM INVOICER et testez tous les modules pendant 30 jours. Vos données restent les vôtres.</p>
+      <div class="final-cta">
+        <a class="btn btn-navy" href="#telecharger" data-magnet><i data-icon="DownloadSimple"></i>Télécharger</a>
+        <a class="btn btn-light" href="#contact" data-magnet>Demander un devis<i data-icon="ArrowRight"></i></a>
       </div>
     </div>
   </section>
 </main>
 
-<footer id="contact">
+<footer id="pied">
   <div class="wrap foot-top">
     <div>
-      <div class="foot-brand">IAM INVOICER</div>
+      <div class="foot-brand"><img src="assets/logo-mark.svg" width="34" height="34" alt="">IAM INVOICER</div>
       <p class="say">Facturez, encaissez et comptabilisez dans un seul logiciel, avec une équipe à Ouagadougou pour vous accompagner de l'installation à la formation.</p>
       <div class="foot-cta">
-        <a class="btn btn-light" href="#telecharger"><i data-icon="ArrowUpRight"></i>Essayer gratuitement</a>
+        <a class="btn btn-gold" href="#telecharger"><i data-icon="ArrowUpRight"></i>Essayer gratuitement</a>
         <a class="btn btn-glass" href="/app/" data-acces><i data-icon="SignIn"></i>Se connecter</a>
       </div>
     </div>
     <div class="foot-cols">
       <div><h4>Produit</h4><a href="#fonctions">Fonctionnalités</a><a href="#demo">Démonstration</a><a href="#apercu">Écrans</a><a href="#offres">Offres</a></div>
-      <div><h4>Solutions</h4><a href="#metiers">Par métier</a><a href="#hors-ligne">Hors connexion</a><a href="#comparatif">Comparatif</a><a href="#etapes">Mise en route</a></div>
+      <div><h4>Solutions</h4><a href="#metiers">Par métier</a><a href="#hors-ligne">Hors connexion</a><a href="#comparatif">Pourquoi nous</a><a href="#etapes">Mise en route</a></div>
       <div><h4>Ressources</h4><a href="#telecharger">Télécharger</a><a href="docs/IAM-INVOICER-Guide-installation.pdf">Guide</a><a href="#faq">Questions</a><a href="/app/">Application web</a></div>
     </div>
   </div>
-  <div class="wrap">
-    <form class="foot-acces" id="foot-acces" novalidate>
-      <label for="foot-i">Accéder à mon espace</label>
-      <div class="row"><input id="foot-i" type="text" placeholder="Identifiant de votre société" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn btn-light">Ouvrir</button></div>
-      <div class="contact" id="contact-list"></div>
-    </form>
-  </div>
+  <div class="weave-band" aria-hidden="true"></div>
   <div class="wordmark" aria-hidden="true">IAM INVOICER</div>
   <div class="foot-end">
     <span>© <span id="year"></span> IAM Technology · Ouagadougou, Burkina Faso</span>
     <span>Conçu pour les entreprises d'Afrique de l'Ouest.</span>
   </div>
 </footer>
+
 
 <div class="mobile-cta" id="mobile-cta">
   <a class="btn btn-cta" href="#telecharger">Essai gratuit</a>
@@ -1264,21 +1747,16 @@
     var hover = matchMedia('(hover: hover)').matches
     var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)) }
 
-    // Thème : celui de l'application (même clé « iam.palette » sur cet appareil)
-    var root = document.documentElement, themeBtns = all('.theme')
-    var THEME_BAR = { ciel: '#1b6ef3', amethyste: '#5b4a9e', lavande: '#5a63c2' }
-    var setPalette = function (name) {
-      if (name === 'ciel') root.removeAttribute('data-palette'); else root.setAttribute('data-palette', name)
-      themeBtns.forEach(function (b) { b.setAttribute('aria-checked', String(b.dataset.palette === name)) })
-      var bar = document.querySelector('meta[name="theme-color"]')
-      if (bar) bar.setAttribute('content', THEME_BAR[name])
-    }
-    setPalette(root.getAttribute('data-palette') || 'ciel')
+    // Thèmes : le choix vaut pour l'application (même clé « iam.palette » sur cet appareil) ;
+    // le site garde les couleurs d'IAM Technology
+    var themeBtns = all('.theme'), saved = 'ciel'
+    try { saved = localStorage.getItem('iam.palette') || 'ciel' } catch (e) {}
+    var markTheme = function (name) { themeBtns.forEach(function (b) { b.setAttribute('aria-checked', String(b.dataset.palette === name)) }) }
+    markTheme(saved)
     themeBtns.forEach(function (b) {
       b.addEventListener('click', function () {
-        var name = b.dataset.palette, go = function () { setPalette(name) }
-        if (document.startViewTransition && !reduce) document.startViewTransition(go); else go()
-        try { localStorage.setItem('iam.palette', name) } catch (e) {}
+        markTheme(b.dataset.palette)
+        try { localStorage.setItem('iam.palette', b.dataset.palette) } catch (e) {}
       })
     })
     // Ancien lien vers l'application (adresse avec #/…) : redirection vers /app/

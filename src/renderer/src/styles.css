@@ -2693,14 +2693,14 @@ body { background: radial-gradient(1100px 620px at 100% -20%, rgba(var(--primary
 :root[data-palette='amethyste'] .content::before { display: none; }
 
 /* Menu violet : pleine hauteur, feuillage au pied, entrée active qui rejoint la page */
-:root[data-palette='amethyste'] .sidebar { position: relative; background: linear-gradient(180deg, #6858b0 0%, var(--side-bg) 42%, #45367e 100%); color: var(--side-text); border: 0; box-shadow: none; }
+:root[data-palette='amethyste'] .sidebar { background: linear-gradient(180deg, #6858b0 0%, var(--side-bg) 42%, #45367e 100%); color: var(--side-text); border: 0; box-shadow: none; }
 :root[data-palette='amethyste'][data-theme='dark'] .sidebar { background: linear-gradient(180deg, #2b2558 0%, var(--side-bg) 50%, #191536 100%); }
 :root[data-palette='amethyste'] .sidebar > :not(.sidebar-art) { position: relative; z-index: 1; }
 :root[data-palette='amethyste'] .brand-name, :root[data-palette='amethyste'] .brand-name span { color: #fff; }
 :root[data-palette='amethyste'] .collapse-btn { color: var(--side-muted); }
 :root[data-palette='amethyste'] .collapse-btn:hover { background: rgba(255, 255, 255, .12); color: #fff; }
-:root[data-palette='amethyste'] nav { scrollbar-width: none; padding-bottom: 170px; -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 170px), transparent calc(100% - 96px)); mask-image: linear-gradient(180deg, #000 calc(100% - 170px), transparent calc(100% - 96px)); }
-:root[data-palette='amethyste'] nav::-webkit-scrollbar { display: none; }
+:root[data-palette='amethyste'] .sidebar nav { scrollbar-width: none; padding-bottom: 170px; -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 170px), transparent calc(100% - 96px)); mask-image: linear-gradient(180deg, #000 calc(100% - 170px), transparent calc(100% - 96px)); }
+:root[data-palette='amethyste'] .sidebar nav::-webkit-scrollbar { display: none; }
 :root[data-palette='amethyste'] .nav-link { border-radius: 999px; padding-left: 18px; }
 :root[data-palette='amethyste'] .nav-collapsed .nav-link { padding-left: 8px; }
 :root[data-palette='amethyste'] .nav-link:hover { background: rgba(255, 255, 255, .1); color: #fff; }
@@ -2710,6 +2710,9 @@ body { background: radial-gradient(1100px 620px at 100% -20%, rgba(var(--primary
 :root[data-palette='amethyste'] .nav-link.active .nav-icon { color: var(--side-ink); }
 :root[data-palette='amethyste'] .nav-ind { background: var(--bg) !important; box-shadow: none !important; border-radius: 999px !important; }
 :root[data-palette='amethyste'] .sidebar-weave { display: none; }
+/* Le menu doit rester positionné pour accueillir le feuillage, mais seulement sur grand écran :
+   sur téléphone il est un tiroir fixe, et « relative » le remettait dans le flux (écran vide). */
+@media (min-width: 901px) { :root[data-palette='amethyste'] .sidebar { position: relative; } }
 @media (min-width: 901px) {
   :root[data-palette='amethyste'] .nav-ind { border-radius: 999px 0 0 999px !important; }
   :root[data-palette='amethyste'] .nav-ind::before { content: ''; position: absolute; left: 100%; top: 0; bottom: 0; width: 14px; background: var(--bg); }

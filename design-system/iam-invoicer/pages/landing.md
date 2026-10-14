@@ -77,3 +77,10 @@ Les sections plus haut décrivent les versions précédentes ; ce qui suit fait 
 - **Accueil** : ciel clair, texte sombre, paysage de l'application (collines, baobabs, soleil, nuages qui dérivent, léger glissement au défilement). La maquette reproduit le tableau de bord réel : menu clair, carte d'accueil avec Awa qui salue, quatre indicateurs à carré pastel, courbe et anneau.
 - **Typographie** : Plus Jakarta Sans, désormais aussi pour les titres de l'application.
 - **Écrans** : la galerie vient de `docs/formation/captures` ; après tout changement visuel de l'application, relancer `node tools/docs/captures.mjs <serveur de démonstration>` puis `npm run build:site`.
+
+## Refonte « Voyage » (2026-10-14) : fait foi à la place de la refonte « Ciel » pour le site
+
+- Mise en page d'après un modèle de site de voyage fourni par l'éditeur : panneau d'accueil bleu nuit et or séparés par une déchirure (Awa, avion en papier, sceau « 30 jours » qui tourne, barre d'informations), trois étapes numérotées et bandeau or, sections à bords déchirés et à vague, offres à image sur le paysage, collage d'écrans et chiffre vertical, carte bleu nuit « Pourquoi IAM INVOICER », grand mot détouré « QUESTIONS », bloc contact image + formulaire, bande d'écrans, bandeau or, pied bleu nuit avec le tissage.
+- **Couleurs d'IAM Technology, fixes** : bleu nuit `#0b3a66`, bleu IAM `#1d6fd6`, or `#f2b01e` (texte or sur blanc : `#a96f00`), vert d'action `#1a7f45` (texte blanc à 5:1). Le site ne suit plus le thème choisi : la section « Thèmes » enregistre seulement le choix pour l'application (`iam.palette`).
+- **Typographie** : Plus Jakarta Sans, mots d'accent en Kaushan Script (classe `.script`).
+- Pas de faux témoignages : l'emplacement « témoignages » du modèle accueille la FAQ.
