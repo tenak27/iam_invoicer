@@ -21,12 +21,19 @@ await build({
 // Galerie d'écrans et manuels
 const GALLERY = ['tableau-de-bord', 'facture', 'caisse', 'stock', 'bilan', 'rh-paie', 'projet-taches', 'roles']
 mkdirSync(`${out}/assets/galerie`, { recursive: true })
-for (const g of GALLERY) cpSync(`docs/formation/captures/${g}.jpg`, `${out}/assets/galerie/${g}.jpg`)
+for (const g of GALLERY) {
+  cpSync(`docs/formation/captures/${g}.jpg`, `${out}/assets/galerie/${g}.jpg`)
+  // Aperçu mobile du même écran (galerie « Le logiciel tel qu'il est »)
+  if (existsSync(`docs/formation/captures/mobile-${g}.jpg`)) cpSync(`docs/formation/captures/mobile-${g}.jpg`, `${out}/assets/galerie/mobile-${g}.jpg`)
+}
 mkdirSync(`${out}/docs`, { recursive: true })
 for (const d of ['IAM-INVOICER-Guide-installation.pdf', 'IAM-INVOICER-Manuel-de-formation.pdf'])
   if (existsSync(`docs/${d}`)) cpSync(`docs/${d}`, `${out}/docs/${d}`)
 
-let html = readFileSync('site/index.html', 'utf8')
+// Les images sont servies avec un cache d'un an : le numéro de version dans leur adresse
+// force leur rechargement à chaque nouvelle version (__VERSION__ dans index.html).
+const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
+let html = readFileSync('site/index.html', 'utf8').replaceAll('__VERSION__', version)
 const missing = new Set()
 html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-weight="([a-z]+)")?><\/i>/g, (_, name, size, weight) => {
   const Icon = Icons[name]

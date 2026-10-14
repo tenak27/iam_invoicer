@@ -985,6 +985,132 @@
   .nav.solid .nav-in { color: var(--navy); }
   .nav-in { background: rgba(7, 42, 75, .35); border-color: rgba(255, 255, 255, .18); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   @media (max-width: 440px) { .nav-act .btn { display: none; } .nav-in { width: calc(100% - 20px); padding-left: 12px; } }
+
+  /* ══ Hors connexion, animation refaite : ordinateur, base en ligne et téléphone ══
+     Coupure : les câbles se rompent avec une étincelle, la base se grise, les saisies
+     s'empilent « en attente » sur chaque appareil. Retour du réseau : les câbles se
+     ressoudent, chaque saisie s'envole vers la base, qui la reçoit et se met à jour. */
+  .duo { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); }
+  .sync { container-type: inline-size; position: relative; padding: 22px 18px 20px; overflow: hidden; }
+  .sync-scene { position: relative; font-size: 11px; font-size: clamp(7px, 2.25cqi, 13px); display: grid; grid-template-columns: 15em minmax(2.4em, 1fr) 9.6em minmax(2.4em, 1fr) 7.8em; align-items: center; gap: .3em; margin-bottom: 1.4em; }
+  .sync .dev { position: relative; display: grid; justify-items: center; gap: .35em; min-width: 0; padding: 0; background: none; box-shadow: none; font-size: 1em; color: var(--muted); transform: none !important; }
+  .dev-st { font-size: .95em; font-weight: 700; color: var(--go); transition: color .3s; white-space: nowrap; }
+  .sync[data-state='offline'] .dev-st { color: #c2410c; }
+  .sync[data-state='sending'] .dev-st { color: var(--navy-2); }
+
+  /* Écrans des appareils */
+  .pc-screen, .ph-screen { position: relative; width: 100%; background: #fff; border: .55em solid var(--navy-3); overflow: hidden; box-shadow: 0 1.4em 2.4em -1.4em rgba(7, 42, 75, .6); transition: transform .5s var(--ease); }
+  .pc-screen { height: 10.4em; border-radius: .9em .9em .3em .3em; }
+  .pc-base { width: 117%; height: .95em; margin-top: -.35em; border-radius: 0 0 .9em .9em; background: linear-gradient(#d9e2ee, #b9c6d6); clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%); }
+  .ph-screen { height: 13.4em; border-width: .45em; border-radius: 1.3em; }
+  .ph-screen::before { content: ''; position: absolute; z-index: 2; left: 50%; top: .3em; width: 2.6em; height: .55em; border-radius: 999px; background: var(--navy-3); transform: translateX(-50%); }
+  .scr-head { display: flex; align-items: center; justify-content: space-between; gap: .4em; padding: .45em .6em; background: var(--navy); color: #fff; font-size: .82em; font-weight: 800; }
+  .ph-screen .scr-head { padding-top: 1.1em; font-size: .74em; }
+  .sig { position: relative; display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; font-style: normal; }
+  .sig svg { grid-area: 1 / 1; width: 1.3em; height: 1.3em; transition: opacity .3s, transform .4s var(--ease); }
+  .sig svg:last-child { opacity: 0; transform: scale(.4); color: #fca5a5; }
+  .sync[data-state='offline'] .sig svg:first-child { opacity: 0; transform: scale(.4); }
+  .sync[data-state='offline'] .sig svg:last-child { opacity: 1; transform: none; animation: sig-blink 1.2s ease-in-out infinite; }
+  @keyframes sig-blink { 50% { opacity: .35; } }
+  .queue { list-style: none; margin: 0; padding: .45em; display: grid; gap: .3em; }
+  .queue li { display: flex; align-items: center; gap: .35em; min-width: 0; padding: .32em .4em; border-radius: .45em; background: #f1f5fa; color: var(--ink); font-size: .74em; font-weight: 700; line-height: 1.2; transition: background .4s, opacity .3s; animation: row-in .5s var(--ease) both; }
+  .ph-screen .queue li { font-size: .64em; }
+  .queue li > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .queue li svg { flex: none; width: 1.15em; height: 1.15em; }
+  .queue li > svg { color: var(--navy-2); }
+  .queue .st { display: grid; place-items: center; font-style: normal; }
+  .queue li.wait { background: #fff4e0; box-shadow: inset .2em 0 0 #f59e0b; }
+  .queue li.wait .st { color: #c2410c; animation: tick 1.6s linear infinite; }
+  .queue li.sent .st { color: var(--go); animation: pop-ok .5s var(--ease-spring, var(--ease)); }
+  .queue li.going { opacity: .3; }
+  @keyframes row-in { from { opacity: 0; transform: translateY(-.8em) scale(.96); } }
+  @keyframes tick { to { transform: rotate(360deg); } }
+  @keyframes pop-ok { 0% { transform: scale(.3); } 60% { transform: scale(1.3); } }
+  .sync[data-state='offline'] .pc-screen, .sync[data-state='offline'] .ph-screen { transform: translateY(-.25em); }
+  .count { position: absolute; z-index: 3; top: -.6em; right: -.4em; min-width: 1.9em; height: 1.9em; padding: 0 .45em; border-radius: 999px; display: grid; place-items: center; background: #ea580c; color: #fff; font-size: .9em; font-weight: 800; box-shadow: 0 .4em .8em -.3em rgba(194, 65, 12, .8); animation: pop-ok .45s var(--ease); }
+  .count[hidden] { display: none; }
+  .dev-ph .count { right: -.7em; }
+
+  /* La base en ligne */
+  .cloud-shape { position: relative; width: 9.6em; }
+  .cloud-shape svg { display: block; width: 100%; height: auto; fill: #fff; stroke: var(--navy-2); stroke-width: 3; filter: drop-shadow(0 .8em 1em rgba(7, 42, 75, .25)); transition: fill .4s, stroke .4s; }
+  .cloud-shape .db { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); color: var(--navy-2); transition: color .4s; }
+  .cloud-shape .db svg { width: 2.4em; height: 2.4em; filter: none; fill: currentColor; stroke: none; }
+  .badge-c { position: absolute; right: .3em; top: .5em; width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--go); box-shadow: 0 0 0 .25em #fff; transition: background .3s; }
+  .badge-c svg { grid-area: 1 / 1; width: 1.2em; height: 1.2em; opacity: 0; transform: scale(.3); transition: opacity .25s, transform .35s var(--ease); fill: currentColor; stroke: none; filter: none; }
+  .sync[data-state='online'] .badge-c svg:nth-child(1), .sync[data-state='offline'] .badge-c svg:nth-child(2), .sync[data-state='sending'] .badge-c svg:nth-child(3) { opacity: 1; transform: none; }
+  .sync[data-state='offline'] .badge-c { background: #dc2626; }
+  .sync[data-state='sending'] .badge-c { background: var(--navy-2); }
+  .sync[data-state='sending'] .badge-c svg:nth-child(3) { animation: tick 1s linear infinite; }
+  .sync[data-state='offline'] .cloud-shape svg { fill: #eef1f5; stroke: #9aa8b8; }
+  .sync[data-state='offline'] .cloud-shape .db { color: #9aa8b8; }
+  .dev-cloud b { color: var(--ink); font-size: .95em; }
+  .dev-cloud.bump .cloud-shape { animation: cloud-bump .45s var(--ease); }
+  @keyframes cloud-bump { 40% { transform: scale(1.08); } }
+  .got { position: absolute; left: .1em; top: .3em; padding: .1em .5em; border-radius: 999px; background: var(--go); color: #fff; font-weight: 800; font-size: .85em; box-shadow: 0 0 0 .2em #fff; }
+  .got:empty { display: none; }
+
+  /* Câbles : paquets en ligne, rupture avec étincelle hors ligne, soudure au retour */
+  .sync .wire { position: relative; height: 1.4em; background: none; opacity: 1; }
+  .wire .half { position: absolute; top: 50%; width: 52%; height: .32em; margin-top: -.16em; border-radius: 999px; background: repeating-linear-gradient(90deg, var(--navy-2) 0 .6em, transparent .6em 1.05em); transition: transform .5s var(--ease-spring, var(--ease)), background .3s; }
+  .wire .half.a { left: 0; transform-origin: 0 50%; }
+  .wire .half.b { right: 0; transform-origin: 100% 50%; }
+  .sync[data-state='offline'] .wire .half { background: repeating-linear-gradient(90deg, #e9a6a6 0 .6em, transparent .6em 1.05em); }
+  .sync[data-state='offline'] .wire .half.a { transform: translateX(-.5em) rotate(14deg); }
+  .sync[data-state='offline'] .wire .half.b { transform: translateX(.5em) rotate(-14deg); }
+  .sync[data-state='sending'] .wire .half { background: repeating-linear-gradient(90deg, var(--go) 0 .6em, transparent .6em 1.05em); }
+  .wire .pk { position: absolute; top: 50%; left: 0; width: .8em; height: .8em; margin-top: -.4em; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 .2em rgba(242, 176, 30, .3); opacity: 0; }
+  .sync[data-state='online'] .wire .pk { animation: pk-run 1.6s linear infinite; }
+  .sync[data-state='online'] .wire .pk2 { animation-delay: -.8s; }
+  .wire.rev .pk { animation-direction: reverse !important; }
+  @keyframes pk-run { 0% { left: 0; opacity: 0; } 15%, 85% { opacity: 1; } 100% { left: calc(100% - .8em); opacity: 0; } }
+  .wire .spark { position: absolute; left: 50%; top: 50%; color: #f59e0b; transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  .wire .spark svg { width: 1.6em; height: 1.6em; display: block; filter: drop-shadow(0 0 .4em rgba(245, 158, 11, .9)); }
+  .sync[data-state='offline'] .wire .spark { animation: spark 1.8s ease-out infinite; }
+  .sync[data-state='offline'] .wire.rev .spark { animation-delay: -.9s; }
+  @keyframes spark { 0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 0; } 12% { transform: translate(-50%, -50%) scale(1.25) rotate(8deg); opacity: 1; } 40% { transform: translate(-50%, -50%) scale(.9) rotate(0); opacity: 1; } 70%, 100% { transform: translate(-50%, -50%) scale(.6); opacity: 0; } }
+
+  /* Saisie en vol */
+  .flyer { position: absolute; z-index: 5; display: inline-flex; align-items: center; gap: .35em; max-width: 13em; padding: .35em .55em; border-radius: .55em; background: #fff; color: var(--ink); font-size: .74em; font-weight: 800; white-space: nowrap; box-shadow: 0 .8em 1.6em -.6em rgba(7, 42, 75, .55), 0 0 0 .15em var(--gold); pointer-events: none; will-change: transform, opacity; }
+  .flyer svg { width: 1.15em; height: 1.15em; color: var(--navy-2); flex: none; }
+  .flyer span { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Avancement et interrupteur */
+  .sync-progress { height: 6px; margin: 0 auto 4px; max-width: 320px; border-radius: 999px; background: rgba(11, 58, 102, .1); overflow: hidden; opacity: 0; transition: opacity .3s; }
+  .sync-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--gold), var(--go)); transition: width .35s var(--ease); }
+  .sync[data-state='sending'] .sync-progress { opacity: 1; }
+  .sync p { margin: 10px 0 14px; min-height: 2.8em; }
+  .sync[data-state='offline'] p { color: #9a3412; }
+  .net[aria-checked='false'] .knob { background: #dc2626; }
+  @media (max-width: 900px) { .duo { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) {
+    .wire .spark { opacity: 1 !important; transform: translate(-50%, -50%) !important; }
+    .sync:not([data-state='offline']) .wire .spark { opacity: 0 !important; }
+  }
+
+  .queue li { text-align: left; }
+  /* Panneau étroit (téléphone) : ordinateur et téléphone en haut, la base dessous, reliés par un arc */
+  @container (max-width: 460px) {
+    .sync-scene { font-size: clamp(7px, 3.5cqi, 12px); grid-template-columns: 15em 7.8em; grid-template-areas: 'pc ph' 'cloud cloud'; justify-content: center; column-gap: 1.6em; row-gap: 2.4em; }
+    .dev-pc { grid-area: pc; } .dev-ph { grid-area: ph; } .dev-cloud { grid-area: cloud; }
+    .sync .wire { display: none; }
+    .dev-cloud::before { content: ''; position: absolute; left: 50%; top: -2.2em; width: 15em; height: 2em; transform: translateX(-50%); border: .28em dashed var(--navy-2); border-bottom: 0; border-radius: 1.2em 1.2em 0 0; transition: border-color .3s; }
+    .sync[data-state='offline'] .dev-cloud::before { border-color: #e9a6a6; }
+    .sync[data-state='sending'] .dev-cloud::before { border-color: var(--go); }
+  }
+  /* ══ Galerie : ordinateur et téléphone côte à côte ══ */
+  .tour { position: relative; padding-right: 15%; }
+  .tour .frame { position: relative; }
+  .phone-frame { position: absolute; z-index: 2; right: 0; bottom: -7%; width: 21%; aspect-ratio: 390 / 844; padding: 3.2% 1.1% 1.1%; border-radius: 2.6em; background: #0a1626; box-shadow: 0 40px 70px -30px rgba(0, 0, 0, .8), inset 0 0 0 2px rgba(255, 255, 255, .12); transform: rotate(3deg); transition: transform .6s var(--ease); }
+  .phone-frame::before { content: ''; position: absolute; left: 50%; top: 1.2%; width: 30%; height: 1.6%; border-radius: 999px; background: #000; transform: translateX(-50%); }
+  .phone-frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 2em; background: #e6eef7; transition: opacity .35s; }
+  .tour:hover .phone-frame { transform: rotate(0) translateY(-8px); }
+  .tour-caption { margin-top: 26px; text-align: center; color: rgba(255, 255, 255, .78); font-size: .92rem; }
+  @media (max-width: 760px) {
+    .tour { padding-right: 0; }
+    .phone-frame { position: relative; right: auto; bottom: auto; width: min(62%, 250px); margin: -18% auto 0; border-radius: 2.2em; }
+    .phone-frame img { border-radius: 1.7em; }
+  }
 </style>
 </head>
 <body id="top">
@@ -1229,7 +1355,7 @@
       <div class="tiers">
         <div class="tier rv">
           
-          <div class="tier-img"><img src="assets/galerie/caisse.jpg" alt="" loading="lazy"></div>
+          <div class="tier-img"><img src="assets/galerie/caisse.jpg?v=__VERSION__" alt="" loading="lazy"></div>
           <div class="tier-body">
             <div class="tier-row"><div><h3>Essentiel</h3><p class="for">Commerces et prestataires</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
             <div class="who">2 utilisateurs</div>
@@ -1245,7 +1371,7 @@
         </div>
         <div class="tier best rv" style="--d:1">
           <span class="flag">Le plus choisi</span>
-          <div class="tier-img"><img src="assets/galerie/tableau-de-bord.jpg" alt="" loading="lazy"></div>
+          <div class="tier-img"><img src="assets/galerie/tableau-de-bord.jpg?v=__VERSION__" alt="" loading="lazy"></div>
           <div class="tier-body">
             <div class="tier-row"><div><h3>Pro</h3><p class="for">PME</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
             <div class="who">5 utilisateurs</div>
@@ -1261,7 +1387,7 @@
         </div>
         <div class="tier rv" style="--d:2">
           
-          <div class="tier-img"><img src="assets/galerie/rh-paie.jpg" alt="" loading="lazy"></div>
+          <div class="tier-img"><img src="assets/galerie/rh-paie.jpg?v=__VERSION__" alt="" loading="lazy"></div>
           <div class="tier-body">
             <div class="tier-row"><div><h3>Entreprise</h3><p class="for">Groupes et multi-sites</p></div><div class="price">Sur devis<small>licence annuelle ou à vie</small></div></div>
             <div class="who">Utilisateurs illimités</div>
@@ -1285,9 +1411,9 @@
   <section id="apropos">
     <div class="wrap about">
       <div class="collage rv" aria-hidden="true">
-        <img class="col-a" src="assets/galerie/caisse.jpg" alt="" loading="lazy">
-        <img class="col-b" src="assets/galerie/tableau-de-bord.jpg" alt="" loading="lazy">
-        <img class="col-c" src="assets/galerie/bilan.jpg" alt="" loading="lazy">
+        <img class="col-a" src="assets/galerie/caisse.jpg?v=__VERSION__" alt="" loading="lazy">
+        <img class="col-b" src="assets/galerie/tableau-de-bord.jpg?v=__VERSION__" alt="" loading="lazy">
+        <img class="col-c" src="assets/galerie/bilan.jpg?v=__VERSION__" alt="" loading="lazy">
         <span class="col-plane"><i data-icon="PaperPlaneTilt" data-size="40" data-weight="fill"></i></span>
       </div>
       <div class="about-copy rv" style="--d:1">
@@ -1420,17 +1546,43 @@
         <div class="panel rv" style="--d:1">
           <div class="tile" style="--k:#c04bd8"><i data-icon="WifiSlash" data-size="30"></i></div>
           <h3>Internet coupé ? Vous continuez</h3>
-          <p>Chaque appareil garde ses saisies et les envoie dès que la connexion revient. Essayez de couper le réseau.</p>
+          <p>Chaque appareil garde ses saisies et les envoie dès que la connexion revient. Coupez le réseau pour voir ce qui se passe.</p>
           <div class="sync" id="sync-stage" data-state="online">
-            <div class="sync-row">
-              <div class="dev"><i data-icon="Laptop" data-size="28"></i><b>Bureau</b><span id="sync-left">Synchronisé</span></div>
-              <div class="wire"><i></i></div>
-              <div class="dev cloud"><i data-icon="Cloud" data-size="28"></i><b>Base</b><span id="sync-cloud">À jour</span></div>
-              <div class="wire rev"><i></i></div>
-              <div class="dev"><i data-icon="DeviceMobile" data-size="28"></i><b>Téléphone</b><span id="sync-right">Synchronisé</span></div>
+            <div class="sync-scene" id="sync-scene">
+              <div class="dev dev-pc">
+                <div class="pc-screen">
+                  <div class="scr-head"><span>Bureau</span><em class="sig"><i data-icon="WifiHigh" data-size="14" data-weight="bold"></i><i data-icon="WifiSlash" data-size="14" data-weight="bold"></i></em></div>
+                  <ul class="queue" id="q-pc"><li class="sent"><i data-icon="FileText" data-size="14"></i><span>Devis DEV-0018</span><i class="st"><i data-icon="CheckCircle" data-size="14" data-weight="fill"></i></i></li></ul>
+                </div>
+                <div class="pc-base"></div>
+                <span class="count" id="c-pc" hidden>0</span>
+                <span class="dev-st" id="sync-left">Synchronisé</span>
+              </div>
+              <div class="wire"><span class="half a"></span><span class="half b"></span><i class="pk"></i><i class="pk pk2"></i><span class="spark"><i data-icon="Lightning" data-size="16" data-weight="fill"></i></span></div>
+              <div class="dev dev-cloud" id="sync-cloud-box">
+                <div class="cloud-shape">
+                  <svg viewBox="0 0 120 80" aria-hidden="true"><path d="M30 72 C12 72 4 60 6 48 C8 36 20 30 30 32 C32 16 46 6 62 8 C78 10 88 22 88 34 C102 32 114 42 114 54 C114 66 104 72 92 72Z"/></svg>
+                  <span class="db"><i data-icon="Database" data-size="26" data-weight="duotone"></i></span>
+                  <span class="badge-c"><i data-icon="Check" data-size="12" data-weight="bold"></i><i data-icon="WifiSlash" data-size="12" data-weight="bold"></i><i data-icon="ArrowsClockwise" data-size="12" data-weight="bold"></i></span>
+                  <span class="got" id="got"></span>
+                </div>
+                <b>Base en ligne</b>
+                <span class="dev-st" id="sync-cloud">À jour</span>
+              </div>
+              <div class="wire rev"><span class="half a"></span><span class="half b"></span><i class="pk"></i><i class="pk pk2"></i><span class="spark"><i data-icon="Lightning" data-size="16" data-weight="fill"></i></span></div>
+              <div class="dev dev-ph">
+                <div class="ph-screen">
+                  <div class="scr-head"><span>Téléphone</span><em class="sig"><i data-icon="WifiHigh" data-size="12" data-weight="bold"></i><i data-icon="WifiSlash" data-size="12" data-weight="bold"></i></em></div>
+                  <ul class="queue" id="q-ph"><li class="sent"><i data-icon="FileText" data-size="14"></i><span>Vente caisse 4 500</span><i class="st"><i data-icon="CheckCircle" data-size="14" data-weight="fill"></i></i></li></ul>
+                </div>
+                <span class="count" id="c-ph" hidden>0</span>
+                <span class="dev-st" id="sync-right">Synchronisé</span>
+              </div>
             </div>
+            <div class="sync-progress" aria-hidden="true"><span id="sync-bar"></span></div>
             <p id="sync-text" aria-live="polite">En ligne : tout est synchronisé</p>
             <button type="button" class="net" id="net" role="switch" aria-checked="true"><span class="knob"></span><span id="net-label">Internet branché — cliquez pour couper</span></button>
+            <span hidden><span id="ic-doc"><i data-icon="FileText" data-size="14"></i></span><span id="ic-wait"><i data-icon="Clock" data-size="14" data-weight="bold"></i></span><span id="ic-ok"><i data-icon="CheckCircle" data-size="14" data-weight="fill"></i></span></span>
           </div>
         </div>
       </div>
@@ -1473,10 +1625,16 @@
         <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="projet-taches"><b>Projets</b></button>
         <button type="button" role="tab" aria-selected="false" aria-controls="tour-panel" data-img="roles"><b>Rôles</b></button>
       </div>
-      <div class="frame rv" id="tour-panel" role="tabpanel" data-tilt>
-        <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>IAM INVOICER</span></div>
-        <img id="tour-img" src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord — IAM INVOICER" width="1600" height="1000" loading="lazy">
+      <div class="tour rv">
+        <div class="frame" id="tour-panel" role="tabpanel" data-tilt>
+          <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>IAM INVOICER</span></div>
+          <img id="tour-img" src="assets/galerie/tableau-de-bord.jpg?v=__VERSION__" alt="Tableau de bord — IAM INVOICER" width="1600" height="1000" loading="lazy">
+        </div>
+        <div class="phone-frame">
+          <img id="tour-phone" src="assets/galerie/mobile-tableau-de-bord.jpg?v=__VERSION__" alt="Tableau de bord sur téléphone — IAM INVOICER" width="390" height="844" loading="lazy">
+        </div>
       </div>
+      <p class="tour-caption rv">Captures de la version __VERSION__, sur ordinateur et sur téléphone.</p>
     </div>
   </section>
 
@@ -1656,14 +1814,14 @@
   <section class="strip" aria-label="Écrans de l'application">
     <p class="strip-t">Suivez l'application, <b>écran par écran</b></p>
     <div class="strip-row">
-      <a href="#apercu"><img src="assets/galerie/tableau-de-bord.jpg" alt="Tableau de bord" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/facture.jpg" alt="Facture" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/caisse.jpg" alt="Caisse" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/stock.jpg" alt="Stock" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/bilan.jpg" alt="Bilan" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/rh-paie.jpg" alt="Paie" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/projet-taches.jpg" alt="Projets" loading="lazy"></a>
-      <a href="#apercu"><img src="assets/galerie/roles.jpg" alt="Rôles" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/tableau-de-bord.jpg?v=__VERSION__" alt="Tableau de bord" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/facture.jpg?v=__VERSION__" alt="Facture" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/caisse.jpg?v=__VERSION__" alt="Caisse" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/stock.jpg?v=__VERSION__" alt="Stock" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/bilan.jpg?v=__VERSION__" alt="Bilan" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/rh-paie.jpg?v=__VERSION__" alt="Paie" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/projet-taches.jpg?v=__VERSION__" alt="Projets" loading="lazy"></a>
+      <a href="#apercu"><img src="assets/galerie/roles.jpg?v=__VERSION__" alt="Rôles" loading="lazy"></a>
     </div>
   </section>
 
@@ -1746,6 +1904,7 @@
     var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
     var hover = matchMedia('(hover: hover)').matches
     var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)) }
+    var GV = '__VERSION__'   // version du site, remplacée à la construction (tools/site/build.mjs)
 
     // Thèmes : le choix vaut pour l'application (même clé « iam.palette » sur cet appareil) ;
     // le site garde les couleurs d'IAM Technology
@@ -1883,7 +2042,14 @@
       img.style.opacity = '.25'
       next.onload = function () { img.src = next.src; img.alt = t.querySelector('b').textContent + ' — IAM INVOICER'; img.style.opacity = '1' }
       next.onerror = function () { img.style.opacity = '1' }
-      next.src = 'assets/galerie/' + t.dataset.img + '.jpg'
+      next.src = 'assets/galerie/' + t.dataset.img + '.jpg?v=' + GV
+      var ph = $('tour-phone'), pn = new Image()
+      if (ph) {
+        ph.style.opacity = '.25'
+        pn.onload = function () { ph.src = pn.src; ph.alt = t.querySelector('b').textContent + ' sur téléphone — IAM INVOICER'; ph.style.opacity = '1' }
+        pn.onerror = function () { ph.style.opacity = '1' }
+        pn.src = 'assets/galerie/mobile-' + t.dataset.img + '.jpg?v=' + GV
+      }
       if (focus) t.focus()
     }
     function play() {
@@ -1902,24 +2068,97 @@
     })
     if ('IntersectionObserver' in window && tabs.length) new IntersectionObserver(function (es) { if (es[0].isIntersecting) play(); else clearInterval(timer) }, { threshold: .3 }).observe($('tour-tabs'))
 
-    // Hors connexion : coupure, saisies en attente, envoi au retour du réseau
+    // Hors connexion : chaque appareil garde ses saisies (en attente), puis elles partent
+    // une à une vers la base au retour du réseau. Boucle automatique tant que la section est
+    // visible ; l'interrupteur prend la main (plus de boucle). Un numéro de génération annule
+    // les étapes en cours quand l'état change.
     var sync = $('sync-stage'), net = $('net')
     if (sync && net) {
-      var text = $('sync-text'), left = $('sync-left'), right = $('sync-right'), cloud = $('sync-cloud'), netLabel = $('net-label'), st = null, visible = false, manual = false
-      var wait = function (fn, ms) { clearTimeout(st); if (manual && (fn === offline || fn === sending)) return; st = setTimeout(function () { if (visible) fn() }, ms) }
+      var sScene = $('sync-scene'), text = $('sync-text'), netLabel = $('net-label'), bar = $('sync-bar'), got = $('got')
+      var stL = $('sync-left'), stR = $('sync-right'), stC = $('sync-cloud'), cloudBox = $('sync-cloud-box')
+      var qPc = $('q-pc'), qPh = $('q-ph'), cPc = $('c-pc'), cPh = $('c-ph')
+      var IC = { doc: $('ic-doc').innerHTML, wait: $('ic-wait').innerHTML, ok: $('ic-ok').innerHTML }
+      var WORK = [[qPc, 'Facture FAC-0043'], [qPh, 'Vente caisse 12 500'], [qPc, 'Dépense carburant'], [qPh, 'Encaissement Orange Money'], [qPc, 'Client Hôtel Splendid'], [qPh, 'Vente caisse 8 000'], [qPc, 'Bon de commande BC-0012'], [qPh, 'Article ajouté']]
+      var wi = 0, gen = 0, timer = null, visible = false, manual = false
+      var plural = function (n, one, many) { return n + ' ' + (n > 1 ? many : one) }
+      var stop = function () { gen++; clearTimeout(timer) }
+      var later = function (fn, ms) { var g = gen; timer = setTimeout(function () { if (g === gen && (manual || visible)) fn() }, ms) }
       var flag = function (on) { net.setAttribute('aria-checked', String(on)); netLabel.textContent = on ? 'Internet branché — cliquez pour couper' : 'Internet coupé — cliquez pour rebrancher' }
-      var online = function () { flag(true); sync.dataset.state = 'online'; text.textContent = 'En ligne : tout est synchronisé'; left.textContent = right.textContent = 'Synchronisé'; cloud.textContent = 'À jour'; wait(offline, 3200) }
-      var offline = function () {
-        flag(false); sync.dataset.state = 'offline'; text.textContent = 'Connexion coupée : le travail continue'
-        var n = 0
-        ;(function add() { n++; left.textContent = n + ' en attente'; right.textContent = Math.max(1, n - 1) + ' en attente'; if (n < 4) { clearTimeout(st); st = setTimeout(function () { if (visible && sync.dataset.state === 'offline') add() }, 900) } else wait(sending, 1100) })()
+      var counts = function () {
+        var a = all('li.wait', qPc).length, b = all('li.wait', qPh).length
+        cPc.textContent = a; cPh.textContent = b; cPc.hidden = !a; cPh.hidden = !b
+        return a + b
       }
-      var sending = function () { flag(true); sync.dataset.state = 'sending'; text.textContent = 'Connexion rétablie : envoi en cours'; left.textContent = right.textContent = 'Envoi…'; cloud.textContent = 'Réception'; clearTimeout(st); st = setTimeout(online, 2200) }
+      var addRow = function () {
+        var w = WORK[wi++ % WORK.length], li = document.createElement('li')
+        li.className = 'wait'
+        li.innerHTML = IC.doc + '<span>' + esc(w[1]) + '</span><i class="st">' + IC.wait + '</i>'
+        w[0].insertBefore(li, w[0].firstChild)
+        all('li', w[0]).forEach(function (r, k) { if (k >= 4 && !r.classList.contains('wait')) r.remove() })
+        return counts()
+      }
+      // Une saisie part de l'appareil et rejoint la base en arc de cercle
+      var fly = function (li, done) {
+        var g = gen
+        if (reduce || !li.animate) return done()
+        var s = sScene.getBoundingClientRect(), a = li.getBoundingClientRect(), c = cloudBox.querySelector('.cloud-shape').getBoundingClientRect()
+        var f = document.createElement('span')
+        f.className = 'flyer'; f.innerHTML = IC.doc + '<span>' + esc(li.textContent) + '</span>'
+        f.style.left = (a.left - s.left) + 'px'; f.style.top = (a.top - s.top) + 'px'
+        sScene.appendChild(f)
+        var dx = c.left + c.width / 2 - a.left - f.offsetWidth / 2, dy = c.top + c.height / 2 - a.top - f.offsetHeight / 2
+        li.classList.add('going')
+        f.animate([
+          { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+          { transform: 'translate(' + (dx * .5).toFixed(1) + 'px, ' + (dy * .5 - 46).toFixed(1) + 'px) scale(.95)', opacity: 1, offset: .55 },
+          { transform: 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(.3)', opacity: 0 }
+        ], { duration: 700, easing: 'cubic-bezier(.45, .05, .35, 1)' }).onfinish = function () { f.remove(); li.classList.remove('going'); if (g === gen) done() }
+      }
+      function online(msg) {
+        stop(); flag(true); sync.dataset.state = 'online'
+        text.textContent = msg || 'En ligne : tout est synchronisé'
+        stL.textContent = stR.textContent = 'Synchronisé'; stC.textContent = 'À jour'
+        if (!manual) later(offline, 3600)
+      }
+      function offline() {
+        stop(); flag(false); sync.dataset.state = 'offline'
+        stC.textContent = 'Injoignable'; stL.textContent = stR.textContent = 'Hors connexion'
+        bar.style.width = '0%'; got.textContent = ''
+        var n = 0
+        ;(function step() {
+          var p = addRow(); n++
+          text.textContent = 'Connexion coupée : ' + plural(p, 'saisie gardée', 'saisies gardées') + ' sur les appareils, le travail continue'
+          if (n < 4) later(step, 1050); else if (!manual) later(sending, 1500)
+        })()
+      }
+      function sending() {
+        stop(); flag(true); sync.dataset.state = 'sending'
+        var items = all('li.wait', sScene), total = items.length, done = 0
+        stC.textContent = 'Réception'; stL.textContent = stR.textContent = 'Envoi…'; got.textContent = ''
+        if (!total) return online()
+        text.textContent = 'Connexion rétablie : envoi de ' + plural(total, 'saisie', 'saisies') + '…'
+        ;(function next() {
+          var li = items[done]
+          fly(li, function () {
+            li.className = 'sent'; li.querySelector('.st').innerHTML = IC.ok
+            done++; counts()
+            bar.style.width = (done / total * 100) + '%'
+            got.textContent = '+' + done
+            cloudBox.classList.remove('bump'); void cloudBox.offsetWidth; cloudBox.classList.add('bump')
+            if (done < total) later(next, reduce ? 0 : 170)
+            else later(function () { online(plural(total, 'saisie envoyée', 'saisies envoyées') + ' : tout est synchronisé') }, 800)
+          })
+        })()
+      }
       net.addEventListener('click', function () {
-        manual = true; visible = true; clearTimeout(st)
+        manual = true
         if (net.getAttribute('aria-checked') === 'true') offline(); else sending()
       })
-      if (!reduce && 'IntersectionObserver' in window) new IntersectionObserver(function (es) { if (manual) return; visible = es[0].isIntersecting; clearTimeout(st); if (visible) online() }, { threshold: .35 }).observe(sync)
+      if (!reduce && 'IntersectionObserver' in window) new IntersectionObserver(function (es) {
+        if (manual) return
+        visible = es[0].isIntersecting
+        if (visible) online(); else stop()
+      }, { threshold: .35 }).observe(sync)
     }
 
     // Métiers : ce que chaque activité utilise dès le premier jour
