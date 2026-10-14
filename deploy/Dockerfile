@@ -1,5 +1,8 @@
 # Serveur IAM INVOICER : API + application web.
-FROM node:22-alpine AS build
+# Image multi-architecture (amd64 : serveurs, NAS Intel/AMD ; arm64 : Raspberry Pi, NAS ARM).
+# La compilation (JavaScript, identique partout) se fait sur l'architecture de la machine de
+# construction ; seule l'installation des dépendances d'exécution tourne sur l'architecture cible.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts

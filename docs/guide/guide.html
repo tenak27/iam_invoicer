@@ -177,6 +177,7 @@
     <li><b>Commerce ou prestataire avec un seul ordinateur :</b> « Ce poste uniquement », avec une sauvegarde hebdomadaire sur clé USB.</li>
     <li><b>Entreprise avec plusieurs postes, agences ou commerciaux sur le terrain :</b> serveur en ligne sur le domaine de l'entreprise.</li>
     <li><b>Site isolé avec une connexion Internet instable :</b> serveur du bureau, ou serveur en ligne avec le mode hors ligne sur les postes web et mobiles.</li>
+    <li><b>Serveur du bureau sur une machine dédiée :</b> Windows Server (4.6) ou un NAS avec Docker (4.7), avec au besoin une copie en ligne pour consulter les chiffres de l'extérieur (4.2).</li>
   </ul>
 </section>
 
@@ -381,6 +382,37 @@ CREATE DATABASE iam_invoicer OWNER iam;
       <li>La sauvegarde et la restauration se font sur la machine PostgreSQL (chapitre 13), pas depuis l'application.</li>
     </ul>
   </div>
+  <h3>4.6 Windows Server : le serveur installé comme un service</h3>
+  <p>Pour une machine dédiée (Windows Server 2016, 2019, 2022, 2025, ou un poste Windows 10/11 réservé à cet usage) : le serveur démarre avec Windows, <b>sans session ouverte</b>, et redémarre seul s'il s'arrête. Rien à laisser ouvert à l'écran, contrairement au 4.1.</p>
+  <p>Ouvrez PowerShell <b>en tant qu'administrateur</b> et lancez :</p>
+<pre>irm https://raw.githubusercontent.com/tenak27/iam_invoicer/main/deploy/windows/installer.ps1 | iex</pre>
+  <p>Le script installe Node.js LTS si besoin, télécharge le paquet serveur de la dernière version (empreintes SHA-256 vérifiées), crée la tâche système <b>IAM INVOICER - Serveur</b>, ouvre le port 8080 dans le pare-feu (réseaux privé et domaine) et affiche les adresses à utiliser, par exemple <code>http://192.168.1.10:8080/app/</code>. Avec la base intégrée, il programme aussi une sauvegarde chaque nuit à 2 h 30 dans <code>C:\ProgramData\IAM-INVOICER\sauvegardes</code> (14 jours conservés).</p>
+  <p>Options (fichier téléchargé, ou forme <code>&amp; ([scriptblock]::Create((irm …))) -Port 8090</code>) :</p>
+  <table>
+    <tr><th>Option</th><th>Rôle</th></tr>
+    <tr><td><code>-Port 8090</code></td><td>Port d'écoute (8080 par défaut)</td></tr>
+    <tr><td><code>-DatabaseUrl postgres://…</code></td><td>Base PostgreSQL (conseillée au-delà de quelques postes) au lieu de la base intégrée</td></tr>
+    <tr><td><code>-CloudUrl https://…/t/ma_societe -CloudKey …</code></td><td>Copie en ligne (4.2), toutes les 15 minutes ou selon <code>-CloudMinutes</code></td></tr>
+    <tr><td><code>-Version 0.14.2</code> ou <code>-Zip fichier.zip</code></td><td>Version précise, ou paquet déjà téléchargé (serveur sans Internet)</td></tr>
+    <tr><td><code>-Uninstall</code> (<code>-Purge</code>)</td><td>Désinstallation ; les données restent, sauf avec <code>-Purge</code></td></tr>
+  </table>
+  <p>Relancer la commande <b>met à jour</b> le serveur en gardant les données et les réglages. Le journal est dans <code>C:\ProgramData\IAM-INVOICER\journal\serveur.log</code>. Les postes se branchent comme au 4.1, étape 4.</p>
+  <div class="box warn"><b class="t">À savoir</b>
+    <ul>
+      <li>Donnez une adresse IP fixe au serveur et désactivez sa mise en veille.</li>
+      <li>Les échanges du réseau local passent en HTTP : comme au 4.1, pas de Wi-Fi invité et pas de redirection du port vers Internet.</li>
+      <li>Le paquet serveur (<code>IAM-INVOICER-Serveur-&lt;version&gt;.zip</code>) sert aussi sur Linux sans Docker : <code>PORT=8080 DATA_DIR=./data node out/server/server.cjs</code> (Node.js 22 ou plus).</li>
+    </ul>
+  </div>
+  <h3>4.7 NAS (UGREEN, Synology, QNAP…) avec Docker</h3>
+  <p>Un NAS de bureau fait un excellent serveur : allumé en permanence, silencieux, et ses disques en RAID gardent la base en double. Il suffit que le NAS sache faire tourner des conteneurs Docker (UGREEN NASync avec UGOS Pro, Synology DSM 7.2 et plus, QNAP, Asustor…). L'image est publiée pour les processeurs Intel et AMD (amd64) et ARM (arm64, dont le Raspberry Pi 4 ou 5 en 64 bits).</p>
+  <ol>
+    <li>Sur le NAS, ouvrez l'application Docker : <b>UGREEN : Docker → Projet → Créer</b> ; <b>Synology : Container Manager → Projet → Créer</b> ; <b>QNAP : Container Station → Applications → Créer</b>.</li>
+    <li>Collez le contenu de <code>deploy/nas/docker-compose.yml</code> (sur GitHub : tenak27/iam_invoicer). <b>Remplacez le mot de passe</b> <code>changez-ce-mot-de-passe</code> par le vôtre : il apparaît trois fois (base, serveur, sauvegarde).</li>
+    <li>Déployez. Le projet crée la base PostgreSQL, le serveur IAM INVOICER (port 8080) et une sauvegarde chaque nuit à 2 h dans le dossier <code>sauvegardes</code> du projet.</li>
+    <li>Depuis un poste du réseau, ouvrez <code>http://adresse-du-nas:8080/app/</code> et créez la société. Les postes se branchent comme au 4.1, étape 4.</li>
+  </ol>
+  <p>Copie en ligne : renseignez <code>CLOUD_MIRROR_URL</code> et <code>CLOUD_MIRROR_KEY</code> dans le fichier (4.2). Mise à jour : dans l'application Docker du NAS, retirez l'image puis redéployez le projet (ou <code>docker compose pull</code> puis <code>docker compose up -d</code>) ; les données restent dans le dossier <code>postgres</code>.</p>
 </section>
 
 <!-- ============================ 5. WINDOWS ============================ -->

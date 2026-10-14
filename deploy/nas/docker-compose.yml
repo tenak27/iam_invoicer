@@ -1,0 +1,80 @@
+# IAM INVOICER sur un NAS (UGREEN NASync, Synology, QNAP, Asustor…) ou tout appareil avec Docker
+# (mini-PC, Raspberry Pi 4/5 en 64 bits). Le serveur du bureau tient dans le NAS : tous les postes,
+# téléphones et navigateurs du réseau s'y connectent, et la base profite des disques en RAID.
+#
+# Installation :
+#   - UGREEN (UGOS Pro) : application Docker → Projet → Créer, collez ce fichier, Déployer.
+#   - Synology (DSM 7.2+) : Container Manager → Projet → Créer, collez ce fichier.
+#   - QNAP : Container Station → Applications → Créer, collez ce fichier.
+#   - En ligne de commande : docker compose -f docker-compose.yml up -d
+# Puis, depuis un poste du réseau : http://adresse-du-nas:8080/app/ (première visite : création
+# de la société et du compte administrateur).
+#
+# Avant de déployer, remplacez le mot de passe de la base (DB_PASSWORD, deux lignes plus bas
+# pour la base et pour le serveur : la même valeur) ou définissez la variable DB_PASSWORD.
+# La base n'est jamais exposée sur le réseau : seul le port 8080 de l'application l'est.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iam_invoicer
+      POSTGRES_USER: iam
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changez-ce-mot-de-passe}
+    volumes:
+      # Dossier du NAS (créé à côté de ce fichier) : sauvegardé avec vos instantanés et votre RAID
+      - ./postgres:/var/lib/postgresql/data
+      - ./sauvegardes:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam -d iam_invoicer"]
+      interval: 10s
+      retries: 10
+
+  app:
+    image: ghcr.io/tenak27/iam-invoicer:latest
+    restart: unless-stopped
+    ports:
+      # Changez le premier nombre si le port 8080 est déjà pris sur le NAS (ex. "8090:8080")
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://iam:${DB_PASSWORD:-changez-ce-mot-de-passe}@db:5432/iam_invoicer
+      # Le serveur est joint directement par les postes (pas de proxy devant lui)
+      TRUST_PROXY: "0"
+      # Clé de chiffrement des secrets (messagerie, SMS…) : 64 caractères hexadécimaux,
+      # à garder précieusement à part (openssl rand -hex 32). Vide : secrets non chiffrés.
+      SECRETS_KEY: ${SECRETS_KEY:-}
+      # Copie en ligne (facultatif) : base de la société sur Internet, consultable de l'extérieur.
+      # Adresse https://…/t/<société> et clé de synchronisation fournies par IAM Technology.
+      CLOUD_MIRROR_URL: ${CLOUD_MIRROR_URL:-}
+      CLOUD_MIRROR_KEY: ${CLOUD_MIRROR_KEY:-}
+      CLOUD_MIRROR_MINUTES: ${CLOUD_MIRROR_MINUTES:-15}
+      DOWNLOADS_DIR: /telechargements
+    volumes:
+      - ./telechargements:/telechargements:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Sauvegarde chaque nuit à 2 h (14 jours conservés) dans le dossier « sauvegardes » du NAS
+  sauvegarde:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-changez-ce-mot-de-passe}
+    volumes:
+      - ./sauvegardes:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          now=$$(date +%H%M)
+          if [ "$$now" = "0200" ]; then
+            pg_dump -h db -U iam -d iam_invoicer -Fc -f /backups/iam-invoicer-$$(date +%F).dump && echo "Sauvegarde $$(date +%F) faite"
+            find /backups -name 'iam-invoicer-*.dump' -mtime +14 -delete
+            sleep 61
+          fi
+          sleep 30
+        done
+    depends_on:
+      db:
+        condition: service_healthy

@@ -180,9 +180,24 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: IAM-INVOICER-iOS, path: '*.ipa', if-no-files-found: error }
 
+  # Paquet serveur autonome (Windows Server, Linux sans Docker) : IAM-INVOICER-Serveur-<version>.zip,
+  # téléchargé et vérifié par deploy/windows/installer.ps1
+  serveur:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run build:all-server
+      - run: node tools/server/bundle.mjs dist
+      - uses: actions/upload-artifact@v4
+        with: { name: IAM-INVOICER-Serveur, path: dist/*.zip, if-no-files-found: error }
+
   # Publication des installateurs (même si une plateforme a échoué : les autres restent disponibles)
   release:
-    needs: [windows, macos, macos-ancien, android, ios]
+    needs: [windows, macos, macos-ancien, android, ios, serveur]
     if: startsWith(github.ref, 'refs/tags/') && !cancelled()
     runs-on: ubuntu-latest
     permissions: { contents: write }
@@ -202,6 +217,8 @@ jobs:
             - macOS 10.15 à 12 : *-macos-ancien.dmg
             - Android : *-android.apk
             - iPhone / iPad : *-ios.ipa (signé) ou *-ios-unsigned.ipa (à signer avec Sideloadly ou AltStore)
+            - Serveur (Windows Server, Linux sans Docker) : IAM-INVOICER-Serveur-*.zip, installé par deploy/windows/installer.ps1
+            - Docker et NAS : ghcr.io/tenak27/iam-invoicer:latest (amd64 et arm64), voir deploy/nas/docker-compose.yml
             Empreintes SHA-256 : SHA256SUMS.txt
 
   server:
@@ -210,11 +227,14 @@ jobs:
     permissions: { contents: read, packages: write }
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with: { registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' }
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ghcr.io/${{ github.repository_owner }}/iam-invoicer:latest

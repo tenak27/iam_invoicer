@@ -66,6 +66,7 @@ describe('Site de présentation, application et téléchargements', () => {
     expect(classify('IAM-INVOICER-0.5.1-ios-unsigned.ipa')).toMatchObject({ platform: 'ios', signed: false })
     expect(classify('IAM-INVOICER-Setup-0.5.0.zip')).toMatchObject({ platform: 'windows', kind: 'portable' })
     expect(classify('IAM-INVOICER-0.5.0-mac.zip')).toMatchObject({ platform: 'macos' })
+    expect(classify('IAM-INVOICER-Serveur-0.14.2.zip')).toMatchObject({ platform: 'server', kind: 'package', version: '0.14.2' })
     expect(classify('notes.txt')).toBeNull()
   })
 

@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-export type Platform = 'windows' | 'macos' | 'android' | 'ios' | 'linux'
+export type Platform = 'windows' | 'macos' | 'android' | 'ios' | 'linux' | 'server'
 export type Kind = 'installer' | 'portable' | 'apk' | 'aab' | 'ipa' | 'package'
 
 export interface DownloadFile {
@@ -32,12 +32,14 @@ export function classify(name: string): Pick<DownloadFile, 'platform' | 'kind' |
   const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase()
   const lower = name.toLowerCase()
   let platform: Platform
-  if (ext === 'ipa') platform = 'ios'
+  // Paquet serveur (Windows Server, Linux sans Docker) : IAM-INVOICER-Serveur-<version>.zip
+  if (ext === 'zip' && /serveur|server/.test(lower)) platform = 'server'
+  else if (ext === 'ipa') platform = 'ios'
   else if (ext === 'apk' || ext === 'aab') platform = 'android'
   else if (ext === 'dmg' || ext === 'pkg' || (ext === 'zip' && /mac|darwin|osx/.test(lower))) platform = 'macos'
   else if (ext === 'appimage' || ext === 'deb') platform = 'linux'
   else platform = 'windows'
-  const kind: Kind = ext === 'zip' ? 'portable' : ext === 'apk' ? 'apk' : ext === 'aab' ? 'aab' : ext === 'ipa' ? 'ipa' : ext === 'deb' || ext === 'appimage' ? 'package' : 'installer'
+  const kind: Kind = platform === 'server' ? 'package' : ext === 'zip' ? 'portable' : ext === 'apk' ? 'apk' : ext === 'aab' ? 'aab' : ext === 'ipa' ? 'ipa' : ext === 'deb' || ext === 'appimage' ? 'package' : 'installer'
   const arch = /universal/.test(lower) ? 'universal' : /arm64|aarch64|apple-?silicon/.test(lower) ? 'arm64' : /x64|x86_64|amd64|intel/.test(lower) ? 'x64' : null
   const version = /(\d+\.\d+\.\d+)/.exec(name)?.[1] ?? null
   const signed = kind === 'ipa' ? !/unsigned|non-?sign/.test(lower) : null
