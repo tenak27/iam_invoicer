@@ -3,7 +3,7 @@
 
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell, CashRegister, Check, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, Palette as PaletteIcon, SignOut, Sun, User, Warning,
   type Icon
@@ -129,10 +129,25 @@ function Notifications() {
   const pop = usePopover()
   const nav = useNavigate()
   const { data, reload } = useQuery<any>('reports.dashboard')
+  // Rafraîchies après chaque saisie, au changement de page, au retour sur la fenêtre, et chaque minute
+  const location = useLocation()
   useEffect(() => {
-    const t = setInterval(reload, 120_000)
-    return () => clearInterval(t)
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const soon = () => { if (timer) clearTimeout(timer); timer = setTimeout(reload, 400) }
+    const onVisible = () => document.visibilityState === 'visible' && soon()
+    const t = setInterval(reload, 60_000)
+    window.addEventListener('iam-data-changed', soon)
+    window.addEventListener('focus', soon)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(t)
+      if (timer) clearTimeout(timer)
+      window.removeEventListener('iam-data-changed', soon)
+      window.removeEventListener('focus', soon)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [reload])
+  useEffect(() => { reload() }, [location.pathname, reload])
   const canSales = can(useSession().user.role, 'sales')
   const items: { key: string; icon: Icon; tone: string; title: string; text: string; to?: string }[] = [
     ...(data?.overdue ?? []).slice(0, 6).map((o: any) => ({

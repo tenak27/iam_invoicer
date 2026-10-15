@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { notify } from './components/ui'
 
+/** Appels de lecture : ils ne changent rien, inutile de rafraîchir les notifications. */
+const READ = /^(list|get|status|dashboard|preview|report|options|search|profile|me|params|runs|leaves|employees|pipeline|agenda|myWeek|clients|suppliers|users|devices|counts|stats|balance|ledger|history|cloud(List|Info|Config))/i
+
 export async function api<T = any>(name: string, args?: unknown): Promise<T> {
   const r = await window.erp.call(name, args)
   if (!r.ok) throw new Error(r.error)
+  // Une écriture (enregistrement, validation, paiement…) a pu changer ce que signalent les notifications
+  if (!READ.test(name.slice(name.lastIndexOf('.') + 1))) window.dispatchEvent(new Event('iam-data-changed'))
   // Saisie faite sans réseau : gardée sur l'appareil, envoyée à la base en ligne au retour de la connexion
   if ((r as { offline?: boolean }).offline && (r.data as { queued?: boolean } | null)?.queued)
     notify("Hors connexion : saisie enregistrée sur cet appareil. Elle sera envoyée à la base en ligne dès le retour d'Internet.", 'info')

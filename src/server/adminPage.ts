@@ -304,6 +304,36 @@ const JS = String.raw`
     load()
   }
 
+  // Créer et attribuer en un clic une licence au nom de la société (raison sociale déjà configurée)
+  function quickLicence(t, slug, done) {
+    var box = h('div', {})
+    if (!me.canIssue) return put(box, h('h3', { style: 'font-size:15px', text: 'Créer une licence pour cette société' }), h('div', { class: 'box warn', text: 'Émission impossible depuis ce serveur : la clé privée de l’éditeur n’y est pas installée.' })), box
+    var company = h('input', { value: t.company || t.name })
+    var tier = h('select', {}, Object.keys(TIERS).filter(function (k) { return k !== 'sur-mesure' }).map(function (k) { return h('option', { value: k, text: TIERS[k], selected: k === 'pro' }) }))
+    var users = h('input', { type: 'number', min: '0', placeholder: 'celui du palier' })
+    var months = h('select', {}, [['12', '1 an'], ['1', '1 mois'], ['6', '6 mois'], ['24', '2 ans'], ['36', '3 ans'], ['', 'Perpétuelle']].map(function (o) { return h('option', { value: o[0], text: o[1] }) }))
+    var go = h('button', { class: 'btn primary', text: 'Créer et attribuer' })
+    go.onclick = function () {
+      if (!company.value.trim()) return company.focus()
+      var expires = null
+      if (months.value) { var x = new Date(); x.setMonth(x.getMonth() + Number(months.value)); expires = x.toISOString().slice(0, 10) }
+      go.disabled = true
+      run(api('POST', '/api/admin/licences', { company: company.value.trim(), tier: tier.value, users: users.value, expires: expires, contact: t.contact || '' })).then(function (l) {
+        if (!l) { go.disabled = false; return }
+        licences.push(l)
+        return run(api('POST', '/api/admin/tenants/' + slug + '/licence', { licence_id: l.id })).then(function (r) {
+          go.disabled = false
+          if (!r) return
+          toast(r.warning ? 'Licence ' + r.number + ' créée et installée, mais pas encore active : ' + r.warning : 'Licence ' + r.number + ' créée et attribuée.', !!r.warning)
+          done()
+        })
+      })
+    }
+    return put(box, h('h3', { style: 'font-size:15px', text: 'Créer une licence pour cette société' }),
+      h('div', { class: 'grid' }, field('Au nom de', company, 'Raison sociale exacte de la société'), field('Palier', tier), field('Utilisateurs', users), field('Durée', months)),
+      h('div', { class: 'actions' }, go)), box
+  }
+
   function openTenant(slug, reload) {
     var body = h('div', { class: 'd-body', style: 'padding:0' }, h('p', { class: 'sub', text: 'Chargement…' }))
     var d = dialog('Société', body)
@@ -354,6 +384,7 @@ const JS = String.raw`
                 reload()
               })
             }, text: 'Attribuer la licence' })),
+          quickLicence(t, slug, function () { refresh(); reload() }),
           h('h3', { style: 'font-size:15px', text: 'Actions' }),
           h('div', { class: 'actions' },
             t.status === 'active'
