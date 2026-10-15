@@ -27,7 +27,8 @@ for (const g of GALLERY) {
   if (existsSync(`docs/formation/captures/mobile-${g}.jpg`)) cpSync(`docs/formation/captures/mobile-${g}.jpg`, `${out}/assets/galerie/mobile-${g}.jpg`)
 }
 mkdirSync(`${out}/docs`, { recursive: true })
-for (const d of ['IAM-INVOICER-Guide-installation.pdf', 'IAM-INVOICER-Manuel-de-formation.pdf'])
+// Le guide d'installation (serveurs, Docker, NAS) reste réservé à l'équipe : seul le manuel de formation est publié
+for (const d of ['IAM-INVOICER-Manuel-de-formation.pdf'])
   if (existsSync(`docs/${d}`)) cpSync(`docs/${d}`, `${out}/docs/${d}`)
 
 // Les images sont servies avec un cache d'un an : le numéro de version dans leur adresse
