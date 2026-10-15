@@ -285,11 +285,13 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .secef.sim .t { color: #b8321f; }
   .terms { margin-top: 16px; font-size: 7.5pt; color: #5f6b7a; border-top: 1px solid #e4e9ef; padding-top: 6px; white-space: pre-line; page-break-inside: avoid; }
   .stamp { position: fixed; top: 40%; left: 15%; font-size: 64pt; color: rgba(200, 30, 30, .13); transform: rotate(-25deg); font-weight: 800; }
+  .stamp.dup { left: 12%; color: rgba(29, 78, 160, .14); letter-spacing: 6px; }
+  .dup-line { display: inline-block; margin-top: 6px; padding: 3px 10px; border: 1.5px solid #1d4ea0; border-radius: 4px; color: #1d4ea0; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
   .eval-mark { position: fixed; top: 58%; left: 8%; font-size: 40pt; color: rgba(29, 111, 214, .11); transform: rotate(-25deg); font-weight: 800; letter-spacing: 2px; white-space: nowrap; pointer-events: none; }
 </style></head>
 <body class="tpl-${layout}">
   <div class="band"></div>
-  ${isDraft ? '<div class="stamp">BROUILLON</div>' : isCancelled ? '<div class="stamp">ANNULÉ</div>' : ''}
+  ${isDraft ? '<div class="stamp">BROUILLON</div>' : isCancelled ? '<div class="stamp">ANNULÉ</div>' : doc.duplicata ? '<div class="stamp dup">DUPLICATA</div>' : ''}
   ${evaluation ? '<div class="eval-mark" aria-hidden="true">VERSION D’ÉVALUATION</div>' : ''}
   <div class="head">
     <div>
@@ -306,6 +308,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
     <div class="doc-title">
       <h1>${esc(info.label)}</h1>
       <div class="num">${esc(doc.number ?? 'Brouillon')}</div>
+      ${doc.duplicata ? `<div class="dup-line">Duplicata${doc.validated_at ? ` · original établi le ${formatDate(new Date(doc.validated_at).toISOString().slice(0, 10))}` : ''}</div>` : ''}
       <table class="meta" align="right">
         <tr><td>Date</td><td>${formatDate(doc.date)}</td></tr>
         ${doc.due_date && info.payable ? `<tr><td>Échéance</td><td>${formatDate(doc.due_date)}</td></tr>` : ''}
@@ -405,6 +408,7 @@ export function receiptHtml(doc: any, company: CompanySettings, evaluation = fal
   </div>
   <hr>
   <div>${esc(doc.number ?? 'Brouillon')} — ${formatDate(doc.date)}</div>
+  ${doc.duplicata ? '<div class="c"><b>*** DUPLICATA ***</b></div>' : ''}
   ${doc.party?.code !== 'COMPTOIR' ? `<div>Client : ${esc(doc.party?.name)}</div>` : ''}
   <hr>
   <table>${lines}</table>

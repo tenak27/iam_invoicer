@@ -97,7 +97,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
     access: 'user',
     fn: async (ctx, a) => {
       const { printable } = await import('./printing')
-      const p = await printable(ctx, Number(a?.id), a?.format === 'ticket' ? 'ticket' : 'a4', false)
+      const p = await printable(ctx, Number(a?.id), a?.format === 'ticket' ? 'ticket' : 'a4', false, { duplicata: !!a?.duplicata })
       return { html: p.html, filename: p.filename }
     }
   },

@@ -20,8 +20,13 @@ export interface Printable {
   format: PrintFormat
 }
 
+export interface PrintOptions {
+  /** Réédition d'un document déjà établi : tampon et mention « DUPLICATA » (documents validés). */
+  duplicata?: boolean
+}
+
 /** forPdf : le pied de page est rendu par printToPDF (Electron) au lieu d'un élément fixe. */
-export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4', forPdf = true): Promise<Printable> {
+export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4', forPdf = true, opts: PrintOptions = {}): Promise<Printable> {
   // Contrôle des droits : un caissier peut imprimer le ticket d'une vente de sa caisse.
   const check = await call(ctx, 'documents.get', { id })
   if (!check.ok) {
@@ -37,6 +42,7 @@ export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4'
   }
   const doc = await loadDocument(ctx.db, id)
   doc.signatures = await signaturesForPrint(ctx.db, id)
+  doc.duplicata = !!opts.duplicata && doc.status === 'valide'
   const company = await getSettings(ctx.db)
   const evaluation = (await licenceStatus(ctx.db)).state !== 'active'
   // Authenticité : QR code vers la page de vérification si l'adresse publique est connue,
@@ -52,6 +58,6 @@ export async function printable(ctx: Ctx, id: number, format: PrintFormat = 'a4'
     doc.auth = { code: formatAuthCode(code), qr: url ?? text, url }
   }
   const html = format === 'ticket' ? receiptHtml(doc, company, evaluation) : documentHtml(doc, company, forPdf, evaluation)
-  const filename = `${doc.number ?? 'Brouillon-' + doc.type + '-' + doc.id} - ${doc.party.name}`.replace(/[\/:*?"<>|]/g, '-') + '.pdf'
+  const filename = `${doc.number ?? 'Brouillon-' + doc.type + '-' + doc.id}${doc.duplicata ? ' (duplicata)' : ''} - ${doc.party.name}`.replace(/[\/:*?"<>|]/g, '-') + '.pdf'
   return { html, footer: pdfFooterTemplate(company), filename, format }
 }

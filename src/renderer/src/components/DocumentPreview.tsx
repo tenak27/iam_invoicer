@@ -9,7 +9,9 @@ import { api, run, unwrap } from '../api'
 import { Loading, Modal } from './ui'
 import { PdfPages } from './PdfPages'
 
-export function DocumentPreview({ id, onClose, ticket = false }: { id: number; onClose: () => void; ticket?: boolean }) {
+/** `duplicata` : réédition d'un document déjà établi (tampon et mention DUPLICATA sur l'aperçu, le PDF et l'impression). */
+export function DocumentPreview({ id, onClose, ticket = false, duplicata = false }: { id: number; onClose: () => void; ticket?: boolean; duplicata?: boolean }) {
+  const opts = { duplicata }
   const [format, setFormat] = useState<'a4' | 'ticket'>('a4')
   const [view, setView] = useState<{ pdf?: Uint8Array; html?: string; filename: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -20,9 +22,9 @@ export function DocumentPreview({ id, onClose, ticket = false }: { id: number; o
     setError(null)
     ;(async () => {
       try {
-        const meta = await api<{ html: string; filename: string }>('documents.preview', { id, format })
+        const meta = await api<{ html: string; filename: string }>('documents.preview', { id, format, duplicata })
         if (window.erp.pdfPreview) {
-          const b64 = await unwrap(window.erp.pdfPreview(id, format))
+          const b64 = await unwrap(window.erp.pdfPreview(id, format, opts))
           const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
           if (!cancelled) setView({ pdf: bytes, filename: meta.filename })
         } else if (!cancelled) setView({ html: meta.html, filename: meta.filename })
@@ -33,12 +35,13 @@ export function DocumentPreview({ id, onClose, ticket = false }: { id: number; o
     return () => {
       cancelled = true
     }
-  }, [id, format])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, format, duplicata])
 
   return (
     <Modal
       wide
-      title={view ? `Aperçu — ${view.filename.replace(/\.pdf$/, '')}` : 'Aperçu avant impression'}
+      title={view ? `${duplicata ? 'Duplicata' : 'Aperçu'} — ${view.filename.replace(/\.pdf$/, '').replace(' (duplicata)', '')}` : 'Aperçu avant impression'}
       onClose={onClose}
       footer={
         <>
@@ -49,9 +52,9 @@ export function DocumentPreview({ id, onClose, ticket = false }: { id: number; o
             </div>
           )}
           <span className="grow" />
-          <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(id, 'save', format)))}><DownloadSimple size={18} aria-hidden="true" />Enregistrer PDF</button>
-          <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(id, 'open', format)))}><FilePdf size={18} aria-hidden="true" />Ouvrir PDF</button>
-          <button className="btn btn-primary" autoFocus onClick={() => run(() => unwrap(window.erp.pdf(id, 'print', format)))}><Printer size={18} aria-hidden="true" />Imprimer</button>
+          <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(id, 'save', format, opts)))}><DownloadSimple size={18} aria-hidden="true" />Enregistrer PDF</button>
+          <button className="btn" onClick={() => run(() => unwrap(window.erp.pdf(id, 'open', format, opts)))}><FilePdf size={18} aria-hidden="true" />Ouvrir PDF</button>
+          <button className="btn btn-primary" autoFocus onClick={() => run(() => unwrap(window.erp.pdf(id, 'print', format, opts)))}><Printer size={18} aria-hidden="true" />Imprimer</button>
         </>
       }
     >

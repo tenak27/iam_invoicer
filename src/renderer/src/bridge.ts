@@ -239,10 +239,10 @@ function createHttpBridge(): ErpBridge {
       location.reload()
     },
 
-    async pdf(id, _action, format = 'a4') {
+    async pdf(id, _action, format = 'a4', opts) {
       // La fenêtre est ouverte tout de suite (clic de l'utilisateur) pour ne pas être bloquée.
       const win = native ? null : window.open('about:blank', '_blank')
-      const r = await request<{ url: string }>('POST', '/api/print', { id, format })
+      const r = await request<{ url: string }>('POST', '/api/print', { id, format, duplicata: !!opts?.duplicata })
       if (!r.ok) {
         win?.close()
         return r

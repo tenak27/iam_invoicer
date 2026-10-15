@@ -391,12 +391,29 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
   return loadDocument(ctx.db, args.id)
 }
 
-/** Transforme un document validé en document suivant de la chaîne (brouillon pré-rempli). */
-export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType }) {
+/**
+ * Transforme un document validé en document suivant de la chaîne (brouillon pré-rempli).
+ * Une seule transformation par type : si le devis a déjà donné son bon de livraison (ou sa
+ * facture…), on ne crée pas de second document, qui sortirait le stock une seconde fois. Le
+ * document existant est renvoyé : en brouillon, on le rouvre ; validé, on le réédite en
+ * DUPLICATA (tracé dans le journal d'activité). Exception : une facture peut recevoir plusieurs avoirs.
+ */
+export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType }): Promise<{ id: number; existing?: boolean; duplicata?: boolean; number?: string | null }> {
   const src = await loadDocument(ctx.db, args.id)
   const from = src.type as DocType
   if (!DOC_TYPES[from].convertsTo.includes(args.to)) fail('Transformation impossible pour ce type de document.')
   if (src.status !== 'valide') fail('Validez le document avant de le transformer.')
+  if (args.to !== 'AV') {
+    const done = await ctx.db.one<{ id: number; status: string; number: string | null }>(
+      "SELECT id, status, number FROM documents WHERE source_id = $1 AND type = $2 AND status <> 'annule' ORDER BY id LIMIT 1",
+      [src.id, args.to]
+    )
+    if (done) {
+      const duplicata = done.status === 'valide'
+      if (duplicata) await audit(ctx.db, ctx, 'duplicata', args.to, done.id, `${done.number} réédité depuis ${src.number}`)
+      return { id: done.id, existing: true, duplicata, number: done.number }
+    }
+  }
   return saveDocument(ctx, {
     type: args.to,
     party_id: src.party_id,

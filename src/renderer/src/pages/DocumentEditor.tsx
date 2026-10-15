@@ -178,10 +178,25 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     if (r) onReload()
   }
 
+  /** Réédition d'un document déjà établi depuis celui-ci (identifiant du document à imprimer en duplicata). */
+  const [duplicataId, setDuplicataId] = useState<number | null>(null)
   const convert = async (to: DocType) => {
-    const r = await run(() => api<{ id: number }>('documents.convert', { id: doc.id, to }), `${DOC_TYPES[to].label} créé${DOC_TYPES[to].fem ? 'e' : ''} en brouillon.`)
-    if (r) nav(`/doc/${r.id}`)
+    const label = DOC_TYPES[to].label
+    const r = await run(() => api<{ id: number; existing?: boolean; duplicata?: boolean; number?: string | null }>('documents.convert', { id: doc.id, to }))
+    if (!r) return
+    if (r.duplicata) {
+      notify(`${label} ${r.number} déjà établi${DOC_TYPES[to].fem ? 'e' : ''} : réédition en duplicata.`, 'info')
+      setDuplicataId(r.id)
+    } else if (r.existing) {
+      notify(`${label} déjà créé${DOC_TYPES[to].fem ? 'e' : ''} en brouillon : il s'ouvre.`, 'info')
+      nav(`/doc/${r.id}`)
+    } else {
+      notify(`${label} créé${DOC_TYPES[to].fem ? 'e' : ''} en brouillon.`, 'success')
+      nav(`/doc/${r.id}`)
+    }
   }
+  /** Document déjà issu de celui-ci pour un type donné (hors annulés ; les avoirs peuvent être multiples). */
+  const issued = (to: DocType) => (to === 'AV' ? undefined : doc?.children?.find((c: any) => c.type === to && c.status !== 'annule'))
 
   const makeRecurring = async () => {
     if (!(await confirmDialog('Créer un contrat mensuel à partir de cette facture ?', { detail: 'La même facture sera créée chaque mois (brouillon à vérifier). Fréquence, dates et montants restent modifiables dans Factures récurrentes.' }))) return
@@ -268,9 +283,16 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
               <button className="btn" onClick={openPreview}><Eye size={18} aria-hidden="true" />Aperçu</button>
               <button className="btn" onClick={openPreview}><Printer size={18} aria-hidden="true" />Imprimer</button>
               <button className="btn" onClick={() => pdf('save')}><DownloadSimple size={18} aria-hidden="true" />PDF</button>
-              {doc.status === 'valide' && info.convertsTo.map((to) => (
-                <button key={to} className="btn btn-accent" onClick={() => convert(to)}>→ {DOC_TYPES[to].label}</button>
-              ))}
+              {doc.status === 'valide' && info.convertsTo.map((to) => {
+                const done = issued(to)
+                return done ? (
+                  <button key={to} className="btn" onClick={() => convert(to)} title={done.status === 'valide' ? 'Déjà établi : réédition marquée DUPLICATA' : 'Brouillon déjà créé : il s’ouvre'}>
+                    {done.status === 'valide' ? <><Copy size={18} aria-hidden="true" />{DOC_TYPES[to].label} {done.number} · duplicata</> : <>→ {DOC_TYPES[to].label} (brouillon)</>}
+                  </button>
+                ) : (
+                  <button key={to} className="btn btn-accent" onClick={() => convert(to)}>→ {DOC_TYPES[to].label}</button>
+                )
+              })}
               {doc.status === 'valide' && info.payable && remaining > 0.5 && (
                 <button className="btn btn-primary" onClick={() => setPayOpen(true)}>{type === 'FAC' ? 'Encaisser' : type === 'AV' ? 'Rembourser' : 'Payer'}</button>
               )}
@@ -486,6 +508,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
       {sending === 'email' && <SendEmailModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
       {sending === 'sms' && <SendSmsModal doc={doc} onClose={() => setSending(null)} onSent={() => { setSending(null); setMsgKey((k) => k + 1) }} />}
       {preview && doc && <DocumentPreview id={doc.id} ticket={type === 'FAC'} onClose={() => setPreview(false)} />}
+      {duplicataId && <DocumentPreview id={duplicataId} duplicata onClose={() => setDuplicataId(null)} />}
       {payOpen && <PaymentModal doc={doc} remaining={remaining} onClose={() => setPayOpen(false)} onDone={() => { setPayOpen(false); onReload() }} />}
     </div>
   )

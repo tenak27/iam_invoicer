@@ -114,7 +114,7 @@ export function createHandler(opts: ServerOptions) {
   // Rafales : 3 000 requêtes d'API par minute et par adresse (un bureau entier derrière une même adresse passe)
   const flood = new Limiter(opts.ratePerMinute && opts.ratePerMinute > 0 ? opts.ratePerMinute : 3000, 60_000)
   // Liens d'impression à usage unique, valables 2 minutes.
-  const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; origin: string; expires: number }>()
+  const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; duplicata?: boolean; origin: string; expires: number }>()
 
   async function readJson(req: IncomingMessage): Promise<any> {
     const chunks: Buffer[] = []
@@ -259,7 +259,7 @@ export function createHandler(opts: ServerOptions) {
     if (method === 'GET' && docMatch) {
       const ctx: Ctx = { db, user: await session(req), origin: publicOrigin(req) }
       const format = url.searchParams.get('format') === 'ticket' ? 'ticket' : 'a4'
-      return send(res, 200, { ok: true, data: await printable(ctx, Number(docMatch[1]), format, url.searchParams.get('pdf') === '1') })
+      return send(res, 200, { ok: true, data: await printable(ctx, Number(docMatch[1]), format, url.searchParams.get('pdf') === '1', { duplicata: url.searchParams.get('duplicata') === '1' }) })
     }
     if (method === 'POST' && path === '/api/print') {
       const user = await session(req)
@@ -270,7 +270,7 @@ export function createHandler(opts: ServerOptions) {
       const ticket = randomBytes(24).toString('base64url')
       const now = Date.now()
       for (const [k, t] of tickets) if (t.expires < now) tickets.delete(k)
-      tickets.set(ticket, { user, id, format, origin: publicOrigin(req), expires: now + 120_000 })
+      tickets.set(ticket, { user, id, format, duplicata: body.duplicata === true, origin: publicOrigin(req), expires: now + 120_000 })
       return send(res, 200, { ok: true, data: { url: `/print/${ticket}` } })
     }
     const signMatch = /^\/api\/public\/sign\/([A-Za-z0-9_-]{20,})$/.exec(path)
@@ -324,7 +324,7 @@ export function createHandler(opts: ServerOptions) {
     const t = tickets.get(ticket)
     tickets.delete(ticket)
     if (!t || t.expires < Date.now()) throw new HttpError(410, "Ce lien d'impression a expiré. Relancez l'impression depuis l'application.")
-    const p = await printable({ db, user: t.user, origin: t.origin }, t.id, t.format, false)
+    const p = await printable({ db, user: t.user, origin: t.origin }, t.id, t.format, false, { duplicata: !!t.duplicata })
     const auto = '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})</script>'
     sendHtml(res, p.html.replace('</body>', `${auto}</body>`), 'SAMEORIGIN')
   }

@@ -3,10 +3,12 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, ClipboardText, Eye, FlagBanner, HourglassMedium, PaperPlaneTilt, PencilSimple, Plus, ShoppingCart, Trash, X, SealCheck } from '@phosphor-icons/react'
+import { CheckCircle, ClipboardText, Copy, Eye, FlagBanner, HourglassMedium, PaperPlaneTilt, PencilSimple, Plus, Printer, ShoppingCart, Trash, X, SealCheck } from '@phosphor-icons/react'
 import { formatDate, formatMoney, todayISO } from '@shared/format'
 import { REQUEST_PRIORITIES, REQUEST_STATUS, REQUEST_STEPS, stepIndex, type RequestPriority, type RequestStatus } from '@shared/workflow'
-import { api, run, useQuery } from '../api'
+import { api, run, unwrap, useQuery } from '../api'
+import { DocumentPreview } from '../components/DocumentPreview'
+import { requestHtml } from '../components/workflowPrint'
 import { KpiStrip } from '../components/KpiStrip'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
 import { DecideModal, WfBadge, WfSteps, WfTimeline } from '../components/Workflow'
@@ -140,6 +142,8 @@ function RequestDetail({ id, onClose, onChanged, onEdit }: { id: number; onClose
   const { data: r, error, reload } = useQuery<any>('requests.get', { id }, [id])
   const [deciding, setDeciding] = useState(false)
   const [ordering, setOrdering] = useState(false)
+  const [duplicata, setDuplicata] = useState(false)
+  const { company } = useSession()
   const done = () => { reload(); onChanged() }
   if (error) return <Modal title="Expression de besoin" onClose={onClose}><ErrorBox error={error} /></Modal>
   if (!r) return <Modal title="Expression de besoin" onClose={onClose}><Loading /></Modal>
@@ -154,7 +158,9 @@ function RequestDetail({ id, onClose, onChanged, onEdit }: { id: number; onClose
       {mine && r.status === 'brouillon' && <button className="btn btn-primary" onClick={() => act('requests.submit', { id }, 'Expression de besoin envoyée à votre responsable.')}><PaperPlaneTilt size={18} aria-hidden="true" />Envoyer pour visa</button>}
       {canDecide && <button className="btn btn-primary" onClick={() => setDeciding(true)}><CheckCircle size={18} aria-hidden="true" />{r.status === 'soumise' ? 'Viser ou rejeter' : 'Valider ou rejeter'}</button>}
       {r.rights.order && r.status === 'validee' && <button className="btn btn-primary" onClick={() => setOrdering(true)}><ShoppingCart size={18} aria-hidden="true" />Créer le bon de commande</button>}
+      <button className="btn" onClick={() => run(() => unwrap(window.erp.printHtml(requestHtml(company, r), `Expression de besoin ${r.number ?? 'brouillon'}`)))}><Printer size={18} aria-hidden="true" />Imprimer</button>
       {r.document && <button className="btn" onClick={() => nav(`/doc/${r.document.id}`)}><ClipboardText size={18} aria-hidden="true" />Ouvrir {r.document.number ?? 'le bon de commande'}</button>}
+      {r.document?.status === 'valide' && <button className="btn" onClick={() => setDuplicata(true)} title="Bon de commande déjà établi : réédition marquée DUPLICATA"><Copy size={18} aria-hidden="true" />{r.document.number} · duplicata</button>}
       {r.rights.order && r.status === 'commandee' && <button className="btn btn-primary" onClick={async () => { if (await confirmDialog('Clôturer cette demande ?', { detail: 'À faire quand la commande est reçue : le besoin est satisfait.' })) act('requests.close', { id }, 'Demande clôturée.') }}><SealCheck size={18} aria-hidden="true" />Clôturer</button>}
     </>}>
       <WfSteps steps={REQUEST_STEPS} current={r.status === 'cloturee' ? REQUEST_STEPS.length : stepIndex(REQUEST_STEPS, r.status)} rejected={r.status === 'rejetee'} />
@@ -178,6 +184,7 @@ function RequestDetail({ id, onClose, onChanged, onEdit }: { id: number; onClose
       <WfTimeline events={r.events} />
       {deciding && <DecideModal title={`${r.number} — ${r.status === 'soumise' ? 'visa du responsable' : 'validation financière'}`} approveLabel={r.status === 'soumise' ? 'Donner mon visa' : 'Valider'} onClose={() => setDeciding(false)}
         onDecide={async (approve, comment) => { if (await run(() => api('requests.decide', { id, approve, comment }), approve ? (r.status === 'soumise' ? 'Visa donné : la demande passe aux finances.' : 'Demande validée : elle est à commander.') : 'Demande rejetée.')) { setDeciding(false); done() } }} />}
+      {duplicata && r.document && <DocumentPreview id={r.document.id} duplicata onClose={() => setDuplicata(false)} />}
       {ordering && <OrderModal id={id} number={r.number} onClose={() => setOrdering(false)} onDone={(docId) => { setOrdering(false); done(); nav(`/doc/${docId}`) }} />}
     </Modal>
   )

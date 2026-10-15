@@ -8,7 +8,7 @@ import { configureVendorKey } from './services/licensing'
 import { normalizeServerUrl, openBackend, RemoteBackend, type AppConfig, type Backend, type SavedLogin, type SessionVault } from './backend'
 import { openDb, restoreLocal } from './db'
 import { backupDue, listBackups, readBackupConfig, runBackup, writeBackupConfig } from './autoBackup'
-import type { PrintFormat } from './printing'
+import type { PrintFormat, PrintOptions } from './printing'
 import { AppError, type SessionUser } from './services/context'
 import { diag, diagInit, errText } from './diag'
 import { Enterprise } from './enterprise'
@@ -368,18 +368,19 @@ function registerIpc(): void {
     app.exit(0)
   })
 
-  ipcMain.handle('pdf.document', (_e, id: number, action: 'open' | 'save' | 'print', format: PrintFormat = 'a4') =>
+  ipcMain.handle('pdf.document', (_e, id: number, action: 'open' | 'save' | 'print', format: PrintFormat = 'a4', opts: PrintOptions = {}) =>
     guard(async () => {
       requireSession()
+      const options: PrintOptions = { duplicata: !!opts?.duplicata }
       if (action === 'print') {
         // Impression directe : version HTML avec pied de page et numéros de page dans les marges.
-        const doc = await requireBackend().printable(id, format, false)
+        const doc = await requireBackend().printable(id, format, false, options)
         const win = new BrowserWindow({ show: false })
         await win.loadURL('data:text/html;charset=utf-8;base64,' + Buffer.from(doc.html).toString('base64'))
         win.webContents.print({ printBackground: true }, () => win.destroy())
         return true
       }
-      const doc = await requireBackend().printable(id, format)
+      const doc = await requireBackend().printable(id, format, true, options)
       const pdf = await renderPdf(doc.html, doc.footer, format)
       if (action === 'save') {
         const r = await dialog.showSaveDialog(mainWindow!, {
@@ -403,10 +404,10 @@ function registerIpc(): void {
   )
 
   // Aperçu avant impression : le PDF exact (pages, marges, numérotation), affiché dans l'application.
-  ipcMain.handle('pdf.preview', (_e, id: number, format: PrintFormat = 'a4') =>
+  ipcMain.handle('pdf.preview', (_e, id: number, format: PrintFormat = 'a4', opts: PrintOptions = {}) =>
     guard(async () => {
       requireSession()
-      const doc = await requireBackend().printable(id, format)
+      const doc = await requireBackend().printable(id, format, true, { duplicata: !!opts?.duplicata })
       return (await renderPdf(doc.html, doc.footer, format)).toString('base64')
     })
   )

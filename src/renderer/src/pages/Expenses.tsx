@@ -2,12 +2,13 @@
 // les finances (l'écriture comptable est passée au paiement).
 
 import { useMemo, useState } from 'react'
-import { CheckCircle, Coins, HourglassMedium, Paperclip, PaperPlaneTilt, PencilSimple, Plus, Receipt, Trash, Wallet, ArrowCounterClockwise, Eye } from '@phosphor-icons/react'
+import { CheckCircle, Coins, HourglassMedium, Paperclip, PaperPlaneTilt, PencilSimple, Plus, Printer, Receipt, Trash, Wallet, ArrowCounterClockwise, Eye } from '@phosphor-icons/react'
 import { PAYMENT_METHODS } from '@shared/domain'
 import { formatDate, formatMoney, todayISO } from '@shared/format'
 import { EXPENSE_CATEGORIES, EXPENSE_STATUS, EXPENSE_STEPS, stepIndex, type ExpenseCategory, type ExpenseStatus } from '@shared/workflow'
 import { api, run, unwrap, useQuery } from '../api'
 import { BarList } from '../components/charts'
+import { expenseHtml } from '../components/workflowPrint'
 import { KpiStrip } from '../components/KpiStrip'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
 import { DecideModal, WfBadge, WfSteps, WfTimeline } from '../components/Workflow'
@@ -134,6 +135,7 @@ function ExpenseDetail({ id, rights, onClose, onChanged, onEdit }: { id: number;
   const [paying, setPaying] = useState(false)
   const [pay, setPay] = useState({ date: todayISO(), method: '' })
   const [showReceipt, setShowReceipt] = useState(false)
+  const { company } = useSession()
   const done = () => { reload(); onChanged() }
   if (error) return <Modal title="Dépense" onClose={onClose}><ErrorBox error={error} /></Modal>
   if (!e) return <Modal title="Dépense" onClose={onClose}><Loading /></Modal>
@@ -145,6 +147,7 @@ function ExpenseDetail({ id, rights, onClose, onChanged, onEdit }: { id: number;
       <button className="btn btn-ghost" onClick={onClose}>Fermer</button>
       {editable && <button className="btn" onClick={() => onEdit(e)}><PencilSimple size={18} aria-hidden="true" />Modifier</button>}
       {mine && e.status === 'brouillon' && <button className="btn btn-primary" onClick={() => act('expenses.submit', { id }, 'Dépense envoyée en approbation.')}><PaperPlaneTilt size={18} aria-hidden="true" />Envoyer en approbation</button>}
+      <button className="btn" onClick={() => run(() => unwrap(window.erp.printHtml(expenseHtml(company, e), `Pièce de dépense ${e.number ?? 'brouillon'}`)))}><Printer size={18} aria-hidden="true" />Imprimer</button>
       {rights.approve && e.status === 'soumise' && <button className="btn btn-primary" onClick={() => setDeciding(true)}><CheckCircle size={18} aria-hidden="true" />Approuver ou rejeter</button>}
       {rights.pay && e.status === 'approuvee' && <button className="btn btn-primary" onClick={() => { setPay({ date: todayISO(), method: e.method }); setPaying(true) }}><Wallet size={18} aria-hidden="true" />Payer</button>}
       {user.role === 'admin' && e.status === 'payee' && <button className="btn" onClick={async () => { if (await confirmDialog('Annuler le paiement de cette dépense ?', { detail: "L'écriture comptable sera retirée et la dépense reviendra « à payer ».", danger: true })) act('expenses.unpay', { id }, 'Paiement annulé.') }}><ArrowCounterClockwise size={18} aria-hidden="true" />Annuler le paiement</button>}

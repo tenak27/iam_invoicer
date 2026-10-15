@@ -11,7 +11,7 @@ import { join } from 'node:path'
 import { createOfflineLayer, type CallResult as OfflineCallResult, type OfflineLayer, type QueuedOp } from '../shared/offline'
 import { openDb, type Db, type DbConfig } from './db'
 import { createFileStore, type FileStore } from './localStore'
-import { printable, type Printable, type PrintFormat } from './printing'
+import { printable, type Printable, type PrintFormat, type PrintOptions } from './printing'
 import { call, type CallResult } from './router'
 import { login, setup } from './services/auth'
 import { AppError, type SessionUser } from './services/context'
@@ -27,7 +27,7 @@ export interface Backend {
   login(username: string, password: string): Promise<SessionUser>
   setup(input: unknown): Promise<SessionUser>
   logout(): Promise<void>
-  printable(id: number, format: PrintFormat, forPdf?: boolean): Promise<Printable>
+  printable(id: number, format: PrintFormat, forPdf?: boolean, opts?: PrintOptions): Promise<Printable>
   close(): Promise<void>
 }
 
@@ -49,9 +49,9 @@ class DirectBackend implements Backend {
   async logout() {
     this.session = null
   }
-  printable(id: number, format: PrintFormat, forPdf = true) {
+  printable(id: number, format: PrintFormat, forPdf = true, opts: PrintOptions = {}) {
     if (!this.session) throw new AppError('Session expirée, veuillez vous reconnecter.')
-    return printable({ db: this.db, user: this.session }, id, format, forPdf)
+    return printable({ db: this.db, user: this.session }, id, format, forPdf, opts)
   }
   close() {
     return this.db.close()
@@ -347,8 +347,8 @@ export class RemoteBackend implements Backend {
     this.session = null
   }
 
-  printable(id: number, format: PrintFormat, forPdf = true) {
-    return this.must<Printable>('GET', `/api/document/${id}?format=${format}&pdf=${forPdf ? 1 : 0}`)
+  printable(id: number, format: PrintFormat, forPdf = true, opts: PrintOptions = {}) {
+    return this.must<Printable>('GET', `/api/document/${id}?format=${format}&pdf=${forPdf ? 1 : 0}${opts.duplicata ? '&duplicata=1' : ''}`)
   }
 
   /** Envoie les saisies en attente, dans l'ordre ; s'arrête à la première coupure. */
