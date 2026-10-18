@@ -272,6 +272,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'crm.saveActivity': { access: 'crm', fn: crm.saveActivity },
   'crm.toggleActivity': { access: 'crm', fn: crm.toggleActivity },
   'crm.agenda': { access: 'crm', fn: crm.agenda },
+  'crm.partyTimeline': { access: 'crm', fn: crm.partyTimeline },
   'crm.pipeline': { access: 'crm', fn: crm.pipeline },
   'crm.createQuote': { access: async (ctx) => (can(ctx.user!.role, 'sales') ? 'crm' : 'sales'), fn: crm.createQuote },
   'crm.clients': { access: 'crm', fn: (ctx) => ctx.db.query("SELECT id, name FROM parties WHERE kind = 'client' AND active ORDER BY name") },

@@ -5,6 +5,33 @@ import { audit, fail, num, str, type Ctx } from './context'
 import { saveDocument } from './documents'
 import { saveParty } from './parties'
 
+/** Relation client : opportunités, activités et messages d'un client, pour la chronologie de sa fiche. */
+export async function partyTimeline(ctx: Ctx, args: { party_id: number }) {
+  const id = Number(args?.party_id) || 0
+  const party = await ctx.db.one("SELECT id FROM parties WHERE id = $1 AND kind = 'client'", [id])
+  if (!party) fail('Client introuvable.')
+  const [opportunities, activities, messages] = await Promise.all([
+    ctx.db.query(
+      `SELECT o.id, o.title, o.stage, o.amount, o.probability, o.expected_date, o.quote_id, u.full_name AS owner_name
+       FROM opportunities o LEFT JOIN users u ON u.id = o.owner_id
+       WHERE o.party_id = $1 ORDER BY o.updated_at DESC, o.id DESC LIMIT 100`,
+      [id]
+    ),
+    ctx.db.query(
+      `SELECT a.id, a.kind, a.subject, a.due_date, a.done, a.created_at, o.id AS opportunity_id, o.title AS opportunity_title, u.full_name AS user_name
+       FROM crm_activities a JOIN opportunities o ON o.id = a.opportunity_id LEFT JOIN users u ON u.id = a.user_id
+       WHERE o.party_id = $1 ORDER BY a.created_at DESC, a.id DESC LIMIT 100`,
+      [id]
+    ),
+    ctx.db.query(
+      `SELECT id, channel, recipient, subject, status, kind, created_at FROM message_log
+       WHERE party_id = $1 ORDER BY created_at DESC, id DESC LIMIT 100`,
+      [id]
+    )
+  ])
+  return { opportunities, activities, messages }
+}
+
 export const STAGES = ['nouveau', 'qualifie', 'proposition', 'negociation', 'gagne', 'perdu'] as const
 export type Stage = (typeof STAGES)[number]
 /** Probabilité proposée à chaque étape (modifiable par opportunité). */

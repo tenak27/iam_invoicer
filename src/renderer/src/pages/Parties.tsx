@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
-import { formatDate } from '@shared/format'
+import { formatDate, formatMoney } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge, useForm } from '../components/ui'
-import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit, UsersThree, UserCheck, UserPlus, Scales, Bell } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ChatCircleText, CheckCircle, Clock, Eye, FilePlus, Handshake, PaperPlaneTilt, PencilSimple, Prohibit, Receipt, UsersThree, UserCheck, UserPlus, Scales, Bell, Wallet } from '@phosphor-icons/react'
 import { KpiStrip } from '../components/KpiStrip'
-import { useSession } from '../session'
+import { useCan, useSession } from '../session'
 
 type Kind = 'client' | 'supplier'
 const LABELS = {
@@ -158,6 +158,7 @@ export function PartyDetail() {
   const nav = useNavigate()
   const { data, error, loading, reload } = useQuery<any>('parties.get', { id: Number(id) })
   const [editing, setEditing] = useState(false)
+  const canCrm = useCan('crm')
   if (error) return <div className="page"><ErrorBox error={error} onRetry={reload} /></div>
   if (loading && !data) return <Loading />
   const { party, documents, payments } = data
@@ -185,6 +186,7 @@ export function PartyDetail() {
         <div className="kpi"><div className="kpi-label">Adresse</div><div className="kpi-text pre">{[party.address, party.city].filter(Boolean).join('\n') || '—'}</div></div>
         <div className="kpi"><div className="kpi-label">Fiscal</div><div className="kpi-text">{company.tax_id_label || 'NIF'} : {party.tax_id || '—'}<br />RCCM : {party.rccm || '—'}<br />Délai : {party.payment_terms} j</div></div>
       </div>
+      {kind === 'client' && canCrm && <ClientRelation partyId={party.id} documents={documents} payments={payments} />}
       <div className="dash-grid two">
         <section className="card">
           <h3>Documents</h3>
@@ -224,5 +226,58 @@ export function PartyDetail() {
       </div>
       {editing && <PartyForm party={party} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); reload() }} />}
     </div>
+  )
+}
+
+const CRM_STAGE: Record<string, { label: string; tone: string }> = {
+  nouveau: { label: 'Nouveau', tone: 'slate' }, qualifie: { label: 'Qualifié', tone: 'info' },
+  proposition: { label: 'Proposition', tone: 'primary' }, negociation: { label: 'Négociation', tone: 'warning' },
+  gagne: { label: 'Gagné', tone: 'success' }, perdu: { label: 'Perdu', tone: 'danger' }
+}
+const ACT_ICON: Record<string, any> = { appel: ChatCircleText, reunion: Handshake, email: PaperPlaneTilt, visite: Handshake, note: Receipt, tache: Clock }
+
+/** Relation client : opportunités en cours + chronologie unifiée (documents, règlements, activités, messages). */
+function ClientRelation({ partyId, documents, payments }: { partyId: number; documents: any[]; payments: any[] }) {
+  const nav = useNavigate()
+  const { data } = useQuery<any>('crm.partyTimeline', { party_id: partyId })
+  const opportunities = (data?.opportunities ?? []).filter((o: any) => o.stage !== 'gagne' && o.stage !== 'perdu')
+  type Ev = { when: string; icon: any; tone: string; title: string; detail: string; to?: string }
+  const events: Ev[] = [
+    ...documents.map((d: any): Ev => ({ when: (d.date || '') + 'T12', icon: Receipt, tone: 'primary', title: `${DOC_TYPES[d.type as DocType].label} ${d.number ?? 'brouillon'}`, detail: `${formatMoney(d.total_ttc)} · ${d.status}`, to: `/doc/${d.id}` })),
+    ...payments.map((p: any): Ev => ({ when: (p.date || '') + 'T12', icon: Wallet, tone: 'success', title: `Règlement ${p.method}`, detail: `${formatMoney(p.direction === 'in' ? p.amount : -p.amount)}${p.document_number ? ` · ${p.document_number}` : ''}` })),
+    ...(data?.activities ?? []).map((a: any): Ev => ({ when: a.due_date ? a.due_date + 'T12' : a.created_at, icon: a.done ? CheckCircle : (ACT_ICON[a.kind] ?? Clock), tone: a.done ? 'success' : 'warning', title: a.subject, detail: `${a.kind}${a.opportunity_title ? ` · ${a.opportunity_title}` : ''}${a.user_name ? ` · ${a.user_name}` : ''}` })),
+    ...(data?.messages ?? []).map((m: any): Ev => ({ when: m.created_at, icon: m.channel === 'sms' ? ChatCircleText : PaperPlaneTilt, tone: m.status === 'envoye' ? 'info' : 'danger', title: `${m.channel === 'sms' ? 'SMS' : 'E-mail'} ${m.status === 'envoye' ? 'envoyé' : 'échoué'}`, detail: m.subject || m.recipient }))
+  ].sort((a, b) => (a.when < b.when ? 1 : -1)).slice(0, 30)
+
+  return (
+    <section className="card">
+      <div className="dcard-head"><div><h3>Relation client</h3></div><Link className="btn btn-sm btn-tonal" to="/crm">Pipeline CRM</Link></div>
+      {opportunities.length > 0 && (
+        <ul className="rows">
+          {opportunities.map((o: any) => {
+            const s = CRM_STAGE[o.stage] ?? { label: o.stage, tone: 'slate' }
+            return (
+              <li key={o.id}>
+                <span className={`tint tint-${s.tone} tint-sm`}><Handshake size={18} weight="duotone" aria-hidden="true" /></span>
+                <div className="grow"><b>{o.title}</b><span>{s.label} · {o.probability}%{o.owner_name ? ` · ${o.owner_name}` : ''}</span></div>
+                <strong className="money">{formatMoney(o.amount)}</strong>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <h4 className="section-title">Activité récente</h4>
+      {events.length === 0 ? <Empty>Aucune activité pour ce client.</Empty> : (
+        <ul className="rows">
+          {events.map((e, i) => (
+            <li key={i} className={e.to ? 'clickable' : ''} onClick={() => e.to && nav(e.to)}>
+              <span className={`tint tint-${e.tone} tint-sm`}><e.icon size={18} weight="duotone" aria-hidden="true" /></span>
+              <div className="grow"><b>{e.title}</b><span>{e.detail}</span></div>
+              <span className="muted small nowrap">{formatDate(e.when.slice(0, 10))}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
