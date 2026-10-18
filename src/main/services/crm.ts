@@ -19,8 +19,8 @@ export async function partyTimeline(ctx: Ctx, args: { party_id: number }) {
     ),
     ctx.db.query(
       `SELECT a.id, a.kind, a.subject, a.due_date, a.done, a.created_at, o.id AS opportunity_id, o.title AS opportunity_title, u.full_name AS user_name
-       FROM crm_activities a JOIN opportunities o ON o.id = a.opportunity_id LEFT JOIN users u ON u.id = a.user_id
-       WHERE o.party_id = $1 ORDER BY a.created_at DESC, a.id DESC LIMIT 100`,
+       FROM crm_activities a LEFT JOIN opportunities o ON o.id = a.opportunity_id LEFT JOIN users u ON u.id = a.user_id
+       WHERE a.party_id = $1 OR o.party_id = $1 ORDER BY a.created_at DESC, a.id DESC LIMIT 100`,
       [id]
     ),
     ctx.db.query(
@@ -83,6 +83,7 @@ export async function saveOpportunity(ctx: Ctx, input: any) {
        expected_date=$10, source=$11, notes=$12, owner_id=$13, updated_at=now() WHERE id=$14`,
       [...fields, input.id]
     )
+    await ctx.db.query('UPDATE crm_activities SET party_id = $1 WHERE opportunity_id = $2', [partyId, input.id])
     await audit(ctx.db, ctx, 'modification', 'opportunite', input.id, title)
     return { id: input.id }
   }
@@ -106,14 +107,18 @@ export async function moveStage(ctx: Ctx, input: { id: number; stage: Stage; los
     [input.stage, STAGE_PROBABILITY[input.stage], input.stage === 'perdu' ? str(input.lost_reason) : '', input.id]
   )
   await ctx.db.query(
-    "INSERT INTO crm_activities (opportunity_id, kind, subject, done, user_id) VALUES ($1, 'note', $2, TRUE, $3)",
+    "INSERT INTO crm_activities (opportunity_id, party_id, kind, subject, done, user_id) VALUES ($1, (SELECT party_id FROM opportunities WHERE id = $1), 'note', $2, TRUE, $3)",
     [input.id, `Étape : ${o.stage} → ${input.stage}${input.stage === 'perdu' ? ` (${str(input.lost_reason)})` : ''}`, ctx.user?.id ?? null]
   )
   await audit(ctx.db, ctx, 'etape', 'opportunite', input.id, input.stage)
   return true
 }
 
-export async function saveActivity(ctx: Ctx, input: { id?: number; opportunity_id: number; kind: string; subject: string; due_date?: string; done?: boolean }) {
+export async function saveActivity(ctx: Ctx, input: { id?: number; opportunity_id?: number; party_id?: number; kind: string; subject: string; due_date?: string; done?: boolean }) {
+  const oppId = Number(input.opportunity_id) || null
+  let partyId = Number(input.party_id) || null
+  if (oppId) partyId = (await ctx.db.one<{ party_id: number | null }>('SELECT party_id FROM opportunities WHERE id = $1', [oppId]))?.party_id ?? partyId
+  if (!input.id && !oppId && !partyId) fail('Rattachez la tâche à un client ou à une opportunité.')
   if (!['appel', 'reunion', 'email', 'visite', 'note', 'tache'].includes(input.kind)) fail("Type d'activité inconnu.")
   const subject = str(input.subject)
   if (!subject) fail("Décrivez l'activité.")
@@ -121,11 +126,11 @@ export async function saveActivity(ctx: Ctx, input: { id?: number; opportunity_i
     await ctx.db.query('UPDATE crm_activities SET kind=$1, subject=$2, due_date=$3, done=$4 WHERE id=$5', [input.kind, subject, str(input.due_date) || null, !!input.done, input.id])
   } else {
     await ctx.db.query(
-      'INSERT INTO crm_activities (opportunity_id, kind, subject, due_date, done, user_id) VALUES ($1,$2,$3,$4,$5,$6)',
-      [input.opportunity_id, input.kind, subject, str(input.due_date) || null, !!input.done, ctx.user?.id ?? null]
+      'INSERT INTO crm_activities (opportunity_id, party_id, kind, subject, due_date, done, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+      [oppId, partyId, input.kind, subject, str(input.due_date) || null, !!input.done, ctx.user?.id ?? null]
     )
   }
-  await ctx.db.query('UPDATE opportunities SET updated_at = now() WHERE id = $1', [input.opportunity_id])
+  if (oppId) await ctx.db.query('UPDATE opportunities SET updated_at = now() WHERE id = $1', [oppId])
   return true
 }
 
@@ -137,9 +142,9 @@ export async function toggleActivity(ctx: Ctx, input: { id: number }) {
 /** Activités à faire (aujourd'hui, en retard, à venir) pour l'utilisateur ou l'équipe. */
 export async function agenda(ctx: Ctx, args: { mine?: boolean } = {}) {
   return ctx.db.query(
-    `SELECT a.*, o.title AS opportunity_title, COALESCE(p.name, o.prospect_name) AS who
-     FROM crm_activities a JOIN opportunities o ON o.id = a.opportunity_id LEFT JOIN parties p ON p.id = o.party_id
-     WHERE NOT a.done AND a.due_date IS NOT NULL AND ($1::int IS NULL OR o.owner_id = $1)
+    `SELECT a.*, o.title AS opportunity_title, COALESCE(p.name, o.prospect_name) AS who, p.id AS who_id
+     FROM crm_activities a LEFT JOIN opportunities o ON o.id = a.opportunity_id LEFT JOIN parties p ON p.id = COALESCE(a.party_id, o.party_id)
+     WHERE NOT a.done AND a.due_date IS NOT NULL AND ($1::int IS NULL OR COALESCE(o.owner_id, a.user_id) = $1)
      ORDER BY a.due_date LIMIT 100`,
     [args.mine ? ctx.user?.id ?? null : null]
   )
@@ -179,6 +184,7 @@ export async function createQuote(ctx: Ctx, input: { id: number }) {
       lines: [{ description: o.title, quantity: 1, unit_price: ht, tva_rate: 18 }]
     })
     await db.query("UPDATE opportunities SET party_id = $1, quote_id = $2, stage = CASE WHEN stage IN ('nouveau','qualifie') THEN 'proposition' ELSE stage END, probability = GREATEST(probability, 50), updated_at = now() WHERE id = $3", [partyId, id, o.id])
+    await db.query('UPDATE crm_activities SET party_id = $1 WHERE opportunity_id = $2', [partyId, o.id])
     await audit(db, ctx, 'devis', 'opportunite', o.id)
     return { documentId: id }
   })

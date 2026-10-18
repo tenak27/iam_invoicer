@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
-import { formatDate, formatMoney } from '@shared/format'
+import { formatDate, formatMoney, todayISO } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge, useForm } from '../components/ui'
 import { ArrowCounterClockwise, ChatCircleText, CheckCircle, Clock, Eye, FilePlus, Handshake, PaperPlaneTilt, PencilSimple, Prohibit, Receipt, UsersThree, UserCheck, UserPlus, Scales, Bell, Wallet } from '@phosphor-icons/react'
@@ -239,7 +239,15 @@ const ACT_ICON: Record<string, any> = { appel: ChatCircleText, reunion: Handshak
 /** Relation client : opportunités en cours + chronologie unifiée (documents, règlements, activités, messages). */
 function ClientRelation({ partyId, documents, payments }: { partyId: number; documents: any[]; payments: any[] }) {
   const nav = useNavigate()
-  const { data } = useQuery<any>('crm.partyTimeline', { party_id: partyId })
+  const { data, reload } = useQuery<any>('crm.partyTimeline', { party_id: partyId })
+  const tasks = (data?.activities ?? []).filter((a: any) => !a.done && a.due_date).sort((a: any, b: any) => (a.due_date < b.due_date ? -1 : 1))
+  const today = todayISO()
+  const [task, setTask] = useState({ subject: '', due_date: today, kind: 'appel' })
+  const addTask = async () => {
+    const ok = await run(() => api('crm.saveActivity', { party_id: partyId, ...task }), 'Tâche ajoutée')
+    if (ok !== undefined) { setTask({ subject: '', due_date: today, kind: 'appel' }); reload() }
+  }
+  const toggle = async (id: number) => { await run(() => api('crm.toggleActivity', { id })); reload() }
   const opportunities = (data?.opportunities ?? []).filter((o: any) => o.stage !== 'gagne' && o.stage !== 'perdu')
   type Ev = { when: string; icon: any; tone: string; title: string; detail: string; to?: string }
   const events: Ev[] = [
@@ -261,6 +269,29 @@ function ClientRelation({ partyId, documents, payments }: { partyId: number; doc
                 <span className={`tint tint-${s.tone} tint-sm`}><Handshake size={18} weight="duotone" aria-hidden="true" /></span>
                 <div className="grow"><b>{o.title}</b><span>{s.label} · {o.probability}%{o.owner_name ? ` · ${o.owner_name}` : ''}</span></div>
                 <strong className="money">{formatMoney(o.amount)}</strong>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <h4 className="section-title">Tâches et rappels</h4>
+      <form className="row-form" onSubmit={(e) => { e.preventDefault(); addTask() }}>
+        <select className="input" value={task.kind} onChange={(e) => setTask({ ...task, kind: e.target.value })} aria-label="Type">
+          {['appel', 'reunion', 'visite', 'email', 'tache'].map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
+        <input className="input grow" placeholder="Rappeler pour le devis, relancer le paiement…" value={task.subject} onChange={(e) => setTask({ ...task, subject: e.target.value })} aria-label="Tâche" />
+        <input className="input" type="date" value={task.due_date} onChange={(e) => setTask({ ...task, due_date: e.target.value })} aria-label="Échéance" />
+        <button className="btn btn-sm btn-primary" disabled={!task.subject.trim()}>Ajouter</button>
+      </form>
+      {tasks.length > 0 && (
+        <ul className="rows">
+          {tasks.map((t: any) => {
+            const late = t.due_date < today
+            return (
+              <li key={t.id}>
+                <button className="btn btn-sm btn-ghost" onClick={() => toggle(t.id)} aria-label="Marquer comme faite"><CheckCircle size={20} aria-hidden="true" /></button>
+                <div className="grow"><b>{t.subject}</b><span>{t.kind}{t.opportunity_title ? ` · ${t.opportunity_title}` : ''}</span></div>
+                <span className={`badge ${late ? 'badge-annule' : t.due_date === today ? 'badge-prospect' : 'badge-brouillon'}`}>{late ? 'En retard · ' : t.due_date === today ? "Aujourd'hui · " : ''}{formatDate(t.due_date)}</span>
               </li>
             )
           })}

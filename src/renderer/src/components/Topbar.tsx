@@ -5,11 +5,11 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  Bell, CashRegister, Check, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, Palette as PaletteIcon, SignOut, Sun, User, Warning,
+  Bell, CashRegister, Check, Clock, Desktop, FileText, Gear, MagnifyingGlass, Moon, Notepad, Package, Palette as PaletteIcon, SignOut, Sun, User, Warning,
   type Icon
 } from '@phosphor-icons/react'
 import { can, ROLE_LABELS, type Module } from '@shared/domain'
-import { formatDate, formatMoney, formatQty } from '@shared/format'
+import { formatDate, formatMoney, formatQty, todayISO } from '@shared/format'
 import { useQuery } from '../api'
 import { useSession } from '../session'
 import { PALETTES, setPalette, setTheme, useAppearance, type ThemeChoice } from '../theme'
@@ -149,6 +149,9 @@ function Notifications() {
   }, [reload])
   useEffect(() => { reload() }, [location.pathname, reload])
   const canSales = can(useSession().user.role, 'sales')
+  const canCrm = can(useSession().user.role, 'crm')
+  const tasksQ = useQuery<any[]>('crm.agenda', { mine: true })
+  useEffect(() => { if (canCrm) tasksQ.reload() }, [data])
   // Alertes « vues » : le compteur ne montre que les nouvelles alertes et se vide à l'ouverture.
   const SEEN_KEY = 'iam.notif.seen'
   const [seen, setSeen] = useState<Set<string>>(() => {
@@ -158,7 +161,13 @@ function Notifications() {
       return new Set()
     }
   })
+  const today = todayISO()
+  const dueTasks = canCrm && Array.isArray(tasksQ.data) ? tasksQ.data.filter((t: any) => t.due_date <= today) : []
   const items: { key: string; icon: Icon; tone: string; title: string; text: string; to?: string }[] = [
+    ...dueTasks.slice(0, 6).map((t: any) => ({
+      key: `t${t.id}`, icon: Clock, tone: t.due_date < today ? 'danger' : 'warning', title: t.due_date < today ? `Tâche en retard : ${t.subject}` : `Aujourd'hui : ${t.subject}`,
+      text: `${t.who ?? ''}${t.due_date < today ? ` · prévue le ${formatDate(t.due_date)}` : ''}`, to: t.who_id ? `/party/${t.who_id}` : '/crm'
+    })),
     ...(data?.overdue ?? []).slice(0, 6).map((o: any) => ({
       key: `o${o.id}`, icon: Warning, tone: 'danger', title: `${o.number} en retard`,
       text: `${o.party_name} · ${formatMoney(o.remaining)} depuis le ${formatDate(o.due_date)}`, to: canSales ? `/doc/${o.id}` : undefined
@@ -194,7 +203,7 @@ function Notifications() {
         <div className="pop-panel notif-panel" role="dialog" aria-label="Notifications">
           <div className="pop-head"><strong>Notifications</strong>{items.length > 0 && <span className="pill">{items.length} à traiter</span>}</div>
           {items.length === 0 ? (
-            <p className="pop-empty">Tout est à jour : aucune facture en retard, aucun stock bas.</p>
+            <p className="pop-empty">Tout est à jour : aucune facture en retard, aucun stock bas, aucune tâche due.</p>
           ) : (
             <ul className="notif-list">
               {items.map((it) => (

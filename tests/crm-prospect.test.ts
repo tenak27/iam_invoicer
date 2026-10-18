@@ -47,3 +47,17 @@ describe('Prospect → client', () => {
     expect(log.length).toBe(1)
   })
 })
+
+describe('Tâches client', () => {
+  it('rattache une tâche au client sans opportunité, la remonte dans l’agenda et la chronologie', async () => {
+    const c = await ok<{ id: number }>(admin, 'parties.save', { kind: 'client', name: 'ONEA' })
+    await ok(admin, 'crm.saveActivity', { party_id: c.id, kind: 'appel', subject: 'Relancer le devis', due_date: '2020-01-01' })
+    const agenda = await ok<any[]>(admin, 'crm.agenda', { mine: true })
+    const t = agenda.find((a) => a.subject === 'Relancer le devis')
+    expect(t?.who_id).toBe(c.id)
+    const tl = await ok<any>(admin, 'crm.partyTimeline', { party_id: c.id })
+    expect(tl.activities.map((a: any) => a.id)).toContain(t.id)
+    await ok(admin, 'crm.toggleActivity', { id: t.id })
+    expect((await ok<any[]>(admin, 'crm.agenda', { mine: true })).find((a) => a.id === t.id)).toBeUndefined()
+  })
+})

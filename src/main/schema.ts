@@ -874,5 +874,13 @@ export const MIGRATIONS: string[] = [
   ALTER TABLE parties ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT '';
   ALTER TABLE parties ADD COLUMN IF NOT EXISTS converted_at TIMESTAMPTZ;
   CREATE INDEX IF NOT EXISTS parties_prospect_idx ON parties(kind, is_prospect)
+  `,
+  // CRM étape 2b : tâches et rappels rattachés directement au client (sans opportunité)
+  `
+  ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS party_id INT REFERENCES parties(id) ON DELETE CASCADE;
+  ALTER TABLE crm_activities ALTER COLUMN opportunity_id DROP NOT NULL;
+  UPDATE crm_activities a SET party_id = o.party_id FROM opportunities o WHERE o.id = a.opportunity_id AND a.party_id IS NULL;
+  CREATE INDEX IF NOT EXISTS crm_activities_party_idx ON crm_activities(party_id);
+  CREATE INDEX IF NOT EXISTS crm_activities_due_idx ON crm_activities(done, due_date)
   `
 ]
