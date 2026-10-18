@@ -16,9 +16,9 @@ const config: CapacitorConfig = {
     scheme: 'IAM INVOICER'
   },
   plugins: {
-    // Android : marges de la barre d'état et de l'encoche exposées en variables CSS (--safe-area-inset-*),
-    // y compris en paysage, là où la WebView ne fournit pas toujours env(safe-area-inset-*).
-    SystemBars: { insetsHandling: 'css' }
+    // Android : les marges (barre d'état, encoche, clavier) sont appliquées nativement dans MainActivity ;
+    // le décalage CSS de Capacitor est coupé pour ne pas les compter deux fois.
+    SystemBars: { insetsHandling: 'disable' }
   }
 }
 

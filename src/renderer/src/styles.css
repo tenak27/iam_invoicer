@@ -2905,3 +2905,16 @@ h1, h2, h3, .auth-title, .brand-name, .kpi-tile-value, .hero-figure, .stat stron
   tr.clickable:active, li.clickable:active { background: rgba(var(--primary-rgb), .08); }
   input, select, textarea { font-size: max(16px, 1em); }
 }
+
+/* ---------- Écrans tactiles : mode allégé ----------
+   Les animations en boucle (mascotte, avatar, cloche, icônes, décor) tournent sans arrêt et occupent le processeur
+   graphique du téléphone : le défilement et le toucher en souffrent. Elles jouent une seule fois ; seuls les
+   indicateurs de chargement continuent. Le calque de fond fixe, repeint à chaque défilement, est retiré. */
+@media (hover: none), (pointer: coarse) {
+  *, *::before, *::after { animation-iteration-count: 1 !important; }
+  .spin, .startup-spinner, .skeleton, .loading-skel i, .loading::before { animation-iteration-count: infinite !important; }
+  .content::before, .auth-screen::after, .auth-grid, .welcome-glow, .page-hero::after { display: none !important; }
+  .navbar, .tabbar, .sidebar { box-shadow: none; }
+  .sidebar { will-change: transform; }
+  .card, .dcard, .table-wrap, .kpi-tile { box-shadow: 0 1px 3px rgba(20, 30, 50, .1); }
+}
