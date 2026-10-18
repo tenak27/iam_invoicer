@@ -14,6 +14,11 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'never',
     scheme: 'IAM INVOICER'
+  },
+  plugins: {
+    // Android : marges de la barre d'état et de l'encoche exposées en variables CSS (--safe-area-inset-*),
+    // y compris en paysage, là où la WebView ne fournit pas toujours env(safe-area-inset-*).
+    SystemBars: { insetsHandling: 'css' }
   }
 }
 
