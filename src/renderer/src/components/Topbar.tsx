@@ -149,6 +149,15 @@ function Notifications() {
   }, [reload])
   useEffect(() => { reload() }, [location.pathname, reload])
   const canSales = can(useSession().user.role, 'sales')
+  // Alertes « vues » : le compteur ne montre que les nouvelles alertes et se vide à l'ouverture.
+  const SEEN_KEY = 'iam.notif.seen'
+  const [seen, setSeen] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
   const items: { key: string; icon: Icon; tone: string; title: string; text: string; to?: string }[] = [
     ...(data?.overdue ?? []).slice(0, 6).map((o: any) => ({
       key: `o${o.id}`, icon: Warning, tone: 'danger', title: `${o.number} en retard`,
@@ -159,11 +168,27 @@ function Notifications() {
       text: `${formatQty(p.stock_qty)} ${p.unit} restant(s), seuil ${formatQty(p.min_stock)}`, to: '/stock'
     }))
   ]
+  // Nombre d'alertes nouvelles (non encore vues) : c'est lui qui s'affiche sur la cloche.
+  const newCount = items.filter((it) => !seen.has(it.key)).length
+  // Ouvre la cloche et marque les alertes actuelles comme vues (le compteur retombe à zéro).
+  const openBell = () => {
+    const willOpen = !pop.open
+    pop.setOpen(willOpen)
+    if (willOpen && newCount > 0) {
+      const keys = items.map((it) => it.key)
+      setSeen(new Set(keys))
+      try {
+        localStorage.setItem(SEEN_KEY, JSON.stringify(keys))
+      } catch {
+        /* préférence non mémorisée : le compteur se revidera à la prochaine ouverture */
+      }
+    }
+  }
   return (
     <div className="pop" ref={pop.ref}>
-      <button className="nav-icon-btn" onClick={() => pop.setOpen(!pop.open)} aria-expanded={pop.open} aria-label={`Notifications : ${items.length}`}>
+      <button className="nav-icon-btn" onClick={openBell} aria-expanded={pop.open} aria-label={`Notifications : ${newCount} nouvelle(s), ${items.length} au total`}>
         <Bell size={21} aria-hidden="true" />
-        {items.length > 0 && <span className="nav-badge">{items.length}</span>}
+        {newCount > 0 && <span className="nav-badge">{newCount}</span>}
       </button>
       {pop.open && (
         <div className="pop-panel notif-panel" role="dialog" aria-label="Notifications">
