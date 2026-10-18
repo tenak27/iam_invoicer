@@ -210,6 +210,22 @@ export async function deleteDraft(ctx: Ctx, args: { id: number }) {
   })
 }
 
+/** Administrateur : supprime définitivement un document annulé (le journal d'activité garde la trace de son numéro). */
+export async function purgeDocument(ctx: Ctx, args: { id: number }) {
+  if (ctx.user?.role !== 'admin') fail("Seul l'administrateur peut supprimer un document annulé.")
+  return ctx.db.tx(async (db) => {
+    const doc = await db.one('SELECT status, type, number FROM documents WHERE id = $1 FOR UPDATE', [args.id])
+    if (!doc) fail('Document introuvable.')
+    if (doc.status !== 'annule') fail("Annulez d'abord le document avant de le supprimer.")
+    await db.query('UPDATE documents SET source_id = NULL WHERE source_id = $1', [args.id])
+    await db.query('UPDATE stock_movements SET document_id = NULL WHERE document_id = $1', [args.id])
+    await db.query('UPDATE payments SET document_id = NULL WHERE document_id = $1', [args.id])
+    await db.query('DELETE FROM documents WHERE id = $1', [args.id])
+    await audit(db, ctx, 'suppression', doc.type, args.id, `${doc.number ?? ''} (annulé) supprimé`)
+    return true
+  })
+}
+
 /**
  * Retenues à la source d'une facture validée : le tiers verse le net et reverse la retenue à l'État.
  * Chaque retenue est enregistrée comme un règlement « Retenue à la source » (compte de la taxe).
@@ -355,8 +371,8 @@ export async function cancelDocument(ctx: Ctx, args: { id: number }) {
     if (!doc) fail('Document introuvable.')
     if (doc.status !== 'valide') fail('Seul un document validé peut être annulé.')
     if (doc.type !== 'DEV' && doc.type !== 'BC') await assertPeriodOpen(db, doc.date)
-    if (doc.type === 'FAC' || doc.type === 'AV')
-      fail('Une facture ou un avoir validé ne peut pas être annulé : établissez un avoir.')
+    if ((doc.type === 'FAC' || doc.type === 'AV') && ctx.user?.role !== 'admin')
+      fail("Une facture ou un avoir validé ne peut pas être annulé : établissez un avoir (ou demandez à l'administrateur).")
     const pay = await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM payments WHERE document_id = $1 AND method <> $2', [doc.id, WITHHOLDING_METHOD])
     if (pay!.n > 0) fail("Supprimez d'abord les paiements liés à ce document.")
     // Retenues à la source enregistrées automatiquement : annulées avec le document.

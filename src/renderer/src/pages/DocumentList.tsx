@@ -3,8 +3,9 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, todayISO } from '@shared/format'
 import { api, exportCsv, run, unwrap, useQuery } from '../api'
+import { useSession } from '../session'
 import { confirmDialog, Empty, ErrorBox, Loading, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge } from '../components/ui'
-import { Copy, Eye, FilePdf, Printer, Trash, Files, Coins, HourglassMedium, Warning, PencilLine } from '@phosphor-icons/react'
+import { Copy, Eye, FilePdf, Printer, Trash, Files, Coins, HourglassMedium, Warning, PencilLine, Prohibit } from '@phosphor-icons/react'
 import { KpiStrip } from '../components/KpiStrip'
 import { DocumentPreview } from '../components/DocumentPreview'
 
@@ -34,6 +35,16 @@ function DocumentListInner({ type }: { type: DocType }) {
   const remove = async (r: any) => {
     if (!(await confirmDialog('Supprimer ce brouillon ?', { danger: true }))) return
     if (await run(() => api('documents.delete', { id: r.id }), 'Brouillon supprimé.')) reload()
+  }
+
+  const isAdmin = useSession().user.role === 'admin'
+  const cancel = async (r: any) => {
+    if (!(await confirmDialog(`Annuler ${r.number} ?`, { danger: true, detail: 'Les écritures comptables sont retirées et le stock éventuel est rétabli. Le numéro reste réservé, marqué ANNULÉ.' }))) return
+    if (await run(() => api('documents.cancel', { id: r.id }), 'Document annulé.')) reload()
+  }
+  const purge = async (r: any) => {
+    if (!(await confirmDialog(`Supprimer définitivement ${r.number ?? 'ce document'} ?`, { danger: true, detail: 'Action irréversible. Le journal d’activité garde la trace de son numéro.' }))) return
+    if (await run(() => api('documents.purge', { id: r.id }), 'Document supprimé.')) reload()
   }
 
   const doExport = () =>
@@ -116,7 +127,9 @@ function DocumentListInner({ type }: { type: DocType }) {
                       { label: 'Voir le PDF', icon: FilePdf, tone: 'primary', onClick: () => run(() => unwrap(window.erp.pdf(r.id, 'open'))) },
                       { label: 'Imprimer (avec aperçu)', icon: Printer, onClick: () => setPreview(r.id) },
                       { label: 'Dupliquer', icon: Copy, tone: 'success', onClick: () => duplicate(r) },
-                      { label: 'Supprimer le brouillon', icon: Trash, tone: 'danger', hidden: r.status !== 'brouillon', onClick: () => remove(r) }
+                      { label: 'Supprimer le brouillon', icon: Trash, tone: 'danger', hidden: r.status !== 'brouillon', onClick: () => remove(r) },
+                      { label: 'Annuler le document', icon: Prohibit, tone: 'danger', hidden: !isAdmin || r.status !== 'valide', onClick: () => cancel(r) },
+                      { label: 'Supprimer définitivement', icon: Trash, tone: 'danger', hidden: !isAdmin || r.status !== 'annule', onClick: () => purge(r) }
                     ]} />
                   </td>
                 </tr>

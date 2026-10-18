@@ -158,6 +158,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'documents.delete': { access: docModule, fn: documents.deleteDraft },
   'documents.validate': { access: docModule, fn: documents.validateDocument },
   'documents.cancel': { access: docModule, fn: documents.cancelDocument },
+  'documents.purge': { access: docModule, fn: documents.purgeDocument },
   'documents.convert': { access: docModule, fn: documents.convertDocument },
   'documents.duplicate': { access: docModule, fn: documents.duplicateDocument },
 

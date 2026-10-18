@@ -8,7 +8,7 @@ import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
-import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash, PencilSimple } from '@phosphor-icons/react'
+import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash, PencilSimple, Prohibit } from '@phosphor-icons/react'
 import { DocumentPreview } from '../components/DocumentPreview'
 
 type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
@@ -213,6 +213,11 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     if (await run(() => api('documents.delete', { id: doc.id }), 'Brouillon supprimé.')) nav(`/docs/${type}`)
   }
 
+  const purge = async () => {
+    if (!(await confirmDialog(`Supprimer définitivement ${doc.number ?? 'ce document'} ?`, { danger: true, detail: 'Action irréversible. Le document annulé disparaît des listes ; le journal d’activité garde la trace de son numéro.' }))) return
+    if (await run(() => api('documents.purge', { id: doc.id }), 'Document supprimé.')) nav(`/docs/${type}`)
+  }
+
   const [preview, setPreview] = useState(false)
   const openPreview = async () => {
     if (dirty && editable && doc) await save()
@@ -268,8 +273,11 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
             </>
           ) : (
             <>
-              {doc.status === 'valide' && type !== 'FAC' && type !== 'AV' && (
-                <button className="btn btn-ghost" onClick={() => action('documents.cancel', 'Document annulé.', `Annuler ${doc.number} ?`, info.stock !== 0 ? 'Les mouvements de stock seront inversés.' : undefined)}>Annuler le document</button>
+              {doc.status === 'valide' && ((type !== 'FAC' && type !== 'AV') || user.role === 'admin') && (
+                <button className="btn btn-ghost" onClick={() => action('documents.cancel', 'Document annulé.', `Annuler ${doc.number} ?`, [type === 'FAC' || type === 'AV' ? "Le numéro reste réservé (marqué ANNULÉ) et les écritures comptables sont retirées. Pour un client déjà facturé, l'avoir reste la voie normale." : '', info.stock !== 0 ? 'Les mouvements de stock seront inversés.' : ''].filter(Boolean).join(' ') || undefined)}><Prohibit size={18} aria-hidden="true" />Annuler le document</button>
+              )}
+              {doc.status === 'annule' && user.role === 'admin' && (
+                <button className="btn btn-ghost" onClick={purge}><Trash size={18} aria-hidden="true" />Supprimer définitivement</button>
               )}
               {canMessages && doc.status === 'valide' && info.side === 'sale' && (
                 <>

@@ -26,7 +26,7 @@ export function Mascot({ className = '', mood = 'calm', messages = [] }: { class
   // Regard et tête tournés vers le pointeur, où qu'il soit dans la fenêtre
   useEffect(() => {
     const el = box.current
-    if (!el || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    if (!el || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || !window.matchMedia?.('(hover: hover)').matches) return
     let frame = 0
     const move = (e: PointerEvent) => {
       cancelAnimationFrame(frame)

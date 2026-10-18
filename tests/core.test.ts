@@ -120,7 +120,7 @@ describe('ERP — cycle complet', () => {
 
   it('avoir : retour en stock et solde client négatif', async () => {
     const [fac] = await ok<any[]>(admin, 'documents.list', { types: ['FAC'], status: 'valide' })
-    expect(await err(admin, 'documents.cancel', { id: fac.id })).toMatch(/avoir/)
+    expect(await err(commercial, 'documents.cancel', { id: fac.id })).toMatch(/avoir/)
     const av = await ok(admin, 'documents.convert', { id: fac.id, to: 'AV' })
     await ok(admin, 'documents.save', {
       id: av.id, party_id: clientId,

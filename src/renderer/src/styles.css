@@ -2860,3 +2860,23 @@ h1, h2, h3, .auth-title, .brand-name, .kpi-tile-value, .hero-figure, .stat stron
 /* Action destructive d'un en-tête de page : elle garde son rouge (le fond clair des autres boutons la rendait illisible) */
 .page-hero .page-actions .btn-danger, .page-hero .page-actions .btn-danger:hover:not(:disabled) { background: #c9393a; border-color: #c9393a; color: #fff; }
 .page-hero .page-actions .btn-danger:hover:not(:disabled) { background: #a92e2f; border-color: #a92e2f; }
+
+/* ---------- Écrans tactiles : fluidité d'abord ----------
+   Sur téléphone et tablette, les effets coûteux (fond fixe repeint à chaque défilement, flous,
+   animations en boucle) saccadent le défilement et le toucher : on les remplace par des équivalents légers. */
+@media (hover: none), (pointer: coarse) {
+  html { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  body, :root[data-palette] body { background-attachment: scroll !important; }
+  *, *::before, *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .modal-backdrop { background: rgba(10, 18, 34, .55); }
+  .auth-card { background: var(--surface); }
+  .main-col, .modal-body, .table-wrap, nav, .notif-list, .cart-lines, .scroll-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  /* Animations décoratives en boucle : arrêtées */
+  .uavatar .uavatar-glow, .auth-bg .orb, .auth-float, .fx-layer { animation: none !important; }
+  .auth-bg .orb { filter: none; opacity: .35; }
+  .uavatar .uavatar-glow { filter: none; }
+  /* Changement de page : simple fondu, sans flou */
+  .route-view { animation: route-in-touch .2s ease-out; }
+  @keyframes route-in-touch { from { opacity: 0; transform: translateY(6px); } }
+  .card, .dcard, .kpi-tile, .mini-kpi { transform: none !important; }
+}

@@ -61,3 +61,17 @@ describe('Tâches client', () => {
     expect((await ok<any[]>(admin, 'crm.agenda', { mine: true })).find((a) => a.id === t.id)).toBeUndefined()
   })
 })
+
+describe('Administrateur : annulation et suppression', () => {
+  it('annule une facture validée sans règlement puis la supprime définitivement', async () => {
+    const c = await ok<{ id: number }>(admin, 'parties.save', { kind: 'client', name: 'SOFITEX' })
+    const prod = await ok<{ id: number }>(admin, 'products.save', { kind: 'prestation', name: 'Audit', sale_price: 50000, tva_rate: 18 })
+    const fac = await ok<{ id: number }>(admin, 'documents.save', { type: 'FAC', party_id: c.id, lines: [{ product_id: prod.id, description: 'Audit', quantity: 1, unit_price: 50000, tva_rate: 18 }] })
+    await ok(admin, 'documents.validate', { id: fac.id })
+    expect((await call(admin, 'documents.purge', { id: fac.id })).ok).toBe(false)
+    const cancelled = await ok<any>(admin, 'documents.cancel', { id: fac.id })
+    expect(cancelled.status).toBe('annule')
+    await ok(admin, 'documents.purge', { id: fac.id })
+    expect((await call(admin, 'documents.get', { id: fac.id })).ok).toBe(false)
+  })
+})
