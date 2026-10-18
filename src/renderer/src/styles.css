@@ -468,6 +468,7 @@ tr.inactive td { opacity: .55; }
 .badge-brouillon { background: var(--neutral-soft); color: var(--on-neutral-soft); }
 .badge-valide { background: rgba(var(--primary-rgb), .14); color: var(--link); }
 .badge-annule { background: var(--red-soft); color: var(--red); }
+.badge-prospect { background: var(--amber-soft, #fcf0dc); color: var(--amber, #8a5208); }
 .pay-payee { background: var(--green-soft); color: var(--green); }
 .pay-partielle { background: var(--amber-soft); color: var(--amber); }
 .pay-non_payee { background: var(--neutral-soft); color: var(--on-neutral-soft); }

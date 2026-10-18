@@ -13,15 +13,18 @@ const BALANCE_SQL = `
   - COALESCE((SELECT SUM(CASE WHEN (py.direction = 'in') = (p.kind = 'client') THEN py.amount ELSE -py.amount END)
               FROM payments py WHERE py.party_id = p.id), 0)`
 
-export async function listParties(ctx: Ctx, args: { kind: PartyKind; search?: string; includeInactive?: boolean }) {
+export async function listParties(ctx: Ctx, args: { kind: PartyKind; search?: string; includeInactive?: boolean; prospect?: string }) {
   const search = `%${str(args.search).toLowerCase()}%`
+  // Filtre « prospect » : 'prospect' = seulement les prospects, 'client' = seulement les clients établis, '' = tous
+  const prospect = args.prospect === 'prospect' || args.prospect === 'client' ? args.prospect : ''
   return ctx.db.query(
     `SELECT p.*, (${BALANCE_SQL}) AS balance
      FROM parties p
      WHERE p.kind = $1 AND ($2 OR p.active)
        AND (lower(p.name) LIKE $3 OR lower(p.code) LIKE $3 OR lower(p.phone) LIKE $3 OR lower(p.contact) LIKE $3)
-     ORDER BY p.name`,
-    [args.kind, !!args.includeInactive, search]
+       AND ($4 = '' OR ($4 = 'prospect') = p.is_prospect)
+     ORDER BY p.is_prospect DESC, p.name`,
+    [args.kind, !!args.includeInactive, search, prospect]
   )
 }
 
@@ -60,16 +63,21 @@ export async function saveParty(ctx: Ctx, input: any) {
     notes: str(input.notes),
     active: input.active ?? true
   }
+  // Prospect : seulement pour un client ; `source` = origine (salon, recommandation, site web…)
+  const prospect = kind === 'client' && !!input.is_prospect
+  const source = str(input.source)
   return ctx.db.tx(async (db) => {
     if (input.id) {
-      await db.query(
+      const r = await db.query(
         `UPDATE parties SET name=$1, contact=$2, phone=$3, email=$4, address=$5, city=$6, tax_id=$7, rccm=$8,
-         payment_terms=$9, notes=$10, active=$11 WHERE id=$12 AND kind=$13 RETURNING id`,
-        [...Object.values(fields), input.id, kind]
-      ).then((r) => {
-        // Le droit vérifié porte sur ce type de tiers : pas de modification d'un fournisseur avec le droit « clients »
-        if (!r.length) fail('Fiche introuvable.')
-      })
+         payment_terms=$9, notes=$10, active=$11, source=$12,
+         is_prospect = $13,
+         converted_at = CASE WHEN $13 THEN converted_at ELSE COALESCE(converted_at, now()) END
+         WHERE id=$14 AND kind=$15 RETURNING id`,
+        [...Object.values(fields), source, prospect, input.id, kind]
+      )
+      // Le droit vérifié porte sur ce type de tiers : pas de modification d'un fournisseur avec le droit « clients »
+      if (!r.length) fail('Fiche introuvable.')
       await audit(db, ctx, 'modification', kind, input.id, name)
       return { id: input.id as number }
     }
@@ -84,11 +92,11 @@ export async function saveParty(ctx: Ctx, input: any) {
     }
     if (await db.one('SELECT 1 FROM parties WHERE kind = $1 AND code = $2', [kind, code])) fail(`Le code ${code} existe déjà.`)
     const row = await db.one<{ id: number }>(
-      `INSERT INTO parties (kind, code, name, contact, phone, email, address, city, tax_id, rccm, payment_terms, notes, active)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
-      [kind, code, ...Object.values(fields)]
+      `INSERT INTO parties (kind, code, name, contact, phone, email, address, city, tax_id, rccm, payment_terms, notes, active, source, is_prospect)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
+      [kind, code, ...Object.values(fields), source, prospect]
     )
     await audit(db, ctx, 'creation', kind, row!.id, name)
-    return row!
+    return { ...row!, is_prospect: prospect }
   })
 }

@@ -340,6 +340,11 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
     await postDocument(db, ctx, doc.id)
     await recordWithholdings(db, ctx, doc.id)
     await audit(db, ctx, 'validation', type, doc.id, number)
+    // CRM : la première facture validée convertit un prospect en client établi.
+    if (type === 'FAC') {
+      const conv = await db.query("UPDATE parties SET is_prospect = FALSE, converted_at = COALESCE(converted_at, now()) WHERE id = $1 AND kind = 'client' AND is_prospect RETURNING id", [doc.party_id])
+      if (conv.length) await audit(db, ctx, 'conversion', 'client', doc.party_id, `Prospect converti par ${number}`)
+    }
   })
   return loadDocument(ctx.db, args.id)
 }

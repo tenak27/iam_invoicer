@@ -866,5 +866,13 @@ export const MIGRATIONS: string[] = [
     at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
   CREATE INDEX fiscal_auth_failures_user_idx ON fiscal_auth_failures(user_id, at)
+  `,
+  // CRM étape 1 — prospects : un tiers client peut être un prospect (pas encore d'achat),
+  // converti automatiquement en client à sa première facture validée. `source` : origine du prospect.
+  `
+  ALTER TABLE parties ADD COLUMN IF NOT EXISTS is_prospect BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE parties ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT '';
+  ALTER TABLE parties ADD COLUMN IF NOT EXISTS converted_at TIMESTAMPTZ;
+  CREATE INDEX IF NOT EXISTS parties_prospect_idx ON parties(kind, is_prospect)
   `
 ]

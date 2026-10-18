@@ -4,7 +4,7 @@ import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge, useForm } from '../components/ui'
-import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit, UsersThree, UserCheck, Scales, Bell } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Eye, FilePlus, PencilSimple, Prohibit, UsersThree, UserCheck, UserPlus, Scales, Bell } from '@phosphor-icons/react'
 import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 
@@ -20,8 +20,9 @@ export function PartyList({ kind }: { kind: Kind }) {
   const nav = useNavigate()
   const [search, setSearch] = useState('')
   const [inactive, setInactive] = useState(false)
+  const [prospect, setProspect] = useState('') // '' tous · 'prospect' · 'client'
   const [editing, setEditing] = useState<any | null>(null)
-  const { data, error, loading, reload } = useQuery<any[]>('parties.list', { kind, search, includeInactive: inactive })
+  const { data, error, loading, reload } = useQuery<any[]>('parties.list', { kind, search, includeInactive: inactive, prospect: kind === 'client' ? prospect : '' })
   const L = LABELS[kind]
   const rows = data ?? []
   const total = rows.reduce((s, r) => s + r.balance, 0)
@@ -42,18 +43,27 @@ export function PartyList({ kind }: { kind: Kind }) {
               { label: 'Téléphone', value: (r) => r.phone }, { label: 'Email', value: (r) => r.email }, { label: 'Ville', value: (r) => r.city },
               { label: taxLabel, value: (r) => r.tax_id }, { label: 'RCCM', value: (r) => r.rccm }, { label: L.balance, value: (r) => r.balance }
             ], rows)}>Exporter (Excel)</button>
+            {kind === 'client' && <button className="btn" onClick={() => setEditing({ kind, is_prospect: true })}>Nouveau prospect</button>}
             <button className="btn btn-primary" onClick={() => setEditing({ kind })}>Nouveau {L.one}</button>
           </>
         }
       />
       <KpiStrip items={[
         { label: L.title, value: rows.length, icon: UsersThree },
+        ...(kind === 'client' ? [{ label: 'Prospects', value: rows.filter((r) => r.is_prospect).length, icon: UserPlus }] : []),
         { label: 'Actifs', value: rows.filter((r) => r.active).length, icon: UserCheck, tone: 'good' },
         { label: L.balance, value: total, icon: Scales, money: true },
         { label: kind === 'client' ? 'Clients qui doivent' : 'Fournisseurs à payer', value: rows.filter((r) => r.balance > 0.5).length, icon: Bell, tone: rows.some((r) => r.balance > 0.5) ? 'bad' : 'good' }
       ]} />
       <div className="toolbar">
         <SearchInput value={search} onChange={setSearch} placeholder="Nom, code, téléphone, contact…" />
+        {kind === 'client' && (
+          <select value={prospect} onChange={(e) => setProspect(e.target.value)} aria-label="Filtrer prospects et clients">
+            <option value="">Tous</option>
+            <option value="prospect">Prospects</option>
+            <option value="client">Clients établis</option>
+          </select>
+        )}
         <label className="inline check"><input type="checkbox" checked={inactive} onChange={(e) => setInactive(e.target.checked)} /> Afficher les inactifs</label>
       </div>
       {error ? <ErrorBox error={error} onRetry={reload} /> : loading && !data ? <Loading /> : rows.length === 0 ? (
@@ -66,7 +76,7 @@ export function PartyList({ kind }: { kind: Kind }) {
               {rows.map((r) => (
                 <tr key={r.id} className={`clickable ${r.active ? '' : 'inactive'}`} onClick={() => nav(`/party/${r.id}`)}>
                   <td className="muted">{r.code}</td>
-                  <td className="strong">{r.name}</td>
+                  <td className="strong">{r.name}{r.is_prospect && <span className="badge badge-prospect" style={{ marginLeft: 8 }}>Prospect</span>}</td>
                   <td>{r.contact}</td>
                   <td>{r.phone}</td>
                   <td>{r.city}</td>
@@ -96,6 +106,7 @@ export function PartyForm({ party, onClose, onSaved }: { party: any; onClose: ()
   const { company } = useSession()
   const f = useForm({
     code: '', name: '', contact: '', phone: '', email: '', address: '', city: '', tax_id: '', rccm: '',
+    source: '', is_prospect: false,
     payment_terms: party.kind === 'supplier' ? '30' : '30', notes: '', active: true, ...party,
     ...(party.payment_terms != null ? { payment_terms: String(party.payment_terms) } : {})
   })
@@ -127,6 +138,12 @@ export function PartyForm({ party, onClose, onSaved }: { party: any; onClose: ()
         <Field label={`N° ${company.tax_id_label || 'NIF'}`}><input {...f.bind('tax_id')} /></Field>
         <Field label="RCCM"><input {...f.bind('rccm')} /></Field>
         <Field label="Notes internes" span={2}><input {...f.bind('notes')} /></Field>
+        {party.kind === 'client' && <>
+          <Field label="Origine" hint="D'où vient ce prospect ? (salon, recommandation, site web, appel…)"><input {...f.bind('source')} /></Field>
+          <Field label="Suivi commercial">
+            <label className="inline check"><input type="checkbox" checked={!!f.values.is_prospect} onChange={(e) => f.set('is_prospect', e.target.checked)} /> Prospect (pas encore d'achat ; devient client à sa 1ʳᵉ facture)</label>
+          </Field>
+        </>}
       </div>
       {party.id && (
         <label className="inline check"><input type="checkbox" checked={!!f.values.active} onChange={(e) => f.set('active', e.target.checked)} /> Actif</label>
@@ -151,7 +168,7 @@ export function PartyDetail() {
     <div className="page">
       <PageHeader
         title={party.name}
-        subtitle={<span className="row gap"><Link to={kind === 'client' ? '/clients' : '/suppliers'}>← {L.title}</Link><span className="muted">{party.code}</span>{!party.active && <span className="badge badge-annule">Inactif</span>}</span>}
+        subtitle={<span className="row gap"><Link to={kind === 'client' ? '/clients' : '/suppliers'}>← {L.title}</Link><span className="muted">{party.code}</span>{party.is_prospect && <span className="badge badge-prospect">Prospect{party.source ? ` · ${party.source}` : ''}</span>}{!party.active && <span className="badge badge-annule">Inactif</span>}</span>}
         actions={<>
           <button className="btn" onClick={() => setEditing(true)}>Modifier</button>
           {newTypes.map((t) => (
