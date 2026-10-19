@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CalendarBlank, CaretRight, ChatsCircle, CheckCircle, Circle, FileText, Phone, Plus, Target, Trophy, UsersThree, type Icon } from '@phosphor-icons/react'
 import { formatDate, formatMoney, formatNumber } from '@shared/format'
 import { api, run, useQuery } from '../api'
-import { Empty, ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, useForm } from '../components/ui'
+import { ErrorBox, Field, Loading, Modal, PageHeader, SearchInput, useForm } from '../components/ui'
 import { useCan } from '../session'
 
 const STAGES: { id: string; label: string; tone: string }[] = [

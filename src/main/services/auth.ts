@@ -13,15 +13,6 @@ export function hashPassword(password: string): string {
   return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`
 }
 
-export function verifyPassword(password: string, stored: string): boolean {
-  const [salt, hash] = String(stored ?? '').split(':')
-  if (!salt || !hash || typeof password !== 'string') return false
-  const expected = Buffer.from(hash, 'hex')
-  if (!expected.length) return false
-  const actual = scryptSync(password, salt, expected.length)
-  return timingSafeEqual(expected, actual)
-}
-
 /** Même vérification sans bloquer le serveur pendant le calcul (connexions simultanées). */
 function verifyPasswordAsync(password: string, stored: string): Promise<boolean> {
   const [salt, hash] = String(stored ?? '').split(':')

@@ -160,14 +160,6 @@ export const DATASETS: DatasetDef[] = [
   }
 ]
 
-export const GRAINS: { id: TimeGrain; label: string }[] = [
-  { id: 'jour', label: 'Jour' },
-  { id: 'semaine', label: 'Semaine' },
-  { id: 'mois', label: 'Mois' },
-  { id: 'trimestre', label: 'Trimestre' },
-  { id: 'annee', label: 'Année' }
-]
-
 export type Compare = 'none' | 'previous' | 'year'
 export type ChartKind = 'bar' | 'line' | 'area' | 'donut' | 'hbar' | 'stacked' | 'table'
 
@@ -218,19 +210,3 @@ export interface AlertRule { measure: string; op: '<' | '>'; threshold: number }
 
 export const findDataset = (id: string) => DATASETS.find((d) => d.id === id)
 
-/** Analyses prêtes à l'emploi proposées dans la bibliothèque. */
-export const TEMPLATES: { id: string; name: string; description: string; config: AnalysisConfig }[] = [
-  { id: 'ca-mensuel', name: 'Chiffre d’affaires mensuel', description: '12 derniers mois comparés à l’année précédente, avec prévision.', config: { dataset: 'ventes', measures: ['ca_ht', 'marge'], rows: 'periode', grain: 'mois', compare: 'year', chart: 'bar' } },
-  { id: 'top-clients', name: 'Meilleurs clients', description: 'Classement des clients par CA et marge sur l’année.', config: { dataset: 'ventes', measures: ['ca_ht', 'marge', 'documents'], rows: 'client', compare: 'year', top: 15, chart: 'hbar' } },
-  { id: 'marge-categorie', name: 'Marge par catégorie', description: 'Où se fait la marge : CA, marge et taux par catégorie d’article.', config: { dataset: 'ventes', measures: ['ca_ht', 'marge', 'taux_marge'], rows: 'categorie', chart: 'hbar' } },
-  { id: 'top-articles', name: 'Articles les plus vendus', description: 'Quantités et CA par article.', config: { dataset: 'ventes', measures: ['ca_ht', 'quantite', 'marge'], rows: 'article', top: 20, chart: 'hbar' } },
-  { id: 'vendeurs', name: 'Performance des vendeurs', description: 'CA, factures et panier moyen par vendeur, mois par mois.', config: { dataset: 'ventes', measures: ['ca_ht'], rows: 'periode', columns: 'commercial', grain: 'mois', chart: 'stacked' } },
-  { id: 'jours', name: 'Ventes par jour de la semaine', description: 'Les jours forts de l’activité.', config: { dataset: 'ventes', measures: ['ca_ht', 'documents'], rows: 'jour_semaine', sort: 'label', chart: 'bar' } },
-  { id: 'creances-age', name: 'Balance âgée des créances', description: 'Reste à encaisser par ancienneté et par client.', config: { dataset: 'creances', measures: ['reste_du', 'factures'], rows: 'anciennete', columns: 'client', sort: 'label', chart: 'donut' } },
-  { id: 'clients-retard', name: 'Clients en retard de paiement', description: 'Qui doit quoi, depuis combien de temps.', config: { dataset: 'creances', measures: ['reste_du', 'retard_moyen', 'factures'], rows: 'client', top: 20, chart: 'hbar' } },
-  { id: 'modes-paiement', name: 'Encaissements par mode', description: 'Espèces, mobile money, banque : la répartition des encaissements.', config: { dataset: 'tresorerie', measures: ['entrees'], rows: 'mode', chart: 'donut' } },
-  { id: 'flux-tresorerie', name: 'Flux de trésorerie mensuels', description: 'Entrées, sorties et solde mois par mois.', config: { dataset: 'tresorerie', measures: ['entrees', 'sorties', 'solde'], rows: 'periode', grain: 'mois', chart: 'bar' } },
-  { id: 'achats-fournisseurs', name: 'Achats par fournisseur', description: 'Poids de chaque fournisseur dans les achats.', config: { dataset: 'achats', measures: ['montant_ht', 'documents'], rows: 'fournisseur', top: 15, compare: 'year', chart: 'hbar' } },
-  { id: 'stock-categorie', name: 'Valeur du stock par catégorie', description: 'Capital immobilisé en stock et articles sous le seuil.', config: { dataset: 'stock', measures: ['valeur', 'valeur_vente', 'sous_seuil'], rows: 'categorie', chart: 'donut' } },
-  { id: 'caisse-heures', name: 'Affluence de la caisse', description: 'Ventes de caisse par heure de la journée.', config: { dataset: 'caisse', measures: ['ca_ttc', 'tickets'], rows: 'heure', sort: 'label', chart: 'bar' } }
-]

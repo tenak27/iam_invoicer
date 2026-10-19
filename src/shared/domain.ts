@@ -144,9 +144,6 @@ export const DOC_LAYOUTS = [
 ] as const
 export type DocLayout = (typeof DOC_LAYOUTS)[number]['id']
 
-export const SALE_TYPES: DocType[] = ['DEV', 'BL', 'FAC', 'AV']
-export const PURCHASE_TYPES: DocType[] = ['BC', 'BR', 'FF']
-
 export const PAYMENT_METHODS = ['Espèces', 'Orange Money', 'Moov Money', 'Wave', 'Virement', 'Chèque', 'Carte bancaire', 'Autre'] as const
 
 /** Comptes de trésorerie SYSCOHADA et journal associés à chaque mode de paiement. */

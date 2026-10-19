@@ -24,11 +24,6 @@ export function fail(message: string): never {
   throw new AppError(message)
 }
 
-export function requireUser(ctx: Ctx): SessionUser {
-  if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
-  return ctx.user
-}
-
 export async function audit(db: Db, ctx: Ctx, action: string, entity: string, entityId: number | null, details = ''): Promise<void> {
   await db.query('INSERT INTO audit_log (user_id, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5)', [
     ctx.user?.id ?? null,
