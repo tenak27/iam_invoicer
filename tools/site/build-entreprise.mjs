@@ -8,8 +8,20 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 
 // « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
+// « node tools/site/build-entreprise.mjs btp » : site d'IAM BTP (site-btp/ → out/site-btp)
 const MAILS = process.argv[2] === 'mails'
-const V = MAILS
+const BTP = process.argv[2] === 'btp'
+const V = BTP
+  ? {
+      dir: 'site-btp',
+      out: 'out/site-btp',
+      assets: ['iam-btp.svg', 'iam-btp-mark.svg'],
+      title: 'IAM BTP — Suivi de chantiers et gestion du parc de machines | IAM Technology',
+      description: "IAM BTP : avancement des chantiers, rapports photo du jour, dépenses et budget, pointage et paie des ouvriers, parc d'engins (heures, carburant, entretien, locations). Pour les entreprises du BTP et ceux qui font construire.",
+      ogTitle: 'IAM BTP — Vos chantiers et vos machines, sous contrôle',
+      icon: 'iam-btp-mark.svg'
+    }
+  : MAILS
   ? {
       dir: 'site-mails',
       out: 'out/site-mails',
@@ -33,6 +45,7 @@ rmSync(out, { recursive: true, force: true })
 mkdirSync(`${out}/assets`, { recursive: true })
 for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
+if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {
