@@ -7,10 +7,31 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 
-const out = 'out/site-entreprise'
+// « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
+const MAILS = process.argv[2] === 'mails'
+const V = MAILS
+  ? {
+      dir: 'site-mails',
+      out: 'out/site-mails',
+      assets: ['iam-mails.svg', 'iam-mails-mark.svg'],
+      title: 'IAM MAILS — Toutes vos boîtes mail réunies, triées et résumées | IAM Technology',
+      description: 'IAM MAILS réunit Gmail, Outlook, Yahoo, iCloud et votre messagerie pro : tableau de bord, désabonnement en un geste, réponses automatiques et synthèse quotidienne.',
+      ogTitle: 'IAM MAILS — Toutes vos boîtes mail réunies',
+      icon: 'iam-mails-mark.svg'
+    }
+  : {
+      dir: 'site-entreprise',
+      out: 'out/site-entreprise',
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg'],
+      title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER et IAM MAILS. Ouagadougou, depuis 2013.",
+      ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
+      icon: 'iam-technology-mark.svg'
+    }
+const out = V.out
 rmSync(out, { recursive: true, force: true })
 mkdirSync(`${out}/assets`, { recursive: true })
-for (const f of ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
+for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {
@@ -22,11 +43,11 @@ const cut = (from, to) => {
 
 const head = src
   .slice(0, src.indexOf('</head>'))
-  .replace(/<title>[^<]*<\/title>/, '<title>IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="IAM TECHNOLOGY accompagne votre entreprise vers l\'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER et IAM MAILS. Ouagadougou, depuis 2013.">')
-  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="IAM Technology — Transformez votre vision digitale en réalité">')
-  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Solutions informatiques, domotique, sécurité et logiciels de gestion adaptés au marché burkinabé, depuis 2013.">')
-  .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="assets/iam-technology-mark.svg" type="image/svg+xml">')
+  .replace(/<title>[^<]*<\/title>/, `<title>${V.title}</title>`)
+  .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${V.description}">`)
+  .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${V.ogTitle}">`)
+  .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${V.description}">`)
+  .replace(/<link rel="icon"[^>]*>/, `<link rel="icon" href="assets/${V.icon}" type="image/svg+xml">`)
 
 // Illustration d'accueil (Awa, avion, nuages) sans le sceau propre au logiciel
 const heroArt = cut('<div class="hero-art" aria-hidden="true">', '<div class="seal">')
@@ -36,7 +57,7 @@ const tearBottom = cut('<svg class="tear tear-bottom"', '</svg>') + '</svg>'
 const contactArt = cut('<div class="contact-art rv">', '<div class="contact-card')
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
-let body = readFileSync('site-entreprise/body.html', 'utf8')
+let body = readFileSync(`${V.dir}/body.html`, 'utf8')
   .replace('{{HERO_ART}}', heroArt)
   .replaceAll('{{TEAR_TOP}}', tearTop)
   .replaceAll('{{TEAR_BOTTOM}}', tearBottom)
@@ -109,4 +130,4 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
 writeFileSync(`${out}/index.html`, html)
-console.log(`Site d'IAM Technology construit dans ${out}`)
+console.log(`Site construit dans ${out}`)
