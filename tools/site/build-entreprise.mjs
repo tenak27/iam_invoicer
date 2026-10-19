@@ -11,7 +11,19 @@ import * as Icons from '@phosphor-icons/react'
 // « node tools/site/build-entreprise.mjs btp » : site d'IAM BTP (site-btp/ → out/site-btp)
 const MAILS = process.argv[2] === 'mails'
 const BTP = process.argv[2] === 'btp'
-const V = BTP
+// « node tools/site/build-entreprise.mjs ecommerce » : site d'IAM E-COMMERCE (site-ecommerce/ → out/site-ecommerce)
+const ECOM = process.argv[2] === 'ecommerce'
+const V = ECOM
+  ? {
+      dir: 'site-ecommerce',
+      out: 'out/site-ecommerce',
+      assets: ['iam-ecommerce.svg', 'iam-ecommerce-mark.svg'],
+      title: 'IAM E-COMMERCE — Votre boutique en ligne en 5 minutes | IAM Technology',
+      description: 'IAM E-COMMERCE : créez votre boutique en ligne, partagez son lien sur WhatsApp et Facebook, recevez les commandes, gérez le stock et vos clients. Paiement à la livraison, Orange Money, Moov Money, Wave.',
+      ogTitle: 'IAM E-COMMERCE — Votre boutique en ligne en 5 minutes',
+      icon: 'iam-ecommerce-mark.svg'
+    }
+  : BTP
   ? {
       dir: 'site-btp',
       out: 'out/site-btp',
@@ -34,9 +46,9 @@ const V = BTP
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS et IAM BTP. Ouagadougou, depuis 2013.",
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP et IAM E-COMMERCE. Ouagadougou, depuis 2013.",
       ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
       icon: 'iam-technology-mark.svg'
     }
@@ -46,6 +58,7 @@ mkdirSync(`${out}/assets`, { recursive: true })
 for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
+if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {
