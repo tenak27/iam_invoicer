@@ -25,3 +25,9 @@
   .histoire-year { flex-direction: row; justify-content: center; gap: 14px; padding: 18px 22px; }
 }
 @media (max-width: 560px) { .brand-wide img { height: 38px; } }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.shots figure { margin: 0; }
+.shots img { width: 100%; height: auto; border-radius: 18px; box-shadow: 0 30px 60px -32px rgba(7, 42, 75, .55); border: 1px solid #e6eef7; }
+.shots figcaption { margin-top: 12px; color: var(--muted); font-size: .95rem; }
+.shots figcaption b { display: block; color: var(--ink); }
+@media (max-width: 860px) { .shots { grid-template-columns: 1fr; } }

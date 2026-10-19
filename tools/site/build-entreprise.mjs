@@ -32,6 +32,7 @@ const out = V.out
 rmSync(out, { recursive: true, force: true })
 mkdirSync(`${out}/assets`, { recursive: true })
 for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
+if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {
