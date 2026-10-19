@@ -130,5 +130,5 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
   return renderToStaticMarkup(createElement(Icon, { size: Number(size ?? 20), weight: weight ?? (size ? 'duotone' : 'bold'), 'aria-hidden': true }))
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
-writeFileSync(`${out}/index.html`, html)
+writeFileSync(`${out}/index.html`, html.replace(/\r\n?/g, '\n'))
 console.log(`Site construit dans ${out}`)
