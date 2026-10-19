@@ -34,9 +34,9 @@ const V = BTP
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER et IAM MAILS. Ouagadougou, depuis 2013.",
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS et IAM BTP. Ouagadougou, depuis 2013.",
       ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
       icon: 'iam-technology-mark.svg'
     }

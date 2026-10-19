@@ -1,7 +1,7 @@
 /* Compléments propres au site d'IAM Technology (le reste vient du site d'IAM INVOICER). */
 .brand-wide img { width: auto; height: 44px; padding: 4px 8px; border-radius: 12px; }
 .tier-logo { display: grid; place-items: center; background: #fff; padding: 18px 26px; border: 1px solid #e6eef7; }
-.tier-logo img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.tier-logo img { width: 100%; height: 114px; object-fit: contain; object-position: center; }
 .tier:hover .tier-logo img { transform: none; }
 .tier.best .tier-logo { border-color: transparent; }
 .tier-icon { display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #0b3a66, #1d6fd6); }
@@ -40,3 +40,6 @@
 .dl-help { text-align: center; margin-top: 22px; color: var(--muted); }
 .dl-help a, .hero-bar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 860px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#logiciels .tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { #logiciels .tiers { grid-template-columns: 1fr; } }
+#logiciels .tier-img.tier-logo img { width: 100%; height: 114px; object-fit: contain; object-position: center; transform: none; }
