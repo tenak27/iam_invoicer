@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IAM Technology — Solutions logicielles pour les entreprises du Burkina Faso</title>
+<meta name="description" content="IAM Technology conçoit, déploie et accompagne des logiciels de gestion pour les PME du Burkina Faso et de la zone OHADA. Éditeur d'IAM INVOICER.">
+<meta name="theme-color" content="#0b3a66">
+<meta property="og:title" content="IAM Technology — Le numérique au service des entreprises">
+<meta property="og:description" content="Éditeur d'IAM INVOICER, le logiciel de gestion pensé pour le Burkina Faso et la zone OHADA.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b3a66; --navy-2: #0f4c86; --navy-3: #072a4b; --gold: #f2b01e; --gold-2: #ffc94a; --green: #12a678;
+    --blue: #1d6fd6; --ink: #0d2440; --text: #2e3f58; --muted: #56677f; --line: #dfeaf9; --bg: #f5f9ff; --surface: #fff;
+    --sh: 0 1px 2px rgba(20, 60, 130, .05), 0 18px 40px -22px rgba(20, 60, 130, .35);
+    --r: 22px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 17px; line-height: 1.65; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  h1, h2, h3, p { margin: 0; }
+  h1, h2, h3 { color: var(--ink); letter-spacing: -.025em; line-height: 1.12; font-weight: 800; }
+  .wrap { width: min(1140px, 100% - 32px); margin: 0 auto; }
+  svg.i { width: 24px; height: 24px; flex-shrink: 0; }
+
+  /* En-tête */
+  header { position: sticky; top: 0; z-index: 10; background: rgba(255, 255, 255, .94); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; gap: 20px; min-height: 68px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--ink); font-size: 18px; letter-spacing: -.01em; }
+  .brand img { width: 36px; height: 36px; }
+  .brand span { color: var(--blue); }
+  nav { margin-left: auto; display: flex; gap: 26px; font-weight: 600; font-size: 15px; color: var(--muted); }
+  nav a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15.5px; transition: transform .15s, background .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-gold { background: var(--gold); color: var(--navy-3); }
+  .btn-gold:hover { background: var(--gold-2); }
+  .btn-navy { background: var(--navy); color: #fff; }
+  .btn-navy:hover { background: var(--navy-3); }
+  .btn-line { border: 1.5px solid rgba(255, 255, 255, .5); color: #fff; }
+  .btn-line:hover { background: rgba(255, 255, 255, .1); }
+  .bar .btn { min-height: 42px; padding: 0 18px; font-size: 14.5px; }
+
+  /* Accueil */
+  .hero { position: relative; overflow: hidden; color: #dbe8f7; background: radial-gradient(800px 460px at 85% 0%, rgba(29, 111, 214, .55), transparent 65%), linear-gradient(160deg, var(--navy-3), var(--navy) 55%, var(--navy-2)); padding: 96px 0 104px; }
+  .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, #c8102e 0 33%, var(--gold) 33% 66%, #009a44 66%); opacity: .9; }
+  .hero h1 { color: #fff; font-size: clamp(36px, 5.4vw, 62px); max-width: 15ch; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { margin-top: 22px; max-width: 58ch; font-size: clamp(17px, 1.6vw, 19.5px); }
+  .hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
+
+  section { padding: 92px 0; }
+  .head { max-width: 680px; margin-bottom: 44px; }
+  .head h2 { font-size: clamp(28px, 3.6vw, 42px); }
+  .head p { margin-top: 14px; color: var(--muted); }
+  .kicker { display: block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
+
+  /* À propos */
+  .about { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+  .about p + p { margin-top: 16px; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fact { background: var(--surface); border-radius: var(--r); padding: 22px; box-shadow: var(--sh); }
+  .fact b { display: block; font-size: 26px; color: var(--ink); letter-spacing: -.02em; }
+  .fact span { font-size: 14.5px; color: var(--muted); }
+
+  /* Métiers */
+  .alt { background: var(--surface); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 26px; }
+  .card .ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: rgba(29, 111, 214, .1); color: var(--blue); margin-bottom: 18px; }
+  .card:nth-child(2) .ic { background: rgba(18, 166, 120, .12); color: var(--green); }
+  .card:nth-child(3) .ic { background: rgba(242, 176, 30, .16); color: #a96f00; }
+  .card:nth-child(4) .ic { background: rgba(11, 58, 102, .1); color: var(--navy); }
+  .card h3 { font-size: 19px; margin-bottom: 8px; }
+  .card p { font-size: 15.5px; color: var(--muted); }
+
+  /* Réalisation phare */
+  .product { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-radius: 30px; overflow: hidden; background: var(--navy); color: #dbe8f7; box-shadow: 0 40px 80px -40px rgba(7, 42, 75, .7); }
+  .product .txt { padding: 52px; }
+  .product h2 { color: #fff; font-size: clamp(28px, 3.4vw, 40px); }
+  .product .tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(242, 176, 30, .16); color: var(--gold); font-size: 13px; font-weight: 700; margin-bottom: 18px; }
+  .product ul { list-style: none; padding: 0; margin: 24px 0 32px; display: grid; gap: 10px; }
+  .product li { display: flex; gap: 10px; align-items: flex-start; }
+  .product li svg { color: var(--gold); margin-top: 3px; width: 20px; height: 20px; }
+  .product .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+  .product .art { position: relative; background: radial-gradient(500px 380px at 70% 30%, rgba(29, 111, 214, .7), transparent 70%), var(--navy-2); display: grid; place-items: center; padding: 40px; }
+  .product .art img { width: min(260px, 70%); filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .35)); }
+  .product .chips { position: absolute; left: 24px; right: 24px; bottom: 24px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .product .chips span { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .12); font-size: 13px; font-weight: 600; color: #fff; }
+
+  /* Engagements */
+  .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .value { padding: 28px; border-radius: var(--r); background: var(--surface); box-shadow: var(--sh); }
+  .value h3 { font-size: 19px; margin: 14px 0 8px; display: flex; align-items: center; gap: 10px; }
+  .value h3 svg { color: var(--blue); }
+  .value p { font-size: 15.5px; color: var(--muted); }
+
+  /* Contact */
+  .contact { text-align: center; background: linear-gradient(160deg, var(--navy-3), var(--navy)); color: #dbe8f7; border-radius: 30px; padding: 64px 28px; }
+  .contact h2 { color: #fff; font-size: clamp(28px, 3.6vw, 40px); }
+  .contact p { margin: 14px auto 30px; max-width: 54ch; }
+  .contact .ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+  footer { padding: 36px 0 44px; font-size: 14.5px; color: var(--muted); }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between; }
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 960px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .about, .product { grid-template-columns: 1fr; }
+    .product .art { min-height: 300px; }
+    .product .txt { padding: 36px 26px; }
+    .values { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    nav { display: none; }
+    .bar .btn { margin-left: auto; }
+    section { padding: 64px 0; }
+    .hero { padding: 64px 0 76px; }
+    .grid, .facts { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-code" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M64 88 24 128l40 40M192 88l40 40-40 40M160 40 96 216"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M80 128a80 80 0 1 1 80 80H72a56 56 0 1 1 14.4-110.1"/></symbol>
+  <symbol id="i-teach" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M8 96 128 32l120 64-120 64Zm60 32v64c0 0 20 24 60 24s60-24 60-24v-64M248 96v72"/></symbol>
+  <symbol id="i-help" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M40 152v-24a88 88 0 0 1 176 0v24M216 152v16a24 24 0 0 1-24 24h-16v-56h40M40 152v16a24 24 0 0 0 24 24h16v-56H40M192 192v8a32 32 0 0 1-32 32h-24"/></symbol>
+  <symbol id="i-check" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="22" d="m40 136 56 56L216 72"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" d="M40 128h176M144 56l72 72-72 72"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M128 232s-80-64-80-128a80 80 0 0 1 160 0c0 64-80 128-80 128Z"/><circle cx="128" cy="104" r="28" fill="none" stroke="currentColor" stroke-width="16"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M48 40l160 176M24 92a160 160 0 0 1 64-36M120 52a160 160 0 0 1 112 40M56 128a112 112 0 0 1 40-24M160 108a112 112 0 0 1 40 20M92 164a64 64 0 0 1 72 0"/><circle cx="128" cy="204" r="12" fill="currentColor"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 256 256"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M128 40v176M88 216h80M56 88l144-32M24 168l32-80 32 80a36 36 0 0 1-64 0ZM168 136l32-80 32 80a36 36 0 0 1-64 0Z"/></symbol>
+</svg>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#"><img src="assets/logo-mark.svg" alt="">IAM <span>Technology</span></a>
+    <nav aria-label="Navigation principale">
+      <a href="#entreprise">L'entreprise</a>
+      <a href="#metiers">Nos métiers</a>
+      <a href="#realisation">IAM INVOICER</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="btn btn-navy" href="#contact">Nous contacter</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow"><svg class="i" style="width:18px;height:18px"><use href="#i-pin"/></svg>Ouagadougou, Burkina Faso</span>
+      <h1>Le numérique au service <em>des entreprises</em> d'ici.</h1>
+      <p class="lead">IAM Technology conçoit, déploie et accompagne des logiciels de gestion pensés pour les réalités des PME du Burkina Faso et de la zone OHADA : mobile money, coupures d'Internet, comptabilité SYSCOHADA.</p>
+      <div class="ctas">
+        <a class="btn btn-gold" href="#realisation">Découvrir IAM INVOICER<svg class="i" style="width:18px;height:18px"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-line" href="#contact">Parler de votre projet</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="entreprise">
+    <div class="wrap about">
+      <div>
+        <span class="kicker">L'entreprise</span>
+        <h2>Des outils fiables, conçus au plus près du terrain</h2>
+        <p style="margin-top:18px">IAM Technology est une entreprise burkinabè de solutions logicielles. Notre conviction : une PME doit pouvoir gérer ses ventes, son stock, sa trésorerie et sa comptabilité avec un outil simple, en français, conforme aux règles locales, et qui continue de fonctionner quand la connexion tombe.</p>
+        <p>Nous développons nos propres logiciels, nous les installons chez nos clients ou les hébergeons pour eux, et nous formons leurs équipes jusqu'à la prise en main complète.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>OHADA</b><span>Comptabilité SYSCOHADA et déclarations locales</span></div>
+        <div class="fact"><b>5 plateformes</b><span>Windows, macOS, Android, iOS et navigateur</span></div>
+        <div class="fact"><b>Hors ligne</b><span>Le travail continue sans Internet, puis se synchronise</span></div>
+        <div class="fact"><b>Mobile money</b><span>Orange Money, Moov Money, Wave intégrés à la caisse</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metiers" class="alt">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">Nos métiers</span>
+        <h2>De l'idée à l'utilisation au quotidien</h2>
+        <p>Nous accompagnons chaque client sur tout le cycle : conception, mise en place, formation et suivi.</p>
+      </div>
+      <div class="grid">
+        <article class="card"><div class="ic"><svg class="i"><use href="#i-code"/></svg></div><h3>Édition de logiciels</h3><p>Conception et développement de logiciels de gestion, sur ordinateur, téléphone et navigateur.</p></article>
+        <article class="card"><div class="ic"><svg class="i"><use href="#i-cloud"/></svg></div><h3>Hébergement et déploiement</h3><p>Base en ligne sécurisée et sauvegardée, ou installation sur le serveur de l'entreprise.</p></article>
+        <article class="card"><div class="ic"><svg class="i"><use href="#i-teach"/></svg></div><h3>Formation</h3><p>Prise en main par les équipes : vente, caisse, stock, comptabilité, paie. Manuels fournis.</p></article>
+        <article class="card"><div class="ic"><svg class="i"><use href="#i-help"/></svg></div><h3>Accompagnement</h3><p>Assistance, mises à jour régulières et évolutions selon les besoins de chaque métier.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="realisation">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">Notre réalisation phare</span>
+        <h2>IAM INVOICER, mis en place par IAM Technology</h2>
+        <p>Le logiciel de gestion complet que nous avons conçu pour les entreprises du Burkina Faso, aujourd'hui en service chez nos clients.</p>
+      </div>
+      <div class="product">
+        <div class="txt">
+          <span class="tag">Conçu et édité par IAM Technology</span>
+          <h2>Toute la gestion de l'entreprise, même sans Internet</h2>
+          <ul>
+            <li><svg class="i"><use href="#i-check"/></svg>Devis, factures, avoirs et suivi des paiements</li>
+            <li><svg class="i"><use href="#i-check"/></svg>Caisse avec mobile money, stock et achats</li>
+            <li><svg class="i"><use href="#i-check"/></svg>Comptabilité SYSCOHADA, paie et déclarations</li>
+            <li><svg class="i"><use href="#i-check"/></svg>CRM : prospects, pipeline commercial et relances</li>
+          </ul>
+          <div class="ctas">
+            <a class="btn btn-gold" href="https://invoice.iamtechnology.store/">Visiter le site d'IAM INVOICER<svg class="i" style="width:18px;height:18px"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-line" href="https://invoice.iamtechnology.store/#telecharger">Télécharger</a>
+          </div>
+        </div>
+        <div class="art">
+          <img src="assets/logo-mark.svg" alt="Logo IAM INVOICER">
+          <div class="chips"><span>Windows</span><span>macOS</span><span>Android</span><span>iOS</span><span>Web</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">Nos engagements</span>
+        <h2>Ce qui guide notre travail</h2>
+      </div>
+      <div class="values">
+        <article class="value"><h3><svg class="i"><use href="#i-scale"/></svg>Conformité locale</h3><p>Règles fiscales et comptables du Burkina Faso et de l'espace OHADA intégrées dès la conception.</p></article>
+        <article class="value"><h3><svg class="i"><use href="#i-wifi"/></svg>Robustesse</h3><p>Des outils qui tiennent face aux coupures de réseau et d'électricité, sans perte de données.</p></article>
+        <article class="value"><h3><svg class="i"><use href="#i-help"/></svg>Proximité</h3><p>Une équipe sur place, qui parle le langage de ses clients et les accompagne dans la durée.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <h2>Un projet, une question ?</h2>
+        <p>Parlons de la gestion de votre entreprise : démonstration d'IAM INVOICER, installation, formation ou développement sur mesure.</p>
+        <div class="ctas">
+          <a class="btn btn-gold" href="https://invoice.iamtechnology.store/#contact">Nous écrire</a>
+          <a class="btn btn-line" href="https://invoice.iamtechnology.store/#demo">Demander une démonstration</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="y">2026</span> IAM Technology · Ouagadougou, Burkina Faso</span>
+    <a href="https://invoice.iamtechnology.store/">IAM INVOICER</a>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+</body>
+</html>
