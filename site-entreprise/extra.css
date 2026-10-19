@@ -31,3 +31,12 @@
 .shots figcaption { margin-top: 12px; color: var(--muted); font-size: .95rem; }
 .shots figcaption b { display: block; color: var(--ink); }
 @media (max-width: 860px) { .shots { grid-template-columns: 1fr; } }
+.dl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.dl-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 18px; border-radius: 24px; background: #fff; text-align: center; color: var(--ink); box-shadow: 0 22px 44px -28px rgba(7, 42, 75, .5); text-decoration: none; }
+.dl-card svg { color: var(--navy-2); margin-bottom: 6px; }
+.dl-card b { font-size: 1.15rem; }
+.dl-card small { color: var(--muted); margin-bottom: 10px; }
+.dl-card.soon { opacity: .7; }
+.dl-help { text-align: center; margin-top: 22px; color: var(--muted); }
+.dl-help a, .hero-bar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 860px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
