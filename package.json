@@ -27,7 +27,8 @@
     "ios": "npm run cap:sync && cap open ios",
     "android:apk": "npm run cap:sync && cd android && gradlew assembleRelease",
     "build:site": "node tools/site/build.mjs",
-    "bundle:server": "node tools/server/bundle.mjs"
+    "bundle:server": "node tools/server/bundle.mjs",
+    "build:site-entreprise": "node tools/site/build-entreprise.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
