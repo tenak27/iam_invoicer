@@ -164,19 +164,21 @@ function Notifications() {
   const today = todayISO()
   const dueTasks = canCrm && Array.isArray(tasksQ.data) ? tasksQ.data.filter((t: any) => t.due_date <= today) : []
   const items: { key: string; icon: Icon; tone: string; title: string; text: string; to?: string }[] = [
-    ...dueTasks.slice(0, 6).map((t: any) => ({
+    ...dueTasks.map((t: any) => ({
       key: `t${t.id}`, icon: Clock, tone: t.due_date < today ? 'danger' : 'warning', title: t.due_date < today ? `Tâche en retard : ${t.subject}` : `Aujourd'hui : ${t.subject}`,
       text: `${t.who ?? ''}${t.due_date < today ? ` · prévue le ${formatDate(t.due_date)}` : ''}`, to: t.who_id ? `/party/${t.who_id}` : '/crm'
     })),
-    ...(data?.overdue ?? []).slice(0, 6).map((o: any) => ({
+    ...(data?.overdue ?? []).map((o: any) => ({
       key: `o${o.id}`, icon: Warning, tone: 'danger', title: `${o.number} en retard`,
       text: `${o.party_name} · ${formatMoney(o.remaining)} depuis le ${formatDate(o.due_date)}`, to: canSales ? `/doc/${o.id}` : undefined
     })),
-    ...(data?.lowStock ?? []).slice(0, 6).map((p: any) => ({
+    ...(data?.lowStock ?? []).map((p: any) => ({
       key: `s${p.id}`, icon: Package, tone: 'warning', title: `Stock bas : ${p.name}`,
       text: `${formatQty(p.stock_qty)} ${p.unit} restant(s), seuil ${formatQty(p.min_stock)}`, to: '/stock'
     }))
   ]
+  // Les listes complètes servent au compte : une alerte résolue disparaît et fait baisser le compteur.
+  const shown = items.slice(0, 15)
   // Nombre d'alertes nouvelles (non encore vues) : c'est lui qui s'affiche sur la cloche.
   const newCount = items.filter((it) => !seen.has(it.key)).length
   // Ouvre la cloche et marque les alertes actuelles comme vues (le compteur retombe à zéro).
@@ -202,11 +204,12 @@ function Notifications() {
       {pop.open && (
         <div className="pop-panel notif-panel" role="dialog" aria-label="Notifications">
           <div className="pop-head"><strong>Notifications</strong>{items.length > 0 && <span className="pill">{items.length} à traiter</span>}</div>
+          {items.length > shown.length && <p className="pop-empty">… et {items.length - shown.length} autre(s) : voir le tableau de bord.</p>}
           {items.length === 0 ? (
             <p className="pop-empty">Tout est à jour : aucune facture en retard, aucun stock bas, aucune tâche due.</p>
           ) : (
             <ul className="notif-list">
-              {items.map((it) => (
+              {shown.map((it) => (
                 <li key={it.key}>
                   <button disabled={!it.to} onClick={() => { if (it.to) { nav(it.to); pop.setOpen(false) } }}>
                     <span className={`tint tint-${it.tone} tint-sm`}><it.icon size={18} weight="duotone" aria-hidden="true" /></span>
