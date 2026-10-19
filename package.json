@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "e2e": "electron-vite build && node tests/e2e.mjs",
-    "icons": "node scripts/icons.mjs && capacitor-assets generate --iconBackgroundColor \"#0b4f8a\" --iconBackgroundColorDark \"#0a1a2b\" --splashBackgroundColor \"#0b4f8a\" --splashBackgroundColorDark \"#0a1a2b\"",
+    "icons": "node scripts/icons.mjs && capacitor-assets generate --ios --android --iconBackgroundColor \"#ffffff\" --iconBackgroundColorDark \"#0a1a2b\" --splashBackgroundColor \"#ffffff\" --splashBackgroundColorDark \"#0a1a2b\"",
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:mac": "electron-vite build && electron-builder --mac",
     "dist": "npm run dist:win",

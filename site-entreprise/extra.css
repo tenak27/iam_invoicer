@@ -1,0 +1,27 @@
+/* Compléments propres au site d'IAM Technology (le reste vient du site d'IAM INVOICER). */
+.brand-wide img { width: auto; height: 44px; padding: 4px 8px; border-radius: 12px; }
+.tier-logo { display: grid; place-items: center; background: #fff; padding: 18px 26px; border: 1px solid #e6eef7; }
+.tier-logo img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.tier:hover .tier-logo img { transform: none; }
+.tier.best .tier-logo { border-color: transparent; }
+.tier-icon { display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #0b3a66, #1d6fd6); }
+.histoire { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(28px, 6vw, 80px); align-items: center; }
+.histoire-year { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 30px 36px; border-radius: 30px; background: var(--navy); color: #fff; box-shadow: 0 30px 60px -34px rgba(7, 42, 75, .7); }
+.histoire-year b { font-size: clamp(3rem, 8vw, 5.6rem); line-height: 1; font-weight: 800; color: var(--gold); letter-spacing: -.03em; }
+.histoire-year span { font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .85); }
+.histoire-copy h2 { margin-bottom: 16px; font-size: clamp(2rem, 4.4vw, 3.2rem); }
+.histoire-copy p { margin: 0 0 14px; font-size: 1.06rem; max-width: 68ch; }
+.coords { list-style: none; margin: 6px 0 22px; padding: 0; display: grid; gap: 16px; }
+.coords li { display: flex; gap: 14px; align-items: flex-start; }
+.coords li > svg { flex: none; margin-top: 2px; padding: 9px; width: 42px; height: 42px; border-radius: 14px; background: #fff; color: var(--navy-2); box-shadow: 0 8px 18px -12px rgba(7, 42, 75, .5); }
+.coords b { display: block; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.coords a { color: var(--navy-2); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.contact-card .final-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.contact-card .btn-glass { color: var(--navy-2); border-color: rgba(11, 58, 102, .25); background: #fff; }
+.foot-brand { display: flex; align-items: center; gap: 12px; }
+.foot-brand img { padding: 4px; border-radius: 10px; background: #fff; }
+@media (max-width: 720px) {
+  .histoire { grid-template-columns: 1fr; }
+  .histoire-year { flex-direction: row; justify-content: center; gap: 14px; padding: 18px 22px; }
+}
+@media (max-width: 560px) { .brand-wide img { height: 38px; } }

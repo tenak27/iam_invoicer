@@ -9,9 +9,8 @@ import * as Icons from '@phosphor-icons/react'
 
 const out = 'out/site-entreprise'
 rmSync(out, { recursive: true, force: true })
-mkdirSync(`${out}/assets/galerie`, { recursive: true })
-cpSync('site/assets/logo-mark.svg', `${out}/assets/logo-mark.svg`)
-for (const g of ['caisse', 'tableau-de-bord', 'bilan']) cpSync(`docs/formation/captures/${g}.jpg`, `${out}/assets/galerie/${g}.jpg`)
+mkdirSync(`${out}/assets`, { recursive: true })
+for (const f of ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {
@@ -23,21 +22,25 @@ const cut = (from, to) => {
 
 const head = src
   .slice(0, src.indexOf('</head>'))
-  .replace(/<title>[^<]*<\/title>/, '<title>IAM Technology — Solutions logicielles pour les entreprises du Burkina Faso</title>')
-  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="IAM Technology, entreprise burkinabè de solutions logicielles : conception, déploiement et accompagnement de logiciels de gestion pour les PME. Éditeur d\'IAM INVOICER.">')
-  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="IAM Technology — Le numérique au service des entreprises">')
-  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Éditeur d\'IAM INVOICER, le logiciel de gestion pensé pour le Burkina Faso et la zone OHADA.">')
+  .replace(/<title>[^<]*<\/title>/, '<title>IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou</title>')
+  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="IAM TECHNOLOGY accompagne votre entreprise vers l\'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER et IAM MAILS. Ouagadougou, depuis 2013.">')
+  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="IAM Technology — Transformez votre vision digitale en réalité">')
+  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Solutions informatiques, domotique, sécurité et logiciels de gestion adaptés au marché burkinabé, depuis 2013.">')
+  .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="assets/iam-technology-mark.svg" type="image/svg+xml">')
 
 // Illustration d'accueil (Awa, avion, nuages) sans le sceau propre au logiciel
 const heroArt = cut('<div class="hero-art" aria-hidden="true">', '<div class="seal">')
 const tearTop = cut('<svg class="tear tear-top"', '</svg>') + '</svg>'
 const tearBottom = cut('<svg class="tear tear-bottom"', '</svg>') + '</svg>'
+// Illustration de la section contact (paysage, Awa)
+const contactArt = cut('<div class="contact-art rv">', '<div class="contact-card')
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
 let body = readFileSync('site-entreprise/body.html', 'utf8')
   .replace('{{HERO_ART}}', heroArt)
   .replaceAll('{{TEAR_TOP}}', tearTop)
   .replaceAll('{{TEAR_BOTTOM}}', tearBottom)
+  .replace('{{CONTACT_ART}}', contactArt)
   .replaceAll('__VERSION__', version)
 
 const script = `<script>
@@ -62,7 +65,7 @@ const script = `<script>
   }, { threshold: .14 }) : null
   all('.rv').forEach(function (el) { io ? io.observe(el) : el.classList.add('in') })
   var rot = all('#rot span'), ri = 0
-  if (rot.length && !reduce) setInterval(function () {
+  if (rot.length > 1 && !reduce) setInterval(function () {
     if (document.hidden) return
     var cur = rot[ri]; ri = (ri + 1) % rot.length
     cur.className = 'out'; rot[ri].className = 'on'
@@ -83,7 +86,10 @@ const script = `<script>
 })()
 </script>`
 
-let html = `${head}</head>
+const extra = readFileSync('site-entreprise/extra.css', 'utf8')
+let html = `${head}<style>
+${extra}</style>
+</head>
 <body id="top">
 <a class="skip" href="#contenu">Aller au contenu</a>
 <div class="read" id="read" aria-hidden="true"></div>

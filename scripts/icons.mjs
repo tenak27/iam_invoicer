@@ -1,41 +1,49 @@
-// Génère les icônes de l'application à partir de resources/logo-mark.svg :
-//   resources/icon.png (1024 px, utilisée par electron-builder pour Windows et macOS)
-//   resources/logo.svg (logo horizontal autonome)
-//   src/renderer/public/ (favicon, icônes web)
-//   assets/ (sources de @capacitor/assets pour iOS et Android)
-// Usage : node scripts/icons.mjs
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+// Génère les icônes de l'application à partir des logos d'IAM INVOICER (assets/marques/) :
+//   resources/logo-mark.svg, resources/logo.svg  (pictogramme et logo complet, copies de référence)
+//   resources/icon.png        (1024 px, utilisée par electron-builder pour Windows et macOS)
+//   src/renderer/public/      (favicon, icônes web)
+//   assets/                   (sources de @capacitor/assets pour iOS et Android)
+// Le pictogramme (cartouche bleu) est posé sur un fond blanc : iOS refuse les icônes transparentes.
+// Usage : node scripts/icons.mjs (puis npm run icons pour les jeux d'icônes iOS et Android)
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import sharp from 'sharp'
 
-const mark = readFileSync('resources/logo-mark.svg')
-const png = (svg, size) => sharp(Buffer.isBuffer(svg) ? svg : Buffer.from(svg), { density: 300 }).resize(size, size).png().toBuffer()
+const markSvg = readFileSync('assets/marques/iam-invoicer-mark.svg', 'utf8')
+const logoSvg = readFileSync('assets/marques/iam-invoicer.svg', 'utf8')
+copyFileSync('assets/marques/iam-invoicer-mark.svg', 'resources/logo-mark.svg')
+copyFileSync('assets/marques/iam-invoicer.svg', 'resources/logo.svg')
 
-// Logo horizontal : on intègre le pictogramme pour que le fichier soit autonome.
-const inner = mark.toString().replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')
-const wordmark = readFileSync('resources/logo.svg', 'utf8')
-  .replace(/<image href="logo-mark.svg"[^>]*\/>|<svg x="0" y="0" width="400" height="400" viewBox="0 0 1024 1024">[\s\S]*?<\/svg><!--mark-->/, `<svg x="0" y="0" width="400" height="400" viewBox="0 0 1024 1024">${inner}</svg><!--mark-->`)
-writeFileSync('resources/logo.svg', wordmark)
+const render = (svg, size) => sharp(Buffer.from(svg), { density: 400 }).resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
 
-writeFileSync('resources/icon.png', await png(mark, 1024))
+/** Icône carrée : fond blanc (arrondi ou non) et pictogramme centré à la proportion donnée. */
+async function icon(size, { radius = 0, scale = 0.82, background = '#ffffff' } = {}) {
+  const inner = Math.round(size * scale)
+  const base = sharp({ create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+  const plate = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${radius}" fill="${background}"/></svg>`)
+  return base.composite([{ input: plate }, { input: await render(markSvg, inner), gravity: 'center' }]).png().toBuffer()
+}
 
+// Bureau (Windows, macOS) : carré blanc arrondi
+writeFileSync('resources/icon.png', await icon(1024, { radius: 210 }))
+
+// Web : pictogramme seul (transparent) pour l'onglet, icônes pleines pour l'écran d'accueil
 mkdirSync('src/renderer/public', { recursive: true })
-writeFileSync('src/renderer/public/favicon.svg', mark)
-writeFileSync('src/renderer/public/icon-192.png', await png(mark, 192))
-writeFileSync('src/renderer/public/icon-512.png', await png(mark, 512))
-writeFileSync('src/renderer/public/apple-touch-icon.png', await png(mark, 180))
+writeFileSync('src/renderer/public/favicon.svg', markSvg)
+writeFileSync('src/renderer/public/icon-192.png', await icon(192, { radius: 40 }))
+writeFileSync('src/renderer/public/icon-512.png', await icon(512, { radius: 104 }))
+writeFileSync('src/renderer/public/apple-touch-icon.png', await icon(180, { scale: 0.8 }))
 
-// Android : icône adaptative = pictogramme sans le fond arrondi + fond uni.
+// iOS et Android (sources de @capacitor/assets) : icône pleine, et icône adaptative Android
+// (pictogramme dans la zone sûre centrale, fond blanc séparé)
 mkdirSync('assets', { recursive: true })
-const foreground = mark.toString()
-  .replace(/<rect width="1024" height="1024" rx="228" fill="url\(#bg\)"\/>/, '')
-  .replace('viewBox="0 0 1024 1024"', 'viewBox="-256 -256 1536 1536"')
-const square = mark.toString().replace('rx="228"', 'rx="0"')
-writeFileSync('assets/icon-only.png', await png(square, 1024))
-writeFileSync('assets/icon-foreground.png', await png(foreground, 1024))
-writeFileSync('assets/icon-background.png', await sharp({ create: { width: 1024, height: 1024, channels: 4, background: '#0b4f8a' } }).png().toBuffer())
-const splash = (bg) => sharp({ create: { width: 2732, height: 2732, channels: 4, background: bg } })
-  .composite([{ input: Buffer.from(mark.toString().replace('width="1024" height="1024"', 'width="640" height="640"')), gravity: 'center' }])
+writeFileSync('assets/icon-only.png', await icon(1024, { scale: 0.8 }))
+writeFileSync('assets/icon-foreground.png', await sharp({ create: { width: 1024, height: 1024, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+  .composite([{ input: await render(markSvg, 600), gravity: 'center' }]).png().toBuffer())
+writeFileSync('assets/icon-background.png', await sharp({ create: { width: 1024, height: 1024, channels: 4, background: '#ffffff' } }).png().toBuffer())
+// Écrans de démarrage : logo complet sur fond blanc ; en mode sombre, le pictogramme seul
+const splash = async (bg, svg, width) => sharp({ create: { width: 2732, height: 2732, channels: 4, background: bg } })
+  .composite([{ input: await sharp(Buffer.from(svg), { density: 400 }).resize(width).png().toBuffer(), gravity: 'center' }])
   .png().toBuffer()
-writeFileSync('assets/splash.png', await splash('#0b4f8a'))
-writeFileSync('assets/splash-dark.png', await splash('#0a1a2b'))
+writeFileSync('assets/splash.png', await splash('#ffffff', logoSvg, 1100))
+writeFileSync('assets/splash-dark.png', await splash('#0a1a2b', markSvg, 560))
 console.log('Icônes générées.')

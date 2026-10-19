@@ -11,7 +11,7 @@
 <meta property="og:title" content="IAM INVOICER — Toute votre gestion, même sans Internet">
 <meta property="og:description" content="Facturation, caisse, stock, dépenses, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
 <meta property="og:type" content="website">
-<link rel="icon" href="assets/logo-mark.svg" type="image/svg+xml">
+<link rel="icon" href="assets/iam-invoicer-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -81,6 +81,8 @@
   .nav.solid .nav-in { background: rgba(255, 255, 255, .86); border-color: #fff; color: var(--ink); box-shadow: var(--sh); }
   .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; letter-spacing: .02em; white-space: nowrap; min-height: 44px; }
   .brand img { width: 36px; height: 36px; padding: 5px; border-radius: 12px; background: #fff; box-shadow: 0 6px 14px -8px rgba(var(--shadow-rgb), .6); }
+  .brand-wide img { width: auto; height: 44px; padding: 3px 8px; }
+  .foot-brand img { display: inline-block; vertical-align: middle; margin-right: 10px; padding: 3px; border-radius: 10px; background: #fff; }
   .brand b { font-weight: 800; }
   .menu { display: flex; gap: 2px; margin-inline: auto; }
   .menu a, .nav-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; font-size: .93rem; font-weight: 600; white-space: nowrap; transition: background .25s; }
@@ -1263,7 +1265,7 @@
 
 <header class="nav" id="nav">
   <div class="nav-in">
-    <a class="brand" href="#top" aria-label="IAM INVOICER, accueil"><img src="assets/logo-mark.svg" width="36" height="36" alt=""><span>IAM <b>INVOICER</b></span></a>
+    <a class="brand brand-wide" href="#top" aria-label="IAM INVOICER, accueil"><img src="assets/iam-invoicer.svg" width="102" height="44" alt="IAM INVOICER"></a>
     <nav class="menu" id="menu" aria-label="Sections">
       <a href="#fonctions">Fonctionnalités</a>
       <a href="#offres">Offres</a>
@@ -1390,7 +1392,7 @@
         <span class="orbe"></span>
         <div class="mock" id="mock">
           <div class="mk-side">
-            <div class="mk-logo"><img src="assets/logo-mark.svg" alt="">IAM INVOICER</div>
+            <div class="mk-logo"><img src="assets/iam-invoicer-mark.svg" alt="">IAM INVOICER</div>
             <div class="mk-nav on"><i data-icon="House" data-size="18" data-weight="fill"></i>Tableau de bord</div>
             <div class="mk-nav"><i data-icon="Receipt" data-size="18" data-weight="bold"></i>Factures</div>
             <div class="mk-nav"><i data-icon="CashRegister" data-size="18" data-weight="bold"></i>Caisse</div>
@@ -2078,7 +2080,7 @@
 <footer id="pied">
   <div class="wrap foot-top">
     <div>
-      <div class="foot-brand"><img src="assets/logo-mark.svg" width="34" height="34" alt="">IAM INVOICER</div>
+      <div class="foot-brand"><img src="assets/iam-invoicer-mark.svg" width="40" height="40" alt="">IAM INVOICER</div>
       <p class="say">Facturez, encaissez et comptabilisez dans un seul logiciel, avec une équipe à Ouagadougou pour vous accompagner de l'installation à la formation.</p>
       <div class="foot-cta">
         <a class="btn btn-gold" href="#telecharger"><i data-icon="ArrowUpRight"></i>Essayer gratuitement</a>
@@ -2171,6 +2173,7 @@
     if (cfg.whatsapp) items.push('<a href="https://wa.me/' + esc(cfg.whatsapp) + '" rel="noopener">WhatsApp ' + esc(cfg.whatsapp) + '</a>')
     if (cfg.email) items.push('<a href="mailto:' + esc(cfg.email) + '">' + esc(cfg.email) + '</a>')
     items.push('<span>' + esc([cfg.company, cfg.address, cfg.city].filter(Boolean).join(' · ')) + '</span>')
+    if (cfg.hours) items.push('<span>' + esc(cfg.hours) + '</span>')
     $('contact-list').innerHTML = items.join('')
 
     // Apparition au défilement et compteurs
