@@ -106,7 +106,7 @@
   </div>
   <div class="foot">
     <div><b>IAM Technology</b><br>Ouagadougou, Burkina Faso</div>
-    <div style="text-align:right">Version du logiciel : <b>0.14.8</b><br>Édition du guide : octobre 2026</div>
+    <div style="text-align:right">Version du logiciel : <b>0.14.9</b><br>Édition du guide : octobre 2026</div>
   </div>
   <div class="weave"></div>
 </div>
@@ -262,7 +262,7 @@ nano deploy/.env</pre>
   </table>
 <pre>docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 docker compose -f deploy/docker-compose.yml ps          <span class="c"># les 3 services doivent être « running »</span>
-docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.14.8 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
+docker compose -f deploy/docker-compose.yml logs -f app <span class="c"># « IAM INVOICER 0.14.9 — http://0.0.0.0:8080 — base PostgreSQL db »</span></pre>
   <p>La première construction prend quelques minutes. Le domaine présente alors :</p>
   <table>
     <thead><tr><th style="width:38%">Adresse</th><th>Contenu</th></tr></thead>
@@ -393,7 +393,7 @@ CREATE DATABASE iam_invoicer OWNER iam;
     <tr><td><code>-Port 8090</code></td><td>Port d'écoute (8080 par défaut)</td></tr>
     <tr><td><code>-DatabaseUrl postgres://…</code></td><td>Base PostgreSQL (conseillée au-delà de quelques postes) au lieu de la base intégrée</td></tr>
     <tr><td><code>-CloudUrl https://…/t/ma_societe -CloudKey …</code></td><td>Copie en ligne (4.2), toutes les 15 minutes ou selon <code>-CloudMinutes</code></td></tr>
-    <tr><td><code>-Version 0.14.8</code> ou <code>-Zip fichier.zip</code></td><td>Version précise, ou paquet déjà téléchargé (serveur sans Internet)</td></tr>
+    <tr><td><code>-Version 0.14.9</code> ou <code>-Zip fichier.zip</code></td><td>Version précise, ou paquet déjà téléchargé (serveur sans Internet)</td></tr>
     <tr><td><code>-Uninstall</code> (<code>-Purge</code>)</td><td>Désinstallation ; les données restent, sauf avec <code>-Purge</code></td></tr>
   </table>
   <p>Relancer la commande <b>met à jour</b> le serveur en gardant les données et les réglages. Le journal est dans <code>C:\ProgramData\IAM-INVOICER\journal\serveur.log</code>. Les postes se branchent comme au 4.1, étape 4.</p>
@@ -420,8 +420,8 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <h2><span class="n">5</span> Windows</h2>
   <h3>5.1 Obtenir l'installateur</h3>
   <ul>
-    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.14.8.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
-    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.14.8.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
+    <li><b>Installateur</b> <code>IAM-INVOICER-Setup-0.14.9.exe</code> : produit par GitHub Actions (onglet <b>Actions → build → Artifacts</b>, archive « IAM-INVOICER-Windows »).</li>
+    <li><b>Version portable</b> <code>IAM-INVOICER-Setup-0.14.9.zip</code> : à décompresser dans un dossier, par exemple <code>C:\IAM INVOICER</code>, puis lancer <code>IAM INVOICER.exe</code>. Elle sert quand l'installateur est bloqué (voir plus bas).</li>
   </ul>
   <h3>5.2 Installer</h3>
   <ol class="steps">
@@ -454,10 +454,10 @@ CREATE DATABASE iam_invoicer OWNER iam;
   <table>
     <thead><tr><th>Mac</th><th>Fichier</th></tr></thead>
     <tbody>
-      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.14.8-arm64.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.14.8-x64.dmg</code></td></tr>
-      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.14.8-arm64-macos-ancien.dmg</code></td></tr>
-      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.14.8-x64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Puce Apple (M1 à M4), macOS 13 ou plus</td><td><code>IAM-INVOICER-0.14.9-arm64.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 13 ou plus</td><td><code>IAM-INVOICER-0.14.9-x64.dmg</code></td></tr>
+      <tr><td>Puce Apple, macOS 11 ou 12</td><td><code>IAM-INVOICER-0.14.9-arm64-macos-ancien.dmg</code></td></tr>
+      <tr><td>Processeur Intel, macOS 10.15 à 12</td><td><code>IAM-INVOICER-0.14.9-x64-macos-ancien.dmg</code></td></tr>
     </tbody>
   </table>
   <div class="box warn"><b class="t">La version de macOS compte</b><p>La version principale refuse de s'ouvrir sur macOS 12 ou plus ancien (« Vous ne pouvez pas utiliser cette version de l'application avec cette version de macOS »). Menu Pomme → <b>À propos de ce Mac</b> indique la version : sous macOS 13, prenez un fichier « macos-ancien ».</p></div>
@@ -811,7 +811,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
   <h3>Avec GitHub Actions (recommandé, sans Mac ni Android Studio)</h3>
   <p>Le fichier <code>.github/workflows/build.yml</code> lance les tests, puis fabrique l'installateur Windows, les fichiers macOS (arm64 et x64), l'APK Android, l'IPA iOS et l'image Docker du serveur. Sur une étiquette de version, tous les installateurs sont publiés dans une Release GitHub, avec le fichier d'empreintes <code>SHA256SUMS.txt</code>.</p>
   <ul>
-    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.14.8 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
+    <li><b>Déclenchement :</b> en poussant une étiquette de version (<code>git tag v0.14.9 &amp;&amp; git push --tags</code>), ou depuis <b>Actions → build → Run workflow</b>.</li>
     <li><b>Résultats :</b> page <b>Releases</b> du dépôt (permanente), ou onglet <b>Artifacts</b> de l'exécution (90 jours).</li>
     <li><b>APK signé (publication) :</b> secrets <code>ANDROID_KEYSTORE_BASE64</code>, <code>ANDROID_KEYSTORE_PASSWORD</code>, <code>ANDROID_KEY_ALIAS</code>, <code>ANDROID_KEY_PASSWORD</code>. Sans eux, l'APK est signé avec la clé de test : installable, mais une version signée autrement ne pourra pas le mettre à jour sans désinstallation.</li>
     <li><b>Image serveur :</b> publiée sur <code>ghcr.io/tenak27/iam-invoicer:latest</code> uniquement pour les étiquettes de version.</li>

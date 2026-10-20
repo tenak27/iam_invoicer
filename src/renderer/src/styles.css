@@ -2918,3 +2918,8 @@ h1, h2, h3, .auth-title, .brand-name, .kpi-tile-value, .hero-figure, .stat stron
   .sidebar { will-change: transform; }
   .card, .dcard, .table-wrap, .kpi-tile { box-shadow: 0 1px 3px rgba(20, 30, 50, .1); }
 }
+
+/* Cloche : alertes déjà vues (pastille grise, sans animation) */
+.nav-badge.seen { background: #8a94a6; animation: none; }
+.nav-badge.seen::after { display: none; }
+.nav-icon-btn:has(.nav-badge.seen) svg { animation: none; }

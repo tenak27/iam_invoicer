@@ -179,9 +179,10 @@ function Notifications() {
   ]
   // Les listes complètes servent au compte : une alerte résolue disparaît et fait baisser le compteur.
   const shown = items.slice(0, 15)
-  // Nombre d'alertes nouvelles (non encore vues) : c'est lui qui s'affiche sur la cloche.
+  // La cloche affiche le nombre d'alertes à traiter (il baisse dès qu'une alerte est résolue) :
+  // en rouge s'il y en a de nouvelles depuis la dernière ouverture, en gris sinon.
   const newCount = items.filter((it) => !seen.has(it.key)).length
-  // Ouvre la cloche et marque les alertes actuelles comme vues (le compteur retombe à zéro).
+  // Ouvre la cloche et marque les alertes actuelles comme vues (la pastille passe au gris).
   const openBell = () => {
     const willOpen = !pop.open
     pop.setOpen(willOpen)
@@ -199,7 +200,7 @@ function Notifications() {
     <div className="pop" ref={pop.ref}>
       <button className="nav-icon-btn" onClick={openBell} aria-expanded={pop.open} aria-label={`Notifications : ${newCount} nouvelle(s), ${items.length} au total`}>
         <Bell size={21} aria-hidden="true" />
-        {newCount > 0 && <span className="nav-badge">{newCount}</span>}
+        {items.length > 0 && <span className={`nav-badge${newCount > 0 ? '' : ' seen'}`}>{items.length > 99 ? '99+' : items.length}</span>}
       </button>
       {pop.open && (
         <div className="pop-panel notif-panel" role="dialog" aria-label="Notifications">
