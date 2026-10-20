@@ -13,7 +13,19 @@ const MAILS = process.argv[2] === 'mails'
 const BTP = process.argv[2] === 'btp'
 // « node tools/site/build-entreprise.mjs ecommerce » : site d'IAM E-COMMERCE (site-ecommerce/ → out/site-ecommerce)
 const ECOM = process.argv[2] === 'ecommerce'
-const V = ECOM
+// « node tools/site/build-entreprise.mjs reminder » : site d'IAM REMINDER (site-reminder/ → out/site-reminder)
+const REMINDER = process.argv[2] === 'reminder'
+const V = REMINDER
+  ? {
+      dir: 'site-reminder',
+      out: 'out/site-reminder',
+      assets: ['iam-reminder.svg', 'iam-reminder-mark.svg'],
+      title: 'IAM REMINDER — Vos commissions rappelées sur le chemin du retour | IAM Technology',
+      description: "IAM REMINDER vous rappelle vos commissions (pain, pressing, pharmacie…) à 5 km de la maison, sur le trajet du retour du travail. Notification et lecture vocale, sans GPS en continu, vos données restent sur votre téléphone.",
+      ogTitle: 'IAM REMINDER — N’oubliez plus rien en rentrant',
+      icon: 'iam-reminder-mark.svg'
+    }
+  : ECOM
   ? {
       dir: 'site-ecommerce',
       out: 'out/site-ecommerce',
@@ -46,9 +58,9 @@ const V = ECOM
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP et IAM E-COMMERCE. Ouagadougou, depuis 2013.",
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE et IAM REMINDER. Ouagadougou, depuis 2013.",
       ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
       icon: 'iam-technology-mark.svg'
     }
@@ -59,8 +71,9 @@ for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
+if (REMINDER) cpSync('site-reminder/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-if (!MAILS && !BTP && !ECOM) {
+if (!MAILS && !BTP && !ECOM && !REMINDER) {
   cpSync('site-entreprise/marques.html', `${out}/marques.html`)
   for (const f of ['iam-technology-mark.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 }
