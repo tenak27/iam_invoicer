@@ -43,3 +43,8 @@
 #logiciels .tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 900px) { #logiciels .tiers { grid-template-columns: 1fr; } }
 #logiciels .tier-img.tier-logo img { width: 100%; height: 114px; object-fit: contain; object-position: center; transform: none; }
+.motion { border-radius: 26px; overflow: hidden; background: #fff; box-shadow: 0 30px 60px -34px rgba(7, 42, 75, .45); padding: 14px 14px 10px; }
+.motion iframe { display: block; width: 100%; height: calc((min(1180px, 100vw) - 60px) * 9 / 16 + 64px); border: 0; }
+.motion-link { text-align: center; margin-top: 14px; }
+.motion-link a { color: var(--navy-2); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 640px) { .motion { padding: 8px; border-radius: 18px; } }

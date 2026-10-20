@@ -59,6 +59,11 @@ for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
+// Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
+if (!MAILS && !BTP && !ECOM) {
+  cpSync('site-entreprise/marques.html', `${out}/marques.html`)
+  for (const f of ['iam-technology-mark.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
+}
 
 const src = readFileSync('site/index.html', 'utf8')
 const cut = (from, to) => {

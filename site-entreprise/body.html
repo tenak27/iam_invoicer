@@ -4,6 +4,7 @@
     <nav class="menu" id="menu" aria-label="Sections">
       <a href="#domaines">Domaines</a>
       <a href="#logiciels">Logiciels</a>
+      <a href="#marques">Nos marques</a>
       <a href="#pourquoi">Pourquoi nous</a>
       <a href="#histoire">Histoire</a>
       <a href="#contact">Contact</a>
@@ -147,6 +148,34 @@
     </div>
     {{TEAR_BOTTOM}}
   </section>
+
+  <section id="marques">
+    <div class="wrap">
+      <div class="head center rv">
+        <h2>Nos marques <span class="script">en mouvement</span></h2>
+        <p>Une même famille, une même exigence : IAM Technology et ses logiciels.</p>
+      </div>
+      <div class="motion rv">
+        <iframe id="motion" src="marques.html?embed" title="Animation des logos IAM Technology, IAM INVOICER, IAM MAILS, Chantier, IAM BTP et IAM E-COMMERCE" loading="lazy" scrolling="no"></iframe>
+      </div>
+      <p class="motion-link rv"><a href="marques.html">Voir l'animation en plein écran</a></p>
+    </div>
+  </section>
+  <script>
+    (function () {
+      var f = document.getElementById('motion')
+      if (!f) return
+      // Hauteur du cadre envoyée par l'animation ; lecture seulement quand elle est à l'écran
+      window.addEventListener('message', function (e) {
+        if (e.origin === location.origin && e.data && e.data.iamMotionHeight) f.style.height = Math.ceil(e.data.iamMotionHeight) + 'px'
+      })
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) {
+          es.forEach(function (en) { f.contentWindow && f.contentWindow.postMessage({ iamMotion: en.isIntersecting }, location.origin) })
+        }, { threshold: 0.15 }).observe(f)
+      }
+    })()
+  </script>
 
   <section id="pourquoi">
     <div class="wrap">
