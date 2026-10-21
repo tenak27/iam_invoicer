@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>IAM Motion des marques</title>
-<meta name="description" content="Animation des logos IAM Technology, IAM INVOICER, IAM MAILS, Chantier, IAM BTP, IAM E-COMMERCE et IAM EDUCATION.">
+<meta name="description" content="Animation des logos IAM Technology, IAM INVOICER, IAM MAILS, Chantier, IAM BTP, IAM E-COMMERCE, IAM EDUCATION et IAM CLOUD.">
 <link rel="icon" href="assets/iam-technology-mark.svg" type="image/svg+xml">
 <script>if (/[?&]embed/.test(location.search)) document.documentElement.classList.add('embed')</script>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
@@ -154,6 +154,15 @@ button.main{background:var(--blue);color:#fff;border-color:var(--blue)}
           <rect x="1614" y="160" width="18" height="18" fill="#FFFFFF"></rect>
           <rect x="1648" y="128" width="14" height="14" fill="#FFFFFF"></rect>
         </g>
+        <g id="sym-cloud">
+          <path d="M1388,316 C1340,316 1318,284 1322,254 C1326,222 1354,202 1386,206 C1394,160 1432,132 1478,134 C1520,136 1552,162 1562,200 C1604,196 1638,224 1640,262 C1642,296 1616,316 1584,316 Z" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round"></path>
+          <path d="M1480,296 L1480,214 M1448,244 L1480,212 L1512,244" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+          <rect x="1350" y="344" width="22" height="22" fill="#FFFFFF"></rect>
+          <rect x="1392" y="352" width="14" height="14" fill="#FFFFFF"></rect>
+          <rect x="1598" y="104" width="44" height="44" fill="#FFFFFF"></rect>
+          <rect x="1572" y="132" width="20" height="20" fill="#FFFFFF"></rect>
+          <rect x="1648" y="128" width="14" height="14" fill="#FFFFFF"></rect>
+        </g>
       </defs>
 
       <rect width="1920" height="1080" fill="#FFFFFF"></rect>
@@ -175,7 +184,7 @@ button.main{background:var(--blue);color:#fff;border-color:var(--blue)}
       <g id="tiles" opacity="0"></g>
 
       <text x="80" y="1020" font-family="Open Sans, sans-serif" font-weight="600" font-size="24" letter-spacing="3" fill="#555A70">iamtechnology.store</text>
-      <text id="counter" x="1840" y="1020" text-anchor="end" font-family="Open Sans, sans-serif" font-weight="600" font-size="24" letter-spacing="3" fill="#3C54A5">01 / 07</text>
+      <text id="counter" x="1840" y="1020" text-anchor="end" font-family="Open Sans, sans-serif" font-weight="600" font-size="24" letter-spacing="3" fill="#3C54A5">01 / 08</text>
     </svg>
   </div>
 
@@ -197,7 +206,8 @@ button.main{background:var(--blue);color:#fff;border-color:var(--blue)}
     {k:'chan', n:'CHANTIER',   label:'Chantier'},
     {k:'btp',  n:'BTP',        label:'BTP'},
     {k:'ecom', n:'E-COMMERCE', label:'e-Commerce'},
-    {k:'edu',  n:'ÉDUCATION',  label:'Éducation'}
+    {k:'edu',  n:'ÉDUCATION',  label:'Éducation'},
+    {k:'cloud', n:'CLOUD',     label:'Cloud'}
   ];
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $ = function(id){ return document.getElementById(id); };
@@ -238,10 +248,10 @@ button.main{background:var(--blue);color:#fff;border-color:var(--blue)}
     });
     return Array.prototype.slice.call(picto.children);
   }
-  function setCounter(i){ counter.textContent = ('0'+(i+1)).slice(-2)+' / 07'; markChip(i); }
+  function setCounter(i){ counter.textContent = ('0'+(i+1)).slice(-2)+' / 08'; markChip(i); }
 
   // Tuiles finales
-  var TW=150, GAP=44, X0=(1920-(7*TW+6*GAP))/2, TY=540;
+  var TW=150, GAP=44, X0=(1920-(8*TW+7*GAP))/2, TY=540;
   var tileEls = brands.map(function(b,i){
     var outer=document.createElementNS(NS,'g');
     outer.setAttribute('transform','translate('+(X0+i*(TW+GAP))+','+TY+')');
