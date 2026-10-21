@@ -15,7 +15,19 @@ const BTP = process.argv[2] === 'btp'
 const ECOM = process.argv[2] === 'ecommerce'
 // « node tools/site/build-entreprise.mjs reminder » : site d'IAM REMINDER (site-reminder/ → out/site-reminder)
 const REMINDER = process.argv[2] === 'reminder'
-const V = REMINDER
+// « node tools/site/build-entreprise.mjs education » : site d'IAM EDUCATION (site-education/ → out/site-education)
+const EDU = process.argv[2] === 'education'
+const V = EDU
+  ? {
+      dir: 'site-education',
+      out: 'out/site-education',
+      assets: ['iam-education.svg', 'iam-education-mark.svg'],
+      title: 'IAM EDUCATION — Gestion scolaire complète : notes, bulletins, absences, frais | IAM Technology',
+      description: "IAM EDUCATION : élèves et classes, saisie des notes et bulletins (moyennes, coefficients, rangs), appel et absences, discipline, frais de scolarité et paiements Orange Money, Moov Money, Wave, salaires, portail parent. Pour les écoles, collèges et lycées du Burkina Faso.",
+      ogTitle: 'IAM EDUCATION — Toute votre école dans une seule application',
+      icon: 'iam-education-mark.svg'
+    }
+  : REMINDER
   ? {
       dir: 'site-reminder',
       out: 'out/site-reminder',
@@ -58,9 +70,9 @@ const V = REMINDER
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE et IAM REMINDER. Ouagadougou, depuis 2013.",
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER et IAM EDUCATION. Ouagadougou, depuis 2013.",
       ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
       icon: 'iam-technology-mark.svg'
     }
@@ -72,8 +84,9 @@ if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: 
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
 if (REMINDER) cpSync('site-reminder/captures', `${out}/assets/captures`, { recursive: true })
+if (EDU) cpSync('site-education/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-if (!MAILS && !BTP && !ECOM && !REMINDER) {
+if (!MAILS && !BTP && !ECOM && !REMINDER && !EDU) {
   cpSync('site-entreprise/marques.html', `${out}/marques.html`)
   for (const f of ['iam-technology-mark.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 }
