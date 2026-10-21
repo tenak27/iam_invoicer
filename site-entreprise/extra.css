@@ -48,3 +48,13 @@
 .motion-link { text-align: center; margin-top: 14px; }
 .motion-link a { color: var(--navy-2); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 640px) { .motion { padding: 8px; border-radius: 18px; } }
+
+/* Installation sur serveur Linux (IAM CLOUD) */
+.install-box { display: flex; gap: 22px; align-items: flex-start; margin: 28px auto 8px; max-width: 980px; padding: 24px 26px; border-radius: 22px; background: #0f1d3d; color: #e7eefc; box-shadow: 0 20px 40px -26px rgba(15, 29, 61, .9); }
+.install-box > div:first-child { width: 58px; height: 58px; flex: none; border-radius: 16px; display: grid; place-items: center; background: rgba(255, 255, 255, .1); color: #f2a81d; }
+.install-box h3 { margin: 0 0 6px; color: #fff; font-size: 20px; }
+.install-box p { margin: 0 0 12px; color: #c9d5ee; }
+.install-box pre { margin: 0 0 10px; padding: 14px 16px; border-radius: 12px; background: #07122a; overflow-x: auto; }
+.install-box code { color: #8fe3b0; font-size: 13.5px; white-space: pre; }
+.install-note { font-size: 13.5px; }
+@media (max-width: 640px) { .install-box { flex-direction: column; padding: 20px; } }
