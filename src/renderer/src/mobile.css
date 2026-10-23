@@ -159,6 +159,8 @@
 
   /* Champs de date et de mois : la date entière reste visible */
   .page :where(input[type='date'], input[type='month'], input[type='datetime-local'], input[type='time']) { min-width: min(136px, 100%); max-width: 100%; flex: 1 1 136px; }
+  /* … sauf dans un champ de formulaire, empilé en colonne : la base de 136 px y deviendrait une hauteur */
+  .page .field > :where(input[type='date'], input[type='month'], input[type='datetime-local'], input[type='time']) { flex: 0 0 auto; }
 
   /* ── 13. Calendrier mensuel : événements sur une ligne ─────────────────────────────────── */
   .cal-head { flex-wrap: wrap; row-gap: 8px; }
