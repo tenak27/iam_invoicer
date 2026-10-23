@@ -4,6 +4,7 @@
     <nav class="menu" id="menu" aria-label="Sections">
       <a href="#fonctions">Fonctions</a>
       <a href="#parcours">Parcours patient</a>
+      <a href="#pilotage">Pilotage national</a>
       <a href="#securite">Sécurité</a>
       <a href="#apercu">Aperçu</a>
       <a href="#faq">Questions</a>
@@ -90,7 +91,28 @@
     {{TEAR_BOTTOM}}
   </section>
 
-  <section id="securite">
+
+  <section id="pilotage">
+    <div class="wrap">
+      <div class="head center rv">
+        <h2>Du CSPS au ministère, <span class="script">chacun son tableau de bord</span></h2>
+        <p>Les données saisies dans les formations sanitaires remontent, sans aucune ressaisie et sans nom de patient, vers les districts, les régions et les directions centrales.</p>
+      </div>
+      <div class="steps">
+        <div class="step rv"><div class="step-top"><span class="step-n">1</span><span class="step-ic"><i data-icon="Virus" data-size="26"></i></span></div><h3>DPSP — surveillance (SIMR)</h3><p>Courbes épidémiques par semaine, seuils d’alerte et épidémiques calculés par district (méningite, rougeole, choléra, dengue…), listes de cas pseudonymisées.</p></div>
+        <div class="step rv" style="--d:1"><div class="step-top"><span class="step-n">2</span><span class="step-ic"><i data-icon="Siren" data-size="26"></i></span></div><h3>CORUS — riposte</h3><p>Événements de santé publique du signal à la clôture : vérification, investigation, riposte, journal horodaté et indicateurs 7-1-7.</p></div>
+        <div class="step rv" style="--d:2"><div class="step-top"><span class="step-n">3</span><span class="step-ic"><i data-icon="ChartLineUp" data-size="26"></i></span></div><h3>DGESS — SNIS</h3><p>Complétude et promptitude des rapports mensuels par district et par région, rapports manquants, export ENDOS.</p></div>
+      </div>
+      <div class="steps" style="margin-top:22px">
+        <div class="step rv"><div class="step-top"><span class="step-n">4</span><span class="step-ic"><i data-icon="Drop" data-size="26"></i></span></div><h3>PNLP, DSF, DPV</h3><p>Paludisme (cas, tests, positivité, CTA), santé de la famille (CPN, accouchements, malnutrition), vaccination (séances, rendez-vous manqués).</p></div>
+        <div class="step rv" style="--d:1"><div class="step-top"><span class="step-n">5</span><span class="step-ic"><i data-icon="Package" data-size="26"></i></span></div><h3>DGAP et DGOS</h3><p>Disponibilité des médicaments traceurs structure par structure ; activité, personnel et contacts par habitant de chaque formation sanitaire.</p></div>
+        <div class="step rv" style="--d:2"><div class="step-top"><span class="step-n">6</span><span class="step-ic"><i data-icon="MapTrifold" data-size="26"></i></span></div><h3>DGSP, DRS, districts</h3><p>Vue d’ensemble nationale ou limitée à la région et au district, sur le découpage territorial de 2025 ; pyramide sanitaire et validation des structures.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="securite" class="paper">
+    {{TEAR_TOP}}
     <div class="wrap">
       <div class="head center rv">
         <h2>Le secret médical <span class="script">protégé</span></h2>
@@ -99,26 +121,29 @@
       <div class="steps">
         <div class="step rv"><div class="step-top"><span class="step-n">1</span><span class="step-ic"><i data-icon="LockKey" data-size="26"></i></span></div><h3>Accès avec l’accord du patient</h3><p>Un dossier suivi ailleurs ne s’ouvre qu’avec le patient présent (carte NNIS), un code SMS qu’il communique, ou l’accès d’urgence motivé, valable 24 h et revu par l’auditeur.</p></div>
         <div class="step rv" style="--d:1"><div class="step-top"><span class="step-n">2</span><span class="step-ic"><i data-icon="ListMagnifyingGlass" data-size="26"></i></span></div><h3>Journal d’audit inaltérable</h3><p>Chaque lecture et chaque modification est enregistrée dans un journal chaîné par empreintes : toute altération est détectée. Le patient peut savoir qui a consulté son dossier.</p></div>
-        <div class="step rv" style="--d:2"><div class="step-top"><span class="step-n">3</span><span class="step-ic"><i data-icon="ShieldCheck" data-size="26"></i></span></div><h3>Rôles et confidentialité</h3><p>21 rôles du cahier des charges et une matrice des droits par structure ; VIH et santé mentale réservés aux soignants habilités ; double authentification obligatoire pour le pilotage ; verrouillage après 10 minutes.</p></div>
+        <div class="step rv" style="--d:2"><div class="step-top"><span class="step-n">3</span><span class="step-ic"><i data-icon="ShieldCheck" data-size="26"></i></span></div><h3>Rôles et confidentialité</h3><p>32 profils, des soignants aux directions centrales, et une matrice des droits par structure ; VIH et santé mentale réservés aux soignants habilités ; double authentification obligatoire pour les profils nationaux ; verrouillage après 10 minutes.</p></div>
       </div>
     </div>
+    {{TEAR_BOTTOM}}
   </section>
 
-  <section id="apercu" class="paper">
-    {{TEAR_TOP}}
+  <section id="apercu">
     <div class="wrap">
       <div class="head center rv">
         <h2>Aperçu de <span class="script">l'application</span></h2>
         <p>Les vrais écrans d'IAM SANTÉ, avec une structure d'exemple.</p>
       </div>
       <div class="shots">
-        <figure class="rv"><img src="assets/captures/tableau-de-bord.jpg" alt="Tableau de bord d'un CSPS" loading="lazy" width="1366" height="854"><figcaption><b>Tableau de bord</b>Passages, attente, examens, ruptures</figcaption></figure>
-        <figure class="rv" style="--d:1"><img src="assets/captures/consultation.jpg" alt="Consultation avec constantes et alerte" loading="lazy" width="1366" height="854"><figcaption><b>Consultation</b>Constantes, alertes, CIM-10</figcaption></figure>
-        <figure class="rv" style="--d:2"><img src="assets/captures/laboratoire.jpg" alt="Demande d'examens au laboratoire" loading="lazy" width="1366" height="854"><figcaption><b>Laboratoire</b>Fiches de prélèvement, résultats</figcaption></figure>
+        <figure class="rv"><img src="assets/captures/tableau-de-bord.jpg" alt="Tableau de bord d'un CSPS" loading="lazy" width="1366" height="854"><figcaption><b>Tableau de bord</b>Tendances, agenda, services</figcaption></figure>
+        <figure class="rv" style="--d:1"><img src="assets/captures/surveillance.jpg" alt="Surveillance épidémiologique de la DPSP" loading="lazy" width="1366" height="854"><figcaption><b>Surveillance (DPSP)</b>Seuils d’alerte par district</figcaption></figure>
+        <figure class="rv" style="--d:2"><img src="assets/captures/evenements.jpg" alt="Événements de santé publique du CORUS" loading="lazy" width="1366" height="854"><figcaption><b>Riposte (CORUS)</b>Événements et 7-1-7</figcaption></figure>
         <figure class="rv" style="--d:3"><img src="assets/captures/file-attente.jpg" alt="File d'attente du jour" loading="lazy" width="1366" height="854"><figcaption><b>File d’attente</b>Priorités, tickets, appel</figcaption></figure>
+        <figure class="rv"><img src="assets/captures/pilotage.jpg" alt="Pilotage national" loading="lazy" width="1366" height="854"><figcaption><b>Pilotage national</b>Régions, alertes, traceurs</figcaption></figure>
+        <figure class="rv" style="--d:1"><img src="assets/captures/paludisme.jpg" alt="Programme de lutte contre le paludisme" loading="lazy" width="1366" height="854"><figcaption><b>Paludisme (PNLP)</b>Cas, tests, positivité</figcaption></figure>
+        <figure class="rv" style="--d:2"><img src="assets/captures/consultation.jpg" alt="Consultation avec constantes et alerte" loading="lazy" width="1366" height="854"><figcaption><b>Consultation</b>Constantes, alertes, CIM-10</figcaption></figure>
+        <figure class="rv" style="--d:3"><img src="assets/captures/laboratoire.jpg" alt="Demande d'examens au laboratoire" loading="lazy" width="1366" height="854"><figcaption><b>Laboratoire</b>Fiches de prélèvement, résultats</figcaption></figure>
       </div>
     </div>
-    {{TEAR_BOTTOM}}
   </section>
 
   <section id="faq">
@@ -132,6 +157,7 @@
         <details class="rv"><summary>Un patient soigné dans un autre CSPS est-il retrouvé ?</summary><p>Oui, grâce à son NNIS : la carte suffit, le patient présent confirme son année de naissance et son dossier s’ouvre dans votre structure. Sans la carte, un code envoyé par SMS au patient le permet.</p></details>
         <details class="rv"><summary>Le rapport mensuel est-il compatible avec ENDOS ?</summary><p>Le rapport est calculé depuis les consultations, examens et factures saisis, validé par le responsable, puis exporté au format DHIS2 (dataValueSets). La correspondance des éléments de données se paramètre avec votre district.</p></details>
         <details class="rv"><summary>Comment sont gérées la gratuité et la CNAMU ?</summary><p>La prise en charge est proposée automatiquement (enfants de moins de 5 ans, femmes enceintes, assurés CNAMU aux droits valides) ; la facture répartit la part gratuité, la part CNAMU (taux de la structure) et la part patient, et le bordereau CNAMU s’exporte chaque mois.</p></details>
+        <details class="rv"><summary>Qui voit quoi au niveau national ?</summary><p>Les directions (DGSP, DPSP, DGESS, DGOS, DGAP, DSF, DPV, PNLP), le CORUS, l’INSP, les DRS et les districts voient des chiffres agrégés et des listes de cas pseudonymisées (numéro EPID, âge, sexe, localité), jamais le nom ni le dossier d’un patient. Leurs comptes exigent la double authentification.</p></details>
         <details class="rv"><summary>Comment démarrer dans notre structure ?</summary><p>Appelez-nous : nous créons votre structure, les comptes du personnel et les tarifs, et formons les équipes sur place. Les référentiels nationaux (CIM-10, examens, médicaments essentiels, régions et provinces 2025) sont déjà chargés.</p></details>
       </div>
     </div>
@@ -142,18 +168,18 @@
     <div class="wrap">
       <div class="head center rv">
         <h2>Téléchargez <span class="script">IAM SANTÉ</span></h2>
-        <p>Un seul compte sur tous vos appareils : ordinateur de la structure, tablette ou téléphone, navigateur. Version 0.1.0.</p>
+        <p>Un seul compte sur tous vos appareils : ordinateur de la structure, tablette ou téléphone, navigateur. Version 0.2.0.</p>
       </div>
       <div class="dl-grid">
         <!--DL-->
-        <a class="dl-card rv" href="/telechargements/IAM-SANTE-Setup-0.1.0.exe"><i data-icon="WindowsLogo" data-size="40" data-weight="fill"></i><b>Windows</b><small>Windows 10 et 11</small><span class="btn btn-cta sm">Télécharger</span></a>
-        <a class="dl-card rv" style="--d:1" href="/telechargements/IAM-SANTE-0.1.0-arm64.dmg"><i data-icon="AppleLogo" data-size="40" data-weight="fill"></i><b>Mac</b><small>Puces Apple M1 à M4</small><span class="btn btn-cta sm">Télécharger</span></a>
-        <a class="dl-card rv" style="--d:2" href="/telechargements/IAM-SANTE-0.1.0-android.apk"><i data-icon="AndroidLogo" data-size="40" data-weight="fill"></i><b>Android</b><small>Android 7 et plus · APK</small><span class="btn btn-cta sm">Télécharger</span></a>
-        <a class="dl-card rv" style="--d:3" href="/telechargements/IAM-SANTE-0.1.0-ios-unsigned.ipa"><i data-icon="DeviceMobile" data-size="40" data-weight="fill"></i><b>iPhone</b><small>À installer avec Sideloadly ou AltStore</small><span class="btn btn-cta sm">Télécharger</span></a>
+        <a class="dl-card rv" href="/telechargements/IAM-SANTE-Setup-0.2.0.exe"><i data-icon="WindowsLogo" data-size="40" data-weight="fill"></i><b>Windows</b><small>Windows 10 et 11</small><span class="btn btn-cta sm">Télécharger</span></a>
+        <a class="dl-card rv" style="--d:1" href="/telechargements/IAM-SANTE-0.2.0-arm64.dmg"><i data-icon="AppleLogo" data-size="40" data-weight="fill"></i><b>Mac</b><small>Puces Apple M1 à M4</small><span class="btn btn-cta sm">Télécharger</span></a>
+        <a class="dl-card rv" style="--d:2" href="/telechargements/IAM-SANTE-0.2.0-android.apk"><i data-icon="AndroidLogo" data-size="40" data-weight="fill"></i><b>Android</b><small>Android 7 et plus · APK</small><span class="btn btn-cta sm">Télécharger</span></a>
+        <a class="dl-card rv" style="--d:3" href="/telechargements/IAM-SANTE-0.2.0-ios-unsigned.ipa"><i data-icon="DeviceMobile" data-size="40" data-weight="fill"></i><b>iPhone</b><small>À installer avec Sideloadly ou AltStore</small><span class="btn btn-cta sm">Télécharger</span></a>
         <!--/DL-->
         <a class="dl-card rv" style="--d:4" href="/app/"><i data-icon="Globe" data-size="40"></i><b>Navigateur</b><small>Chrome, Edge, Firefox, Safari</small><span class="btn btn-cta sm">Ouvrir</span></a>
       </div>
-      <p class="dl-help rv">Mac à processeur Intel : <a href="/telechargements/IAM-SANTE-0.1.0-x64.dmg">version Intel</a>. Sur Mac, au premier lancement : clic droit sur l'application puis « Ouvrir ». Une mise à jour est signalée dans l'application dès sa sortie. Besoin d'aide ? Appelez-nous au <a href="tel:+22605142323">+226 05 14 23 23</a> (lundi au vendredi 8 h – 18 h, samedi 8 h – 13 h).</p>
+      <p class="dl-help rv">Mac à processeur Intel : <a href="/telechargements/IAM-SANTE-0.2.0-x64.dmg">version Intel</a>. Sur Mac, au premier lancement : clic droit sur l'application puis « Ouvrir ». Une mise à jour est signalée dans l'application dès sa sortie. Besoin d'aide ? Appelez-nous au <a href="tel:+22605142323">+226 05 14 23 23</a> (lundi au vendredi 8 h – 18 h, samedi 8 h – 13 h).</p>
     </div>
     {{TEAR_BOTTOM}}
   </section>
