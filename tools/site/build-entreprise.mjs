@@ -22,7 +22,19 @@ const EDU = process.argv[2] === 'education'
 const CLOUD = process.argv[2] === 'cloud'
 // « node tools/site/build-entreprise.mjs sante » : site d'IAM SANTÉ (site-sante/ → out/site-sante)
 const SANTE = process.argv[2] === 'sante'
-const V = SANTE
+// « node tools/site/build-entreprise.mjs location » : site d'IAM LOCATION (site-location/ → out/site-location)
+const LOCATION = process.argv[2] === 'location'
+const V = LOCATION
+  ? {
+      dir: 'site-location',
+      out: 'out/site-location',
+      assets: ['iam-location.svg', 'iam-location-mark.svg'],
+      title: 'IAM LOCATION — Gestion locative : loyers, quittances, baux et locataires | IAM Technology',
+      description: "IAM LOCATION : biens et locataires, encaissement des loyers en espèces, Orange Money, Moov Money ou Wave, quittances PDF avec QR code, baux conformes à la loi n°103-2015/CNT, états des lieux, réparations et relances WhatsApp. Pour les propriétaires et les agences du Burkina Faso.",
+      ogTitle: 'IAM LOCATION — Vos loyers encaissés, sans courir après',
+      icon: 'iam-location-mark.svg'
+    }
+  : SANTE
   ? {
       dir: 'site-sante',
       out: 'out/site-sante',
@@ -95,9 +107,9 @@ const V = SANTE
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD et IAM SANTÉ. Ouagadougou, depuis 2013.",
+      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ et IAM LOCATION. Ouagadougou, depuis 2013.",
       ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
       icon: 'iam-technology-mark.svg'
     }
@@ -112,8 +124,9 @@ if (REMINDER) cpSync('site-reminder/captures', `${out}/assets/captures`, { recur
 if (EDU) cpSync('site-education/captures', `${out}/assets/captures`, { recursive: true })
 if (CLOUD) cpSync('site-cloud/captures', `${out}/assets/captures`, { recursive: true })
 if (SANTE) cpSync('site-sante/captures', `${out}/assets/captures`, { recursive: true })
+if (LOCATION) cpSync('site-location/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE
+const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION
 // Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
 // avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
 function withCsp(page) {

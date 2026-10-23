@@ -38,7 +38,7 @@
 .dl-card small { color: var(--muted); margin-bottom: 10px; }
 .dl-card.soon { opacity: .7; }
 .dl-help { text-align: center; margin-top: 22px; color: var(--muted); }
-.dl-help a, .hero-bar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.dl-help a, .hero-bar a:not(.btn) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 860px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 #logiciels .tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 900px) { #logiciels .tiers { grid-template-columns: 1fr; } }
@@ -60,3 +60,11 @@
 /* La commande défile dans son cadre au lieu d'élargir l'encadré (téléphone) */
 .install-box > div:last-child { min-width: 0; }
 @media (max-width: 640px) { .install-box { flex-direction: column; align-items: stretch; padding: 20px; } }
+
+/* Sceau avec une icône au centre (IAM LOCATION) : l'icône ne suit pas l'anneau de texte qui tourne */
+.seal b svg { position: static; display: block; width: 36px; height: 36px; margin: 0 auto 2px; animation: none; }
+.seal b svg + small { font-size: .6rem; letter-spacing: .06em; }
+@media (max-width: 1040px) { .seal b svg { width: 28px; height: 28px; } .seal b svg + small { font-size: .5rem; letter-spacing: .04em; } }
+
+/* Barre d'accueil : un texte long passe sur deux lignes au lieu d'être coupé par des points de suspension */
+.hero-bar b { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
