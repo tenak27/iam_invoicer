@@ -57,4 +57,6 @@
 .install-box pre { margin: 0 0 10px; padding: 14px 16px; border-radius: 12px; background: #07122a; overflow-x: auto; }
 .install-box code { color: #8fe3b0; font-size: 13.5px; white-space: pre; }
 .install-note { font-size: 13.5px; }
-@media (max-width: 640px) { .install-box { flex-direction: column; padding: 20px; } }
+/* La commande défile dans son cadre au lieu d'élargir l'encadré (téléphone) */
+.install-box > div:last-child { min-width: 0; }
+@media (max-width: 640px) { .install-box { flex-direction: column; align-items: stretch; padding: 20px; } }

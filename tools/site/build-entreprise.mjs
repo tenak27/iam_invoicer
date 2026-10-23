@@ -2,6 +2,7 @@
 // Même charte que le site d'IAM INVOICER : on reprend son <head> (styles), son illustration d'accueil
 // et ses déchirures de papier, puis on y place le contenu de site-entreprise/body.html.
 // Usage : node tools/site/build-entreprise.mjs
+import { createHash } from 'node:crypto'
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -112,8 +113,16 @@ if (EDU) cpSync('site-education/captures', `${out}/assets/captures`, { recursive
 if (CLOUD) cpSync('site-cloud/captures', `${out}/assets/captures`, { recursive: true })
 if (SANTE) cpSync('site-sante/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-if (!MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE) {
-  cpSync('site-entreprise/marques.html', `${out}/marques.html`)
+const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE
+// Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
+// avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
+function withCsp(page) {
+  const hashes = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`)
+  const csp = `default-src 'self'; script-src 'self' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; frame-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`
+  return page.replace(/<meta charset="?utf-?8"?>/i, (m) => `${m}<meta http-equiv="Content-Security-Policy" content="${csp}">`)
+}
+if (ENTREPRISE) {
+  writeFileSync(`${out}/marques.html`, withCsp(readFileSync('site-entreprise/marques.html', 'utf8').replace(/\r\n?/g, '\n')))
   for (const f of ['iam-technology-mark.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 }
 
@@ -213,5 +222,6 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
   return renderToStaticMarkup(createElement(Icon, { size: Number(size ?? 20), weight: weight ?? (size ? 'duotone' : 'bold'), 'aria-hidden': true }))
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
-writeFileSync(`${out}/index.html`, html.replace(/\r\n?/g, '\n'))
+html = html.replace(/\r\n?/g, '\n')
+writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
 console.log(`Site construit dans ${out}`)

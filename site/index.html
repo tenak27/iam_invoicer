@@ -1256,6 +1256,17 @@
   @media (hover: none), (pointer: coarse) {
     *, *::before, *::after { animation-iteration-count: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background-attachment: scroll !important; }
   }
+  /* Très petits téléphones (320 px) : les colonnes peuvent rétrécir sous la largeur de leur contenu,
+     les boutons longs passent sur deux lignes */
+  @media (max-width: 360px) {
+    .hero-panel, .contact-wrap, .tiers, .jobs, .foot-top { grid-template-columns: minmax(0, 1fr); }
+    .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-copy { padding-inline: 18px; }
+    .hero h1 { font-size: 2rem; overflow-wrap: break-word; }
+    .outline { font-size: 2.5rem !important; }
+    .contact-card { padding: 22px 18px; }
+    .btn { white-space: normal; text-align: center; }
+  }
 </style>
 </head>
 <body id="top">

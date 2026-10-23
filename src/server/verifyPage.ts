@@ -66,7 +66,7 @@ export function verifyPageHtml(opts: { company: any; doc: VerifiedDocument | nul
 <body><main class="card">
   <div class="weave"></div>
   <div class="in">
-    ${company.logo ? `<img class="logo" src="${company.logo}" alt="">` : ''}
+    ${/^data:image\/(png|jpe?g|svg\+xml|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(String(company.logo ?? '')) ? `<img class="logo" src="${esc(company.logo)}" alt="">` : ''}
     ${head}
     ${doc ? `<dl>
       ${row('Document', `${esc(doc.label)} ${esc(doc.number)}`)}
