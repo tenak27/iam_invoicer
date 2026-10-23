@@ -1,0 +1,176 @@
+/* ─────────────────────────────────────────────────────────────────────────────────────────
+   Couche mobile commune aux applications IAM (INVOICER, MAILS, BTP, E-COMMERCE, REMINDER,
+   EDUCATION, CLOUD). Chargée en dernier. Deux objectifs :
+   1. rien ne déborde de l'écran (largeur du téléphone), tout reste lisible et touchable ;
+   2. un style doux et coloré : grandes cartes arrondies, tuiles pastel, barre du bas en pastille.
+   ───────────────────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --m-radius: 22px;
+  --m-radius-sm: 14px;
+  --m-shadow: 0 10px 28px -18px rgba(30, 28, 70, .35), 0 2px 6px -4px rgba(30, 28, 70, .12);
+  --m-tile-1: #ece9ff; --m-tile-1-ink: #5b4fd6;
+  --m-tile-2: #e3f7ec; --m-tile-2-ink: #178a52;
+  --m-tile-3: #ffe9e6; --m-tile-3-ink: #d2453a;
+  --m-tile-4: #fff4d6; --m-tile-4-ink: #b07400;
+  --m-tile-5: #e3f1fb; --m-tile-5-ink: #1f6fae;
+  --m-tile-6: #fbe7f3; --m-tile-6-ink: #b4367f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --m-tile-1: rgba(124, 108, 255, .16); --m-tile-1-ink: #b9b0ff;
+    --m-tile-2: rgba(40, 199, 111, .14); --m-tile-2-ink: #7fe0aa;
+    --m-tile-3: rgba(234, 84, 85, .15); --m-tile-3-ink: #ff9d97;
+    --m-tile-4: rgba(255, 180, 0, .14); --m-tile-4-ink: #ffd36b;
+    --m-tile-5: rgba(0, 150, 220, .15); --m-tile-5-ink: #8fcdf5;
+    --m-tile-6: rgba(220, 70, 160, .15); --m-tile-6-ink: #f3a3d2;
+  }
+}
+:root[data-theme='dark'] {
+  --m-tile-1: rgba(124, 108, 255, .16); --m-tile-1-ink: #b9b0ff;
+  --m-tile-2: rgba(40, 199, 111, .14); --m-tile-2-ink: #7fe0aa;
+  --m-tile-3: rgba(234, 84, 85, .15); --m-tile-3-ink: #ff9d97;
+  --m-tile-4: rgba(255, 180, 0, .14); --m-tile-4-ink: #ffd36b;
+  --m-tile-5: rgba(0, 150, 220, .15); --m-tile-5-ink: #8fcdf5;
+  --m-tile-6: rgba(220, 70, 160, .15); --m-tile-6-ink: #f3a3d2;
+}
+
+@media (max-width: 900px) {
+  /* ── 1. Aucun débordement ─────────────────────────────────────────────────────────────── */
+  html, body { overflow-x: clip; max-width: 100%; }
+  .main-col, .content, .page { max-width: 100vw; overflow-x: clip; }
+  .page { overflow-wrap: break-word; }
+  .page :where(h1, h2, h3, h4, p, li, td, th, label, span, b, small, a) { overflow-wrap: break-word; }
+  .page :where(.num, .money, time, kbd, code) { overflow-wrap: normal; }
+  /* Les enfants de flex et de grilles peuvent rétrécir au lieu de pousser la page */
+  .page :where(.row, .toolbar, .page-header, .page-actions, .form-actions, .form-grid, .grid, .grid-2, .grid-3, .grid-4,
+    .bento, .kpis, .stats, .rows > li, .card, .chips, .dash-grid, section, header, footer, div[class*='grid']) > * { min-width: 0; }
+  .page :where(img, video, iframe, canvas, svg:not([width])) { max-width: 100%; }
+  .page :where(img, video) { height: auto; }
+  .page pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
+  /* Tableaux : défilement horizontal dans leur cadre, jamais la page entière */
+  .table-wrap { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  /* Tableaux compacts (non transformés en cartes) : le cadre défile, pas la page */
+  .page :where(.card, section, .modal-body):has(> :where(table.compact, table:not(.table))) { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  .page :not(.bulletin, .id-card, .receipt, .invoice-paper) > :where(table.compact, table:not(.table)) { width: max-content; min-width: 100%; }
+  .page :not(.bulletin, .id-card, .receipt, .invoice-paper) > :where(table.compact, table:not(.table)) td { max-width: 240px; }
+  .table-wrap > table, .table-wrap > .table { min-width: 100%; }
+  .table th { white-space: nowrap; }
+  /* Barres d'outils, en-têtes et actions : passage à la ligne */
+  .toolbar, .page-actions, .form-actions, .row, .chips, .modal-foot, .seg { flex-wrap: wrap; }
+  .toolbar > *, .page-actions > * { max-width: 100%; }
+  .seg { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .seg::-webkit-scrollbar, .tabs::-webkit-scrollbar { display: none; }
+  .modal, .modal-wide { max-width: 100vw; }
+  .modal-body { overflow-x: hidden; }
+  .form-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .form-grid > [class*='span-'] { grid-column: auto !important; }
+  .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── 2. Lisibilité et cibles tactiles ─────────────────────────────────────────────────── */
+  body { -webkit-text-size-adjust: 100%; }
+  .page { padding: 18px 16px calc(36px + var(--safe-bottom, 0px)); }
+  /* 16 px : pas de zoom automatique d'iOS dans les champs */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea { font-size: 16px; }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), select { min-height: 46px; border-radius: var(--m-radius-sm); }
+  textarea { border-radius: var(--m-radius-sm); }
+  .btn { min-height: 46px; border-radius: 999px; padding-left: 18px; padding-right: 18px; font-weight: 700; }
+  .btn-sm { min-height: 38px; padding-left: 14px; padding-right: 14px; }
+  .icon-btn { min-width: 40px; min-height: 40px; border-radius: 12px; }
+  .muted.small, small.muted, .small { font-size: 13px; }
+
+  /* ── 3. En-tête de page ───────────────────────────────────────────────────────────────── */
+  .page-header { gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .page-header h1 { font-size: 26px; line-height: 1.15; letter-spacing: -.02em; font-weight: 800; }
+  .page-header p, .page-header .subtitle { font-size: 14px; line-height: 1.45; }
+  .page-actions { width: 100%; gap: 10px; }
+  .page-actions > .btn, .page-actions > button { flex: 1 1 auto; }
+  .page-actions > .btn-primary { flex-basis: 100%; min-height: 52px; font-size: 16px; box-shadow: 0 12px 24px -12px rgba(var(--primary-rgb), .7); }
+
+  /* ── 4. Cartes douces et arrondies ────────────────────────────────────────────────────── */
+  .card { border-radius: var(--m-radius); box-shadow: var(--m-shadow); border-color: transparent; }
+  .card.flush, .table-wrap.card { border-radius: var(--m-radius-sm); }
+  .card > h2:first-child, .card > header h2 { font-size: 18px; }
+  .rows > li { padding-top: 12px; padding-bottom: 12px; gap: 10px; }
+
+  /* ── 5. Tuiles d'indicateurs façon « cartes de matières » ─────────────────────────────── */
+  .kpis, .kpi-tiles, .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .kpi, .kpi-tiles > *, .kt { border-radius: 20px; border: 0; box-shadow: none; padding: 14px 15px; min-height: 92px; }
+  .kpis > :nth-child(6n+1), .kpi-tiles > :nth-child(6n+1) { background: var(--m-tile-1); }
+  .kpis > :nth-child(6n+2), .kpi-tiles > :nth-child(6n+2) { background: var(--m-tile-2); }
+  .kpis > :nth-child(6n+3), .kpi-tiles > :nth-child(6n+3) { background: var(--m-tile-3); }
+  .kpis > :nth-child(6n+4), .kpi-tiles > :nth-child(6n+4) { background: var(--m-tile-4); }
+  .kpis > :nth-child(6n+5), .kpi-tiles > :nth-child(6n+5) { background: var(--m-tile-5); }
+  .kpis > :nth-child(6n+6), .kpi-tiles > :nth-child(6n+6) { background: var(--m-tile-6); }
+  .kpi :where(b, strong, .kpi-value, .value), .kt b { font-size: 22px; line-height: 1.15; letter-spacing: -.01em; overflow-wrap: break-word; }
+  .kpi :where(span, small, .kpi-label, .label), .kt > span { font-size: 12.5px; }
+
+  /* ── 6. Onglets en pastilles défilantes ───────────────────────────────────────────────── */
+  .tabs { display: flex; gap: 6px; padding: 5px; border-radius: 999px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; max-width: 100%; }
+  .tabs :where(.tab, button) { flex: 0 0 auto; white-space: nowrap; border-radius: 999px; min-height: 40px; padding: 0 16px; }
+
+  /* ── 7. Barre de navigation du bas : pastille active ──────────────────────────────────── */
+  .tabbar { border-top: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px -16px rgba(30, 28, 70, .35); }
+  .tab-item { gap: 4px; font-size: 11.5px; }
+  .tab-item svg { padding: 4px 14px; box-sizing: content-box; border-radius: 999px; transition: background var(--t-fast, .15s), color var(--t-fast, .15s); }
+  .tab-item.active { color: var(--c-primary); }
+  .tab-item.active::before { display: none; }
+  .tab-item.active svg { background: rgba(var(--primary-rgb), .14); }
+
+  /* ── 8. Barre du haut ─────────────────────────────────────────────────────────────────── */
+  .navbar { box-shadow: 0 8px 22px -18px rgba(30, 28, 70, .4); }
+  .navbar-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+  .navbar-actions { flex-shrink: 0; }
+
+  /* ── 9. Fenêtres en feuille, listes d'actions ─────────────────────────────────────────── */
+  .modal, .modal-wide { border-radius: 26px 26px 0 0; }
+  .modal-head h2 { font-size: 19px; }
+  .modal-foot { gap: 10px; }
+  .modal-foot > .btn { flex: 1 1 auto; }
+  .modal-foot > .grow, .modal-foot > span.grow { flex-basis: 100%; }
+  .empty { border-radius: var(--m-radius); }
+}
+
+@media (max-width: 900px) {
+  /* ── 10. Barre du haut : titre sur deux lignes au lieu d'être coupé ───────────────────── */
+  .navbar { gap: 6px; }
+  .navbar-title { white-space: normal; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 15.5px; line-height: 1.2; min-width: 0; }
+  .navbar .nav-icon-btn, .navbar .search-btn { width: 38px; height: 38px; min-height: 38px; padding: 0; flex: 0 0 auto; }
+  .navbar-actions { gap: 2px; }
+  .navbar .avatar-btn { flex: 0 0 auto; }
+
+  /* ── 11. Lignes et listes : le texte garde une largeur lisible, le reste passe dessous ── */
+  .page :where(.rows > li, .row, .stat, .list-row, .item-row), .page :has(> .grow) { flex-wrap: wrap; }
+  .page .grow { flex: 1 1 160px; min-width: 0; }
+  .page :where(td, th) .grow, .page .toolbar > .grow:empty, .page .form-actions > .grow:empty, .modal-foot > .grow:empty { flex-basis: 0; }
+  .page :where(li, .row) > :where(h2, h3, h4).grow { flex-basis: 100%; }
+  /* Tuiles d'accès rapide : icône au-dessus, texte dessous (comme des cartes de matières) */
+  .page :where(.skill, .stat, .kpi) > .grow { flex-basis: 100%; }
+  /* Documents imprimables (cartes, bulletins, reçus) : mise en page d'origine conservée */
+  .page .id-card *, .page .bulletin *, .page .receipt *, .page .doc-paper *, .page .invoice-paper * { flex-wrap: nowrap; }
+  .page .id-card .grow, .page .bulletin .grow, .page .receipt .grow, .page .doc-paper .grow, .page .invoice-paper .grow { flex-basis: 0; }
+  /* Sélecteurs de vue : colonnes égales, le texte passe à la ligne au lieu d'être coupé */
+  .page-actions > .seg { flex: 1 1 100%; grid-column: 1 / -1; }
+  .page-header .seg, .page .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: 100%; overflow: visible; }
+  .seg > button { white-space: normal; line-height: 1.2; min-height: 44px; padding-left: 8px; padding-right: 8px; }
+
+  /* ── 12. Tableaux : largeur naturelle des colonnes, défilement dans le cadre ───────────── */
+  .table-wrap td :where(.muted, .small, small) { white-space: normal; }
+
+  /* Champs de date et de mois : la date entière reste visible */
+  .page :where(input[type='date'], input[type='month'], input[type='datetime-local'], input[type='time']) { min-width: min(136px, 100%); max-width: 100%; flex: 1 1 136px; }
+
+  /* ── 13. Calendrier mensuel : événements sur une ligne ─────────────────────────────────── */
+  .cal-head { flex-wrap: wrap; row-gap: 8px; }
+  .cal-ev { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10.5px; padding-left: 3px; padding-right: 3px; }
+}
+
+@media (max-width: 380px) {
+  .kpis, .kpi-tiles, .stats { grid-template-columns: minmax(0, 1fr); }
+  .page-header h1 { font-size: 23px; }
+  .tab-item svg { padding: 4px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-item svg { transition: none; }
+}

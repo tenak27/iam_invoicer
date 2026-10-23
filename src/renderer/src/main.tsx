@@ -7,6 +7,7 @@ import { installMagnet, installReveal, installRipple, installSpotlight, installT
 import '@fontsource-variable/public-sans/index.css'
 import './fonts.css'
 import './styles.css'
+import './mobile.css'
 
 installBridge()
 initTheme()
