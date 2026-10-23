@@ -19,7 +19,19 @@ const REMINDER = process.argv[2] === 'reminder'
 const EDU = process.argv[2] === 'education'
 // « node tools/site/build-entreprise.mjs cloud » : site d'IAM CLOUD (site-cloud/ → out/site-cloud)
 const CLOUD = process.argv[2] === 'cloud'
-const V = CLOUD
+// « node tools/site/build-entreprise.mjs sante » : site d'IAM SANTÉ (site-sante/ → out/site-sante)
+const SANTE = process.argv[2] === 'sante'
+const V = SANTE
+  ? {
+      dir: 'site-sante',
+      out: 'out/site-sante',
+      assets: ['iam-sante.svg', 'iam-sante-mark.svg'],
+      title: 'IAM SANTÉ — Dossier patient électronique des formations sanitaires | IAM Technology',
+      description: "IAM SANTÉ : identifiant national de santé (NNIS), accueil et file d'attente, consultations CIM-10, laboratoire, pharmacie, caisse CNAMU et gratuité, surveillance des MDO et rapport mensuel pour ENDOS. Pour les CSPS, CM, CMA, hôpitaux et cliniques du Burkina Faso.",
+      ogTitle: 'IAM SANTÉ — Un patient, un dossier, dans toutes les structures',
+      icon: 'iam-sante-mark.svg'
+    }
+  : CLOUD
   ? {
       dir: 'site-cloud',
       out: 'out/site-cloud',
@@ -98,8 +110,9 @@ if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursiv
 if (REMINDER) cpSync('site-reminder/captures', `${out}/assets/captures`, { recursive: true })
 if (EDU) cpSync('site-education/captures', `${out}/assets/captures`, { recursive: true })
 if (CLOUD) cpSync('site-cloud/captures', `${out}/assets/captures`, { recursive: true })
+if (SANTE) cpSync('site-sante/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-if (!MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD) {
+if (!MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE) {
   cpSync('site-entreprise/marques.html', `${out}/marques.html`)
   for (const f of ['iam-technology-mark.svg']) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 }
