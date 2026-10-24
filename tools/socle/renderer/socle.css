@@ -102,7 +102,8 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
 .socle-int-lock.open { border-color: color-mix(in srgb, var(--c-primary, #1b6ef3) 45%, transparent); }
 .socle-int-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .socle-int-row > input { flex: 1 1 200px; width: auto; }
-.socle-int-row > input.socle-int-code { flex: 0 1 150px; letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+.socle-int-row > input.socle-int-code { flex: 0 1 170px; letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+.socle-int-row > input.socle-int-code::placeholder { letter-spacing: normal; }
 .socle-int-row.end { justify-content: flex-end; }
 .socle-int-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .socle-int-list > li { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line, #e6e6ec); }
