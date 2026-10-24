@@ -29,6 +29,9 @@ a, button, summary, .btn, [role='button'] { touch-action: manipulation; }
 .btn:active:not([aria-disabled='true']) { transform: scale(.97); }
 .btn-cta::after { transition: transform .7s var(--ease); }
 
+/* ── Barre d'informations sous l'accueil : deux lignes équilibrées plutôt qu'un texte coupé par « … » ── */
+.hero-bar b { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; text-wrap: balance; }
+
 /* ── Apparitions au défilement : moins loin, plus vite, en cascade courte ── */
 .js .rv { transform: translateY(18px); transition: opacity .7s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--d, 0) * 60ms); }
 .js .rv.in { transform: none; }
@@ -143,6 +146,25 @@ summary::after { transition: transform .3s var(--ease); }
   .fil .step-ic { display: none; }
   .fil .steps::before { left: 39px; top: 40px; bottom: 40px; }
 }
+
+/* ── Barre du haut : le logo ne se tasse jamais (il tombait à 16 px quand la barre était pleine) ; si
+      tout ne tient pas, premium.js l'élargit (.wide), la resserre (.tight), puis replie le menu comme
+      sur tablette (.compact) ── */
+.brand { flex: none; }
+.brand img { max-width: none; }
+.nav.wide .nav-in { width: min(1400px, 100% - 48px); }
+.nav.tight .menu a { padding: 0 10px; }
+.nav.tight .nav-link[href^='tel:'] { display: none; }
+.nav.compact .nav-in { position: relative; }
+.nav.compact .menu { position: absolute; top: calc(100% + 10px); left: 12px; right: 12px; flex-direction: column; margin: 0; padding: 10px; border-radius: 22px; background: #fff; color: var(--navy, var(--ink)); box-shadow: var(--sh-2); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: opacity .25s, transform .25s var(--ease), visibility .25s; }
+.nav.compact .menu.open { opacity: 1; visibility: visible; transform: none; }
+/* Sur un écran large, le menu replié reste une colonne sous son bouton, pas une bande de toute la largeur */
+@media (min-width: 1041px) { .nav.compact .menu { left: auto; width: 320px; transform-origin: top right; } }
+.nav.compact .menu a { padding: 0 14px; }
+.nav.compact .menu a:hover, .nav.compact .menu a[aria-current] { background: var(--bg-2); }
+.nav.compact .menu-toggle { display: inline-flex; }
+.nav.compact .nav-act { margin-left: auto; }
+.nav.compact .menu-ind { display: none; }
 
 /* ── Menu : la section lue est signalée (premium.js) ; sur ordinateur, une pastille glisse d'un lien à
       l'autre (ease-in-out : un élément déjà à l'écran qui se déplace) ── */

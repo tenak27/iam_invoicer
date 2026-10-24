@@ -4,6 +4,24 @@
 ;(function () {
   var all = function (s, root) { return Array.prototype.slice.call((root || document).querySelectorAll(s)) }
 
+  // ── Barre du haut : quand tout ne tient pas sur une ligne, elle s'élargit (si l'écran le permet),
+  //    puis se resserre (liens plus serrés, numéro de téléphone masqué), et en dernier recours passe au
+  //    menu repliable, comme sur tablette ──
+  var bar = document.getElementById('nav')
+  var barIn = bar && bar.querySelector('.nav-in')
+  var burger = bar && bar.querySelector('.menu-toggle')
+  var fit = function () {
+    if (!barIn || !burger) return
+    bar.classList.remove('wide', 'tight', 'compact')
+    if (getComputedStyle(burger).display !== 'none') return
+    var over = function () { return barIn.scrollWidth > barIn.clientWidth + 1 }
+    var steps = ['wide', 'tight', 'compact']
+    for (var i = 0; i < steps.length && over(); i++) bar.classList.add(steps[i])
+  }
+  fit()
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit)
+  addEventListener('load', fit)
+
   // ── Menu : la section à l'écran est signalée (aria-current) ; sur ordinateur, une pastille glisse
   //    d'un lien à l'autre (elle apparaît sur place, sans venir du bord, quand elle était cachée) ──
   var menu = document.getElementById('menu')
@@ -34,8 +52,8 @@
       es.forEach(function (e) { if (e.isIntersecting) set(byId[e.target.id] || null) })
     }, { rootMargin: '-45% 0px -54% 0px' })
     all('main section[id]').forEach(function (s) { spy.observe(s) })
-    addEventListener('resize', function () { if (current) place(current, true) })
-  }
+    addEventListener('resize', function () { fit(); if (current) place(current, true) })
+  } else addEventListener('resize', fit)
 
   // ── Téléchargements : la carte de l'appareil du visiteur passe en tête, avec « Votre appareil » ──
   var ua = navigator.userAgent
