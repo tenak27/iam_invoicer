@@ -10,6 +10,7 @@ import { classify, compareVersions, listDownloads } from '../tools/socle/server/
 import { PGlite } from '@electric-sql/pglite'
 import { createSocle, spaceDemo } from '../tools/socle/server'
 import { pickFile } from '../tools/socle/renderer/versions'
+import { excelDate, excelDateTime, phoneText, toCsv } from '../tools/socle/renderer/csv'
 import { Notifier } from '../tools/socle/server/notify'
 import { ConsoleAgent } from '../tools/socle/server/agent'
 import { openDb, type Db } from '../src/main/db'
@@ -76,6 +77,29 @@ describe('serveur : /api/downloads et /telechargements/', () => {
     expect(await part.text()).toBe('456789')
     expect((await fetch(base + '/telechargements/lisez-moi.txt')).status).toBe(404)
     expect((await fetch(base + '/telechargements/..%2F..%2Fetc%2Fpasswd')).status).toBe(404)
+  })
+})
+
+describe('export vers Excel : contenu du fichier CSV', () => {
+  it('accents, virgule décimale, formules neutralisées, numéros longs ou à zéro de tête gardés en texte', () => {
+    const csv = toCsv([
+      ['Nom', 'Montant', 'Note', 'N° CNAMU', 'Compte', 'Petit'],
+      ['Ouédraogo; Awa', 1234.5, '=SOMME(A1)', '000123', '123456789012345', '12345'],
+      ['Sawadogo', -12, '-5', '0', true, null]
+    ])
+    expect(csv.charCodeAt(0)).toBe(0xfeff)
+    const [head, a, b] = csv.slice(1).split('\r\n')
+    expect(head).toBe('Nom;Montant;Note;N° CNAMU;Compte;Petit')
+    expect(a).toBe(`"Ouédraogo; Awa";1234,5;'=SOMME(A1);"=""000123""";"=""123456789012345""";12345`)
+    expect(b).toBe('Sawadogo;-12;-5;0;oui;')
+  })
+  it('dates et téléphones lisibles par Excel', () => {
+    expect(excelDate('2026-10-24')).toBe('24/10/2026')
+    expect(excelDate(null)).toBe('')
+    expect(excelDateTime('2026-10-24T07:05:00')).toBe('24/10/2026 07:05')
+    expect(phoneText('+22676990011')).toBe('(+226) 76 99 00 11')
+    expect(phoneText('76990011')).toBe('76 99 00 11')
+    expect(phoneText('+33 6 12 34 56 78')).toBe('+33 6 12 34 56 78')
   })
 })
 
