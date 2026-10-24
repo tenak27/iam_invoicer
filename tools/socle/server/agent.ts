@@ -167,7 +167,7 @@ export class ConsoleAgent {
     const rows = await this.opts.db.query<{ id: string | number; at: string; kind: string; details: string; user_name: string | null; space: string | null }>(
       `SELECT a.id, a.created_at AS at, a.kind, a.details, u.${s.userName} AS user_name, ${space} AS space
        FROM activity a LEFT JOIN users u ON u.id = a.user_id
-       WHERE a.id > $1 AND (u.id IS NULL OR ${this.realUserSql(s, 'u')})${s.activitySpace && s.spaceDemo ? ` AND NOT EXISTS (SELECT 1 FROM ${s.spaces} d WHERE d.id = a.company_id AND d.demo)` : ''}
+       WHERE a.id > $1 AND (u.id IS NULL OR ${this.realUserSql(s, 'u')})${s.activitySpace && s.spaceDemo ? ` AND (a.company_id IS NULL OR EXISTS (SELECT 1 FROM ${s.spaces} d WHERE d.id = a.company_id AND NOT d.demo))` : ''}
        ORDER BY a.id LIMIT 500`,
       [since]
     )
