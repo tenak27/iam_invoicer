@@ -1,0 +1,175 @@
+/* =====================================================================
+   Mouvement commun des applications IAM, chargé EN DERNIER (après la feuille de base,
+   celle de l'application, mobile.css et socle.css). Base commune : source
+   iam-erp/tools/socle/renderer/motion.css, recopiée par sync.mjs ; ne pas modifier ici.
+
+   Principes (Emil Kowalski, emilkowal.ski) :
+   – une animation a une raison : retour d'un geste, continuité d'un espace, éviter un
+     changement brutal ; « joli » ne suffit pas pour ce qu'on voit souvent ;
+   – ce qui revient des dizaines de fois par jour (changer de page, afficher une liste,
+     survoler) bouge peu ou pas ; une action au clavier n'est jamais animée ;
+   – entrée et sortie en ease-out franc, jamais ease-in ; interface sous 300 ms ; la
+     sortie est plus courte que l'entrée ; rien ne naît de scale(0) ;
+   – menus et panneaux naissent de leur déclencheur ; les fenêtres restent centrées ;
+   – rien ne bouge sans fin sur un élément toujours visible ;
+   – « Réduire les animations » (réglage du système) garde les fondus, retire les mouvements.
+
+   Les règles reprennent les sélecteurs de la feuille de base pour la remplacer à
+   spécificité égale. Jamais « animation: none » sur un élément caché au départ qui ne
+   s'affiche que par son animation (forwards) : seulement la durée et le délai.
+   ===================================================================== */
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Ancien jeton des sorties : une sortie part vite, elle aussi */
+  --ease-in: cubic-bezier(0.23, 1, 0.32, 1);
+  --chart-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --t-slow: .3s;
+  --t-exit: .15s;
+}
+
+@keyframes iam-fade-in { from { opacity: 0; } }
+@keyframes iam-fade-out { to { opacity: 0; } }
+
+/* ---------- Changer de page : un fondu bref qui évite le saut, rien de plus ---------- */
+.route-view { animation: iam-page-in 160ms var(--ease-out); }
+@keyframes iam-page-in { from { opacity: 0; transform: translateY(4px); } }
+:where(.route-view .page > *) { animation: none; }
+.route-view > .page:not(.dashboard) > * { animation: none; }
+.route-view :is(.kpi-row, .kpis) > * { animation: none; }
+.dashboard .bento > * { animation: none; }
+.page-hero, .hero-icon, .page-hero h1, .page-hero .page-subtitle, .page-hero .hero-icon, .page-hero .page-actions > * { animation: none; }
+/* Décor du bandeau de page (et électrocardiogramme d'IAM SANTÉ) : deux passages, puis le calme */
+.page-hero::after { animation-iteration-count: 2; }
+.tab-panel { animation: iam-fade-in 120ms var(--ease-out); }
+
+/* ---------- Listes, tableaux, tuiles : affichés à chaque recherche et à chaque filtre ---------- */
+.route-view .table tbody tr, .sched tbody tr, .kanban-card, .pos-tile, .badge, .uavatar, .uavatar .uavatar-dot, .mini-kpi { animation: none; }
+.class-card, .roll, .msg-list .card, .kid-card, .task-list li, .hist-list li, .tile { animation: none; }
+/* Tuiles d'indicateurs d'IAM E-COMMERCE : cachées au départ, rendues visibles ici */
+.kt { opacity: 1; transform: none; animation: none; }
+
+/* ---------- Ouverture de l'application : la coque est là, tout de suite ---------- */
+.navbar, .navbar-actions > *, .sidebar .brand, .sidebar .nav-section, .sidebar .brand-logo { animation: none; }
+.sidebar .brand:hover .brand-logo { transform: none; }
+/* Barre de progression du défilement sous la barre du haut : retirée (bruit) */
+@supports (animation-timeline: scroll()) {
+  .navbar::after { animation: none; transform: scaleX(0); }
+}
+/* … sauf le motif tissé que ce même trait porte sur téléphone */
+@media (max-width: 900px) {
+  .navbar::after { left: 0; right: 0; bottom: -4px; height: 4px; border-radius: 0; background: var(--weave); transform: none; animation: none; }
+}
+
+/* ---------- Menu et onglets : l'indicateur glisse vers son nouvel emplacement, sans rebond ---------- */
+.nav-link.active, nav.has-ind .nav-link.active .nav-icon { animation: none; }
+.nav-ind.ready { transition: transform 220ms var(--ease-in-out), width 220ms var(--ease-in-out), height 220ms var(--ease-in-out); }
+.tab-ind.ready { transition: transform 200ms var(--ease-in-out), width 200ms var(--ease-in-out); }
+.nav-icon, .nav-label { transition: transform 150ms var(--ease-out); }
+.nav-link:hover .nav-icon, .nav-link:hover .nav-label { transform: none; }
+.nav-link:active { transform: scale(.98); }
+.tab-item svg { transition: transform 150ms var(--ease-out); }
+.tab-item.active svg { animation: none; }
+
+/* ---------- Boutons : un appui franc (scale .97), aucun gadget ---------- */
+.btn { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 200ms ease, transform 160ms var(--ease-out); }
+.btn:active:not(:disabled) { transform: scale(.97); }
+/* Plus d'aimantation ni de reflet qui balaie le bouton principal */
+.btn-primary { transform: none; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 200ms ease, transform 160ms var(--ease-out); }
+.btn-primary:hover:not(:disabled) { background-position: 130% 0; }
+.btn-primary:active:not(:disabled) { transform: scale(.97); }
+.btn svg, .icon-btn svg, .ra-btn svg, .nav-icon-btn svg, .search-btn svg, .user-panel > button svg, .tab svg { transition: transform 150ms var(--ease-out); }
+.btn:hover:not(:disabled) svg, .icon-btn:hover svg, .ra-btn:hover svg, .nav-icon-btn:hover svg, .search-btn:hover svg, .user-panel > button:hover svg, .tab:hover svg, .tab.active svg { transform: none; }
+.nav-icon-btn, .avatar-btn { transform: none; }
+.icon-btn:active, .nav-icon-btn:active, .tab:active, .row-action:active { transform: scale(.95); }
+.chip:hover { transform: none; }
+
+/* ---------- Menus et panneaux : ils naissent de leur bouton (en haut à droite) ---------- */
+.pop-panel { transform-origin: top right; animation: iam-pop-in 180ms var(--ease-out); }
+@keyframes iam-pop-in { from { opacity: 0; transform: scale(.96); } }
+.pop-panel > *, .notif-list > li { animation: none; }
+/* Palette de commandes : ouverte au clavier (Ctrl K), donc sans aucune animation */
+.palette, .palette-backdrop { animation: none; }
+
+/* ---------- Fenêtres : centrées, sans rebond ; la fermeture est plus courte que l'ouverture ---------- */
+.modal-backdrop { animation: iam-fade-in 200ms var(--ease-out); }
+@media (min-width: 761px) {
+  .modal { animation: iam-modal-in 220ms var(--ease-out); }
+}
+@keyframes iam-modal-in { from { opacity: 0; transform: scale(.96); } }
+.modal-backdrop.closing { animation: iam-fade-out 150ms var(--ease-out) forwards; }
+.modal-backdrop.closing .modal { animation: iam-modal-out 150ms var(--ease-out) forwards; }
+@keyframes iam-modal-out { to { opacity: 0; transform: scale(.97); } }
+/* Téléphone : la fenêtre est une feuille qui monte du bas (courbe d'iOS) et y redescend */
+@media (max-width: 760px) {
+  .modal, .modal-wide { animation: iam-sheet-in 340ms var(--ease-drawer); }
+  .modal-backdrop.closing .modal { animation: iam-sheet-out 150ms var(--ease-out) forwards; }
+}
+@keyframes iam-sheet-in { from { transform: translateY(100%); } }
+@keyframes iam-sheet-out { to { transform: translateY(100%); } }
+
+/* ---------- Notifications : elles montent d'en bas, là où elles vivent, et y redescendent ---------- */
+/* Un peu plus lent et en « ease », comme Sonner : une notification se lit, elle ne claque pas */
+.toast { animation: iam-toast-in 380ms ease; }
+@keyframes iam-toast-in { from { opacity: 0; transform: translateY(100%); } }
+.toast.leaving { animation: iam-toast-out 150ms var(--ease-out) forwards; }
+@keyframes iam-toast-out { to { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+/* ---------- Formulaires : cocher et saisir restent immédiats ---------- */
+input[type='checkbox']:checked, input[type='radio']:checked { animation: none; }
+.field:focus-within > label, .field:focus-within > span:first-child { transform: none; }
+
+/* ---------- Plus rien ne bouge sans fin sur un élément toujours visible ---------- */
+.content::before, .kpi-tile-icon, .uavatar-ring, .uavatar .uavatar-ring, .uavatar .uavatar-glow, .uavatar-dot.on::after, .status-dot.good i { animation: none; }
+.uavatar .uavatar-face::after, .uavatar .uavatar-orbit, .progress span::after { display: none; }
+.avatar-btn:hover .uavatar, .who:hover .uavatar, .profile-photo .uavatar:hover, .table tbody tr:hover .uavatar, .avatar-btn:hover .uavatar-face img, .profile-photo .uavatar:hover .uavatar-face img { transform: none; }
+.kpi-tile:hover, .mini-kpi:hover { transform: none; }
+.mini-kpi:hover::after { transform: translateX(-120%); }
+.chart-bar:hover { transform: none; }
+/* Cloche : elle sonne une fois quand des notifications attendent, puis se tait */
+.nav-icon-btn:has(.nav-badge) svg { transform-origin: 50% 10%; animation: iam-bell 800ms ease-in-out 1s 1; }
+@keyframes iam-bell { 20% { transform: rotate(14deg); } 40% { transform: rotate(-11deg); } 60% { transform: rotate(7deg); } 80% { transform: rotate(-4deg); } }
+.nav-badge::after { animation-iteration-count: 3; }
+/* Mascottes et illustrations d'accueil : quelques gestes à l'arrivée, puis le calme
+   (la respiration et le clignement des yeux restent : ils les rendent vivantes) */
+.hello-text h1 i, .ma-hero, .ma-wl, .ma-wr, .ma-letter, .gift-ic, .hc-float, .hc-bob, .sa-cap, .m-wave, .m-coin, .m-spark, .mx-arm-l, .mx-coin, .mx-spark, .mx-earring, .mx-knot { animation-iteration-count: 2; }
+/* Photo d'un produit dans la boutique : on la regarde, elle ne flotte pas */
+.pd-img img { animation: none; }
+
+/* ---------- Graphiques : les données se construisent vite (tableaux de bord ouverts chaque jour) ----------
+   :root devant : la feuille des graphiques peut arriver après celle-ci (chargement différé). */
+:root .ac-line { animation-duration: .6s; animation-delay: 0s; }
+:root .ac-area { animation-duration: .45s; animation-delay: .1s; }
+:root .ac-dot { animation-name: iam-dot-in; animation-duration: .3s; animation-delay: calc(.15s + .4s * var(--i) / var(--n)); }
+:root .bc-bar { animation-duration: .45s; animation-delay: calc(var(--i) * 25ms); }
+:root .rank li { animation-duration: .3s; animation-delay: calc(var(--i) * 35ms); }
+:root .rank-track i { animation-duration: .5s; animation-delay: calc(var(--i) * 35ms + .05s); }
+:root .dn-seg { animation-duration: .5s; animation-delay: calc(var(--i) * 60ms); }
+:root .legend li { animation-duration: .3s; animation-delay: calc(var(--i) * 35ms + .1s); }
+:root .gauge-arc { animation-duration: .6s; animation-delay: 0s; }
+:root .area-line.draw { animation-duration: .6s; animation-delay: .05s; }
+:root .area-fill { animation-duration: .4s; animation-delay: .3s; }
+:root .area-dot.peak { animation-name: iam-dot-in; animation-duration: .3s; animation-delay: .6s; }
+:root .area-peak-label { animation-duration: .3s; animation-delay: .65s; }
+:root .donut-seg { animation-duration: .6s; }
+:root .progress span { animation-duration: .5s; animation-delay: 0s; }
+:root .ichart-bar { animation-duration: .45s; }
+:root .barlist-track i { animation-duration: .5s; }
+:root .pie-seg { animation-duration: .55s; }
+:root .fy-bar span { animation-duration: .5s; }
+:root .sb i, :root .sb-col .sb-seg { animation-duration: .45s; }
+:root .goal-ring { animation-duration: .6s; }
+/* Un point naît petit, jamais de rien, et sans rebond */
+@keyframes iam-dot-in { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
+
+/* ---------- Moins d'animations (réglage du système) : des fondus, aucun déplacement ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .route-view, .tab-panel { animation: iam-fade-in 120ms ease !important; }
+  .modal, .modal-wide, .pop-panel, .toast, .modal-backdrop { animation: iam-fade-in 150ms ease !important; }
+  .modal-backdrop.closing, .modal-backdrop.closing .modal, .toast.leaving { animation: iam-fade-out 120ms ease forwards !important; }
+  .nav-icon-btn:has(.nav-badge) svg { animation: none !important; }
+  .nav-ind.ready, .tab-ind.ready { transition: none !important; }
+  .btn:active:not(:disabled), .btn-primary:active:not(:disabled), .icon-btn:active, .nav-icon-btn:active, .tab:active, .row-action:active, .nav-link:active { transform: none; }
+}

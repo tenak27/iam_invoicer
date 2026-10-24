@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { celebrate } from '../components/fx'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { computeTotals, lineHT, PAYMENT_METHODS, type LineInput } from '@shared/domain'
 import { formatMoney, formatNumber, formatQty } from '@shared/format'
@@ -181,7 +180,6 @@ function Pos({ summary, reload }: { summary: any; reload: () => void }) {
           onPay={async (payments) => {
             const r = await run(() => api('cash.sale', { party_id: clientId ? Number(clientId) : null, lines: cart, payments }))
             if (r) {
-              celebrate()
               const cash = payments.find((p) => p.method === 'Espèces')
               setDone({ ...r, change: cash?.received ? cash.received - cash.amount : 0 })
               setPaying(false)
