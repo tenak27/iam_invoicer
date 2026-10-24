@@ -17,6 +17,7 @@ import { useResponsiveTables } from './responsiveTables'
 import { useNavIndicator } from './fx'
 import { SidebarArt } from './Scenery'
 import { NavFoldTitle, useNavFold } from '../socle/navfold'
+import { InstallPrompt } from '../socle/install'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
 type Section = { title?: string; tone: Tone; items: Item[] }
@@ -342,6 +343,10 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="weave sidebar-weave" />
       </aside>
       <UpdatePrompt />
+      <div className="socle-stack">
+        {/* Navigateur : installer IAM INVOICER sur l'appareil (pas dans la société de démonstration) */}
+        <InstallPrompt app="IAM INVOICER" eligible={() => !/^\/t\/demonstration(\/|$)/.test(window.location.pathname)} />
+      </div>
       <div className="main-col">
         <Navbar
           entries={allowed}

@@ -9,7 +9,7 @@
 //                          paquet tiré de l'appId de capacitor.config.ts
 // IAM INVOICER (ce dépôt) a déjà ses propres téléchargements et sa fenêtre de mise à jour : il ne
 // reçoit que le tactile, les styles communs, le panneau « API et webhooks », la récupération des
-// comptes et le menu à sections repliables (son serveur importe directement
+// comptes, le menu à sections repliables et l'invitation à installer (son serveur importe directement
 // tools/socle/server/integrations.ts et recovery.ts).
 // IAM REMINDER a ses propres notifications natives (rappels géolocalisés) : pas de service Android ni
 // de bureau.
@@ -49,7 +49,7 @@ for (const app of [...APPS, SELF]) {
   }
   changed = 0
   if (app === SELF) {
-    for (const f of ['touch.ts', 'socle.css', 'integrations.tsx', 'recovery.tsx', 'navfold.tsx']) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
+    for (const f of ['touch.ts', 'socle.css', 'integrations.tsx', 'recovery.tsx', 'navfold.tsx', 'install.tsx']) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
   } else {
     copyTree(join(here, 'server'), join(root, 'src/server/socle'))
     for (const f of readdirSync(join(here, 'renderer'))) if (/\.(tsx?|css)$/.test(f)) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
