@@ -104,7 +104,8 @@ export async function saveUser(
   input: { id?: number; username: string; full_name: string; role: string; password?: string; active?: boolean }
 ) {
   const username = str(input.username).toLowerCase()
-  if (!/^[a-z0-9._-]{2,}$/.test(username)) fail("Nom d'utilisateur invalide (lettres, chiffres, . _ - ; 2 caractères minimum).")
+  // L'adresse e-mail sert d'identifiant aux sociétés inscrites en ligne : « @ » et « + » admis
+  if (!/^[a-z0-9._@+-]{2,80}$/.test(username)) fail("Nom d'utilisateur invalide (lettres, chiffres, . _ - @ ; 2 caractères minimum, sans espace).")
   checkRole(input.role)
   const isAdmin = ctx.user?.role === 'admin'
   if (!isAdmin && (input.role === 'admin' || input.role === 'licences')) fail('Seul un administrateur peut attribuer ce rôle.')

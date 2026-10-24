@@ -285,6 +285,11 @@ export class TenantManager {
     return { db_password: password }
   }
 
+  /** Société configurée par son inscription en ligne : le code d'activation ne sert plus. */
+  async consumeSetupCode(slug: string) {
+    await this.control.query('UPDATE cloud_tenants SET setup_code = NULL WHERE slug = $1', [slug])
+  }
+
   /** Nouveau code d'activation (utile tant que la société n'est pas configurée). */
   async resetSetupCode(slug: string): Promise<{ setup_code: string }> {
     await this.must(slug)

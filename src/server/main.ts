@@ -75,6 +75,8 @@ async function main() {
       manager,
       adminToken: process.env.ADMIN_TOKEN,
       rootDb: db,
+      // Inscription libre des sociétés depuis le site (SIGNUP=off pour la fermer)
+      selfSignup: process.env.SIGNUP !== 'off',
       shared: { version: __APP_VERSION__, webRoot: process.env.WEB_ROOT ?? join(__dirname, '../web'), corsOrigin: process.env.CORS_ORIGIN, trustProxy, ratePerMinute: Number(process.env.API_RATE_PER_MINUTE) || undefined }
     })
     console.log(`Hébergement multi-clients actif : ${(await manager.list()).length} client(s), adresses /t/<client>`)

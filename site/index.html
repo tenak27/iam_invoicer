@@ -597,6 +597,9 @@
   .acces form { display: grid; gap: 12px; }
   .acces label { display: grid; gap: 8px; font-weight: 700; font-size: .9rem; color: var(--ink); }
   .acces-msg { min-height: 1.5em; font-size: .92rem; color: var(--muted); }
+  .acces-hint { font-weight: 500; font-size: .84rem; color: var(--muted); }
+  .acces form[hidden], .acces-alt[hidden] { display: none; }
+  dialog.acces { max-height: calc(100dvh - 28px); overflow-y: auto; }
   .acces-msg.ok { color: var(--mint); } .acces-msg.err { color: #c8321c; }
   .acces-recent { display: grid; gap: 8px; }
   .acces-recent[hidden] { display: none; }
@@ -1289,7 +1292,7 @@
     </nav>
     <div class="nav-act">
       <a class="nav-link" href="/app/" data-acces>Se connecter</a>
-      <a class="btn btn-cta sm" href="#telecharger">Essai gratuit</a>
+      <a class="btn btn-cta sm" href="#inscription" data-inscription>Créer mon compte</a>
       <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu"><i data-icon="List"></i></button>
     </div>
   </div>
@@ -1627,7 +1630,7 @@
               <button type="button" style="--c:#1f2933" data-c="#1f2933" aria-pressed="false" aria-label="Noir"></button>
             </div>
           </div>
-          <a class="btn btn-cta" href="#telecharger"><i data-icon="RocketLaunch"></i>Créer mes vraies factures gratuitement</a>
+          <a class="btn btn-cta" href="#inscription" data-inscription><i data-icon="RocketLaunch"></i>Créer mes vraies factures gratuitement</a>
           <p class="note">Dans l'application : six modèles, votre logo, votre cachet, le montant en lettres et l'envoi par e-mail ou SMS.</p>
         </form>
         <div class="demo-stage rv" style="--d:1">
@@ -2115,7 +2118,7 @@
 
 
 <div class="mobile-cta" id="mobile-cta">
-  <a class="btn btn-cta" href="#telecharger">Essai gratuit</a>
+  <a class="btn btn-cta" href="#inscription" data-inscription>Créer mon compte</a>
   <a class="btn btn-ghost" href="/app/" data-acces>Se connecter</a>
 </div>
 <button type="button" class="to-top" id="to-top" aria-label="Revenir en haut"><i data-icon="ArrowUp"></i></button>
@@ -2134,7 +2137,19 @@
       <button class="btn btn-cta" style="width:100%" id="acces-b">Ouvrir mon espace</button>
     </form>
     <div class="acces-recent" id="acces-r" hidden><small>Ouvertes récemment sur cet appareil</small></div>
-    <div class="acces-alt">Pas encore de société en ligne ? <a class="link" href="/app/">Ouvrir la version d'essai</a></div>
+    <div class="acces-alt" id="acces-alt">Pas encore de société en ligne ? <a class="link" href="#inscription" data-inscription>Créer ma société (essai gratuit)</a></div>
+    <form id="insc-f" hidden novalidate>
+      <label>Société<input id="insc-company" autocomplete="organization" maxlength="120" placeholder="Ou votre nom, si vous travaillez seul" required></label>
+      <label>Votre nom<input id="insc-name" autocomplete="name" maxlength="120" required></label>
+      <label>Téléphone<input id="insc-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+226 …"></label>
+      <label>Adresse e-mail<input id="insc-email" type="email" autocomplete="email" maxlength="120" required><small class="acces-hint">Elle sert d'identifiant de connexion.</small></label>
+      <label>Mot de passe<input id="insc-pass" type="password" autocomplete="new-password" minlength="10" required><small class="acces-hint">10 caractères au moins.</small></label>
+      <label>Confirmez le mot de passe<input id="insc-pass2" type="password" autocomplete="new-password" required></label>
+      <p class="acces-msg" id="insc-m" role="status"></p>
+      <button class="btn btn-cta" style="width:100%" id="insc-b">Créer ma société</button>
+      <p class="acces-hint">Votre société est hébergée sur invoice.iamtechnology.store, avec vos vraies données. Évaluation gratuite, sans carte bancaire : 30 documents, 25 clients et 2 utilisateurs, puis licence à activer.</p>
+    </form>
+    <div class="acces-alt" id="insc-alt" hidden>Déjà une société en ligne ? <a class="link" href="#" id="to-login">Se connecter</a></div>
   </div>
 </dialog>
 <span hidden>
@@ -2657,8 +2672,57 @@
           sp.appendChild(em); a.appendChild(b); a.appendChild(sp); list.appendChild(a)
         })
       }
+      // Deux volets : se connecter à sa société, ou en créer une (inscription libre, vraies données)
+      var head = $('acces-t'), sub = head.nextElementSibling, signupForm = $('insc-f')
+      var mode = function (m) {
+        var signup = m === 'signup'
+        $('acces-f').hidden = signup; $('acces-alt').hidden = signup
+        if (signup) list.hidden = true
+        signupForm.hidden = !signup; $('insc-alt').hidden = !signup
+        head.textContent = signup ? 'Créer ma société' : 'Accéder à mon espace'
+        sub.textContent = signup ? 'En une minute : votre société en ligne et votre compte administrateur.' : "Saisissez l'adresse ou l'identifiant fourni avec votre accès."
+      }
+      var openSignup = function () { mode('signup'); $('insc-m').textContent = ''; $('insc-b').disabled = false; if (!dlg.open) dlg.showModal(); $('insc-company').focus() }
       all('[data-acces]').forEach(function (a) {
-        a.addEventListener('click', function (e) { e.preventDefault(); recents(); say(''); go.disabled = false; dlg.showModal(); input.focus() })
+        a.addEventListener('click', function (e) { e.preventDefault(); mode('login'); recents(); say(''); go.disabled = false; dlg.showModal(); input.focus() })
+      })
+      all('[data-inscription]').forEach(function (a) {
+        a.addEventListener('click', function (e) { e.preventDefault(); openSignup() })
+      })
+      $('to-login').addEventListener('click', function (e) { e.preventDefault(); mode('login'); recents(); say(''); go.disabled = false; input.focus() })
+      if (location.hash === '#inscription') openSignup()
+      signupForm.addEventListener('submit', function (e) {
+        e.preventDefault()
+        var m = $('insc-m'), b = $('insc-b')
+        var tell = function (t, kind) { m.textContent = t; m.className = 'acces-msg' + (kind ? ' ' + kind : '') }
+        var val = function (id) { return $(id).value.trim() }
+        if (val('insc-company').length < 2) return tell('Indiquez le nom de votre société.', 'err')
+        if (val('insc-name').length < 2) return tell('Indiquez votre nom.', 'err')
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val('insc-email'))) return tell('Adresse e-mail invalide.', 'err')
+        if ($('insc-pass').value.length < 10) return tell('Le mot de passe doit contenir au moins 10 caractères.', 'err')
+        if ($('insc-pass').value !== $('insc-pass2').value) return tell('Les deux mots de passe ne correspondent pas.', 'err')
+        b.disabled = true
+        tell('Création de votre société… (quelques secondes)')
+        fetch('/api/inscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company: val('insc-company'), full_name: val('insc-name'), phone: val('insc-phone'), email: val('insc-email'), password: $('insc-pass').value, device: navigator.userAgent })
+        }).then(function (r) { return r.json() }).then(function (r) {
+          if (!r || !r.ok) throw new Error((r && r.error) || 'Inscription impossible pour le moment.')
+          var d = r.data, scope = 't:' + d.slug + ':'
+          // Même rangement que l'application : la session est prête à l'arrivée
+          try {
+            localStorage.setItem(scope + 'iam.token', d.token)
+            localStorage.setItem(scope + 'iam.lastUser', JSON.stringify(d.user))
+            var rec = []
+            try { rec = JSON.parse(localStorage.getItem('iam.recent') || '[]') } catch (x) {}
+            var url = location.origin + d.path
+            rec = [{ url: url, name: d.name, at: new Date().toISOString() }].concat((Array.isArray(rec) ? rec : []).filter(function (x) { return x && x.url !== url })).slice(0, 6)
+            localStorage.setItem('iam.recent', JSON.stringify(rec))
+          } catch (x) {}
+          tell('Société créée. Son adresse : ' + location.host + d.path + ' — ouverture…', 'ok')
+          setTimeout(function () { location.href = d.path + '/?bienvenue=1' }, 900)
+        }).catch(function (err) { b.disabled = false; tell(err.message || String(err), 'err') })
       })
     }
     // Pied de page : l'identifiant saisi ouvre la même recherche

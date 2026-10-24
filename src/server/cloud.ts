@@ -4,6 +4,9 @@
 //   /api/admin/…      administration des clients (éditeur uniquement)
 //   le reste          site de présentation et base principale (serveur mono-société habituel)
 //
+// Inscription libre (site) : POST /api/inscription { company, full_name, email, phone?, city?, password }
+// crée la société hébergée (base neuve, en évaluation) et son administrateur → { slug, path, token, user }.
+//
 // API d'administration. Authentification « Authorization: Bearer … » avec, au choix :
 //   - le jeton ADMIN_TOKEN du serveur ;
 //   - le jeton de session du compte administrateur de l'éditeur (VENDOR_ADMIN) sur la base
@@ -33,7 +36,8 @@ import { isVendorAdmin } from '@shared/licence'
 import type { Db } from '../main/db'
 import { AppError, type SessionUser } from '../main/services/context'
 import { issueLicence, listIssued, revokeIssued, vendorKeyAvailable } from '../main/services/licensing'
-import { resolveToken } from '../main/services/tokens'
+import { createToken, resolveToken } from '../main/services/tokens'
+import { setup } from '../main/services/auth'
 import { adminPageHtml } from './adminPage'
 import { createHandler, type ServerOptions } from './app'
 import { SLUG, type TenantManager, type TenantRow } from './tenants'
@@ -50,6 +54,8 @@ export interface CloudOptions {
   adminToken?: string
   /** Base principale : comptes de l'éditeur (connexion à la console) et registre des licences. */
   rootDb?: Db
+  /** Inscription libre : un visiteur crée sa société hébergée (en évaluation) depuis le site. */
+  selfSignup?: boolean
   /** Réglages communs aux clients (version, application web, CORS). */
   shared: Omit<ServerOptions, 'db' | 'siteRoot' | 'downloadsDir' | 'publicPath' | 'setupCode'>
 }
@@ -97,8 +103,39 @@ export function createCloudHandler(opts: CloudOptions): Handler {
   const handlers = new Map<string, { handler: Handler; password: string }>()
   const adminKey = opts.adminToken && opts.adminToken.length >= 32 ? Buffer.from(opts.adminToken) : null
   const failures = new Limiter(10)
+  // Inscriptions : une base PostgreSQL chacune, donc limitées par adresse et sur la journée
+  const signupsByIp = new Limiter(3, 60 * 60_000)
+  const signupsByDay = new Limiter(40, 24 * 60 * 60_000)
 
   const ipOf = (req: IncomingMessage) => clientIp(req, opts.shared.trustProxy)
+
+  /** Nouvelle société hébergée, configurée d'un coup : plus de code d'activation à attendre. */
+  async function selfSignup(body: any, device: string) {
+    const clean = (v: unknown, max: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
+    const company = clean(body?.company, 120)
+    const fullName = clean(body?.full_name, 120)
+    const email = clean(body?.email, 120).toLowerCase()
+    const phone = clean(body?.phone, 40)
+    const city = clean(body?.city, 80) || 'Ouagadougou'
+    const password = String(body?.password ?? '')
+    if (company.length < 2) throw new AppError('Indiquez le nom de votre société (ou votre nom, si vous travaillez seul).')
+    if (fullName.length < 2) throw new AppError('Indiquez votre nom.')
+    if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) throw new AppError('Adresse e-mail invalide : elle sert d’identifiant de connexion.')
+    if (password.length < 10) throw new AppError('Le mot de passe doit contenir au moins 10 caractères.')
+    const created = await manager.create({ name: company, contact: [fullName, email, phone].filter(Boolean).join(' · '), notes: `Inscription en ligne le ${new Date().toISOString().slice(0, 10)} (évaluation)` })
+    try {
+      const t = (await manager.get(created.slug))!
+      const db = await manager.db(t)
+      const user = await setup({ db, user: null }, { company: { name: company, phone, email, city }, username: email, full_name: fullName, password })
+      await manager.consumeSetupCode(created.slug)
+      const token = await createToken(db, user.id, device.slice(0, 200) || 'Inscription en ligne')
+      return { slug: created.slug, path: created.path, name: company, token, user }
+    } catch (e) {
+      handlers.delete(created.slug)
+      await manager.remove(created.slug).catch(() => {})
+      throw e
+    }
+  }
 
   /** Éditeur authentifié : par le jeton du serveur, ou par son compte de la base principale. */
   async function adminOf(req: IncomingMessage): Promise<{ by: 'jeton' | 'compte'; user: SessionUser | null } | null> {
@@ -222,6 +259,20 @@ export function createCloudHandler(opts: CloudOptions): Handler {
     try {
       if (path.startsWith('/api/admin/') || path.startsWith('/admin') || path.startsWith('/t/')) securityHeaders(req, res)
       if (path.startsWith('/api/admin/')) return await admin(req, res, path, url)
+      if (path === '/api/inscription') {
+        securityHeaders(req, res)
+        if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Méthode non autorisée.' })
+        if (!opts.selfSignup) return json(res, 403, { ok: false, error: 'Les inscriptions en ligne sont fermées : contactez IAM Technology.' })
+        const ip = ipOf(req)
+        if (signupsByIp.blocked(ip)) return json(res, 429, { ok: false, error: 'Trop d’inscriptions depuis cette adresse. Réessayez dans une heure.' })
+        if (signupsByDay.blocked('jour')) return json(res, 429, { ok: false, error: 'Trop d’inscriptions aujourd’hui. Réessayez demain ou contactez IAM Technology.' })
+        const body = await readJson(req)
+        const data = await selfSignup(body, String(body.device ?? req.headers['user-agent'] ?? ''))
+        signupsByIp.hit(ip)
+        signupsByDay.hit('jour')
+        console.log(`Inscription en ligne : société « ${data.name} » (${data.slug})`)
+        return json(res, 200, { ok: true, data })
+      }
       // Console de l'éditeur : page seule, toutes les données passent par /api/admin/
       if (path === '/admin') {
         res.writeHead(301, { Location: '/admin/' })

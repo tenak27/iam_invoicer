@@ -76,7 +76,7 @@ beforeAll(async () => {
   manager = new TenantManager(control, fake.prov)
   await manager.init()
   const root = createHandler({ db: mainDb, version: 't' })
-  server = createServer(createCloudHandler({ root, manager, adminToken: TOKEN, rootDb: mainDb, shared: { version: 't' } }))
+  server = createServer(createCloudHandler({ root, manager, adminToken: TOKEN, rootDb: mainDb, selfSignup: true, shared: { version: 't' } }))
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
 })
@@ -259,5 +259,43 @@ describe('Console de l’éditeur', () => {
     const list = (await http('GET', '/api/admin/tenants', undefined, vendor)).json.data
     expect(list.find((t: any) => t.slug === created.json.data.slug).licence_number).toBe(lic.json.data.number)
     expect((await http('POST', '/api/admin/tenants', { name: 'Sans Licence', licence_id: 9999 }, vendor)).json.error).toMatch(/introuvable/)
+  })
+})
+
+describe('Inscription libre depuis le site', () => {
+  const form = { company: 'Boutique Wend-Kuni', full_name: 'Awa Ouédraogo', email: 'Awa.Ouedraogo@exemple.bf', phone: '+226 70 11 22 33', password: 'Ouaga-2026-Faso!' }
+
+  it('crée la société, son administrateur, et ouvre une session', async () => {
+    const r = await http('POST', '/api/inscription', form)
+    expect(r.status).toBe(200)
+    const d = r.json.data
+    expect(d).toMatchObject({ slug: 'boutique_wend_kuni', path: '/t/boutique_wend_kuni', name: 'Boutique Wend-Kuni', user: { username: 'awa.ouedraogo@exemple.bf', role: 'admin' } })
+    // La session ouvre directement la société, déjà configurée (plus de code d'activation)
+    const st = await http('GET', '/t/boutique_wend_kuni/api/status', undefined, { Authorization: `Bearer ${d.token}` })
+    expect(st.json.data).toMatchObject({ needsSetup: false, user: { username: 'awa.ouedraogo@exemple.bf' } })
+    const t = await manager.get('boutique_wend_kuni')
+    expect(t?.setup_code).toBeNull()
+    expect(t?.contact).toContain('awa.ouedraogo@exemple.bf')
+    // Raison sociale reprise sur les documents ; connexion avec l'adresse e-mail
+    expect((await call('boutique_wend_kuni', d.token, 'settings.get')).json.data.name).toBe('Boutique Wend-Kuni')
+    const login = await http('POST', '/t/boutique_wend_kuni/api/login', { username: 'awa.ouedraogo@exemple.bf', password: form.password })
+    expect(login.json.data.user.role).toBe('admin')
+  })
+
+  it('même nom : une autre adresse ; champs invalides refusés sans créer de base', async () => {
+    const again = await http('POST', '/api/inscription', { ...form, email: 'awa2@exemple.bf' })
+    expect(again.json.data.slug).toBe('boutique_wend_kuni_2')
+    const before = (await manager.list()).length
+    expect((await http('POST', '/api/inscription', { ...form, email: 'pas-une-adresse' })).json.error).toMatch(/e-mail/)
+    expect((await http('POST', '/api/inscription', { ...form, password: 'court' })).json.error).toMatch(/10 caractères/)
+    expect((await http('POST', '/api/inscription', { ...form, company: 'x' })).json.error).toMatch(/société/)
+    expect((await manager.list()).length).toBe(before)
+  })
+
+  it('trois inscriptions par heure et par adresse au plus', async () => {
+    const r = await http('POST', '/api/inscription', { ...form, company: 'Quatrième Société', email: 'q@exemple.bf' })
+    expect(r.status).toBe(200)
+    const blocked = await http('POST', '/api/inscription', { ...form, company: 'Cinquième Société', email: 'c@exemple.bf' })
+    expect(blocked.status).toBe(429)
   })
 })
