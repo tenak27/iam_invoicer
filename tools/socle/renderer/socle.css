@@ -152,3 +152,15 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
   .socle-lic-offer { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
   .socle-lic-bar { background: rgba(255, 255, 255, .12); }
 }
+
+/* ── Menu latéral : sections repliables (navfold.tsx) ───────────────────────────────────── */
+.nav-title.socle-nav-fold { width: 100%; border: 0; background: none; font-family: inherit; cursor: pointer; text-align: left; border-radius: 8px; }
+.nav-title.socle-nav-fold:hover, .nav-title.socle-nav-fold:focus-visible { color: var(--side-text, currentColor); }
+.nav-title.socle-nav-fold:focus-visible { outline: 2px solid var(--ring, currentColor); outline-offset: -2px; }
+.socle-nav-caret { flex: 0 0 auto; margin-left: auto; opacity: .55; transition: transform .2s ease; }
+.socle-nav-fold.folded .socle-nav-caret { transform: rotate(-90deg); }
+.socle-nav-fold::after { display: none; }
+.socle-nav-count { flex: 0 0 auto; margin-left: auto; padding: 1px 7px; border-radius: 99px; background: var(--side-line, rgba(127, 127, 127, .14)); font-size: 10.5px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+.socle-nav-count + .socle-nav-caret { margin-left: 0; }
+.nav-collapsed .socle-nav-caret, .nav-collapsed .socle-nav-count { display: none; }
+@media (prefers-reduced-motion: reduce) { .socle-nav-caret { transition: none; } }

@@ -16,6 +16,7 @@ import { useCountUpEnhancer } from './motion'
 import { useResponsiveTables } from './responsiveTables'
 import { useNavIndicator } from './fx'
 import { SidebarArt } from './Scenery'
+import { NavFoldTitle, useNavFold } from '../socle/navfold'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
 type Section = { title?: string; tone: Tone; items: Item[] }
@@ -256,6 +257,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { user, company, dbMode, licence } = useSession()
   const [open, setOpen] = useState(false)
   const [collapsed, toggleCollapsed] = useCollapsed()
+  const fold = useNavFold('iam-invoicer', collapsed)
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const navRef = useRef<HTMLElement>(null)
@@ -263,7 +265,7 @@ export function Layout({ children }: { children: ReactNode }) {
   useResponsiveTables(mainRef, location.pathname)
   const online = useOnline()
   const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && moduleLicensed(licence, it.module))
-  const navInd = useNavIndicator(navRef, [location.pathname, collapsed, allowed.length, licence?.vendor])
+  const navInd = useNavIndicator(navRef, [location.pathname, collapsed, allowed.length, licence?.vendor, fold.version])
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
 
   useEffect(() => {
@@ -310,10 +312,12 @@ export function Layout({ children }: { children: ReactNode }) {
             // Émission de licences : seulement sur le poste ou le serveur de l'éditeur
             const items = section.items.filter((it) => can(user.role, it.module) && (it.module !== 'licensing' || !!licence?.vendor))
             if (items.length === 0) return null
+            // Section repliée : seule la page ouverte, si elle en fait partie, reste affichée
+            const shut = fold.isFolded(section.title)
             return (
-              <div key={i} className="nav-section">
-                {section.title && <div className="nav-title"><span>{section.title}</span></div>}
-                {items.map((it) => {
+              <div key={i} className={`nav-section${shut ? ' is-folded' : ''}`}>
+                {section.title && <NavFoldTitle title={section.title} folded={shut} count={items.length} onToggle={() => fold.toggle(section.title!)} />}
+                {(shut ? items.filter((it) => it === current) : items).map((it) => {
                   // Module hors licence : visible, cadenassé, mène à la page Licence.
                   const locked = !!licence && !moduleLicensed(licence, it.module)
                   return (
