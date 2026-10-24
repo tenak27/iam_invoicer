@@ -110,11 +110,38 @@ summary::after { transition: transform .3s var(--ease); }
 .prix-card:hover { transform: translateY(-4px); box-shadow: var(--sh-2); }
 .prix-card:active { transform: scale(.985); transition-duration: 160ms; }
 
+/* ── Menu : la section lue est signalée (premium.js) ; sur ordinateur, une pastille glisse d'un lien à
+      l'autre (ease-in-out : un élément déjà à l'écran qui se déplace) ── */
+.menu-ind { display: none; }
+.menu a[aria-current] { color: var(--p-dark); }
+@media (min-width: 1041px) {
+  .menu { position: relative; isolation: isolate; }
+  .menu-ind { display: block; position: absolute; z-index: -1; left: 0; top: 50%; height: 40px; margin-top: -20px; border-radius: 999px; background: rgba(var(--p-rgb), .1); opacity: 0; pointer-events: none; transition: transform .35s var(--ease-in-out), width .35s var(--ease-in-out), opacity .2s ease; }
+  .menu-ind.on { opacity: 1; }
+  .menu-ind.jump { transition: opacity .2s ease; }
+  .menu a[aria-current], .nav.solid .menu a[aria-current]:hover { background: transparent; }
+}
+@media (max-width: 1040px) { .menu a[aria-current] { background: var(--bg-2); } }
+
+/* ── Téléchargements : la carte de l'appareil du visiteur passe en tête (premium.js), liseré en dégradé ;
+      sur téléphone elle prend toute la largeur, et une carte restée seule sur sa ligne aussi ── */
+.dl-card { position: relative; transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.dl-card:hover { transform: translateY(-4px); box-shadow: var(--sh-2); }
+.dl-card:active { transform: scale(.985); transition-duration: 160ms; }
+.dl-card.mine { border: 1.5px solid transparent; background: linear-gradient(#fff, #fff) padding-box, var(--grad) border-box; box-shadow: var(--sh-2); }
+.dl-mine { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); padding: 4px 12px; border-radius: 999px; background: var(--grad); color: #fff; font-style: normal; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 8px 18px -8px rgba(var(--p-rgb), .8); }
+@media (max-width: 860px) {
+  .dl-grid .dl-card.mine, .dl-grid .dl-card:last-child:nth-child(odd), .dl-grid.has-mine .dl-card:last-child:nth-child(even) { grid-column: 1 / -1; }
+  .dl-grid.has-mine .dl-card:last-child:nth-child(odd):not(.mine) { grid-column: auto; }
+}
+
 /* ── Moins d'animations : des fondus, aucun déplacement ni flou ── */
 @media (prefers-reduced-motion: reduce) {
   .js .rv { transform: none !important; transition: opacity .4s ease !important; }
   .js .head.rv h2 { filter: none !important; }
   .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
+  .prix-card:hover, .prix-card:active, .dl-card:hover, .dl-card:active { transform: none; }
+  .menu-ind { transition: opacity .2s ease; }
   .faq details::details-content { transition: none; }
   .vit-screens img { filter: none; transform: none; transition: opacity .3s ease; }
   .js .vit.rv .vit-window { transform: none; }
