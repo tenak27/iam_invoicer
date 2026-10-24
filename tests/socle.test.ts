@@ -616,3 +616,162 @@ describe('intégrations : clés d’API, webhooks signés, verrouillage sous con
     expect((await v1('sites.list', keys.lecture)).status).toBe(200)
   })
 })
+
+describe('récupération des comptes : code envoyé par la console, nouveau mot de passe, coordonnées', () => {
+  const pg = new PGlite()
+  const db = {
+    query: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows,
+    one: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows[0]
+  }
+  let server: Server
+  let consoleSrv: Server
+  let base = ''
+  let socle: ReturnType<typeof createSocle>
+  const relayed: { channel: string; to: string; code: string; name: string; app: string }[] = []
+  const passwords = new Map<number, string>()
+  const closed: number[] = []
+  const journal: string[] = []
+  // Visiteurs derrière nginx : chaque demande vient d'une adresse différente (sauf quand on teste la limite par appareil)
+  let visitor = 0
+  const post = async (path: string, body: unknown, token?: string, ip = `10.0.0.${++visitor}`) => {
+    const r = await fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `203.0.113.9, ${ip}`, ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) })
+    return { status: r.status, json: await r.json() }
+  }
+  const ask = async (identifier: string, ip?: string) => {
+    const r = await post('/api/socle/recovery/request', { identifier }, undefined, ip)
+    await socle.recovery!.pending
+    return r
+  }
+
+  beforeAll(async () => {
+    await pg.exec(`
+      CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT NOT NULL, demo BOOLEAN NOT NULL DEFAULT FALSE);
+      CREATE TABLE users (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id), username TEXT NOT NULL UNIQUE, full_name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT '', active BOOLEAN NOT NULL DEFAULT TRUE);
+      INSERT INTO companies (name, demo) VALUES ('Bâtisseurs du Faso', FALSE), ('Démo', TRUE);
+      INSERT INTO users (company_id, username, full_name, phone) VALUES (1, 'awa', 'Awa Patronne', '70 11 22 33'), (1, 'issa', 'Issa Associé', ''), (2, 'visiteur', 'Visiteur', '76 00 00 00');
+    `)
+    for (const id of [1, 2, 3]) passwords.set(id, 'ancien-mot-de-passe')
+    // Console d'IAM Technology simulée : moyens prêts et codes relayés
+    consoleSrv = createServer(async (rq, rs) => {
+      let body = ''
+      for await (const c of rq) body += c
+      if (rq.headers.authorization !== 'Bearer jeton-console-de-test-0123456789abcdef') {
+        rs.writeHead(401)
+        return rs.end(JSON.stringify({ ok: false, error: 'Application inconnue.' }))
+      }
+      if (rq.method === 'POST') relayed.push(JSON.parse(body))
+      rs.writeHead(200, { 'Content-Type': 'application/json' })
+      rs.end(JSON.stringify({ ok: true, data: rq.method === 'GET' ? { email: true, whatsapp: true } : { sent: true } }))
+    })
+    await new Promise<void>((r) => consoleSrv.listen(0, '127.0.0.1', r))
+    process.env.CONSOLE_URL = `http://127.0.0.1:${(consoleSrv.address() as { port: number }).port}`
+    process.env.CONSOLE_TOKEN = 'jeton-console-de-test-0123456789abcdef'
+    const one = (sql: string, params: unknown[]) => db.one<any>(sql, params)
+    socle = createSocle({
+      app: 'IAM BTP',
+      version: '1.0.0',
+      db,
+      resolveUser: async (t) => (t.startsWith('jeton-') ? one('SELECT * FROM users WHERE id = $1', [Number(t.slice(6))]) : null),
+      webPush: false,
+      recovery: {
+        findUser: async (identifier) => (await one("SELECT u.id FROM users u JOIN companies c ON c.id = u.company_id WHERE u.active AND NOT c.demo AND lower(u.username) = lower($1)", [identifier]))?.id ?? null,
+        user: async (id) => one("SELECT u.id, u.full_name AS name, u.phone, '' AS email FROM users u JOIN companies c ON c.id = u.company_id WHERE u.id = $1 AND u.active AND NOT c.demo", [id]),
+        setPassword: async (id, password) => {
+          passwords.set(id, password)
+          closed.push(id)
+        },
+        checkPassword: async (id, password) => passwords.get(id) === password,
+        minLength: 10,
+        validatePassword: (p) => {
+          if (p.toLowerCase() === 'motdepasse123') throw new Error('Ce mot de passe est trop courant : choisissez-en un autre.')
+        },
+        log: async (id, details) => void journal.push(`${id} : ${details}`)
+      }
+    })
+    server = createServer(async (rq, rs) => {
+      const path = new URL(rq.url ?? '/', 'http://x').pathname
+      if (!(await socle(rq, rs, path))) {
+        rs.writeHead(404)
+        rs.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  })
+  afterAll(async () => {
+    delete process.env.CONSOLE_URL
+    delete process.env.CONSOLE_TOKEN
+    await new Promise((r) => server.close(r))
+    await new Promise((r) => consoleSrv.close(r))
+    await pg.close()
+  })
+
+  it('code par WhatsApp au numéro du compte ; même réponse pour un compte inconnu ou de démonstration', async () => {
+    expect((await (await fetch(base + '/api/socle/recovery')).json()).data).toEqual({ email: true, whatsapp: true, min_length: 10 })
+    expect((await ask('personne')).json.data).toEqual({ sent: true })
+    expect((await ask('visiteur')).json.data).toEqual({ sent: true })
+    expect(relayed).toHaveLength(0)
+    expect((await ask('AWA')).json.data).toEqual({ sent: true })
+    expect(relayed).toHaveLength(1)
+    expect(relayed[0]).toMatchObject({ channel: 'whatsapp', to: '22670112233', name: 'Awa Patronne', app: 'IAM BTP' })
+    expect(relayed[0].code).toMatch(/^\d{6}$/)
+    // Le code n'est gardé que sous forme d'empreinte
+    expect(JSON.stringify(await db.query('SELECT * FROM socle_recovery_codes'))).not.toContain(relayed[0].code)
+    // Sans aucune coordonnée : rien n'est envoyé, l'administrateur reste le recours
+    expect((await ask('issa')).json.data).toEqual({ sent: true })
+    expect(relayed).toHaveLength(1)
+    expect(journal.some((j) => j.startsWith('2 :') && /aucun moyen/.test(j))).toBe(true)
+  })
+
+  it('nouveau mot de passe : règle de l’application, mauvais code, code à usage unique, sessions fermées', async () => {
+    const code = relayed[0].code
+    const wrong = code === '000000' ? '111111' : '000000'
+    expect((await post('/api/socle/recovery/reset', { identifier: 'awa', code, password: 'court' })).json.error).toMatch(/10 caractères/)
+    expect((await post('/api/socle/recovery/reset', { identifier: 'awa', code, password: 'MotDePasse123' })).json.error).toMatch(/trop courant/)
+    expect((await post('/api/socle/recovery/reset', { identifier: 'awa', code: wrong, password: 'nouveau-mot-de-passe' })).json.error).toMatch(/incorrect ou expiré/)
+    expect((await post('/api/socle/recovery/reset', { identifier: 'issa', code, password: 'nouveau-mot-de-passe' })).json.error).toMatch(/incorrect ou expiré/)
+    const ok = await post('/api/socle/recovery/reset', { identifier: 'awa', code, password: 'nouveau-mot-de-passe' })
+    expect(ok.json.data).toEqual({ reset: true })
+    expect(passwords.get(1)).toBe('nouveau-mot-de-passe')
+    expect(closed).toEqual([1])
+    expect((await post('/api/socle/recovery/reset', { identifier: 'awa', code, password: 'encore-un-autre-mot' })).json.error).toMatch(/incorrect ou expiré/)
+    expect(journal.some((j) => j === '1 : Mot de passe réinitialisé avec un code de récupération (sessions fermées)')).toBe(true)
+  })
+
+  it('5 essais par code, puis un nouveau code est nécessaire', async () => {
+    await ask('awa')
+    const code = relayed[relayed.length - 1].code
+    const wrong = code === '999999' ? '888888' : '999999'
+    for (let i = 0; i < 5; i++) await post('/api/socle/recovery/reset', { identifier: 'awa', code: wrong, password: 'nouveau-mot-de-passe-2' })
+    expect((await post('/api/socle/recovery/reset', { identifier: 'awa', code, password: 'nouveau-mot-de-passe-2' })).json.error).toMatch(/Trop d’essais|incorrect ou expiré/)
+    expect(passwords.get(1)).toBe('nouveau-mot-de-passe')
+  })
+
+  it('coordonnées de récupération : mot de passe exigé, puis code envoyé à l’e-mail choisi', async () => {
+    const get = async (token: string) => (await (await fetch(base + '/api/socle/recovery/contacts', { headers: { Authorization: `Bearer ${token}` } })).json()).data
+    expect(await get('jeton-2')).toMatchObject({ email: '', phone: '', account_phone: '', demo: false, channels: { email: true, whatsapp: true } })
+    expect((await post('/api/socle/recovery/contacts', { email: 'issa@exemple.bf', phone: '', password: 'faux' }, 'jeton-2')).json.error).toMatch(/incorrect/)
+    expect((await post('/api/socle/recovery/contacts', { email: 'pas-une-adresse', password: 'ancien-mot-de-passe' }, 'jeton-2')).json.error).toMatch(/invalide/)
+    const saved = await post('/api/socle/recovery/contacts', { email: 'Issa@Exemple.bf', phone: '+226 65 44 33 22', password: 'ancien-mot-de-passe' }, 'jeton-2')
+    expect(saved.json.data).toMatchObject({ email: 'issa@exemple.bf', phone: '+226 65 44 33 22' })
+    expect((await get('jeton-3')).demo).toBe(true)
+    expect((await post('/api/socle/recovery/contacts', { email: 'x@exemple.bf', password: 'ancien-mot-de-passe' }, 'jeton-3')).json.error).toMatch(/démonstration/)
+    // Retrouvé par son e-mail de récupération : code par e-mail et par WhatsApp
+    const before = relayed.length
+    await ask('issa@exemple.bf')
+    expect(relayed.slice(before).map((r) => [r.channel, r.to])).toEqual([['email', 'issa@exemple.bf'], ['whatsapp', '22665443322']])
+    expect((await fetch(base + '/api/socle/recovery/contacts')).status).toBe(401)
+  })
+
+  it('limites : 3 demandes par heure et par compte, 5 par heure et par appareil', async () => {
+    const before = relayed.length
+    // « issa » a déjà fait deux demandes (dont une sans moyen d'envoi) : une de plus (e-mail et WhatsApp), puis plus rien
+    for (let i = 0; i < 3; i++) expect((await ask('issa')).json.data).toEqual({ sent: true })
+    expect(relayed.length - before).toBe(2)
+    // Même appareil (la première adresse de la chaîne, fournie par le visiteur, ne compte pas)
+    for (let i = 0; i < 5; i++) expect((await ask('personne', '198.51.100.7')).status).toBe(200)
+    const r = await post('/api/socle/recovery/request', { identifier: 'awa' }, undefined, '198.51.100.7')
+    expect(r.status).toBe(429)
+    expect(r.json.error).toMatch(/Trop de demandes/)
+  })
+})

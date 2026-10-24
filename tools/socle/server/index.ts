@@ -7,6 +7,7 @@
 //   /api/socle/demo           version de démonstration (demo.ts)
 //   /api/socle/licence        licence de l'espace client, formules et paiement (licence.ts)
 //   /api/socle/integrations   clés d'API, webhooks et leur verrouillage ; /api/v1/… pour les logiciels tiers (integrations.ts)
+//   /api/socle/recovery       « Mot de passe oublié ? » : code envoyé par la console (e-mail, WhatsApp) (recovery.ts)
 //
 // Branchement dans app.ts, avant les autres routes :  if (await socle(req, res, path)) return
 // Notifier depuis un service :  import { notify } from '../socle' ; notify([userId], { title, body, url })
@@ -15,6 +16,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { ConsoleAgent } from './agent'
 import { DemoService, type DemoSeed } from './demo'
 import { IntegrationsService, type IntegrationsConfig } from './integrations'
+import { RecoveryService, type RecoveryConfig } from './recovery'
 import { LicenceService, type LicenceConfig } from './licence'
 export { purgeRows, spaceDemo, userDemo } from './demo'
 export { emitEvent, IntegrationLock, LOCKED_MESSAGE, UNLOCK_BLOCKED, UNLOCK_REFUSED, UNLOCK_REFUSED_CODE } from './integrations'
@@ -25,6 +27,7 @@ export type { Notice } from './notify'
 export type { DemoSeed } from './demo'
 export type { LicenceConfig, LicenceState } from './licence'
 export type { IntegrationsConfig, LockState } from './integrations'
+export type { RecoveryConfig, RecoveryUser } from './recovery'
 
 export interface SocleOptions {
   /** Nom affiché de l'application (IAM BTP, Faso Artisans…). */
@@ -43,11 +46,26 @@ export interface SocleOptions {
   licence?: LicenceConfig
   /** Clés d'API et webhooks de l'espace client, verrouillables (Paramètres → API et webhooks). */
   integrations?: IntegrationsConfig
+  /** « Mot de passe oublié ? » : codes envoyés par la console (SMTP et WhatsApp d'IAM Technology). */
+  recovery?: RecoveryConfig
 }
 
-export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null; licence: LicenceService | null; integrations: IntegrationsService | null }
+export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null; licence: LicenceService | null; integrations: IntegrationsService | null; recovery: RecoveryService | null }
 
 let current: Notifier | null = null
+
+const PRIVATE = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|::ffff:(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)|f[cd])/i
+
+/** Adresse du visiteur : la dernière ajoutée par le serveur mandataire (nginx) quand la connexion vient de lui, sinon celle de la connexion. */
+function visitorIp(req: IncomingMessage): string {
+  const peer = req.socket.remoteAddress ?? ''
+  if (PRIVATE.test(peer)) {
+    const chain = String(req.headers['x-forwarded-for'] ?? '').split(',').map((v) => v.trim()).filter(Boolean)
+    const last = chain[chain.length - 1]
+    if (last && /^[0-9a-fA-F.:]{3,45}$/.test(last)) return last
+  }
+  return peer
+}
 
 /** Notifie des utilisateurs (sans attendre ; sans effet tant que le serveur n'est pas démarré, ex. tests). */
 export function notify(userIds: number[], n: Notice) {
@@ -66,12 +84,14 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   const demo = opts.demo && opts.resolveUser ? new DemoService({ seed: opts.demo.seed, token: opts.demo.token, resolveUser: opts.resolveUser }) : null
   const licence = opts.licence && opts.db && opts.resolveUser ? new LicenceService({ db: opts.db, app: opts.app, config: opts.licence, resolveUser: opts.resolveUser }) : null
   const integrations = opts.integrations && opts.db && opts.resolveUser ? new IntegrationsService({ db: opts.db, app: opts.app, config: opts.integrations, resolveUser: opts.resolveUser, notify, enforce: licence ? (u, n, a) => licence.enforce(u, n, a) : undefined }) : null
+  const recovery = opts.recovery && opts.db && opts.resolveUser ? new RecoveryService({ db: opts.db, app: opts.app, config: opts.recovery, resolveUser: opts.resolveUser, notify }) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
     agent?.watch(res)
+    const ip = () => visitorIp(req)
     if (demo && path.startsWith('/api/socle/demo')) {
-      const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || req.socket.remoteAddress || ''
-      if (await demo.handle(req, res, path, ip)) return true
+      if (await demo.handle(req, res, path, ip())) return true
     }
+    if (recovery && path.startsWith('/api/socle/recovery')) return recovery.handle(req, res, path, ip())
     if (licence && path.startsWith('/api/socle/licence')) return licence.handle(req, res, path)
     if (integrations && (path.startsWith('/api/socle/integrations') || path.startsWith('/api/v1/'))) return integrations.handle(req, res, path)
     if (path.startsWith('/api/socle/console/')) {
@@ -95,5 +115,6 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   socle.agent = agent
   socle.licence = licence
   socle.integrations = integrations
+  socle.recovery = recovery
   return socle
 }

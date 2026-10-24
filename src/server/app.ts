@@ -14,6 +14,7 @@
 //   GET  /api/downloads              installateurs disponibles (site de présentation)
 //   GET  /api/ios-manifest/:fichier  manifeste d'installation iPhone d'un .ipa signé
 //   /api/socle/integrations, /api/v1/<appel>   clés d'API et webhooks de la société (integrations.ts)
+//   /api/socle/recovery…            « Mot de passe oublié ? » : code envoyé par la console d'IAM Technology (recovery.ts)
 // Authentification : en-tête « Authorization: Bearer <jeton> ».
 
 import { randomBytes } from 'node:crypto'
@@ -38,6 +39,8 @@ import { checkSeat } from '../main/services/licence'
 import { iosManifest, listDownloads } from './downloads'
 import { integrationsConfig } from './integrations'
 import { IntegrationsService } from '../../tools/socle/server/integrations'
+import { recoveryConfig } from './recovery'
+import { RecoveryService } from '../../tools/socle/server/recovery'
 import { clientIp as ipOf, contentSecurityPolicy, fileCsp, Limiter, securityHeaders } from './security'
 
 export interface ServerOptions {
@@ -126,6 +129,8 @@ export function createHandler(opts: ServerOptions) {
     publicPath: opts.publicPath,
     config: integrationsConfig(db, (user, name, args, req) => call({ db, user, origin: publicOrigin(req), token: null }, name, args))
   })
+  // « Mot de passe oublié ? » : code envoyé par la console d'IAM Technology (e-mail ou WhatsApp)
+  const recovery = new RecoveryService({ db, app: 'IAM INVOICER', resolveUser: (t) => resolveToken(db, t), config: recoveryConfig(db) })
 
   async function readJson(req: IncomingMessage): Promise<any> {
     const chunks: Buffer[] = []
@@ -395,6 +400,7 @@ export function createHandler(opts: ServerOptions) {
         return res.end('ok')
       }
       if (await integrations.handle(req, res, path)) return
+      if (await recovery.handle(req, res, path, clientIp(req))) return
       if (path.startsWith('/api/')) return await api(req, res, path, url)
       if (path.startsWith('/print/')) return await printPage(res, path.slice('/print/'.length))
       if (/^\/sign\/[A-Za-z0-9_-]{20,}$/.test(path)) return await signPage(res, path.slice('/sign/'.length))

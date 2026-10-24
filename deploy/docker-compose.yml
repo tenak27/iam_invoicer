@@ -38,6 +38,10 @@ services:
       SETUP_CODE: ${SETUP_CODE:-}
       # Clé de chiffrement des secrets enregistrés en base (openssl rand -hex 32). À conserver à part des sauvegardes.
       SECRETS_KEY: ${SECRETS_KEY:-}
+      # Console d'IAM Technology (codes de réinitialisation des mots de passe) : jeton partagé, absent = désactivé ;
+      # adresse vue depuis le VPS, par le réseau interne
+      CONSOLE_TOKEN: ${CONSOLE_TOKEN:-}
+      CONSOLE_URL: ${CONSOLE_URL:-http://console:8080}
       # 0 si le serveur est joint directement, sans nginx ni Caddy devant lui
       TRUST_PROXY: ${TRUST_PROXY:-1}
       # Serveur installé dans une entreprise : copie de sa base vers sa base en ligne

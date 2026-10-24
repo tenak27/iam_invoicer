@@ -15,6 +15,7 @@ import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
 import { httpSession } from '../bridge'
 import { IntegrationsPanel } from '../socle/integrations'
+import { RecoveryContacts } from '../socle/recovery'
 
 const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
@@ -590,6 +591,8 @@ async function squareImage(dataUrl: string, size = 256): Promise<string> {
 
 export function MyAccount() {
   const { user, updateUser } = useSession()
+  // Navigateur et mobile : e-mail et WhatsApp de récupération du mot de passe
+  const http = httpSession()
   const choosePhoto = async () => {
     const picked = await run(() => unwrap(window.erp.pickImage()))
     if (!picked) return
@@ -629,6 +632,11 @@ export function MyAccount() {
           <div className="form-actions"><button className="btn btn-primary" onClick={submit}>Modifier</button></div>
         </div>
       </div>
+      {http && (
+        <div className="narrow">
+          <RecoveryContacts server={http.server} token={http.token} />
+        </div>
+      )}
     </div>
   )
 }

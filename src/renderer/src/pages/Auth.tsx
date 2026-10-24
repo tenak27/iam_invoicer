@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { run, unwrap } from '../api'
+import { httpSession } from '../bridge'
+import { ForgotPassword } from '../socle/recovery'
 import { Field, Modal, notify, useForm } from '../components/ui'
 import type { User } from '../session'
 import { ArrowLeft, ArrowRight, Buildings, CloudArrowDown, WifiHigh } from '@phosphor-icons/react'
@@ -62,6 +64,9 @@ export function LoginScreen({ onLogin, dbMode, serverUrl, brand }: { onLogin: (u
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [showDb, setShowDb] = useState(false)
+  // Navigateur et mobile : « Mot de passe oublié ? » (code envoyé par la console d'IAM Technology)
+  const http = httpSession()
+  const [forgot, setForgot] = useState(false)
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     setBusy(true)
@@ -71,6 +76,9 @@ export function LoginScreen({ onLogin, dbMode, serverUrl, brand }: { onLogin: (u
   }
   return (
     <AuthCard title={brand?.name || 'IAM INVOICER'} subtitle={brand?.name ? 'Connexion · IAM INVOICER' : 'Connexion'} logo={brand?.logo}>
+      {forgot && http ? (
+        <ForgotPassword server={http.server} app={brand?.name ? `IAM INVOICER — ${brand.name}` : 'IAM INVOICER'} initial={username} onCancel={() => setForgot(false)} onDone={(id) => { setForgot(false); setUsername(id); setPassword('') }} />
+      ) : (
       <form onSubmit={submit} className="stack">
         <Field label="Nom d'utilisateur">
           <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
@@ -81,7 +89,9 @@ export function LoginScreen({ onLogin, dbMode, serverUrl, brand }: { onLogin: (u
         <button className="btn btn-primary btn-block" disabled={busy || !username || !password}>
           {busy ? 'Connexion…' : 'Se connecter'}
         </button>
+        {http && <button type="button" className="link-btn" onClick={() => setForgot(true)}>Mot de passe oublié ?</button>}
       </form>
+      )}
       <button className="link-btn auth-foot" onClick={() => setShowDb(true)}>
         {dbMode === 'remote' && serverUrl ? `Serveur : ${serverUrl.replace(/^https?:\/\//, '')}` : `Base de données : ${MODE_TEXT[dbMode]}`} — modifier
       </button>

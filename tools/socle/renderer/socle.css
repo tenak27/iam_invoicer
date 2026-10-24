@@ -138,6 +138,16 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
 .socle-int-doc pre { margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2, #f8f8fb); overflow-x: auto; font-size: .8rem; line-height: 1.55; }
 .socle-int-ok { margin: 0; padding: 10px 12px; border-radius: 12px; color: var(--c-success, #13744a); background: color-mix(in srgb, var(--c-success, #17874f) 12%, transparent); }
 .socle-int-empty { margin: 0; color: var(--muted, #4a5875); font-size: .9rem; }
+/* ── Récupération des comptes (recovery.tsx) : « Mot de passe oublié ? » et coordonnées de récupération ── */
+.socle-recovery { display: flex; flex-direction: column; gap: 14px; }
+.socle-recovery h1 { margin: 0; }
+.socle-recovery > p { margin: 0; }
+.socle-recovery-code { letter-spacing: .3em; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.socle-recovery-help { margin: 0; }
+.socle-link { align-self: center; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--link, var(--c-primary, #1b6ef3)); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.socle-recovery-help .socle-link { align-self: auto; }
+.socle-recovery-form { display: grid; gap: 14px; }
+.socle-recovery-note { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--surface-2, #f8f8fb); color: var(--muted, #4a5875); font-size: .9rem; }
 @media (prefers-color-scheme: dark) {
   .socle-lic-offer { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
   .socle-lic-bar { background: rgba(255, 255, 255, .12); }

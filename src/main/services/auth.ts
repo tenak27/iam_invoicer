@@ -25,7 +25,7 @@ function verifyPasswordAsync(password: string, stored: string): Promise<boolean>
 const DUMMY_HASH = hashPassword(randomBytes(12).toString('hex'))
 const COMMON = new Set(['password', 'motdepasse', '12345678', '123456789', '1234567890', 'azertyui', 'azertyuiop', 'qwertyui', 'qwertyuiop', '00000000', '11111111', 'admin123', 'admin1234', 'iaminvoicer'])
 
-function checkPassword(p: string): void {
+export function checkPassword(p: string): void {
   if (typeof p !== 'string' || p.length < 8) fail('Le mot de passe doit contenir au moins 8 caractères.')
   if (p.length > 200) fail('Mot de passe trop long (200 caractères au plus).')
   if (COMMON.has(p.toLowerCase())) fail('Ce mot de passe est trop courant : choisissez-en un autre.')
