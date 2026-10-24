@@ -175,6 +175,27 @@ let body = readFileSync(`${V.dir}/body.html`, 'utf8')
   .replace('{{CONTACT_ART}}', contactArt)
   .replaceAll('__VERSION__', version)
 
+// Aperçu de l'application : les captures deviennent une vitrine (onglets + grande fenêtre de
+// navigateur à l'adresse du logiciel), en HTML statique ; le script commun gère les onglets.
+const host = ENTREPRISE ? 'iamtechnology.store' : `${V.dir.replace('site-', '')}.iamtechnology.store`
+body = body.replace(/<div class="shots">([\s\S]*?)\n\s*<\/div>/, (whole, inner) => {
+  const figs = [...inner.matchAll(/<figure[^>]*>\s*<img ([^>]*)>\s*<figcaption><b>([^<]*)<\/b>([^<]*)<\/figcaption>\s*<\/figure>/g)]
+  if (figs.length < 2) return whole
+  const tabs = figs.map(([, , title, text], i) => `<button type="button" role="tab" id="vit-t${i}" aria-controls="vit-p${i}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><b>${title}</b>${text}<i aria-hidden="true"></i></button>`)
+  const shots = figs.map(([, attrs], i) => `<img ${attrs.replace(/\s*loading="lazy"/, '')}${i ? ' loading="lazy"' : ''} id="vit-p${i}" role="tabpanel" aria-labelledby="vit-t${i}"${i ? '' : ' class="on"'}>`)
+  return `<div class="vit rv" data-vit>
+        <div class="vit-tabs" role="tablist" aria-label="Écrans de l’application">
+          ${tabs.join('\n          ')}
+        </div>
+        <div class="vit-window">
+          <div class="vit-bar" aria-hidden="true"><span></span><span></span><span></span><em>${host}/app</em></div>
+          <div class="vit-screens">
+            ${shots.join('\n            ')}
+          </div>
+        </div>
+      </div>`
+})
+
 const script = `<script>
 (function () {
   var $ = function (id) { return document.getElementById(id) }
@@ -214,6 +235,31 @@ const script = `<script>
   addEventListener('scroll', function () { if (!queued) { queued = true; requestAnimationFrame(frame) } }, { passive: true })
   top.addEventListener('click', function () { scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }) })
   frame()
+  // Vitrine de l'aperçu : onglets (clic, flèches du clavier) et avance automatique pilotée par la
+  // fin du trait de progression (en pause au survol), lancée quand la vitrine arrive à l'écran
+  all('[data-vit]').forEach(function (box) {
+    var tabs = Array.prototype.slice.call(box.querySelectorAll('[role="tab"]'))
+    var imgs = Array.prototype.slice.call(box.querySelectorAll('.vit-screens img'))
+    var cur = 0, auto = !reduce
+    function show(i, focus) {
+      cur = (i + tabs.length) % tabs.length
+      tabs.forEach(function (t, k) { var on = k === cur; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1 })
+      imgs.forEach(function (im, k) { im.classList.toggle('on', k === cur) })
+      if (focus) tabs[cur].focus()
+      if (auto) { box.classList.remove('auto'); void box.offsetWidth; box.classList.add('auto') }
+    }
+    function stop() { auto = false; box.classList.remove('auto') }
+    tabs.forEach(function (t, k) { t.addEventListener('click', function () { stop(); show(k) }) })
+    box.querySelector('[role="tablist"]').addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0
+      if (d) { e.preventDefault(); stop(); show(cur + d, true) }
+    })
+    box.addEventListener('animationend', function (e) { if (auto && e.animationName === 'vit-fill' && !document.hidden) show(cur + 1) })
+    if (auto && 'IntersectionObserver' in window) {
+      var seen = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { seen.disconnect(); show(0) } }, { threshold: .35 })
+      seen.observe(box)
+    }
+  })
   requestAnimationFrame(function () { document.body.classList.add('ready') })
 })()
 </script>`

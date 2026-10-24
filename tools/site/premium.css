@@ -59,10 +59,50 @@ summary::after { transition: transform .3s var(--ease); }
 /* ── Cartes et tuiles : un léger relief au survol (souris), un appui au toucher ── */
 .card:active, .tile:active, .tier:active, .dl:active, .step:active { transform: scale(.985); transition-duration: 160ms; }
 
+/* ── Aperçu de l'application : une vitrine (onglets + grande fenêtre de navigateur), construite
+      en HTML par build-entreprise.mjs ; onglets et avance automatique dans le script commun ── */
+.vit { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: clamp(18px, 3vw, 36px); align-items: start; }
+.vit-tabs { display: grid; gap: 8px; }
+.vit-tabs button { position: relative; display: grid; gap: 2px; text-align: left; padding: 14px 16px 18px; border-radius: 18px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: .9rem; line-height: 1.4; cursor: pointer; overflow: hidden; transition: background-color .25s ease, border-color .25s ease, box-shadow .3s var(--ease), transform 160ms var(--ease); }
+.vit-tabs button b { color: var(--ink); font-size: 1rem; }
+.vit-tabs button[aria-selected='true'] { background: var(--surface); border-color: var(--line); box-shadow: var(--sh); }
+.vit-tabs button:active { transform: scale(.98); }
+.vit-tabs button:hover { background: rgba(var(--p-rgb), .06); }
+.vit-tabs button[aria-selected='true']:hover { background: var(--surface); }
+/* Avance automatique : un trait se remplit, linéaire (c'est une progression), sous l'onglet actif */
+.vit-tabs i { position: absolute; left: 16px; right: 16px; bottom: 8px; height: 3px; border-radius: 3px; background: rgba(var(--p-rgb), .12); overflow: hidden; opacity: 0; transition: opacity .3s ease; }
+.vit-tabs i::after { content: ''; position: absolute; inset: 0; background: var(--grad); transform: scaleX(0); transform-origin: left; }
+.vit.auto .vit-tabs [aria-selected='true'] i { opacity: 1; }
+.vit.auto .vit-tabs [aria-selected='true'] i::after { animation: vit-fill 5s linear forwards; }
+.vit.auto:hover .vit-tabs [aria-selected='true'] i::after { animation-play-state: paused; }
+@keyframes vit-fill { to { transform: scaleX(1); } }
+.vit-window { border-radius: 18px; background: var(--surface); overflow: hidden; box-shadow: 0 0 0 1px rgba(var(--shadow-rgb), .07), 0 2px 4px rgba(var(--shadow-rgb), .05), 0 34px 70px -30px rgba(var(--shadow-rgb), .5); }
+.vit-bar { display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; background: linear-gradient(180deg, #f8fbff, #eef4fc); border-bottom: 1px solid var(--line); }
+.vit-bar span { flex: none; width: 11px; height: 11px; border-radius: 50%; background: #ff6159; }
+.vit-bar span:nth-child(2) { background: #ffbd2e; }
+.vit-bar span:nth-child(3) { background: #28c941; }
+.vit-bar em { margin-left: 12px; flex: 1; min-width: 0; max-width: 360px; padding: 4px 12px; border-radius: 8px; background: #fff; border: 1px solid var(--line); color: var(--muted); font-style: normal; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vit-screens { display: grid; background: var(--soft); }
+/* Changement d'écran : fondu masqué d'un léger flou (on lit un seul écran qui change, pas deux qui se croisent) */
+.vit-screens img { grid-area: 1 / 1; display: block; width: 100%; height: auto; opacity: 0; filter: blur(4px); transform: scale(1.012); transition: opacity .45s var(--ease), filter .45s var(--ease), transform .6s var(--ease); }
+.vit-screens img.on { opacity: 1; filter: none; transform: none; }
+/* Entrée : la fenêtre se redresse en apparaissant */
+.js .vit.rv .vit-window { transform: perspective(1400px) rotateX(9deg) translateY(28px); transform-origin: 50% 100%; transition: transform 1s var(--ease); }
+.js .vit.rv.in .vit-window { transform: none; }
+@media (max-width: 860px) {
+  .vit { grid-template-columns: 1fr; }
+  .vit-window { order: -1; }
+  .vit-tabs { grid-auto-flow: column; grid-auto-columns: minmax(180px, 72%); overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 6px; scrollbar-width: none; }
+  .vit-tabs::-webkit-scrollbar { display: none; }
+  .vit-tabs button { scroll-snap-align: start; }
+}
+
 /* ── Moins d'animations : des fondus, aucun déplacement ni flou ── */
 @media (prefers-reduced-motion: reduce) {
   .js .rv { transform: none !important; transition: opacity .4s ease !important; }
   .js .head.rv h2 { filter: none !important; }
   .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
   .faq details::details-content { transition: none; }
+  .vit-screens img { filter: none; transform: none; transition: opacity .3s ease; }
+  .js .vit.rv .vit-window { transform: none; }
 }
