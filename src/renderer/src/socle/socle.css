@@ -18,6 +18,21 @@ html.touch :is(main, .content, .page) { overscroll-behavior-y: none; }
 html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 @media (prefers-reduced-motion: reduce) { html.touch .is-pressed { transition: none; } }
 
+/* ── Choix d'une couleur : une vraie pastille (le style commun des champs l'étirait en un trait gris) ── */
+input[type='color'] { -webkit-appearance: none; appearance: none; inline-size: 44px; block-size: 44px; min-inline-size: 44px; padding: 4px; border-radius: 12px; cursor: pointer; flex: none; }
+input[type='color']::-webkit-color-swatch-wrapper { padding: 0; }
+input[type='color']::-webkit-color-swatch { border: 0; border-radius: 8px; }
+input[type='color']::-moz-color-swatch { border: 0; border-radius: 8px; }
+
+/* ── Fenêtres : le corps défile, ses blocs ne rétrécissent jamais. Sans cela, un bloc qui défile en
+      largeur (onglets sur téléphone, tableau large) était écrasé à quelques pixels de haut quand le
+      contenu dépassait (« Nouveau patient » d'IAM SANTÉ). Priorité nulle : une règle d'écran l'emporte. ── */
+:where(.modal-body) > * { flex-shrink: 0; }
+
+/* ── Saisie courte (ask.tsx, à la place de window.prompt) : choix en boutons ── */
+.modal.ask { max-width: 460px; }
+.ask-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+
 /* ── Avis : mise à jour disponible, notifications ── */
 .socle-stack { position: fixed; z-index: 2147483000; right: 18px; bottom: 18px; width: min(380px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .socle-stack > * { pointer-events: auto; }
