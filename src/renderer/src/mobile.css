@@ -167,6 +167,20 @@
   .cal-ev { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10.5px; padding-left: 3px; padding-right: 3px; }
 }
 
+@media (max-width: 600px) {
+  /* ── 14. Accueil : carte de bienvenue compacte, les chiffres du jour visibles sans défiler ──
+     L'illustration passe en petit dans le coin (au lieu d'occuper le haut de l'écran), le texte
+     garde sa largeur, les boutons tiennent sur une ligne. */
+  .page .hello-card { display: block; position: relative; min-height: 0; padding: 18px 16px 16px; margin-bottom: 14px; }
+  .page .hello-card > :not(.hello-text) { position: absolute; top: 4px; right: 2px; width: 118px; height: 118px; max-height: 118px; margin: 0; order: 0; z-index: 0; pointer-events: none; }
+  .page .hello-card .hello-text { position: relative; z-index: 1; }
+  .page .hello-card .hello-text > :not(.hello-actions) { margin-right: 104px; }
+  .page .hello-card .hello-text h1 { font-size: 24px; line-height: 1.15; margin: 8px 0 6px; }
+  .page .hello-card .hello-text p { font-size: 14px; line-height: 1.4; margin: 0 0 12px; }
+  .page .hello-card .hello-actions { gap: 8px; flex-wrap: wrap; }
+  .page .hello-card .hello-actions .btn { flex: 1 1 auto; height: 44px; min-height: 44px; padding: 0 14px; font-size: 14.5px; }
+}
+
 @media (max-width: 380px) {
   .kpis, .kpi-tiles, .stats { grid-template-columns: minmax(0, 1fr); }
   .page-header h1 { font-size: 23px; }
