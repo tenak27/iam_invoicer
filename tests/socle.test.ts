@@ -79,6 +79,41 @@ describe('serveur : /api/downloads et /telechargements/', () => {
   })
 })
 
+describe('export d’une liste vers l’application téléphone : fichier gardé 10 minutes', () => {
+  let server: Server
+  let base = ''
+  beforeAll(async () => {
+    const socle = createSocle({ app: 'Test', version: '1.0.0', resolveUser: async (t) => (t === 'jeton' ? { id: 1 } : null) })
+    server = createServer(async (req, res) => {
+      const path = new URL(req.url ?? '/', 'http://x').pathname
+      if (!(await socle(req, res, path))) {
+        res.writeHead(404)
+        res.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  })
+  afterAll(() => new Promise((r) => server.close(r)))
+
+  it('compte connecté exigé ; fichier servi avec son nom (accents compris), adresse imprévisible', async () => {
+    const send = (body: unknown, token?: string) =>
+      fetch(base + '/api/socle/export', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) })
+    const content = String.fromCharCode(0xfeff) + 'Client;Total\r\nAwa Ouédraogo;15000'
+    expect((await send({ name: 'clients.csv', content })).status).toBe(401)
+    expect((await (await send({ name: 'vide.csv', content: '' }, 'jeton')).json()).ok).toBe(false)
+    const r = await (await send({ name: 'loyers réglés/../2026.csv', content }, 'jeton')).json()
+    expect(r.data.url).toMatch(/^\/api\/socle\/export\/[A-Za-z0-9_-]{32}$/)
+    const file = await fetch(base + r.data.url)
+    expect(file.status).toBe(200)
+    expect(file.headers.get('content-type')).toBe('text/csv; charset=utf-8')
+    expect(file.headers.get('content-disposition')).toContain("filename*=UTF-8''loyers%20r%C3%A9gl%C3%A9s-..-2026.csv")
+    // Octets bruts : text() retirerait la marque UTF-8 (BOM) qu'Excel attend pour les accents
+    expect(Buffer.from(await file.arrayBuffer()).equals(Buffer.from(content, 'utf8'))).toBe(true)
+    expect((await fetch(base + '/api/socle/export/inconnu')).status).toBe(404)
+  })
+})
+
 describe('notifications : fil des applications installées et abonnements Web Push', () => {
   let db: Db
   let server: Server

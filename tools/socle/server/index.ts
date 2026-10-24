@@ -8,6 +8,7 @@
 //   /api/socle/licence        licence de l'espace client, formules et paiement (licence.ts)
 //   /api/socle/integrations   clés d'API, webhooks et leur verrouillage ; /api/v1/… pour les logiciels tiers (integrations.ts)
 //   /api/socle/recovery       « Mot de passe oublié ? » : code envoyé par la console (e-mail, WhatsApp) (recovery.ts)
+//   /api/socle/export         export d'une liste (CSV) vers l'application installée sur téléphone (exports.ts)
 //
 // Branchement dans app.ts, avant les autres routes :  if (await socle(req, res, path)) return
 // Notifier depuis un service :  import { notify } from '../socle' ; notify([userId], { title, body, url })
@@ -15,6 +16,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { ConsoleAgent } from './agent'
 import { DemoService, type DemoSeed } from './demo'
+import { ExportService } from './exports'
 import { IntegrationsService, type IntegrationsConfig } from './integrations'
 import { RecoveryService, type RecoveryConfig } from './recovery'
 import { LicenceService, type LicenceConfig } from './licence'
@@ -85,6 +87,7 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   const licence = opts.licence && opts.db && opts.resolveUser ? new LicenceService({ db: opts.db, app: opts.app, config: opts.licence, resolveUser: opts.resolveUser }) : null
   const integrations = opts.integrations && opts.db && opts.resolveUser ? new IntegrationsService({ db: opts.db, app: opts.app, config: opts.integrations, resolveUser: opts.resolveUser, notify, enforce: licence ? (u, n, a) => licence.enforce(u, n, a) : undefined }) : null
   const recovery = opts.recovery && opts.db && opts.resolveUser ? new RecoveryService({ db: opts.db, app: opts.app, config: opts.recovery, resolveUser: opts.resolveUser, notify }) : null
+  const exportFiles = opts.resolveUser ? new ExportService(opts.resolveUser) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
     agent?.watch(res)
     const ip = () => visitorIp(req)
@@ -93,6 +96,9 @@ export function createSocle(opts: SocleOptions): SocleHandler {
     }
     if (recovery && path.startsWith('/api/socle/recovery')) return recovery.handle(req, res, path, ip())
     if (licence && path.startsWith('/api/socle/licence')) return licence.handle(req, res, path)
+    if (exportFiles && path.startsWith('/api/socle/export')) {
+      if (await exportFiles.handle(req, res, path)) return true
+    }
     if (integrations && (path.startsWith('/api/socle/integrations') || path.startsWith('/api/v1/'))) return integrations.handle(req, res, path)
     if (path.startsWith('/api/socle/console/')) {
       if (agent) return agent.handle(req, res, path)
