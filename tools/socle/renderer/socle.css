@@ -1,0 +1,46 @@
+/* Base commune des applications IAM : la source est iam-erp/tools/socle, recopiée dans chaque
+   application par sync.mjs. Ne pas modifier ici. */
+
+/* ── Tactile : réponse immédiate, pas de zoom au double appui, pas de sélection accidentelle ── */
+html.touch { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html.touch :is(button, a, [role="button"], [role="tab"], [role="switch"], label, summary, input, select, textarea) { touch-action: manipulation; }
+html.touch :is(button, [role="button"], [role="tab"], [role="menuitem"], .btn, nav a, .tabbar a) { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html.touch :is(button, .btn, [role="button"]) img { -webkit-touch-callout: none; pointer-events: none; }
+html.touch .is-pressed { transition: transform .07s ease-out, filter .07s ease-out, background-color .07s ease-out; }
+html.touch :is(button, .btn, [role="button"], [role="tab"], [role="switch"], a, summary, select, label).is-pressed { transform: scale(.965); filter: brightness(.93); }
+/* Lignes, cartes et éléments de liste : un fond teinté plutôt qu'un rétrécissement */
+html.touch :is(tr, li, article, section, .card, [class*="row"], [class*="item"], [class*="tile"]).is-pressed:not(button, a, [role="button"]) { transform: none; filter: none; background-color: color-mix(in srgb, currentColor 7%, transparent); }
+html.touch :is(input[type="checkbox"], input[type="radio"]) { min-width: 22px; min-height: 22px; }
+/* Fenêtres et panneaux : le défilement ne se propage pas à la page derrière */
+html.touch :is(dialog, [role="dialog"], .modal, .modal-body, .drawer, .sheet, .sidebar, aside) { overscroll-behavior: contain; }
+html.touch :is(main, .content, .page) { overscroll-behavior-y: none; }
+/* Appareils modestes : effets de flou coupés, ombres allégées (défilement fluide) */
+html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+@media (prefers-reduced-motion: reduce) { html.touch .is-pressed { transition: none; } }
+
+/* ── Mise à jour disponible ── */
+.socle-update {
+  position: fixed; z-index: 2147483000; right: 18px; bottom: 18px; width: min(380px, calc(100vw - 24px));
+  display: grid; gap: 10px; padding: 16px 16px 14px; border-radius: 20px;
+  background: #fff; color: #0f1b33; border: 1px solid rgba(15, 27, 51, .08);
+  box-shadow: 0 24px 60px -18px rgba(15, 27, 51, .45), 0 2px 6px rgba(15, 27, 51, .08);
+  font-size: .94rem; line-height: 1.45; animation: socle-up .35s cubic-bezier(.2, .9, .3, 1.2);
+}
+.socle-update p { margin: 0; color: #4a5875; }
+.socle-update-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.socle-update-head b { font-size: 1rem; }
+.socle-update-dot { width: 10px; height: 10px; border-radius: 50%; background: #1b6ef3; box-shadow: 0 0 0 4px rgba(27, 110, 243, .18); animation: socle-pulse 1.8s ease-in-out infinite; }
+.socle-update-v { margin-left: auto; font-size: .86rem; color: #4a5875; font-variant-numeric: tabular-nums; }
+.socle-update-v strong { color: #1b6ef3; }
+.socle-update-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.socle-btn { min-height: 42px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(15, 27, 51, .14); background: #fff; color: #0f1b33; font: inherit; font-weight: 700; cursor: pointer; }
+.socle-btn-primary { background: #1b6ef3; border-color: #1b6ef3; color: #fff; }
+.socle-btn:focus-visible { outline: 3px solid rgba(27, 110, 243, .35); outline-offset: 2px; }
+@media (max-width: 900px) {
+  /* Au-dessus de la barre d'onglets du bas */
+  .socle-update { left: 12px; right: 12px; width: auto; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .socle-btn { min-height: 46px; flex: 1; }
+}
+@keyframes socle-up { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes socle-pulse { 50% { box-shadow: 0 0 0 8px rgba(27, 110, 243, 0); } }
+@media print { .socle-update { display: none !important; } }
