@@ -181,6 +181,11 @@
   .page .hello-card .hello-actions .btn { flex: 1 1 auto; height: 44px; min-height: 44px; padding: 0 14px; font-size: 14.5px; }
 }
 
+@media (max-width: 640px) {
+  /* ── 15. Listes en cartes : la cellule d'actions (colonne sans titre) va à droite ──────── */
+  .route-view .table:not(.compact):not(.lines-table) tbody td[data-label='']:not(:first-child) { justify-content: flex-end; }
+}
+
 @media (max-width: 380px) {
   .kpis, .kpi-tiles, .stats { grid-template-columns: minmax(0, 1fr); }
   .page-header h1 { font-size: 23px; }
