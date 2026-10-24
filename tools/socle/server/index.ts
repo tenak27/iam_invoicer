@@ -8,6 +8,7 @@
 // Branchement dans app.ts, avant les autres routes :  if (await socle(req, res, path)) return
 // Notifier depuis un service :  import { notify } from '../socle' ; notify([userId], { title, body, url })
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { ConsoleAgent } from './agent'
 import { listDownloads, serveDownload } from './downloads'
 import { Notifier, type Notice, type SocleDb } from './notify'
 
@@ -26,7 +27,7 @@ export interface SocleOptions {
   webPush?: boolean
 }
 
-export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null }
+export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null }
 
 let current: Notifier | null = null
 
@@ -42,7 +43,16 @@ export function createSocle(opts: SocleOptions): SocleHandler {
     current = notifier
     notifier.init().catch((e) => console.warn('Notifications indisponibles :', e?.message ?? e))
   }
+  // Console d'IAM Technology : mesures et journal, seulement avec CONSOLE_TOKEN
+  const agent = opts.db && process.env.CONSOLE_TOKEN ? new ConsoleAgent({ db: opts.db, app: opts.app, version: opts.version, token: process.env.CONSOLE_TOKEN }) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
+    agent?.watch(res)
+    if (path.startsWith('/api/socle/console/')) {
+      if (agent) return agent.handle(req, res, path)
+      res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' })
+      res.end(JSON.stringify({ ok: false, error: 'Ressource inconnue.' }))
+      return true
+    }
     if (notifier && path.startsWith('/api/socle/')) return notifier.handle(req, res, path)
     if (req.method !== 'GET' && req.method !== 'HEAD') return false
     if (path === '/api/downloads') {
@@ -55,5 +65,6 @@ export function createSocle(opts: SocleOptions): SocleHandler {
     return false
   } as SocleHandler
   socle.notifier = notifier
+  socle.agent = agent
   return socle
 }

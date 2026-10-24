@@ -51,6 +51,8 @@ for (const app of [...APPS, SELF]) {
     copyTree(join(here, 'server'), join(root, 'src/server/socle'))
     for (const f of readdirSync(join(here, 'renderer'))) if (/\.(tsx?|css)$/.test(f)) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
     copyTree(join(here, 'renderer/public'), join(root, 'src/renderer/public'))
+    // Site de présentation : liens de téléchargement toujours à jour
+    if (existsSync(join(root, 'site/index.html'))) put(join(here, 'site/socle-telechargements.js'), join(root, 'site/socle-telechargements.js'))
     if (!NO_BACKGROUND.has(app)) {
       if (existsSync(join(root, 'src/desktop'))) put(join(here, 'desktop/background.ts'), join(root, 'src/desktop/socle.ts'))
       const cap = existsSync(join(root, 'capacitor.config.ts')) ? readFileSync(join(root, 'capacitor.config.ts'), 'utf8') : ''

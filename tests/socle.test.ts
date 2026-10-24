@@ -9,6 +9,7 @@ import { classify, compareVersions, listDownloads } from '../tools/socle/server/
 import { createSocle } from '../tools/socle/server'
 import { pickFile } from '../tools/socle/renderer/versions'
 import { Notifier } from '../tools/socle/server/notify'
+import { ConsoleAgent } from '../tools/socle/server/agent'
 import { openDb, type Db } from '../src/main/db'
 
 describe('installateurs', () => {
@@ -131,5 +132,61 @@ describe('notifications : fil des applications installées et abonnements Web Pu
     expect(await db.query('SELECT user_id, device FROM socle_push')).toEqual([{ user_id: uid, device: 'Chrome Android' }])
     await post('/api/socle/push/unsubscribe', { endpoint: subscription.endpoint })
     expect(await db.query('SELECT 1 FROM socle_push')).toEqual([])
+  })
+})
+
+describe('agent de la console : jeton exigé, mesures, journal, espaces, licences', () => {
+  let db: Db
+  let server: Server
+  let base = ''
+  const TOKEN = 'c'.repeat(48)
+  const req = (path: string, init: RequestInit = {}, token = TOKEN) =>
+    fetch(base + path, { ...init, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' } }).then(async (r) => ({ status: r.status, json: await r.json() }))
+
+  beforeAll(async () => {
+    db = await openDb({ mode: 'local' })
+    const uid = (await db.one<{ id: number }>("INSERT INTO users (username, full_name, role, password_hash) VALUES ('mariam', 'Mariam Traoré', 'admin', 'x') RETURNING id"))!.id
+    await db.query('CREATE TABLE activity (id BIGSERIAL PRIMARY KEY, user_id INT, kind TEXT NOT NULL, details TEXT NOT NULL DEFAULT \'\', created_at TIMESTAMPTZ NOT NULL DEFAULT now())')
+    await db.query("INSERT INTO activity (user_id, kind, details) VALUES ($1, 'connexion', 'Connexion'), ($1, 'facture', 'Facture F-0001 créée')", [uid])
+    const agent = new ConsoleAgent({ db, app: 'Test', version: '1.2.3', token: TOKEN })
+    server = createServer(async (rq, rs) => {
+      agent.watch(rs)
+      const path = new URL(rq.url ?? '/', 'http://x').pathname
+      if (!(await agent.handle(rq, rs, path))) {
+        rs.writeHead(204)
+        rs.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  })
+  afterAll(async () => {
+    await new Promise((r) => server.close(r))
+    await db.close()
+  })
+
+  it('sans le bon jeton, ces routes n’existent pas', async () => {
+    expect((await req('/api/socle/console/metrics', {}, '')).status).toBe(404)
+    expect((await req('/api/socle/console/metrics', {}, 'd'.repeat(48))).status).toBe(404)
+  })
+
+  it('mesures : version, mémoire, requêtes comptées, base et comptes', async () => {
+    await fetch(base + '/autre')
+    const m = (await req('/api/socle/console/metrics')).json.data
+    expect(m).toMatchObject({ app: 'Test', version: '1.2.3', users: 1, spaces: 1 })
+    expect(m.http.requests).toBeGreaterThanOrEqual(1)
+    expect(m.db.size_mb).toBeGreaterThan(0)
+    expect(m.mem_mb).toBeGreaterThan(0)
+  })
+
+  it('journal à partir d’un numéro, espaces clients, licence décidée par la console', async () => {
+    const a = (await req('/api/socle/console/activity?since=0')).json.data
+    expect(a.map((x: any) => [x.kind, x.details, x.user_name])).toEqual([['connexion', 'Connexion', 'Mariam Traoré'], ['facture', 'Facture F-0001 créée', 'Mariam Traoré']])
+    expect((await req(`/api/socle/console/activity?since=${a[0].id}`)).json.data).toHaveLength(1)
+    const spaces = (await req('/api/socle/console/spaces')).json.data
+    expect(spaces.map((s: any) => s.name)).toContain('Mariam Traoré')
+    await req('/api/socle/console/licence', { method: 'POST', body: JSON.stringify({ space_id: '1', plan: 'pro', status: 'active', limits: { users: 10 }, ends_on: '2027-10-31' }) })
+    const lic = (await req('/api/socle/console/licences')).json.data
+    expect(lic[0]).toMatchObject({ space_id: '1', plan: 'pro', status: 'active', limits: { users: 10 } })
   })
 })
