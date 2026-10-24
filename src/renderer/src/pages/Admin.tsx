@@ -654,7 +654,7 @@ function LocalSyncCard() {
   const st = off?.state?.()
   if (!off || !st) return null
   const when = (iso: string | null) => (iso ? `${formatDate(iso.slice(0, 10))} à ${iso.slice(11, 16)}` : 'jamais')
-  const size = st.localBytes > 1_048_576 ? `${(st.localBytes / 1_048_576).toFixed(1)} Mo` : `${Math.max(1, Math.round(st.localBytes / 1024))} Ko`
+  const size = st.localBytes > 1_048_576 ? `${(st.localBytes / 1_048_576).toFixed(1).replace('.', ',')} Mo` : `${Math.max(1, Math.round(st.localBytes / 1024))} Ko`
   const sync = async () => {
     setBusy('sync')
     const r = await off.sync()
@@ -723,7 +723,7 @@ function AutoBackupCard() {
   }, [])
   if (!st) return null
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : 'jamais')
-  const size = (b: number) => (b > 1_048_576 ? `${(b / 1_048_576).toFixed(1)} Mo` : `${Math.max(1, Math.round(b / 1024))} Ko`)
+  const size = (b: number) => (b > 1_048_576 ? `${(b / 1_048_576).toFixed(1).replace('.', ',')} Mo` : `${Math.max(1, Math.round(b / 1024))} Ko`)
   return (
     <div className="card">
       <h3>Sauvegardes automatiques</h3>
