@@ -110,6 +110,36 @@ summary::after { transition: transform .3s var(--ease); }
 .prix-card:hover { transform: translateY(-4px); box-shadow: var(--sh-2); }
 .prix-card:active { transform: scale(.985); transition-duration: 160ms; }
 
+/* ── Rythme : une section de cartes numérotées sur deux devient un fil (build-entreprise.mjs) : l'en-tête
+      reste à gauche pendant la lecture, les étapes sont reliées en liste à droite ── */
+.fil > .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: clamp(36px, 6vw, 88px); align-items: start; }
+.fil > .wrap > .head { grid-column: 1; grid-row: 1 / span 4; position: sticky; top: 130px; margin: 0; text-align: left; }
+.fil > .wrap > .steps { grid-column: 2; position: relative; isolation: isolate; grid-template-columns: minmax(0, 1fr); gap: 16px; view-timeline-name: --fil; }
+.fil > .wrap > .steps + .steps { margin-top: 16px; }
+.fil .step { display: grid; grid-template-columns: 48px minmax(0, 1fr) 56px; grid-template-areas: 'n h ic' 'n p ic'; column-gap: 20px; row-gap: 6px; padding: 22px 24px; }
+.fil .step-top { display: contents; }
+.fil .step-n { grid-area: n; }
+.fil .step-ic { grid-area: ic; align-self: center; }
+.fil .step h3 { grid-area: h; align-self: end; margin: 0; }
+.fil .step p { grid-area: p; }
+.fil .step:hover { transform: translateX(6px); }
+/* Le fil qui relie les numéros ; il se trace au défilement là où le navigateur sait le faire */
+.fil .steps::before { content: ''; position: absolute; z-index: -1; left: 47px; top: 46px; bottom: 46px; width: 2px; border-radius: 2px; background: linear-gradient(var(--gold, #f2b01e), rgba(var(--p-rgb), .4)); transform-origin: 50% 0; }
+/* Deux listes à la suite : le fil continue dans l'espace qui les sépare */
+.fil .steps + .steps::before { top: -16px; }
+@supports (animation-timeline: view()) {
+  .fil .steps::before { animation: fil-trace linear both; animation-timeline: --fil; animation-range: entry 25% cover 60%; }
+  @keyframes fil-trace { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+}
+@media (max-width: 860px) {
+  .fil > .wrap { display: block; }
+  .fil > .wrap > .head { position: static; margin: 0 auto clamp(36px, 5vw, 60px); text-align: center; }
+  .fil .step { grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: 'n h' 'n p'; column-gap: 16px; padding: 18px 18px 20px; }
+  .fil .step-n { width: 44px; height: 44px; }
+  .fil .step-ic { display: none; }
+  .fil .steps::before { left: 39px; top: 40px; bottom: 40px; }
+}
+
 /* ── Menu : la section lue est signalée (premium.js) ; sur ordinateur, une pastille glisse d'un lien à
       l'autre (ease-in-out : un élément déjà à l'écran qui se déplace) ── */
 .menu-ind { display: none; }
@@ -140,7 +170,8 @@ summary::after { transition: transform .3s var(--ease); }
   .js .rv { transform: none !important; transition: opacity .4s ease !important; }
   .js .head.rv h2 { filter: none !important; }
   .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
-  .prix-card:hover, .prix-card:active, .dl-card:hover, .dl-card:active { transform: none; }
+  .prix-card:hover, .prix-card:active, .dl-card:hover, .dl-card:active, .fil .step:hover { transform: none; }
+  .fil .steps::before { animation: none; transform: none; }
   .menu-ind { transition: opacity .2s ease; }
   .faq details::details-content { transition: none; }
   .vit-screens img { filter: none; transform: none; transition: opacity .3s ease; }

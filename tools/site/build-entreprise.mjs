@@ -217,6 +217,18 @@ body = body.replace(/(<section id="tarifs"[\s\S]*?)<ol class="feat-list">([\s\S]
   return `${before}<div class="prix" role="list">\n        ${cards.join('\n        ')}\n      </div>`
 })
 
+// Rythme : une section de cartes numérotées sur deux devient un « fil » (en-tête à gauche qui reste à
+// l'écran, étapes reliées en liste à droite), quand elle ne contient que son en-tête et ses étapes
+let stepSections = 0
+body = body.replace(/<section([^>]*)>([\s\S]*?)<\/section>/g, (whole, attrs, inner) => {
+  if (!inner.includes('<div class="steps">')) return whole
+  if (stepSections++ % 2 === 0) return whole
+  const blocks = [...inner.matchAll(/^ {6}<\w+[^>]*class="([^" ]+)/gm)].map((m) => m[1])
+  if (blocks[0] !== 'head' || blocks.slice(1).some((b) => b !== 'steps')) return whole
+  const open = /class="([^"]*)"/.test(attrs) ? attrs.replace(/class="([^"]*)"/, 'class="$1 fil"') : `${attrs} class="fil"`
+  return `<section${open}>${inner}</section>`
+})
+
 const script = `<script>
 (function () {
   var $ = function (id) { return document.getElementById(id) }
