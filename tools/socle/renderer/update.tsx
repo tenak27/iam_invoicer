@@ -8,6 +8,7 @@
 // au plus) et toutes les six heures. « Plus tard » fait taire cette version pendant un jour.
 import { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
+import { compareVersions, pickFile } from './versions'
 
 declare const __APP_VERSION__: string
 
@@ -18,23 +19,6 @@ export interface Update {
   url: string | null
   reload: boolean
   size?: number
-}
-
-interface RemoteFile {
-  platform: string
-  kind: string
-  arch: string | null
-  version: string | null
-  size: number
-  url: string
-}
-
-/** > 0 si a est plus récente que b (1.10.0 > 1.9.3). */
-export function compareVersions(a: string | null | undefined, b: string | null | undefined): number {
-  const parts = (v: string | null | undefined) => String(v ?? '0.0.0').replace(/^v/i, '').split(/[.-]/).slice(0, 3).map((n) => parseInt(n, 10) || 0)
-  const [x, y] = [parts(a), parts(b)]
-  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] - y[i]
-  return 0
 }
 
 const isDesktop = () => location.protocol === 'file:' || /Electron/i.test(navigator.userAgent)
@@ -51,18 +35,6 @@ async function device(): Promise<{ platform: 'web' | 'windows' | 'macos' | 'linu
     /* processeur inconnu : version Intel */
   }
   return { platform: /Mac/i.test(ua) ? 'macos' : /Linux/i.test(ua) ? 'linux' : 'windows', arch }
-}
-
-/** Installateur le plus récent pour cet appareil, parmi ceux proposés par le serveur. */
-export function pickFile(files: RemoteFile[], platform: string, arch: string | null): RemoteFile | null {
-  const mine = files.filter((f) => f.platform === platform && f.version)
-  if (!mine.length) return null
-  const newest = mine.reduce((a, b) => (compareVersions(b.version, a.version) > 0 ? b : a)).version
-  const same = mine.filter((f) => f.version === newest)
-  if (platform === 'macos') return same.find((f) => f.arch === arch) ?? same.find((f) => f.arch === 'universal') ?? same.find((f) => !f.arch) ?? null
-  if (platform === 'windows') return same.find((f) => f.kind === 'installer') ?? same[0]
-  if (platform === 'android') return same.find((f) => f.kind === 'apk') ?? null
-  return same[0]
 }
 
 export async function checkUpdate(server: string): Promise<Update | null> {
@@ -138,7 +110,7 @@ export function UpdateNotice({ server, open }: { server: () => string; open: (ur
   }
   const android = Capacitor.getPlatform() === 'android'
   return (
-    <div className="socle-update" role="dialog" aria-live="polite" aria-label="Mise à jour disponible">
+    <div className="socle-card socle-update" role="dialog" aria-live="polite" aria-label="Mise à jour disponible">
       <div className="socle-update-head">
         <span className="socle-update-dot" aria-hidden="true" />
         <b>Mise à jour disponible</b>

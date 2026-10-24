@@ -4,12 +4,12 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { classify, compareVersions, listDownloads } from '../tools/socle/server/downloads'
 import { createSocle } from '../tools/socle/server'
-
-vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => false, getPlatform: () => 'web' } }))
-const { pickFile } = await import('../tools/socle/renderer/update')
+import { pickFile } from '../tools/socle/renderer/versions'
+import { Notifier } from '../tools/socle/server/notify'
+import { openDb, type Db } from '../src/main/db'
 
 describe('installateurs', () => {
   it('classement par plateforme, type, processeur et version', () => {
@@ -73,5 +73,63 @@ describe('serveur : /api/downloads et /telechargements/', () => {
     expect(await part.text()).toBe('456789')
     expect((await fetch(base + '/telechargements/lisez-moi.txt')).status).toBe(404)
     expect((await fetch(base + '/telechargements/..%2F..%2Fetc%2Fpasswd')).status).toBe(404)
+  })
+})
+
+describe('notifications : fil des applications installées et abonnements Web Push', () => {
+  let db: Db
+  let server: Server
+  let base = ''
+  let uid = 0
+  let other = 0
+  let notifier: Notifier
+  const get = (path: string, token = 'jeton') => fetch(base + path, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(async (r) => ({ status: r.status, json: await r.json() }))
+  const post = (path: string, body: unknown) => fetch(base + path, { method: 'POST', headers: { Authorization: 'Bearer jeton', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ status: r.status, json: await r.json() }))
+
+  beforeAll(async () => {
+    db = await openDb({ mode: 'local' })
+    uid = (await db.one<{ id: number }>("INSERT INTO users (username, full_name, role, password_hash) VALUES ('awa', 'Awa', 'admin', 'x') RETURNING id"))!.id
+    other = (await db.one<{ id: number }>("INSERT INTO users (username, full_name, role, password_hash) VALUES ('issa', 'Issa', 'caissier', 'x') RETURNING id"))!.id
+    notifier = new Notifier({ db, app: 'Test', resolveUser: async (t) => (t === 'jeton' ? { id: uid } : null) })
+    server = createServer(async (req, res) => {
+      const path = new URL(req.url ?? '/', 'http://x').pathname
+      if (!(await notifier.handle(req, res, path))) {
+        res.writeHead(404)
+        res.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  })
+  afterAll(async () => {
+    await new Promise((r) => server.close(r))
+    await db.close()
+  })
+
+  it('clé publique VAPID créée une fois, session exigée pour le reste', async () => {
+    const k = await get('/api/socle/push/key', '')
+    expect(k.json.data.key).toMatch(/^[A-Za-z0-9_-]{80,}$/)
+    expect((await get('/api/socle/push/key', '')).json.data.key).toBe(k.json.data.key)
+    expect((await get('/api/socle/notifications?since=0', '')).status).toBe(401)
+  })
+
+  it('fil : rien d’ancien au premier passage, puis les nouveautés de l’utilisateur seulement', async () => {
+    await notifier.notify([uid], { title: 'Ancienne', body: 'déjà vue' })
+    const first = await get('/api/socle/notifications?since=-1')
+    expect(first.json.data.items).toEqual([])
+    await notifier.notify([uid, other], { title: 'Nouvelle commande', body: 'Commande n° 12 : 45 000 F', url: '/commandes/12', tag: 'commande-12' })
+    await notifier.notify([other], { title: 'Pour Issa' })
+    const next = await get(`/api/socle/notifications?since=${first.json.data.last}`)
+    expect(next.json.data.items.map((i: any) => [i.title, i.body, i.url, i.tag])).toEqual([['Nouvelle commande', 'Commande n° 12 : 45 000 F', '/commandes/12', 'commande-12']])
+    expect((await get(`/api/socle/notifications?since=${next.json.data.last}`)).json.data.items).toEqual([])
+  })
+
+  it('abonnement Web Push : enregistré pour l’utilisateur, refusé s’il est incomplet, retiré', async () => {
+    const subscription = { endpoint: 'https://push.exemple.invalid/abc', keys: { p256dh: 'BOr' + 'a'.repeat(84), auth: 'b'.repeat(22) } }
+    expect((await post('/api/socle/push/subscribe', { subscription: { endpoint: 'http://non-securise' } })).status).toBe(400)
+    expect((await post('/api/socle/push/subscribe', { subscription, device: 'Chrome Android' })).json.data).toBe(true)
+    expect(await db.query('SELECT user_id, device FROM socle_push')).toEqual([{ user_id: uid, device: 'Chrome Android' }])
+    await post('/api/socle/push/unsubscribe', { endpoint: subscription.endpoint })
+    expect(await db.query('SELECT 1 FROM socle_push')).toEqual([])
   })
 })

@@ -18,15 +18,16 @@ html.touch :is(main, .content, .page) { overscroll-behavior-y: none; }
 html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 @media (prefers-reduced-motion: reduce) { html.touch .is-pressed { transition: none; } }
 
-/* ── Mise à jour disponible ── */
-.socle-update {
-  position: fixed; z-index: 2147483000; right: 18px; bottom: 18px; width: min(380px, calc(100vw - 24px));
+/* ── Avis : mise à jour disponible, notifications ── */
+.socle-stack { position: fixed; z-index: 2147483000; right: 18px; bottom: 18px; width: min(380px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.socle-stack > * { pointer-events: auto; }
+.socle-card {
   display: grid; gap: 10px; padding: 16px 16px 14px; border-radius: 20px;
   background: #fff; color: #0f1b33; border: 1px solid rgba(15, 27, 51, .08);
   box-shadow: 0 24px 60px -18px rgba(15, 27, 51, .45), 0 2px 6px rgba(15, 27, 51, .08);
   font-size: .94rem; line-height: 1.45; animation: socle-up .35s cubic-bezier(.2, .9, .3, 1.2);
 }
-.socle-update p { margin: 0; color: #4a5875; }
+.socle-card p { margin: 0; color: #4a5875; }
 .socle-update-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .socle-update-head b { font-size: 1rem; }
 .socle-update-dot { width: 10px; height: 10px; border-radius: 50%; background: #1b6ef3; box-shadow: 0 0 0 4px rgba(27, 110, 243, .18); animation: socle-pulse 1.8s ease-in-out infinite; }
@@ -38,9 +39,11 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
 .socle-btn:focus-visible { outline: 3px solid rgba(27, 110, 243, .35); outline-offset: 2px; }
 @media (max-width: 900px) {
   /* Au-dessus de la barre d'onglets du bas */
-  .socle-update { left: 12px; right: 12px; width: auto; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .socle-stack { left: 12px; right: 12px; width: auto; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
   .socle-btn { min-height: 46px; flex: 1; }
 }
 @keyframes socle-up { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes socle-pulse { 50% { box-shadow: 0 0 0 8px rgba(27, 110, 243, 0); } }
-@media print { .socle-update { display: none !important; } }
+@media print { .socle-stack { display: none !important; } }
+
+.socle-btn:disabled { opacity: .6; cursor: default; }
