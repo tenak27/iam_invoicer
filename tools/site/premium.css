@@ -97,6 +97,19 @@ summary::after { transition: transform .3s var(--ease); }
   .vit-tabs button { scroll-snap-align: start; }
 }
 
+/* ── Tarifs : de vraies cartes (construites par build-entreprise.mjs), prix en grand ── */
+.prix { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: clamp(14px, 2vw, 22px); align-items: stretch; max-width: 1080px; margin-inline: auto; }
+.prix-card { position: relative; display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.6vw, 30px); border-radius: 24px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--sh); transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.prix-card h3 { font-size: 1.12rem; }
+.prix-montant { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; margin: 2px 0; color: var(--ink); font-weight: 800; font-size: clamp(1.8rem, 3.2vw, 2.4rem); letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.prix-montant :is(small, span, em) { font-size: .95rem; font-weight: 600; font-style: normal; letter-spacing: 0; color: var(--muted); }
+.prix-desc { flex: 1; color: var(--muted); font-size: .97rem; }
+.prix-card .btn { align-self: flex-start; }
+/* Carte mise en avant : un liseré en dégradé et une ombre plus profonde, rien d'autre */
+.prix-card.mis-en-avant { border: 1.5px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad) border-box; box-shadow: var(--sh-2); }
+.prix-card:hover { transform: translateY(-4px); box-shadow: var(--sh-2); }
+.prix-card:active { transform: scale(.985); transition-duration: 160ms; }
+
 /* ── Moins d'animations : des fondus, aucun déplacement ni flou ── */
 @media (prefers-reduced-motion: reduce) {
   .js .rv { transform: none !important; transition: opacity .4s ease !important; }

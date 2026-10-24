@@ -196,6 +196,27 @@ body = body.replace(/<div class="shots">([\s\S]*?)\n\s*<\/div>/, (whole, inner) 
       </div>`
 })
 
+// Tarifs : la liste « Formule : prix » devient des cartes (prix en grand, bouton d'essai ou de contact)
+const essai = /<a class="btn btn-cta[^"]*" href="([^"]+)"/.exec(body)?.[1] ?? '#contact'
+body = body.replace(/(<section id="tarifs"[\s\S]*?)<ol class="feat-list">([\s\S]*?)<\/ol>/, (whole, before, inner) => {
+  const items = [...inner.matchAll(/<b>([^<]*)<\/b><small>([^<]*)<\/small>/g)]
+  if (items.length < 2) return whole
+  const cards = items.map(([, label, desc], i) => {
+    let [name, price] = label.includes(' : ') ? label.split(' : ') : [label, '']
+    const asked = /^(Sur devis|Sur demande)\s*:\s*/i.exec(desc)
+    if (!price && asked) [price, desc] = [asked[1], desc.slice(asked[0].length)]
+    if (!price && /gratuit/i.test(name)) price = 'Gratuit'
+    const m = /^(dès\s+)?([\d\s ]+)\s*(FCFA)?\s*(\/\s*\S+)?$/i.exec(price.trim())
+    const amount = m
+      ? `${m[1] ? `<small>${m[1].trim()}</small> ` : ''}${m[2].trim()}${m[3] ? ` <span>${m[3]}</span>` : ''}${m[4] ? ` <em>${m[4].replace(/\s+/g, ' ')}</em>` : ''}`
+      : price.charAt(0).toUpperCase() + price.slice(1)
+    const contact = /devis|demande/i.test(price)
+    const cta = contact ? `<a class="btn btn-ghost sm" href="#contact">Nous contacter</a>` : `<a class="btn btn-cta sm" href="${essai}">Essai gratuit</a>`
+    return `<article class="prix-card rv${i === 1 ? ' mis-en-avant' : ''}" role="listitem" style="--d:${i}"><h3>${name}</h3><p class="prix-montant">${amount}</p><p class="prix-desc">${desc.charAt(0).toUpperCase() + desc.slice(1)}</p>${cta}</article>`
+  })
+  return `${before}<div class="prix" role="list">\n        ${cards.join('\n        ')}\n      </div>`
+})
+
 const script = `<script>
 (function () {
   var $ = function (id) { return document.getElementById(id) }
