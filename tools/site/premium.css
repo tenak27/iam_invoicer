@@ -35,6 +35,10 @@ a, button, summary, .btn, [role='button'] { touch-action: manipulation; }
 /* Les titres de section sortent d'un léger flou (un seul mouvement, lisible) */
 .js .head.rv h2 { filter: blur(6px); transition: filter .8s var(--ease) calc(var(--d, 0) * 60ms + .05s); }
 .js .head.rv.in h2 { filter: none; }
+/* Le mot manuscrit d'un titre s'écrit de gauche à droite pendant que le titre sort du flou
+   (marges négatives : les jambages et les boucles de l'écriture ne sont jamais coupés) */
+.js .head.rv h2 .script, .js .contact-card.rv h2 .script { clip-path: inset(-.5em 100% -.5em -.5em); transition: clip-path .9s cubic-bezier(.65, 0, .35, 1) calc(var(--d, 0) * 60ms + .3s); }
+.js .head.rv.in h2 .script, .js .contact-card.rv.in h2 .script { clip-path: inset(-.5em -.5em -.5em -.5em); }
 /* Une coche de comparaison naît petite, jamais de rien */
 .js .rv .vs-us svg { transform: scale(.5); opacity: 0; transition: transform .5s var(--ease) calc(var(--d, 0) * 60ms + .25s), opacity .3s ease calc(var(--d, 0) * 60ms + .25s); }
 .js .rv.in .vs-us svg { transform: none; opacity: 1; }
@@ -169,6 +173,7 @@ summary::after { transition: transform .3s var(--ease); }
 @media (prefers-reduced-motion: reduce) {
   .js .rv { transform: none !important; transition: opacity .4s ease !important; }
   .js .head.rv h2 { filter: none !important; }
+  .js .head.rv h2 .script, .js .contact-card.rv h2 .script { clip-path: none; transition: none; }
   .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
   .prix-card:hover, .prix-card:active, .dl-card:hover, .dl-card:active, .fil .step:hover { transform: none; }
   .fil .steps::before { animation: none; transform: none; }
