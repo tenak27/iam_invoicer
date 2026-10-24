@@ -117,6 +117,9 @@ const out = V.out
 rmSync(out, { recursive: true, force: true })
 mkdirSync(`${out}/assets`, { recursive: true })
 for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
+// Icône du logiciel (dessinée) : onglet du navigateur et écran d'accueil d'iOS
+const slug = V.icon.replace(/-mark\.svg$/, '')
+for (const f of [`${slug}-favicon.png`, `${slug}-apple-touch.png`]) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
@@ -153,7 +156,8 @@ const head = src
   .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${V.description}">`)
   .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${V.ogTitle}">`)
   .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${V.description}">`)
-  .replace(/<link rel="icon"[^>]*>/, `<link rel="icon" href="assets/${V.icon}" type="image/svg+xml">`)
+  .replace(/<link rel="icon"[^>]*>(\s*<link rel="apple-touch-icon"[^>]*>)?/, `<link rel="icon" href="assets/${V.icon.replace(/-mark\.svg$/, '')}-favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/${V.icon.replace(/-mark\.svg$/, '')}-apple-touch.png">`)
 
 // Illustration d'accueil (Awa, avion, nuages) sans le sceau propre au logiciel
 const heroArt = cut('<div class="hero-art" aria-hidden="true">', '<div class="seal">')
