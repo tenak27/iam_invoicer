@@ -1,6 +1,6 @@
 // Base commune des applications IAM (tools/socle) : installateurs proposés, envoi avec reprise,
 // choix de la mise à jour pour l'appareil.
-import { randomBytes } from 'node:crypto'
+import { createHmac, randomBytes } from 'node:crypto'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
@@ -411,5 +411,205 @@ describe('licences : essai, version gratuite, formule payée, limites appliquée
     await fetch(base + '/api/socle/licence/guide', { method: 'POST', headers: { Authorization: `Bearer jeton-${users['payee@x.bf'].id}`, 'Content-Type': 'application/json' }, body: '{}' })
     expect((await get('payee@x.bf')).state.seen_guide).toBe(true)
     expect((await fetch(base + '/api/socle/licence')).status).toBe(401)
+  })
+})
+
+describe('intégrations : clés d’API, webhooks signés, verrouillage sous condition', () => {
+  const pg = new PGlite()
+  const db = {
+    query: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows,
+    one: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows[0]
+  }
+  class AppError extends Error {}
+  let server: Server
+  let hook: Server
+  let base = ''
+  let hookUrl = ''
+  const received: { headers: Record<string, any>; body: string }[] = []
+  const journal: string[] = []
+  const users: Record<string, { id: number; company_id: number; role: string; full_name: string; active: boolean }> = {}
+  const as = (who: string) => ({ Authorization: `Bearer jeton-${users[who].id}`, 'Content-Type': 'application/json' })
+  const post = async (path: string, body: unknown, who: string) => (await fetch(base + path, { method: 'POST', headers: as(who), body: JSON.stringify(body) })).json()
+  const view = async (who: string) => (await (await fetch(base + '/api/socle/integrations', { headers: as(who) })).json()).data
+  const v1 = async (name: string, key: string, body?: unknown) => {
+    const r = await fetch(base + '/api/v1/' + name + (body === undefined ? '?limit=5' : ''), {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    })
+    return { status: r.status, json: await r.json() }
+  }
+  const until = async (test: () => boolean | Promise<boolean>) => {
+    for (let i = 0; i < 100 && !(await test()); i++) await new Promise((r) => setTimeout(r, 30))
+  }
+
+  beforeAll(async () => {
+    process.env.WEBHOOK_ALLOW_PRIVATE = '1'
+    await pg.exec(`
+      CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT NOT NULL, demo BOOLEAN NOT NULL DEFAULT FALSE);
+      CREATE TABLE users (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id), full_name TEXT NOT NULL, role TEXT NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
+      CREATE TABLE sites (id SERIAL PRIMARY KEY, company_id INT NOT NULL, name TEXT NOT NULL);
+      INSERT INTO companies (name, demo) VALUES ('Bâtisseurs du Faso', FALSE), ('Autre entreprise', FALSE), ('Démo', TRUE);
+      INSERT INTO users (company_id, full_name, role) VALUES (1, 'Awa Patronne', 'admin'), (1, 'Issa Associé', 'admin'), (1, 'Chef Moussa', 'chef'), (2, 'Autre Patron', 'admin'), (3, 'Visiteur', 'admin');
+      INSERT INTO sites (company_id, name) VALUES (1, 'Villa Ouaga 2000'), (2, 'Ailleurs');
+    `)
+    for (const u of await db.query<any>('SELECT * FROM users')) users[u.full_name.split(' ')[0].toLowerCase()] = u
+    const userById = async (id: number) => (await db.one<any>('SELECT * FROM users WHERE id = $1 AND active', [id])) ?? null
+    const socle = createSocle({
+      app: 'Test BTP',
+      version: '1.0.0',
+      db,
+      resolveUser: async (t) => {
+        const u = Object.values(users).find((x) => `jeton-${x.id}` === t)
+        return u ? userById(u.id) : null
+      },
+      webPush: false,
+      integrations: {
+        spaces: 'companies',
+        spaceOf: (u) => u.company_id,
+        isAdmin: (u) => u.role === 'admin',
+        userById,
+        checkPassword: async (_u, p) => p === 'bon-mot-de-passe',
+        adminIds: async (space) => (await db.query<{ id: number }>("SELECT id FROM users WHERE company_id = $1 AND role = 'admin' AND active", [Number(space)])).map((r) => r.id),
+        log: async (u, details) => void journal.push(`${u.full_name} : ${details}`),
+        events: { 'site.created': 'Chantier créé' },
+        triggers: { 'sites.save': (a, d) => !a?.id && ['site.created', { id: d.id, name: a.name }] },
+        examples: ['GET sites.list', 'POST sites.save {"name": "Villa"}'],
+        dispatch: async (u, name, args: any) => {
+          if (name === 'sites.list') return { ok: true, data: await db.query('SELECT id, name FROM sites WHERE company_id = $1 ORDER BY id', [u.company_id]) }
+          if (name === 'sites.save') return { ok: true, data: await db.one('INSERT INTO sites (company_id, name) VALUES ($1, $2) RETURNING id', [u.company_id, String(args?.name ?? '')]) }
+          return { ok: false, error: `Appel inconnu : ${name}` }
+        },
+        fail: (m) => {
+          throw new AppError(m)
+        }
+      }
+    })
+    server = createServer(async (rq, rs) => {
+      const path = new URL(rq.url ?? '/', 'http://x').pathname
+      if (!(await socle(rq, rs, path))) {
+        rs.writeHead(404)
+        rs.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+    // Logiciel tiers qui reçoit les webhooks
+    hook = createServer(async (rq, rs) => {
+      let body = ''
+      for await (const c of rq) body += c
+      received.push({ headers: rq.headers, body })
+      rs.writeHead(200)
+      rs.end('ok')
+    })
+    await new Promise<void>((r) => hook.listen(0, '127.0.0.1', r))
+    hookUrl = `http://127.0.0.1:${(hook.address() as { port: number }).port}/iam`
+  })
+  afterAll(async () => {
+    delete process.env.WEBHOOK_ALLOW_PRIVATE
+    await new Promise((r) => server.close(r))
+    await new Promise((r) => hook.close(r))
+    await pg.close()
+  })
+
+  const keys: Record<string, string> = {}
+  let secret = ''
+
+  it('administrateur seulement, jamais depuis une démonstration ; clés montrées une fois', async () => {
+    expect((await post('/api/socle/integrations/key', { name: 'Compta', scope: 'lecture' }, 'chef')).error).toMatch(/administrateur/)
+    expect((await post('/api/socle/integrations/key', { name: 'Compta', scope: 'lecture' }, 'visiteur')).error).toMatch(/démonstration/)
+    expect((await view('visiteur')).demo).toBe(true)
+    const lecture = await post('/api/socle/integrations/key', { name: 'Compta', scope: 'lecture' }, 'awa')
+    const ecriture = await post('/api/socle/integrations/key', { name: 'Site', scope: 'ecriture' }, 'awa')
+    keys.lecture = lecture.data.key
+    keys.ecriture = ecriture.data.key
+    expect(keys.lecture).toMatch(/^iak_[\w-]{8}_[\w-]{20,}$/)
+    const v = await view('awa')
+    expect(v.keys.map((k: any) => [k.name, k.scope, k.created_by_name])).toEqual([
+      ['Site', 'ecriture', 'Awa Patronne'],
+      ['Compta', 'lecture', 'Awa Patronne']
+    ])
+    expect(JSON.stringify(v)).not.toContain(keys.lecture)
+    expect(v.api).toBe(`${base}/api/v1/`)
+    expect(v.lock).toMatchObject({ locked: false, editable: true })
+    expect((await fetch(base + '/api/socle/integrations')).status).toBe(401)
+  })
+
+  it('API : lecture seule, écriture, appels interdits, données de l’espace seulement', async () => {
+    const list = await v1('sites.list', keys.lecture)
+    expect(list.status).toBe(200)
+    expect(list.json.data).toEqual([{ id: 1, name: 'Villa Ouaga 2000' }])
+    expect((await v1('sites.save', keys.lecture, { name: 'Interdit' })).status).toBe(403)
+    expect((await v1('team.save', keys.ecriture, { full_name: 'Pirate' })).status).toBe(403)
+    expect((await v1('sites.list', 'iak_aaaaaaaa_bbbbbbbbbbbbbbbbbbbbbbbbbbbb')).status).toBe(401)
+    expect((await v1('autre.inconnu', keys.ecriture, {})).status).toBe(400)
+    const saved = await v1('sites.save', keys.ecriture, { name: 'Immeuble R+4' })
+    expect(saved.json).toMatchObject({ ok: true, data: { id: 3 } })
+  })
+
+  it('webhook signé : événement tiré de l’appel, signature vérifiable, envoi inscrit', async () => {
+    const h = await post('/api/socle/integrations/webhook', { url: hookUrl, events: ['site.created', 'inconnu'] }, 'awa')
+    expect(h.data.secret).toMatch(/^whsec_/)
+    secret = h.data.secret
+    expect((await post('/api/socle/integrations/webhook', { url: 'ftp://exemple.bf', events: ['site.created'] }, 'awa')).error).toMatch(/https/)
+    await v1('sites.save', keys.ecriture, { name: 'École de Koudougou' })
+    await until(() => received.length > 0)
+    const r = received[0]
+    expect(r.headers['x-iam-event']).toBe('site.created')
+    expect(r.headers['x-iam-signature']).toBe('sha256=' + createHmac('sha256', secret).update(r.body).digest('hex'))
+    expect(JSON.parse(r.body)).toMatchObject({ app: 'Test BTP', event: 'site.created', space_id: '1', data: { id: 4, name: 'École de Koudougou' } })
+    await until(async () => (await view('awa')).webhooks[0].deliveries.length > 0)
+    const v = await view('awa')
+    expect(v.webhooks[0]).toMatchObject({ url: hookUrl, events: ['site.created'], active: true })
+    expect(v.webhooks[0].deliveries[0]).toMatchObject({ event: 'site.created', status: 'ok', code: 200 })
+    expect((await post('/api/socle/integrations/webhook/test', { id: v.webhooks[0].id }, 'awa')).data).toMatchObject({ status: 'ok', code: 200 })
+    // Un autre espace ne voit rien de celui-ci
+    expect((await view('autre')).webhooks).toEqual([])
+    expect((await view('autre')).keys).toEqual([])
+  })
+
+  it('verrouillage : plus aucune modification, même le secret ; mot de passe exigé ; fenêtre de 15 minutes', async () => {
+    const hookId = (await view('awa')).webhooks[0].id
+    expect((await post('/api/socle/integrations/lock', {}, 'awa')).data).toMatchObject({ locked: true, editable: false })
+    const v = await view('issa')
+    expect(v.lock).toMatchObject({ locked: true, editable: false, locked_by_name: 'Awa Patronne' })
+    const attempts: [string, unknown][] = [
+      ['/api/socle/integrations/key', { name: 'Nouvelle', scope: 'ecriture' }],
+      ['/api/socle/integrations/key/revoke', { id: 1 }],
+      ['/api/socle/integrations/webhook', { url: hookUrl, events: ['*'] }],
+      ['/api/socle/integrations/webhook/remove', { id: hookId }],
+      ['/api/socle/integrations/webhook/secret', { id: hookId }]
+    ]
+    for (const [path, body] of attempts) expect((await post(path, body, 'issa')).error).toMatch(/verrouillées/)
+    // Les clés continuent de servir pendant le verrouillage
+    expect((await v1('sites.list', keys.lecture)).status).toBe(200)
+    // Mauvais mot de passe : refusé et inscrit au journal
+    expect((await post('/api/socle/integrations/unlock', { password: 'faux' }, 'issa')).error).toMatch(/incorrect/)
+    expect(journal.some((j) => j.startsWith('Issa Associé') && /refusé/.test(j))).toBe(true)
+    const open = await post('/api/socle/integrations/unlock', { password: 'bon-mot-de-passe' }, 'issa')
+    expect(open.data).toMatchObject({ locked: true, editable: true })
+    const minutes = (new Date(open.data.unlocked_until).getTime() - Date.now()) / 60_000
+    expect(minutes).toBeGreaterThan(14)
+    expect(minutes).toBeLessThanOrEqual(15.1)
+    expect((await post('/api/socle/integrations/webhook/secret', { id: hookId }, 'issa')).data.secret).toBe(secret)
+    // L'autre administrateur est prévenu
+    const notified = async () => ((await db.one<{ n: number }>('SELECT COUNT(*)::int AS n FROM socle_notifications WHERE user_id = $1', [users.awa.id]))?.n ?? 0) > 0
+    await until(notified)
+    expect(await db.one<any>('SELECT title, body FROM socle_notifications WHERE user_id = $1', [users.awa.id])).toMatchObject({ title: 'Intégrations déverrouillées', body: expect.stringContaining('Issa Associé') })
+    expect(journal).toContain('Issa Associé : Intégrations déverrouillées pour 15 minutes')
+    // Fenêtre écoulée : verrouillé de nouveau sans rien faire
+    await db.query("UPDATE socle_integration_lock SET unlocked_until = now() - interval '1 second'")
+    expect((await view('issa')).lock).toMatchObject({ locked: true, editable: false, unlocked_until: null })
+    expect((await post('/api/socle/integrations/key/revoke', { id: 1 }, 'issa')).error).toMatch(/verrouillées/)
+  })
+
+  it('déverrouillage : 5 essais par quart d’heure ; clé inutilisable si son auteur n’est plus administrateur', async () => {
+    for (let i = 0; i < 5; i++) await post('/api/socle/integrations/unlock', { password: 'faux' }, 'awa')
+    expect((await post('/api/socle/integrations/unlock', { password: 'bon-mot-de-passe' }, 'awa')).error).toMatch(/Trop d’essais/)
+    expect((await post('/api/socle/integrations/unlock', { password: 'faux' }, 'chef')).error).toMatch(/administrateur/)
+    await db.query("UPDATE users SET role = 'chef' WHERE id = $1", [users.awa.id])
+    expect((await v1('sites.list', keys.lecture)).status).toBe(401)
+    await db.query("UPDATE users SET role = 'admin' WHERE id = $1", [users.awa.id])
+    expect((await v1('sites.list', keys.lecture)).status).toBe(200)
   })
 })

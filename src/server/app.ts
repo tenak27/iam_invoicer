@@ -13,6 +13,7 @@
 //   GET  /print/:ticket              page imprimable (navigateur, mobile)
 //   GET  /api/downloads              installateurs disponibles (site de présentation)
 //   GET  /api/ios-manifest/:fichier  manifeste d'installation iPhone d'un .ipa signé
+//   /api/socle/integrations, /api/v1/<appel>   clés d'API et webhooks de la société (integrations.ts)
 // Authentification : en-tête « Authorization: Bearer <jeton> ».
 
 import { randomBytes } from 'node:crypto'
@@ -35,6 +36,8 @@ import { verifyDocument } from '../main/services/documents'
 import { getSettings } from '../main/services/settings'
 import { checkSeat } from '../main/services/licence'
 import { iosManifest, listDownloads } from './downloads'
+import { integrationsConfig } from './integrations'
+import { IntegrationsService } from '../../tools/socle/server/integrations'
 import { clientIp as ipOf, contentSecurityPolicy, fileCsp, Limiter, securityHeaders } from './security'
 
 export interface ServerOptions {
@@ -115,6 +118,14 @@ export function createHandler(opts: ServerOptions) {
   const flood = new Limiter(opts.ratePerMinute && opts.ratePerMinute > 0 ? opts.ratePerMinute : 3000, 60_000)
   // Liens d'impression à usage unique, valables 2 minutes.
   const tickets = new Map<string, { user: SessionUser; id: number; format: PrintFormat; duplicata?: boolean; origin: string; expires: number }>()
+  // API et webhooks de la société (Paramètres → API et webhooks) : une clé appelle les mêmes fonctions que l'application
+  const integrations = new IntegrationsService({
+    db,
+    app: 'IAM INVOICER',
+    resolveUser: (t) => resolveToken(db, t),
+    publicPath: opts.publicPath,
+    config: integrationsConfig(db, (user, name, args, req) => call({ db, user, origin: publicOrigin(req), token: null }, name, args))
+  })
 
   async function readJson(req: IncomingMessage): Promise<any> {
     const chunks: Buffer[] = []
@@ -253,6 +264,8 @@ export function createHandler(opts: ServerOptions) {
       if (opId && user && result.ok) {
         await db.query('INSERT INTO client_ops (op_id, user_id, name, result) VALUES ($1, $2, $3, $4) ON CONFLICT (op_id) DO NOTHING', [opId, user.id, name, JSON.stringify(result)])
       }
+      // Webhooks : événement tiré de l'appel réussi (facture validée, paiement…)
+      if (user && result.ok) integrations.after(user, name, body.args, result.data)
       return send(res, 200, result)
     }
     const docMatch = /^\/api\/document\/(\d+)$/.exec(path)
@@ -381,6 +394,7 @@ export function createHandler(opts: ServerOptions) {
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         return res.end('ok')
       }
+      if (await integrations.handle(req, res, path)) return
       if (path.startsWith('/api/')) return await api(req, res, path, url)
       if (path.startsWith('/print/')) return await printPage(res, path.slice('/print/'.length))
       if (/^\/sign\/[A-Za-z0-9_-]{20,}$/.test(path)) return await signPage(res, path.slice('/sign/'.length))

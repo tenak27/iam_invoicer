@@ -69,6 +69,11 @@ export function normalizeUrl(raw: string): string {
   return `${u.protocol}//${u.host}${u.pathname.replace(/\/+$/, '')}`
 }
 
+/** Adresse du serveur et jeton de la session (navigateur, iOS, Android) pour les panneaux de la base
+ * commune (API et webhooks) ; null dans l'application de bureau, qui passe par Electron. */
+let http: { server: () => string; token: () => string | null } | null = null
+export const httpSession = () => http
+
 function createHttpBridge(): ErpBridge {
   const native = Capacitor.isNativePlatform()
   // Sur le web, l'application est servie par le serveur lui-même : même origine par défaut.
@@ -77,6 +82,7 @@ function createHttpBridge(): ErpBridge {
   const servedBase = () => location.origin + location.pathname.replace(/\/(index\.html)?$/, '').replace(/\/app$/, '')
   const baseUrl = () => (servedByServer ? servedBase() : store.get(URL_KEY))
   let token = store.get(TOKEN_KEY)
+  http = { server: () => baseUrl() ?? '', token: () => token }
   // Identifiant de cet appareil : il compte pour un seul poste de la licence
   const deviceId = () => {
     let id = store.get(DEVICE_KEY)

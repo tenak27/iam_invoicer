@@ -13,6 +13,8 @@ import { TemplateGallery } from '../components/TemplateGallery'
 import { EnterpriseCard } from '../components/EnterpriseCard'
 import { KpiStrip } from '../components/KpiStrip'
 import { useSession } from '../session'
+import { httpSession } from '../bridge'
+import { IntegrationsPanel } from '../socle/integrations'
 
 const MODULE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord', sales: 'Ventes', purchases: 'Achats', stock: 'Stock', payments: 'Paiements', clients: 'Clients',
@@ -28,7 +30,7 @@ const DATA_TEXT: Record<DataMode, string> = {
   remote: 'serveur en ligne'
 }
 
-type SettingsTab = 'societe' | 'taxes' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees'
+type SettingsTab = 'societe' | 'taxes' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees' | 'integrations'
 
 /** Réglages d'envoi des fournisseurs de messagerie courants (préremplissage du serveur SMTP). */
 const MAIL_PROVIDERS: { name: string; host: string; port: number; secure: boolean; hint?: string }[] = [
@@ -45,6 +47,9 @@ const DOC_COLORS = ['#1d6fd6', '#0b4f8a', '#178a55', '#7367f0', '#c2410c', '#be1
 export function CompanySettingsPage() {
   const { refreshCompany, dbMode, serverUrl, user } = useSession()
   const desktop = window.erp.kind === 'desktop'
+  // API et webhooks : servis par le serveur web, pour l'administrateur (navigateur, iOS, Android)
+  const http = httpSession()
+  const integrations = !!http && user.role === 'admin'
   const { data, error, loading, reload } = useQuery<any>('settings.get')
   const { data: secrets, reload: reloadSecrets } = useQuery<any>('settings.secrets')
   const f = useForm<any>({})
@@ -128,7 +133,8 @@ export function CompanySettingsPage() {
         { value: 'mail', label: 'E-mail d’envoi' },
         { value: 'sms', label: 'SMS' },
         { value: 'secef', label: 'Facture certifiée' },
-        { value: 'donnees', label: 'Données' }
+        { value: 'donnees', label: 'Données' },
+        ...(integrations ? [{ value: 'integrations' as const, label: 'API et webhooks' }] : [])
       ]} />
 
       {tab === 'societe' && (
@@ -383,6 +389,11 @@ export function CompanySettingsPage() {
           {desktop && dbMode !== 'remote' && window.erp.enterprise && <EnterpriseCard />}
           {desktop && dbMode === 'remote' && <LocalSyncCard />}
           {desktop && dbMode === 'local' && window.erp.backupAuto && <AutoBackupCard />}
+        </div>
+      )}
+      {tab === 'integrations' && integrations && http && (
+        <div className="tab-panel" key="integrations">
+          <IntegrationsPanel server={http.server} token={http.token} app="IAM INVOICER" />
         </div>
       )}
       {showDb && <Modal title={desktop ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide><DbConfigForm /></Modal>}
