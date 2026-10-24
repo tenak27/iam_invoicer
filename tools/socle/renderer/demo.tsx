@@ -14,7 +14,8 @@ export interface DemoHooks {
   setToken: (t: string | null) => void
 }
 
-const installed = () => !!(window as any).Capacitor?.isNativePlatform?.() || location.protocol === 'file:' || /Electron/i.test(navigator.userAgent)
+/** Application installée (téléphone, ordinateur) : ni démonstration ni invitation à installer. */
+export const installed = () => !!(window as any).Capacitor?.isNativePlatform?.() || location.protocol === 'file:' || /Electron/i.test(navigator.userAgent)
 
 function read(store: Storage, k: string): string | null {
   try {
@@ -33,7 +34,7 @@ function write(store: Storage, k: string, v: string | null) {
   }
 }
 
-async function demoStatus(server: () => string, token: string): Promise<{ demo: boolean; expires_at: string | null } | null> {
+export async function demoStatus(server: () => string, token: string): Promise<{ demo: boolean; expires_at: string | null } | null> {
   try {
     const res = await fetch(server() + '/api/socle/demo/status', { headers: { Authorization: `Bearer ${token}` } })
     const json = await res.json()
