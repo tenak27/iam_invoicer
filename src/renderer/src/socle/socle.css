@@ -47,3 +47,13 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
 @media print { .socle-stack { display: none !important; } }
 
 .socle-btn:disabled { opacity: .6; cursor: default; }
+
+/* ── Version de démonstration ── */
+.socle-demo { border-color: rgba(201, 162, 39, .45); background: #fffaf0; }
+.socle-demo .socle-update-dot { background: #c9a227; box-shadow: 0 0 0 4px rgba(201, 162, 39, .2); }
+.socle-demo-fold { margin-left: auto; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: #4a5875; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.socle-demo-fold:hover { background: rgba(15, 27, 51, .06); }
+.socle-demo-pill { justify-self: end; align-self: flex-end; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(201, 162, 39, .55); background: #fffaf0; color: #0f1b33; font: inherit; font-weight: 800; cursor: pointer; box-shadow: 0 10px 30px -12px rgba(15, 27, 51, .45); }
+.socle-demo-pill .socle-update-dot { background: #c9a227; box-shadow: none; animation: none; }
+.socle-demo-boot { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; gap: 12px; font: 600 1rem/1.4 system-ui, sans-serif; color: #0f1b33; background: #f5f7fb; }
+@media (prefers-color-scheme: dark) { .socle-demo-boot { color: #e8edf7; background: #0b1324; } }

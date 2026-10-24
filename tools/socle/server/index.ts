@@ -4,15 +4,19 @@
 //   GET /api/downloads        version du serveur et installateurs proposés (contrôle des mises à jour)
 //   GET /telechargements/…    installateurs, avec reprise (quand nginx ne les sert pas lui-même)
 //   /api/socle/…              notifications : fil des applications installées, Web Push (notify.ts)
+//   /api/socle/demo           version de démonstration (demo.ts)
 //
 // Branchement dans app.ts, avant les autres routes :  if (await socle(req, res, path)) return
 // Notifier depuis un service :  import { notify } from '../socle' ; notify([userId], { title, body, url })
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { ConsoleAgent } from './agent'
+import { DemoService, type DemoSeed } from './demo'
+export { purgeRows, spaceDemo, userDemo } from './demo'
 import { listDownloads, serveDownload } from './downloads'
 import { Notifier, type Notice, type SocleDb } from './notify'
 
 export type { Notice } from './notify'
+export type { DemoSeed } from './demo'
 
 export interface SocleOptions {
   /** Nom affiché de l'application (IAM BTP, Faso Artisans…). */
@@ -25,6 +29,8 @@ export interface SocleOptions {
   resolveUser?: (token: string) => Promise<{ id: number } | null | undefined>
   /** Faux : l'application envoie elle-même ses Web Push (IAM CLOUD) ; le fil reste servi. */
   webPush?: boolean
+  /** Version de démonstration (navigateur) : espaces fictifs séparés, effacés après 24 heures. */
+  demo?: { seed: DemoSeed; token: (userId: number) => Promise<string> }
 }
 
 export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null }
@@ -45,8 +51,13 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   }
   // Console d'IAM Technology : mesures et journal, seulement avec CONSOLE_TOKEN
   const agent = opts.db && process.env.CONSOLE_TOKEN ? new ConsoleAgent({ db: opts.db, app: opts.app, version: opts.version, token: process.env.CONSOLE_TOKEN }) : null
+  const demo = opts.demo && opts.resolveUser ? new DemoService({ seed: opts.demo.seed, token: opts.demo.token, resolveUser: opts.resolveUser }) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
     agent?.watch(res)
+    if (demo && path.startsWith('/api/socle/demo')) {
+      const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || req.socket.remoteAddress || ''
+      if (await demo.handle(req, res, path, ip)) return true
+    }
     if (path.startsWith('/api/socle/console/')) {
       if (agent) return agent.handle(req, res, path)
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' })

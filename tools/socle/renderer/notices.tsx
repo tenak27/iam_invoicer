@@ -1,6 +1,7 @@
 // Avis de la base commune des applications IAM (source iam-erp/tools/socle ; ne pas modifier ici) :
-// mise à jour disponible, et proposition d'activer les notifications sur l'appareil.
+// version de démonstration, mise à jour disponible, et proposition d'activer les notifications.
 import { useEffect, useState } from 'react'
+import { DemoBanner } from './demo'
 import { UpdateNotice } from './update'
 import { enableNotifications, notificationState, watchNotifications, type NotifOptions } from './notifications'
 
@@ -64,9 +65,10 @@ export function NotifyPrompt(o: NotifOptions) {
   )
 }
 
-export function SocleNotices(props: { server: () => string; open: (url: string) => unknown; token: () => string | null; app: string }) {
+export function SocleNotices(props: { server: () => string; open: (url: string) => unknown; token: () => string | null; setToken?: (t: string | null) => void; app: string }) {
   return (
     <div className="socle-stack">
+      {props.setToken && <DemoBanner server={props.server} token={props.token} setToken={props.setToken} />}
       <NotifyPrompt server={props.server} token={props.token} app={props.app} />
       <UpdateNotice server={props.server} open={props.open} />
     </div>

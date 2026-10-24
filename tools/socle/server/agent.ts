@@ -80,7 +80,7 @@ export class ConsoleAgent {
   private cpu = process.cpuUsage()
   private cpuAt = process.hrtime.bigint()
   private started = Date.now()
-  private schema: Promise<{ spaces: string | null; activitySpace: boolean; userName: string }> | null = null
+  private schema: Promise<{ spaces: string | null; activitySpace: boolean; userName: string; spaceDemo: boolean; userDemo: boolean; userSpace: string }> | null = null
   private key: Buffer | null
 
   constructor(private opts: AgentOptions) {
@@ -110,7 +110,15 @@ export class ConsoleAgent {
       const has = async (t: string) => !!(await this.opts.db.one<{ t: string | null }>('SELECT to_regclass($1)::text AS t', [t]))?.t
       const col = async (t: string, c: string) => !!(await this.opts.db.one('SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2', [t, c]))
       const spaces = (await has('companies')) ? 'companies' : (await has('orgs')) ? 'orgs' : null
-      return { spaces, activitySpace: (await has('activity')) && (await col('activity', 'company_id')), userName: (await col('users', 'full_name')) ? 'full_name' : 'username' }
+      return {
+        spaces,
+        activitySpace: (await has('activity')) && (await col('activity', 'company_id')),
+        userName: (await col('users', 'full_name')) ? 'full_name' : 'username',
+        // Espaces et comptes de démonstration : jamais comptés (statistiques, journal, licences)
+        spaceDemo: !!spaces && (await col(spaces, 'demo')),
+        userDemo: await col('users', 'demo'),
+        userSpace: spaces === 'orgs' ? 'org_id' : 'company_id'
+      }
     })()
     this.schema.catch(() => (this.schema = null))
     return this.schema
@@ -128,11 +136,12 @@ export class ConsoleAgent {
     const db = this.opts.db
     const s = await this.detect()
     const one = async (sql: string) => Number((await db.one<{ n: string | number | null }>(sql).catch(() => null))?.n ?? 0)
+    const realUser = this.realUserSql(s, 'u')
     const [size, users, active, spaces, tables] = await Promise.all([
       one('SELECT pg_database_size(current_database()) AS n'),
-      one('SELECT COUNT(*) AS n FROM users'),
-      one("SELECT COUNT(DISTINCT user_id) AS n FROM auth_sessions WHERE created_at > now() - interval '1 day'"),
-      s.spaces ? one(`SELECT COUNT(*) AS n FROM ${s.spaces}`) : Promise.resolve(0),
+      one(`SELECT COUNT(*) AS n FROM users u WHERE ${realUser}`),
+      one(`SELECT COUNT(DISTINCT x.user_id) AS n FROM auth_sessions x JOIN users u ON u.id = x.user_id WHERE x.created_at > now() - interval '1 day' AND ${realUser}`),
+      s.spaces ? one(`SELECT COUNT(*) AS n FROM ${s.spaces}${s.spaceDemo ? ' WHERE NOT demo' : ''}`) : Promise.resolve(0),
       db.query<{ name: string; rows: string | number }>('SELECT relname AS name, n_live_tup AS rows FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 12').catch(() => [])
     ])
     return {
@@ -157,7 +166,9 @@ export class ConsoleAgent {
     const space = s.activitySpace && s.spaces ? `(SELECT name FROM ${s.spaces} WHERE id = a.company_id)` : "''"
     const rows = await this.opts.db.query<{ id: string | number; at: string; kind: string; details: string; user_name: string | null; space: string | null }>(
       `SELECT a.id, a.created_at AS at, a.kind, a.details, u.${s.userName} AS user_name, ${space} AS space
-       FROM activity a LEFT JOIN users u ON u.id = a.user_id WHERE a.id > $1 ORDER BY a.id LIMIT 500`,
+       FROM activity a LEFT JOIN users u ON u.id = a.user_id
+       WHERE a.id > $1 AND (u.id IS NULL OR ${this.realUserSql(s, 'u')})${s.activitySpace && s.spaceDemo ? ` AND NOT EXISTS (SELECT 1 FROM ${s.spaces} d WHERE d.id = a.company_id AND d.demo)` : ''}
+       ORDER BY a.id LIMIT 500`,
       [since]
     )
     return rows.map((r) => ({ ...r, id: Number(r.id), user_name: r.user_name ?? '', space: r.space ?? '' }))
@@ -167,10 +178,18 @@ export class ConsoleAgent {
     const s = await this.detect()
     if (s.spaces)
       return this.opts.db.query(
-        `SELECT c.id::text AS id, c.name, c.created_at, (SELECT COUNT(*)::int FROM users u WHERE u.${s.spaces === 'orgs' ? 'org_id' : 'company_id'} = c.id) AS users FROM ${s.spaces} c ORDER BY c.id`
+        `SELECT c.id::text AS id, c.name, c.created_at, (SELECT COUNT(*)::int FROM users u WHERE u.${s.userSpace} = c.id) AS users FROM ${s.spaces} c${s.spaceDemo ? ' WHERE NOT c.demo' : ''} ORDER BY c.id`
       )
     // Applications sans entreprise (un compte = un client)
-    return this.opts.db.query(`SELECT u.id::text AS id, u.${s.userName} AS name, u.created_at, 1 AS users FROM users u ORDER BY u.id`)
+    return this.opts.db.query(`SELECT u.id::text AS id, u.${s.userName} AS name, u.created_at, 1 AS users FROM users u WHERE ${this.realUserSql(s, 'u')} ORDER BY u.id`)
+  }
+
+  /** Condition SQL « compte réel » (ni compte de démonstration, ni compte d'un espace de démonstration). */
+  private realUserSql(s: { spaces: string | null; spaceDemo: boolean; userDemo: boolean; userSpace: string }, u: string): string {
+    const parts = ['TRUE']
+    if (s.userDemo) parts.push(`NOT ${u}.demo`)
+    if (s.spaces && s.spaceDemo) parts.push(`NOT EXISTS (SELECT 1 FROM ${s.spaces} d WHERE d.id = ${u}.${s.userSpace} AND d.demo)`)
+    return parts.join(' AND ')
   }
 
   async handle(req: IncomingMessage, res: ServerResponse, path: string): Promise<boolean> {

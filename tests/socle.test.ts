@@ -1,12 +1,14 @@
 // Base commune des applications IAM (tools/socle) : installateurs proposés, envoi avec reprise,
 // choix de la mise à jour pour l'appareil.
+import { randomBytes } from 'node:crypto'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { classify, compareVersions, listDownloads } from '../tools/socle/server/downloads'
-import { createSocle } from '../tools/socle/server'
+import { PGlite } from '@electric-sql/pglite'
+import { createSocle, spaceDemo } from '../tools/socle/server'
 import { pickFile } from '../tools/socle/renderer/versions'
 import { Notifier } from '../tools/socle/server/notify'
 import { ConsoleAgent } from '../tools/socle/server/agent'
@@ -188,5 +190,116 @@ describe('agent de la console : jeton exigé, mesures, journal, espaces, licence
     await req('/api/socle/console/licence', { method: 'POST', body: JSON.stringify({ space_id: '1', plan: 'pro', status: 'active', limits: { users: 10 }, ends_on: '2027-10-31' }) })
     const lic = (await req('/api/socle/console/licences')).json.data
     expect(lic[0]).toMatchObject({ space_id: '1', plan: 'pro', status: 'active', limits: { users: 10 } })
+  })
+})
+
+describe('version de démonstration : espaces séparés, nettoyage complet, jamais comptés', () => {
+  const pg = new PGlite()
+  const db = {
+    query: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows,
+    one: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows[0]
+  }
+  const TOKEN = 'k'.repeat(48)
+  let server: Server
+  let base = ''
+  let seed: ReturnType<typeof spaceDemo>
+  const count = async (sql: string) => Number((await db.one<{ n: number }>(sql))!.n)
+  const realToken = async () => {
+    const t = 'reel-' + randomBytes(8).toString('hex')
+    await db.query('INSERT INTO auth_sessions (token_hash, user_id) VALUES ($1, 1)', [t])
+    return t
+  }
+
+  beforeAll(async () => {
+    await pg.exec(`
+      CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT NOT NULL, demo BOOLEAN NOT NULL DEFAULT FALSE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+      CREATE TABLE users (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id) ON DELETE CASCADE, username TEXT NOT NULL, full_name TEXT NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+      CREATE TABLE auth_sessions (token_hash TEXT PRIMARY KEY, user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+      CREATE TABLE sites (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id), name TEXT NOT NULL, parent_id INT REFERENCES sites(id), manager_id INT REFERENCES users(id));
+      CREATE TABLE reports (id SERIAL PRIMARY KEY, site_id INT NOT NULL REFERENCES sites(id), author_id INT REFERENCES users(id) ON DELETE SET NULL, body TEXT);
+      CREATE TABLE activity (id BIGSERIAL PRIMARY KEY, company_id INT, user_id INT, kind TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+    `)
+    // Un client réel, avec ses données
+    await pg.exec(`
+      INSERT INTO companies (name) VALUES ('Entreprise réelle');
+      INSERT INTO users (company_id, username, full_name) VALUES (1, 'reel', 'Client Réel');
+      INSERT INTO sites (company_id, name, manager_id) VALUES (1, 'Chantier réel', 1);
+      INSERT INTO reports (site_id, author_id, body) VALUES (1, 1, 'Rapport réel');
+      INSERT INTO activity (company_id, user_id, kind, details) VALUES (1, 1, 'connexion', 'Connexion réelle');
+    `)
+    seed = spaceDemo({
+      db,
+      async create() {
+        const c = (await db.one<{ id: number }>("INSERT INTO companies (name, demo) VALUES ('Démo BTP', TRUE) RETURNING id"))!.id
+        const u = (await db.one<{ id: number }>("INSERT INTO users (company_id, username, full_name) VALUES ($1, $2, 'Visiteur') RETURNING id", [c, 'demo-' + c]))!.id
+        const s = (await db.one<{ id: number }>("INSERT INTO sites (company_id, name, manager_id) VALUES ($1, 'Chantier fictif', $2) RETURNING id", [c, u]))!.id
+        await db.query("INSERT INTO sites (company_id, name, parent_id) VALUES ($1, 'Lot fictif', $2)", [c, s])
+        await db.query("INSERT INTO reports (site_id, author_id, body) VALUES ($1, $2, 'Rapport fictif')", [s, u])
+        await db.query("INSERT INTO activity (company_id, user_id, kind, details) VALUES ($1, $2, 'connexion', 'Connexion de démonstration')", [c, u])
+        return { userId: u }
+      }
+    })
+    const token = async (userId: number) => {
+      const t = randomBytes(24).toString('hex')
+      await db.query('INSERT INTO auth_sessions (token_hash, user_id) VALUES ($1, $2)', [t, userId])
+      return t
+    }
+    const resolveUser = async (t: string) => db.one<{ id: number }>('SELECT user_id AS id FROM auth_sessions WHERE token_hash = $1', [t])
+    process.env.CONSOLE_TOKEN = TOKEN
+    const socle = createSocle({ app: 'Test', version: '1.0.0', db, resolveUser, webPush: false, demo: { seed, token } })
+    delete process.env.CONSOLE_TOKEN
+    server = createServer(async (rq, rs) => {
+      const path = new URL(rq.url ?? '/', 'http://x').pathname
+      if (!(await socle(rq, rs, path))) {
+        rs.writeHead(404)
+        rs.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+  })
+  afterAll(async () => {
+    await new Promise((r) => server.close(r))
+    await pg.close()
+  })
+
+  it('chaque visiteur reçoit son propre espace fictif, reconnu comme tel', async () => {
+    const a = await (await fetch(base + '/api/socle/demo', { method: 'POST', headers: { 'x-forwarded-for': '10.0.0.1' } })).json()
+    const b = await (await fetch(base + '/api/socle/demo', { method: 'POST', headers: { 'x-forwarded-for': '10.0.0.2' } })).json()
+    expect([a, b]).toMatchObject([{ ok: true }, { ok: true }])
+    expect(a.data.token).not.toBe(b.data.token)
+    expect(await count('SELECT COUNT(*) AS n FROM companies WHERE demo')).toBe(2)
+    const st = await (await fetch(base + '/api/socle/demo/status', { headers: { Authorization: `Bearer ${a.data.token}` } })).json()
+    expect(st.data.demo).toBe(true)
+    expect(new Date(st.data.expires_at).getTime()).toBeGreaterThan(Date.now() + 23 * 3600_000)
+    const st2 = await (await fetch(base + '/api/socle/demo/status', { headers: { Authorization: `Bearer ${await realToken()}` } })).json()
+    expect(st2.data.demo).toBe(false)
+  })
+
+  it('trop de démonstrations depuis la même adresse : refusées', async () => {
+    let last = 0
+    for (let i = 0; i < 7; i++) last = (await fetch(base + '/api/socle/demo', { method: 'POST', headers: { 'x-forwarded-for': '10.0.0.9' } })).status
+    expect(last).toBe(429)
+  })
+
+  it('console : comptes, espaces et journal réels seulement', async () => {
+    const h = { headers: { Authorization: `Bearer ${TOKEN}` } }
+    const m = (await (await fetch(base + '/api/socle/console/metrics', h)).json()).data
+    expect(m).toMatchObject({ users: 1, spaces: 1 })
+    const spaces = (await (await fetch(base + '/api/socle/console/spaces', h)).json()).data
+    expect(spaces.map((s: any) => s.name)).toEqual(['Entreprise réelle'])
+    const act = (await (await fetch(base + '/api/socle/console/activity?since=0', h)).json()).data
+    expect(act.map((x: any) => x.details)).toEqual(['Connexion réelle'])
+  })
+
+  it('nettoyage : tout l’espace fictif disparaît, rien du client réel ne bouge', async () => {
+    expect(await seed.purge(new Date(Date.now() - 3600_000))).toBe(0)
+    expect(await seed.purge(new Date(Date.now() + 1000))).toBeGreaterThanOrEqual(2)
+    expect(await count('SELECT COUNT(*) AS n FROM companies')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM users')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM sites')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM reports')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM activity')).toBe(1)
+    expect(await count('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id <> 1')).toBe(0)
   })
 })
