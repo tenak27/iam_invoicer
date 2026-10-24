@@ -6,6 +6,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 import { build } from 'esbuild'
+import { finishSite } from './premium.mjs'
 
 const out = 'out/site'
 rmSync(out, { recursive: true, force: true })
@@ -45,5 +46,7 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
   return renderToStaticMarkup(createElement(Icon, { size: Number(size ?? 20), weight: weight ?? (size ? 'duotone' : 'bold'), 'aria-hidden': true }))
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
+// Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
+html = await finishSite(html)
 writeFileSync(`${out}/index.html`, html)
 console.log(`Site construit dans ${out}`)

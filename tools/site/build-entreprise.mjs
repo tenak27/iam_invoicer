@@ -7,6 +7,7 @@ import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
+import { finishSite } from './premium.mjs'
 
 // « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
 // « node tools/site/build-entreprise.mjs btp » : site d'IAM BTP (site-btp/ → out/site-btp)
@@ -226,6 +227,7 @@ ${extra}</style>
 <div class="read" id="read" aria-hidden="true"></div>
 ${body}
 ${script}
+${ENTREPRISE ? '' : '<script src="socle-telechargements.js" defer></script>'}
 </body>
 </html>
 `
@@ -239,6 +241,7 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
   return renderToStaticMarkup(createElement(Icon, { size: Number(size ?? 20), weight: weight ?? (size ? 'duotone' : 'bold'), 'aria-hidden': true }))
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
-html = html.replace(/\r\n?/g, '\n')
+// Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
+html = await finishSite(html.replace(/\r\n?/g, '\n'))
 writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
 console.log(`Site construit dans ${out}`)

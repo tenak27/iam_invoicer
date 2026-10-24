@@ -1,0 +1,68 @@
+/* =====================================================================
+   Finition « premium » des sites d'IAM Technology et de ses logiciels, ajoutée à la fin des
+   styles par tools/site/premium.mjs (sites construits par build.mjs et build-entreprise.mjs).
+   Règles d'Emil Kowalski (emilkowal.ski) pour une vitrine : les apparitions au défilement et le
+   décor ont leur place, mais tout part vite (ease-out franc), rien ne naît de scale(0), les
+   cascades restent courtes (60 ms), les survols sont réservés à la souris (fait à la
+   construction), et « Réduire les animations » laisse des fondus, sans déplacement.
+   ===================================================================== */
+:root {
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Ouverture fluide des questions (Chrome, Edge) ; ailleurs elles s'ouvrent d'un coup */
+  interpolate-size: allow-keywords;
+}
+
+/* ── Texte : titres équilibrés, paragraphes sans mot orphelin, sélection aux couleurs ── */
+h1, h2, h3, .head h2 { text-wrap: balance; }
+p, li, .head p { text-wrap: pretty; }
+::selection { background: rgba(var(--p-rgb), .18); color: var(--ink); }
+
+/* ── Téléphone : un vrai toucher d'application (pas de flash gris, pas de délai, pas de sélection) ── */
+html { -webkit-tap-highlight-color: transparent; }
+a, button, summary, .btn, [role='button'] { touch-action: manipulation; }
+.btn, button, summary, .chips button, .tour-tabs button, .inst-tabs button { -webkit-user-select: none; user-select: none; }
+
+/* ── Boutons : un appui franc ; la transition ne porte que sur ce qui change ── */
+.btn { will-change: auto; transition: transform 160ms var(--ease), box-shadow .3s var(--ease), background-color .2s ease, border-color .2s ease, color .2s ease; }
+.btn:active:not([aria-disabled='true']) { transform: scale(.97); }
+.btn-cta::after { transition: transform .7s var(--ease); }
+
+/* ── Apparitions au défilement : moins loin, plus vite, en cascade courte ── */
+.js .rv { transform: translateY(18px); transition: opacity .7s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--d, 0) * 60ms); }
+.js .rv.in { transform: none; }
+/* Les titres de section sortent d'un léger flou (un seul mouvement, lisible) */
+.js .head.rv h2 { filter: blur(6px); transition: filter .8s var(--ease) calc(var(--d, 0) * 60ms + .05s); }
+.js .head.rv.in h2 { filter: none; }
+/* Une coche de comparaison naît petite, jamais de rien */
+.js .rv .vs-us svg { transform: scale(.5); opacity: 0; transition: transform .5s var(--ease) calc(var(--d, 0) * 60ms + .25s), opacity .3s ease calc(var(--d, 0) * 60ms + .25s); }
+.js .rv.in .vs-us svg { transform: none; opacity: 1; }
+
+/* ── Appels à l'attention : quelques battements à l'arrivée, puis le calme ── */
+.play::before, .vs-badge, .sync[data-state='offline'] .sig svg:last-child { animation-iteration-count: 3; }
+
+/* ── Transitions précises (jamais « all ») ── */
+.chips button { transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .25s var(--ease), transform 160ms var(--ease); }
+.chips button:active { transform: scale(.97); }
+.live-top { transition: background-color .4s ease, color .4s ease, box-shadow .4s ease; }
+.track li::before { transition: background-color .4s ease, border-color .4s ease, transform .4s var(--ease), opacity .4s ease; }
+.badge { transition: background-color .4s ease, color .4s ease, border-color .4s ease, transform .4s var(--ease), opacity .4s ease; }
+.to-top { transition: opacity .4s var(--ease), transform .4s var(--ease), visibility .4s; }
+
+/* ── Questions : la réponse se déplie (hauteur et fondu), la flèche tourne ── */
+.faq details::details-content { block-size: 0; overflow: clip; opacity: 0; transition: block-size .32s var(--ease), opacity .25s ease, content-visibility .32s allow-discrete; }
+.faq details[open]::details-content { block-size: auto; opacity: 1; }
+.faq details[open] p { animation: none; }
+summary::after { transition: transform .3s var(--ease); }
+
+/* ── Cartes et tuiles : un léger relief au survol (souris), un appui au toucher ── */
+.card:active, .tile:active, .tier:active, .dl:active, .step:active { transform: scale(.985); transition-duration: 160ms; }
+
+/* ── Moins d'animations : des fondus, aucun déplacement ni flou ── */
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { transform: none !important; transition: opacity .4s ease !important; }
+  .js .head.rv h2 { filter: none !important; }
+  .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
+  .faq details::details-content { transition: none; }
+}
