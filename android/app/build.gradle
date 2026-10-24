@@ -16,21 +16,35 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    // Signature de publication : fournie par les variables ANDROID_KEYSTORE_FILE,
-    // ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS et ANDROID_KEY_PASSWORD (secrets GitHub).
+    // Signature de publication : variables ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
+    // ANDROID_KEY_ALIAS et ANDROID_KEY_PASSWORD (secrets GitHub), ou sur le PC le fichier
+    // ~/.iam-signing/signature.properties (clé d'IAM Technology, gardée hors des dépôts).
+    // Toujours la même clé : Android n'installe une mise à jour que signée comme la version en place.
+    def signing = [:]
+    if (System.getenv("ANDROID_KEYSTORE_FILE")) {
+        signing = [storeFile: System.getenv("ANDROID_KEYSTORE_FILE"), storePassword: System.getenv("ANDROID_KEYSTORE_PASSWORD"),
+                   keyAlias: System.getenv("ANDROID_KEY_ALIAS"), keyPassword: System.getenv("ANDROID_KEY_PASSWORD")]
+    } else {
+        def local = new File(System.getProperty("user.home"), ".iam-signing/signature.properties")
+        if (local.exists()) {
+            def p = new Properties()
+            local.withInputStream { p.load(it) }
+            signing = [storeFile: p.storeFile, storePassword: p.storePassword, keyAlias: p.keyAlias, keyPassword: p.keyPassword]
+        }
+    }
     signingConfigs {
-        if (System.getenv("ANDROID_KEYSTORE_FILE")) {
+        if (signing) {
             release {
-                storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storeFile file(signing.storeFile)
+                storePassword signing.storePassword
+                keyAlias signing.keyAlias
+                keyPassword signing.keyPassword
             }
         }
     }
     buildTypes {
         release {
-            if (System.getenv("ANDROID_KEYSTORE_FILE")) signingConfig signingConfigs.release
+            if (signing) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
