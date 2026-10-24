@@ -494,7 +494,8 @@ export class IntegrationsService {
     if (refused) return json(res, 403, { ok: false, error: refused })
     let args: any = {}
     if (req.method === 'GET') {
-      for (const [k, v] of new URL(req.url ?? '/', 'http://x').searchParams) args[k] = /^-?\d+(\.\d+)?$/.test(v) && v.length < 16 ? Number(v) : v === 'true' ? true : v === 'false' ? false : v
+      // Nombres et booléens reconnus ; un code à zéro initial (« 0042 ») reste du texte
+      for (const [k, v] of new URL(req.url ?? '/', 'http://x').searchParams) args[k] = /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v) && v.length < 16 ? Number(v) : v === 'true' ? true : v === 'false' ? false : v
     } else args = await readJson(req)
     await this.opts.enforce?.(who.user, name, args)
     const out = await this.opts.config.dispatch(who.user, name, args, req)

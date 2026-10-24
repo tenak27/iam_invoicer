@@ -432,7 +432,7 @@ describe('intégrations : clés d’API, webhooks signés, verrouillage sous con
   const post = async (path: string, body: unknown, who: string) => (await fetch(base + path, { method: 'POST', headers: as(who), body: JSON.stringify(body) })).json()
   const view = async (who: string) => (await (await fetch(base + '/api/socle/integrations', { headers: as(who) })).json()).data
   const v1 = async (name: string, key: string, body?: unknown) => {
-    const r = await fetch(base + '/api/v1/' + name + (body === undefined ? '?limit=5' : ''), {
+    const r = await fetch(base + '/api/v1/' + name + (body === undefined && !name.includes('?') ? '?limit=5' : ''), {
       method: body === undefined ? 'GET' : 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body)
@@ -477,6 +477,7 @@ describe('intégrations : clés d’API, webhooks signés, verrouillage sous con
         examples: ['GET sites.list', 'POST sites.save {"name": "Villa"}'],
         dispatch: async (u, name, args: any) => {
           if (name === 'sites.list') return { ok: true, data: await db.query('SELECT id, name FROM sites WHERE company_id = $1 ORDER BY id', [u.company_id]) }
+          if (name === 'sites.get') return { ok: true, data: args }
           if (name === 'sites.save') return { ok: true, data: await db.one('INSERT INTO sites (company_id, name) VALUES ($1, $2) RETURNING id', [u.company_id, String(args?.name ?? '')]) }
           return { ok: false, error: `Appel inconnu : ${name}` }
         },
@@ -539,6 +540,8 @@ describe('intégrations : clés d’API, webhooks signés, verrouillage sous con
     const list = await v1('sites.list', keys.lecture)
     expect(list.status).toBe(200)
     expect(list.json.data).toEqual([{ id: 1, name: 'Villa Ouaga 2000' }])
+    // Arguments d'une lecture GET : nombres et booléens reconnus, codes à zéro initial gardés en texte
+    expect((await v1('sites.get?id=7&ref=0042&montant=12.5&actif=true&nom=Villa', keys.lecture)).json.data).toEqual({ id: 7, ref: '0042', montant: 12.5, actif: true, nom: 'Villa' })
     expect((await v1('sites.save', keys.lecture, { name: 'Interdit' })).status).toBe(403)
     expect((await v1('team.save', keys.ecriture, { full_name: 'Pirate' })).status).toBe(403)
     expect((await v1('sites.list', 'iak_aaaaaaaa_bbbbbbbbbbbbbbbbbbbbbbbbbbbb')).status).toBe(401)
