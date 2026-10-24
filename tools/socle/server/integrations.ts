@@ -504,6 +504,8 @@ export class IntegrationsService {
 
   emit(space: string, event: string, data: unknown) {
     void (async () => {
+      // Aucun webhook encore configuré sur ce serveur : rien à envoyer, et pas de tables créées pour rien
+      if (!this.ready && !(await this.opts.db.one<{ t: string | null }>("SELECT to_regclass('socle_webhooks')::text AS t"))?.t) return
       await this.init()
       const hooks = await this.opts.db.query<any>("SELECT id, url, secret FROM socle_webhooks WHERE space_id = $1 AND active AND ($2 = ANY(events) OR '*' = ANY(events))", [space, event])
       await Promise.all(hooks.map((h) => this.deliver(h, space, event, data)))

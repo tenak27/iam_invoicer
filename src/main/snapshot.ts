@@ -15,8 +15,10 @@ export interface Snapshot {
   tables: Record<string, Record<string, unknown>[]>
 }
 
-/** Propres à chaque base : jamais copiées. Les secrets (mots de passe de messagerie, jetons) ne quittent pas le serveur. */
+/** Propres à chaque base : jamais copiées. Les secrets (mots de passe de messagerie, jetons) ne quittent pas le serveur ;
+ * les tables de la base commune (socle_* : clés d'API, webhooks, verrou) appartiennent à chaque serveur. */
 const SKIP = new Set(['schema_version', 'auth_sessions', 'client_ops', 'secrets'])
+const skipped = (t: string) => SKIP.has(t) || t.startsWith('socle_')
 
 interface Column { name: string; type: string; nullable: boolean; serial: boolean }
 interface Fk { table: string; column: string; parent: string }
@@ -24,7 +26,7 @@ interface Fk { table: string; column: string; parent: string }
 async function describe(db: Db) {
   const tables = (await db.query<{ t: string }>("SELECT table_name AS t FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name"))
     .map((r) => r.t)
-    .filter((t) => !SKIP.has(t))
+    .filter((t) => !skipped(t))
   const cols = await db.query<{ t: string; c: string; d: string; n: string; def: string | null }>(
     "SELECT table_name AS t, column_name AS c, data_type AS d, is_nullable AS n, column_default AS def FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position"
   )
