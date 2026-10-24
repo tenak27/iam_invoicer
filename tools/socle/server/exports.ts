@@ -26,14 +26,19 @@ const json = (res: ServerResponse, status: number, body: unknown) => {
   res.end(JSON.stringify(body))
 }
 
-/** Nom de fichier sûr : lettres (accents compris), chiffres, espaces, tirets, points ; extension .csv. */
+/** Fichiers texte acceptés : tableau pour Excel, données (fichier ENDOS de SANTÉ), document Word (CLOUD). */
+const TYPES: Record<string, string> = { csv: 'text/csv; charset=utf-8', json: 'application/json; charset=utf-8', doc: 'application/msword' }
+
+/** Nom de fichier sûr : lettres (accents compris), chiffres, espaces, tirets, points ; extension .csv, .json ou .doc (.csv sinon). */
 export function exportName(raw: unknown): string {
-  const base = String(raw ?? '')
-    .replace(/\.csv$/i, '')
+  const s = String(raw ?? '')
+  const ext = /\.(csv|json|doc)$/i.exec(s)?.[1].toLowerCase() ?? 'csv'
+  const base = s
+    .replace(/\.(csv|json|doc)$/i, '')
     .replace(/[^\p{L}\p{N} ._-]+/gu, '-')
     .replace(/^[.\s-]+|[.\s-]+$/g, '')
     .slice(0, 80)
-  return `${base || 'export'}.csv`
+  return `${base || 'export'}.${ext}`
 }
 
 export class ExportService {
@@ -79,9 +84,11 @@ export class ExportService {
         res.end('Ce fichier n’est plus disponible : relancez l’export depuis l’application.')
         return true
       }
-      const ascii = f.name.normalize('NFD').replace(/[^\x20-\x7e]/g, '').replace(/"/g, '') || 'export.csv'
+      const ext = f.name.slice(f.name.lastIndexOf('.') + 1)
+      const ascii = f.name.normalize('NFD').replace(/[^\x20-\x7e]/g, '').replace(/"/g, '') || `export.${ext}`
+      // Toujours en pièce jointe, type imposé (nosniff) : jamais affiché comme une page
       res.writeHead(200, {
-        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Type': TYPES[ext] ?? TYPES.csv,
         'Content-Length': f.body.length,
         'Content-Disposition': `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(f.name)}`,
         'Cache-Control': 'no-store',

@@ -23,7 +23,13 @@ export async function saveCsv(name: string, table: Cell[][], env: ExportEnv): Pr
 }
 
 /** CSV déjà prêt (journal comptable calculé par le serveur, par exemple) : même enregistrement que saveCsv. */
-export async function saveCsvText(file: string, content: string, env: ExportEnv): Promise<void> {
+export const saveCsvText = (file: string, content: string, env: ExportEnv) => saveTextFile(file, content, env, 'text/csv;charset=utf-8')
+
+/**
+ * Fichier texte « .csv », « .json » ou « .doc » : enregistré directement sur ordinateur ; sur téléphone,
+ * confié 10 minutes au serveur puis ouvert par le navigateur (un téléchargement direct n'y aboutit pas).
+ */
+export async function saveTextFile(file: string, content: string, env: ExportEnv, type = 'text/plain;charset=utf-8'): Promise<void> {
   if (env.native) {
     const r = await fetch(`${env.server}/api/socle/export`, {
       method: 'POST',
@@ -36,7 +42,7 @@ export async function saveCsvText(file: string, content: string, env: ExportEnv)
     return
   }
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }))
+  a.href = URL.createObjectURL(new Blob([content], { type }))
   a.download = file
   document.body.appendChild(a)
   a.click()

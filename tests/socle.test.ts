@@ -136,6 +136,24 @@ describe('export d’une liste vers l’application téléphone : fichier gardé
     expect(Buffer.from(await file.arrayBuffer()).equals(Buffer.from(content, 'utf8'))).toBe(true)
     expect((await fetch(base + '/api/socle/export/inconnu')).status).toBe(404)
   })
+
+  it('fichier ENDOS (.json) et document Word (.doc) : type imposé, toujours en pièce jointe ; autre extension → .csv', async () => {
+    const keep = async (name: string, content: string) => {
+      const r = await (await fetch(base + '/api/socle/export', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer jeton' }, body: JSON.stringify({ name, content }) })).json()
+      return fetch(base + r.data.url)
+    }
+    const json = await keep('endos-2026-10.json', '{"dataValues":[]}')
+    expect(json.headers.get('content-type')).toBe('application/json; charset=utf-8')
+    expect(json.headers.get('content-disposition')).toMatch(/^attachment; filename="endos-2026-10\.json"/)
+    expect(json.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(await json.text()).toBe('{"dataValues":[]}')
+    const doc = await keep('Compte rendu.doc', '<html><body>Bonjour</body></html>')
+    expect(doc.headers.get('content-type')).toBe('application/msword')
+    expect(doc.headers.get('content-disposition')).toMatch(/^attachment; filename="Compte rendu\.doc"/)
+    const page = await keep('piege.html', '<script>alert(1)</script>')
+    expect(page.headers.get('content-type')).toBe('text/csv; charset=utf-8')
+    expect(page.headers.get('content-disposition')).toMatch(/^attachment; filename="piege\.html\.csv"/)
+  })
 })
 
 describe('notifications : fil des applications installées et abonnements Web Push', () => {
