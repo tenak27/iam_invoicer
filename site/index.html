@@ -1271,6 +1271,44 @@
     .contact-card { padding: 22px 18px; }
     .btn { white-space: normal; text-align: center; }
   }
+
+  /* ── Deux façons de commencer : version démo (fictive, partagée) ou connexion réelle ── */
+  .debut { padding: clamp(48px, 7vw, 96px) 0; }
+  .debut-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 28px); }
+  .debut-card { position: relative; display: grid; align-content: start; gap: 14px; padding: clamp(24px, 3.2vw, 38px); border-radius: 28px; overflow: hidden; }
+  .debut-card :is(h3, p) { margin: 0; }
+  .debut-card h3 { font-size: clamp(1.35rem, 2.4vw, 1.75rem); }
+  .debut-card p { line-height: 1.6; }
+  .debut-card small { display: block; font-size: .84rem; font-weight: 600; opacity: .8; }
+  .debut-tag { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 999px; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .debut-tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .debut-demo { background: #fffaf0; border: 1px solid #f0dfb4; box-shadow: 0 24px 50px -30px rgba(150, 110, 20, .45); }
+  .debut-demo h3 { color: #3a2a05; }
+  .debut-demo p { color: #5b4a24; }
+  .debut-demo small { color: #6d5726; }
+  .debut-demo .debut-tag { background: #fbecc4; color: #8a6409; }
+  .debut-real { background: #0f1b33; border: 1px solid #0f1b33; color: #dbe4f5; box-shadow: 0 24px 50px -28px rgba(15, 27, 51, .7); }
+  .debut-real h3 { color: #fff; }
+  .debut-real p { color: #c4d0e6; }
+  .debut-real small { color: #aebbd5; }
+  .debut-real .debut-tag { background: rgba(255, 255, 255, .12); color: #9fd0ff; }
+  .debut-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .debut-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 12px 24px; border-radius: 999px; font-weight: 800; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease; }
+  .debut-btn:hover { transform: translateY(-2px); }
+  .debut-btn:focus-visible { outline: 3px solid #c9a227; outline-offset: 3px; }
+  .debut-btn svg { flex: none; }
+  .debut-btn-demo { justify-self: start; margin-top: 4px; background: #c9a227; color: #1f1604; box-shadow: 0 14px 28px -14px rgba(160, 120, 20, .9); }
+  .debut-btn-demo:hover { background: #d8b23a; }
+  .debut-btn-main { background: #fff; color: #0f1b33; }
+  .debut-btn-ghost { border: 1px solid rgba(255, 255, 255, .35); color: #fff; }
+  .debut-btn-ghost:hover { background: rgba(255, 255, 255, .08); }
+  @media (max-width: 860px) {
+    .debut-grid { grid-template-columns: 1fr; }
+    .debut-btn, .debut-btn-demo { width: 100%; }
+    .debut-actions { display: grid; }
+  }
+  @media (prefers-reduced-motion: reduce) { .debut-btn { transition: none; } .debut-btn:hover { transform: none; } }
+  .debut-card small a { color: inherit; text-decoration: underline; }
 </style>
 </head>
 <body id="top">
@@ -1291,6 +1329,7 @@
       <a href="#contact">Contact</a>
     </nav>
     <div class="nav-act">
+      <a class="nav-link" href="#commencer" data-demo>Version démo</a>
       <a class="nav-link" href="/app/" data-acces>Se connecter</a>
       <a class="btn btn-cta sm" href="#inscription" data-inscription>Créer mon compte</a>
       <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu"><i data-icon="List"></i></button>
@@ -1311,7 +1350,7 @@
         <p class="lede up" style="--i:3">Devis, factures, caisse et mobile money, stock, dépenses, comptabilité SYSCOHADA et paie : IAM INVOICER réunit toute la gestion des entreprises du Burkina Faso dans un seul logiciel.</p>
         <div class="hero-cta up" style="--i:4">
           <a class="btn btn-cta" id="hero-dl" href="#telecharger" data-magnet><i data-icon="DownloadSimple"></i><span>Télécharger gratuitement</span></a>
-          <a class="btn btn-glass" href="#demo" data-magnet><span class="play"><i data-icon="Play" data-size="14" data-weight="fill"></i></span>Démonstration</a>
+          <a class="btn btn-glass" href="#commencer" data-demo data-magnet><span class="play"><i data-icon="Play" data-size="14" data-weight="fill"></i></span>Version démo</a>
         </div>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -1358,6 +1397,37 @@
       <a class="btn btn-cta" href="#telecharger">Commencer<i data-icon="ArrowRight"></i></a>
     </div>
   </section>
+
+  <!-- ═══ Deux façons de commencer : version démo (fictive, partagée) ou connexion réelle ═══ -->
+  <section class="debut" id="commencer" aria-labelledby="debut-t">
+    <div class="wrap">
+      <div class="head center">
+        <span class="eyebrow">Commencer</span>
+        <h2 id="debut-t">Deux façons de <em>commencer</em></h2>
+        <p>La version démo sert à découvrir, avec une société inventée. La connexion réelle, c'est votre société et vos vraies données.</p>
+      </div>
+      <div class="debut-grid">
+        <article class="debut-card debut-demo">
+          <span class="debut-tag">Version démo</span>
+          <h3>Essayez le logiciel complet, sans compte</h3>
+          <p>Vous ouvrez dans votre navigateur une société fictive déjà remplie : clients, articles et stock, devis, factures certifiées en simulation, encaissements et dépenses. Elle est partagée avec les autres visiteurs et remise à neuf toutes les 3 heures ; aucun e-mail ni SMS n'en part.</p>
+          <a class="debut-btn debut-btn-demo" href="#commencer" data-demo><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path></svg>Ouvrir la version démo</a>
+          <small>Données fictives · aucune inscription · navigateur uniquement · <a href="#demo">ou créez une facture ici même</a></small>
+        </article>
+        <article class="debut-card debut-real">
+          <span class="debut-tag">Connexion réelle</span>
+          <h3>Votre société, vos vraies données</h3>
+          <p>Créez votre société hébergée (30 jours d'essai, sans carte) ou connectez-vous à la vôtre ; vous pouvez aussi installer le logiciel sur Windows, Mac et Android, même sans Internet.</p>
+          <div class="debut-actions">
+            <a class="debut-btn debut-btn-main" href="#inscription" data-inscription><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg>Créer mon compte</a>
+            <a class="debut-btn debut-btn-ghost" href="/app/" data-acces>Se connecter</a>
+          </div>
+          <small>Données réelles · privées · sur tous vos appareils</small>
+        </article>
+      </div>
+    </div>
+  </section>
+
 
   <!-- ═══ Trois étapes + bandeau or ═══ -->
   <section id="etapes">
@@ -2767,6 +2837,32 @@
     }
   })()
 
+</script>
+
+<script>
+  // Version démo : session dans la société fictive partagée, puis ouverture de l'application
+  ;(function () {
+    var busy = false
+    document.querySelectorAll('[data-demo]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault()
+        if (busy) return
+        busy = true
+        var label = a.lastChild && a.lastChild.nodeType === 3 ? a.lastChild : null
+        var before = label ? label.nodeValue : ''
+        if (label) label.nodeValue = 'Préparation de la démonstration…'
+        fetch('/api/demo', { method: 'POST' }).then(function (r) { return r.json() }).then(function (r) {
+          if (!r || !r.ok) throw new Error((r && r.error) || 'Démonstration indisponible pour le moment.')
+          try { localStorage.setItem('t:' + r.data.slug + ':iam.token', r.data.token) } catch (x) {}
+          location.href = r.data.path + '/?demo=1'
+        }).catch(function (err) {
+          busy = false
+          if (label) label.nodeValue = before
+          alert(err.message || String(err))
+        })
+      })
+    })
+  })()
 </script>
 </body>
 </html>

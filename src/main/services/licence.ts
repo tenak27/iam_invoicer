@@ -82,6 +82,9 @@ async function computeStatus(db: Db): Promise<LicenceStatus> {
     await writeSetting(db, 'trial_start', trialStart)
   }
   const contact = [VENDOR.name, VENDOR.phone, VENDOR.email].filter(Boolean).join(' · ')
+  // Société de démonstration du site : tous les modules, sans quotas (données remises à neuf toutes les 3 heures)
+  if ((await readSetting(db, 'demo_mode')) === '1')
+    return { state: 'active', label: 'Démonstration', tier: 'trial', modules: ALL_MODULES, users: 50, seats: 0, expires: null, daysLeft: null, company, licenceId: null, whiteLabel: false, canWrite: true, message: 'Version de démonstration : données fictives, remises à neuf toutes les 3 heures.' }
   const trialLeft = TRIAL_DAYS - daysBetween(trialStart, today)
   const trial = (message: string): LicenceStatus =>
     trialLeft > 0

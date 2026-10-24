@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { installBridge } from './bridge'
+import { DemoNotice } from './components/DemoNotice'
 import { initTheme } from './theme'
 import { initTouch } from './socle/touch'
 import { installMagnet, installReveal, installRipple, installSpotlight, installTilt } from './components/fx'
@@ -23,5 +24,6 @@ installReveal()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
+    <DemoNotice />
   </StrictMode>
 )

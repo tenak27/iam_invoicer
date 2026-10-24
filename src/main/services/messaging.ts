@@ -6,6 +6,7 @@ import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, formatMoney, todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { audit, fail, str, type Ctx } from './context'
+import { refuseInDemo } from './demoMode'
 import { loadDocument } from './documents'
 import { getSecret, getSettings, type CompanySettings } from './settings'
 import { assertPublicHost, outboundRestricted } from '../outbound'
@@ -182,6 +183,7 @@ async function transportFor(db: Db, override?: Partial<SmtpSettings> & { smtp_pa
  * peuvent être testées avant d'être enregistrées.
  */
 export async function verifySmtp(ctx: Ctx, input: { smtp_host?: string; smtp_port?: number; smtp_secure?: boolean; smtp_user?: string; smtp_from_email?: string; smtp_password?: string } = {}) {
+  await refuseInDemo(ctx.db, 'Le serveur d’envoi')
   const override: any = {}
   for (const k of ['smtp_host', 'smtp_user', 'smtp_from_email', 'smtp_password'] as const) if (typeof input?.[k] === 'string' && input[k]) override[k] = str(input[k])
   if (input?.smtp_port) override.smtp_port = Number(input.smtp_port) || 587
@@ -200,6 +202,7 @@ export async function verifySmtp(ctx: Ctx, input: { smtp_host?: string; smtp_por
 
 /** Message de sécurité (code à usage unique) : envoyé sans copie, et son contenu n'est pas conservé au journal. */
 export async function sendSecurityEmail(ctx: Ctx, to: string, subject: string, body: string) {
+  await refuseInDemo(ctx.db, 'L’envoi par e-mail')
   const { transport, from, settings } = await transportFor(ctx.db)
   const entry = { channel: 'email' as const, to, subject: 'Code de sécurité', body: '(contenu non conservé)', kind: 'securite' }
   try {
@@ -222,6 +225,7 @@ export async function sendEmail(
   ctx: Ctx,
   input: { to: string; subject: string; body: string; documentId?: number | null; kind?: string; attachments?: Attachment[] }
 ) {
+  await refuseInDemo(ctx.db, 'L’envoi par e-mail')
   const to = str(input.to)
   const recipients = to.split(/[,;]\s*/).filter(Boolean)
   if (recipients.length === 0 || !recipients.every((r) => EMAIL_RE.test(r))) fail('Adresse e-mail du destinataire invalide.')
@@ -324,6 +328,7 @@ async function smsSend(db: Db, to: string, message: string): Promise<void> {
 }
 
 export async function sendSms(ctx: Ctx, input: { to: string; body: string; documentId?: number | null; kind?: string }) {
+  await refuseInDemo(ctx.db, 'L’envoi par SMS')
   const body = str(input.body)
   if (!body) fail('Le message est vide.')
   if (body.length > 480) fail('Message trop long (480 caractères maximum).')

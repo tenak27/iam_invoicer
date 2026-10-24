@@ -38,6 +38,7 @@ import { AppError, type SessionUser } from '../main/services/context'
 import { issueLicence, listIssued, revokeIssued, vendorKeyAvailable } from '../main/services/licensing'
 import { createToken, resolveToken } from '../main/services/tokens'
 import { setup } from '../main/services/auth'
+import { InvoicerDemo } from './demo'
 import { adminPageHtml } from './adminPage'
 import { createHandler, type ServerOptions } from './app'
 import { SLUG, type TenantManager, type TenantRow } from './tenants'
@@ -56,6 +57,8 @@ export interface CloudOptions {
   rootDb?: Db
   /** Inscription libre : un visiteur crée sa société hébergée (en évaluation) depuis le site. */
   selfSignup?: boolean
+  /** Version de démonstration du site : société fictive partagée, remise à neuf toutes les 3 heures (demo.ts). */
+  demo?: boolean
   /** Réglages communs aux clients (version, application web, CORS). */
   shared: Omit<ServerOptions, 'db' | 'siteRoot' | 'downloadsDir' | 'publicPath' | 'setupCode'>
 }
@@ -106,6 +109,10 @@ export function createCloudHandler(opts: CloudOptions): Handler {
   // Inscriptions : une base PostgreSQL chacune, donc limitées par adresse et sur la journée
   const signupsByIp = new Limiter(3, 60 * 60_000)
   const signupsByDay = new Limiter(40, 24 * 60 * 60_000)
+  // Version de démonstration : une société fictive partagée (une session par visiteur)
+  const demo = opts.demo ? new InvoicerDemo(manager, (slug) => handlers.delete(slug)) : null
+  demo?.start()
+  const demosByIp = new Limiter(10, 60 * 60_000)
 
   const ipOf = (req: IncomingMessage) => clientIp(req, opts.shared.trustProxy)
 
@@ -272,6 +279,20 @@ export function createCloudHandler(opts: CloudOptions): Handler {
         signupsByDay.hit('jour')
         console.log(`Inscription en ligne : société « ${data.name} » (${data.slug})`)
         return json(res, 200, { ok: true, data })
+      }
+      if (path === '/api/demo') {
+        securityHeaders(req, res)
+        if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Méthode non autorisée.' })
+        if (!demo) return json(res, 404, { ok: false, error: 'Version de démonstration indisponible sur ce serveur.' })
+        const ip = ipOf(req)
+        if (demosByIp.blocked(ip)) return json(res, 429, { ok: false, error: 'Trop de démonstrations ouvertes : réessayez dans une heure.' })
+        demosByIp.hit(ip)
+        try {
+          return json(res, 200, { ok: true, data: await demo.session(String(req.headers['user-agent'] ?? '')) })
+        } catch (e: any) {
+          console.error('[démonstration]', e)
+          return json(res, 503, { ok: false, error: 'Démonstration en cours de préparation : réessayez dans une minute.' })
+        }
       }
       // Console de l'éditeur : page seule, toutes les données passent par /api/admin/
       if (path === '/admin') {

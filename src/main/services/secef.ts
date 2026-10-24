@@ -14,6 +14,7 @@ import { randomBytes } from 'node:crypto'
 import QRCode from 'qrcode'
 import type { Db } from '../db'
 import { fail, type Ctx } from './context'
+import { isDemoDb } from './demoMode'
 import { getSecret, getSettings } from './settings'
 import { assertPublicHost, outboundRestricted } from '../outbound'
 
@@ -29,6 +30,8 @@ const group4 = (s: string) => s.match(/.{1,4}/g)!.join('-')
 
 export async function certify(db: Db, ctx: Ctx, docId: number): Promise<void> {
   const s = await getSettings(db)
+  // Société de démonstration : jamais d'appel à l'administration fiscale, au plus une simulation
+  if (s.secef_mode === 'api' && (await isDemoDb(db))) s.secef_mode = 'simulation'
   if (!s.secef_mode) return
   const doc = await db.one(
     `SELECT d.*, p.name AS party_name, p.tax_id AS party_ifu, p.address AS party_address, p.phone AS party_phone
