@@ -29,6 +29,9 @@ a, button, summary, .btn, [role='button'] { touch-action: manipulation; }
 .btn:active:not([aria-disabled='true']) { transform: scale(.97); }
 .btn-cta::after { transition: transform .7s var(--ease); }
 
+/* ── Accueil : les mots qui tournent rétrécissent juste assez pour tenir dans la colonne (premium.js) ── */
+.rot span { font-size: calc(.86em * var(--rot-fit, 1)); }
+
 /* ── Barre d'informations sous l'accueil : deux lignes équilibrées plutôt qu'un texte coupé par « … » ── */
 .hero-bar b { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; text-wrap: balance; }
 

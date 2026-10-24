@@ -22,6 +22,28 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit)
   addEventListener('load', fit)
 
+  // ── Accueil : les mots qui tournent (#rot) tiennent dans la colonne du titre. La phrase la plus longue
+  //    fixe une taille commune (aucun saut d'une phrase à l'autre) ; sur ordinateur, l'illustration
+  //    empiète de quelques pixels sur la colonne, d'où la marge ──
+  var rot = document.getElementById('rot')
+  if (rot) {
+    var fitRot = function () {
+      rot.style.removeProperty('--rot-fit')
+      var title = rot.closest('h1') || rot.parentElement
+      var room = title.clientWidth - (innerWidth > 1040 ? 28 : 4)
+      var widest = 0
+      all('span', rot).forEach(function (s) {
+        var range = document.createRange()
+        range.selectNodeContents(s)
+        widest = Math.max(widest, range.getBoundingClientRect().width)
+      })
+      if (room > 0 && widest > room) rot.style.setProperty('--rot-fit', (room / widest).toFixed(3))
+    }
+    fitRot()
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRot)
+    addEventListener('resize', fitRot)
+  }
+
   // ── Menu : la section à l'écran est signalée (aria-current) ; sur ordinateur, une pastille glisse
   //    d'un lien à l'autre (elle apparaît sur place, sans venir du bord, quand elle était cachée) ──
   var menu = document.getElementById('menu')
