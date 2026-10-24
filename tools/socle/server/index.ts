@@ -5,18 +5,21 @@
 //   GET /telechargements/…    installateurs, avec reprise (quand nginx ne les sert pas lui-même)
 //   /api/socle/…              notifications : fil des applications installées, Web Push (notify.ts)
 //   /api/socle/demo           version de démonstration (demo.ts)
+//   /api/socle/licence        licence de l'espace client, formules et paiement (licence.ts)
 //
 // Branchement dans app.ts, avant les autres routes :  if (await socle(req, res, path)) return
 // Notifier depuis un service :  import { notify } from '../socle' ; notify([userId], { title, body, url })
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { ConsoleAgent } from './agent'
 import { DemoService, type DemoSeed } from './demo'
+import { LicenceService, type LicenceConfig } from './licence'
 export { purgeRows, spaceDemo, userDemo } from './demo'
 import { listDownloads, serveDownload } from './downloads'
 import { Notifier, type Notice, type SocleDb } from './notify'
 
 export type { Notice } from './notify'
 export type { DemoSeed } from './demo'
+export type { LicenceConfig, LicenceState } from './licence'
 
 export interface SocleOptions {
   /** Nom affiché de l'application (IAM BTP, Faso Artisans…). */
@@ -31,9 +34,11 @@ export interface SocleOptions {
   webPush?: boolean
   /** Version de démonstration (navigateur) : espaces fictifs séparés, effacés après 24 heures. */
   demo?: { seed: DemoSeed; token: (userId: number) => Promise<string> }
+  /** Licences vendues par la console : limites appliquées, formules et paiement, guide après paiement. */
+  licence?: LicenceConfig
 }
 
-export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null }
+export type SocleHandler = ((req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>) & { notifier: Notifier | null; agent: ConsoleAgent | null; licence: LicenceService | null }
 
 let current: Notifier | null = null
 
@@ -52,12 +57,14 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   // Console d'IAM Technology : mesures et journal, seulement avec CONSOLE_TOKEN
   const agent = opts.db && process.env.CONSOLE_TOKEN ? new ConsoleAgent({ db: opts.db, app: opts.app, version: opts.version, token: process.env.CONSOLE_TOKEN }) : null
   const demo = opts.demo && opts.resolveUser ? new DemoService({ seed: opts.demo.seed, token: opts.demo.token, resolveUser: opts.resolveUser }) : null
+  const licence = opts.licence && opts.db && opts.resolveUser ? new LicenceService({ db: opts.db, app: opts.app, config: opts.licence, resolveUser: opts.resolveUser }) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
     agent?.watch(res)
     if (demo && path.startsWith('/api/socle/demo')) {
       const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || req.socket.remoteAddress || ''
       if (await demo.handle(req, res, path, ip)) return true
     }
+    if (licence && path.startsWith('/api/socle/licence')) return licence.handle(req, res, path)
     if (path.startsWith('/api/socle/console/')) {
       if (agent) return agent.handle(req, res, path)
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' })
@@ -77,5 +84,6 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   } as SocleHandler
   socle.notifier = notifier
   socle.agent = agent
+  socle.licence = licence
   return socle
 }

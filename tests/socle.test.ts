@@ -303,3 +303,113 @@ describe('version de démonstration : espaces séparés, nettoyage complet, jama
     expect(await count('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id <> 1')).toBe(0)
   })
 })
+
+describe('licences : essai, version gratuite, formule payée, limites appliquées', () => {
+  const pg = new PGlite()
+  const db = {
+    query: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows,
+    one: async <T = any>(sql: string, params?: unknown[]) => (await pg.query<T>(sql, params as any[])).rows[0]
+  }
+  class AppError extends Error {}
+  let server: Server
+  let base = ''
+  let socle: ReturnType<typeof createSocle>
+  const users: Record<string, { id: number; company_id: number; role: string }> = {}
+
+  beforeAll(async () => {
+    await pg.exec(`
+      CREATE TABLE companies (id SERIAL PRIMARY KEY, name TEXT NOT NULL, demo BOOLEAN NOT NULL DEFAULT FALSE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+      CREATE TABLE users (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id), username TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'admin');
+      CREATE TABLE sites (id SERIAL PRIMARY KEY, company_id INT NOT NULL REFERENCES companies(id), name TEXT NOT NULL);
+      INSERT INTO companies (name, created_at) VALUES ('En essai', now()), ('Ancienne', now() - interval '90 days'), ('Payée', now() - interval '90 days'), ('Démo', now());
+      UPDATE companies SET demo = TRUE WHERE name = 'Démo';
+      INSERT INTO users (company_id, username, role) VALUES (1, 'essai@x.bf', 'admin'), (2, 'ancienne@x.bf', 'admin'), (3, 'payee@x.bf', 'admin'), (4, 'demo', 'admin'), (2, 'chef@x.bf', 'chef');
+      INSERT INTO sites (company_id, name) SELECT 2, 'Chantier ' || g FROM generate_series(1, 3) g;
+      INSERT INTO sites (company_id, name) SELECT 3, 'Chantier ' || g FROM generate_series(1, 3) g;
+    `)
+    for (const u of await db.query<{ id: number; company_id: number; role: string; username: string }>('SELECT * FROM users')) users[u.username] = u
+    // Console injoignable : le paiement en ligne doit répondre clairement
+    process.env.CONSOLE_URL = 'http://127.0.0.1:9'
+    socle = createSocle({
+      app: 'Test',
+      version: '1.0.0',
+      db,
+      resolveUser: async (t) => Object.values(users).find((u) => `jeton-${u.id}` === t) ?? null,
+      webPush: false,
+      licence: {
+        spaces: 'companies',
+        spaceOf: (u) => u.company_id,
+        canBuy: (u) => u.role === 'admin',
+        quotas: { chantiers: { label: 'chantiers', sql: 'SELECT COUNT(*)::int AS n FROM sites WHERE company_id = $1' }, utilisateurs: { label: 'utilisateurs', sql: 'SELECT COUNT(*)::int AS n FROM users WHERE company_id = $1' } },
+        free: { chantiers: 3, utilisateurs: 2 },
+        calls: { 'sites.save': { quota: 'chantiers', when: (a) => !a?.id }, 'team.save': { quota: 'utilisateurs', when: (a) => !a?.id } },
+        fail: (m) => {
+          throw new AppError(m)
+        }
+      }
+    })
+    server = createServer(async (rq, rs) => {
+      const path = new URL(rq.url ?? '/', 'http://x').pathname
+      if (!(await socle(rq, rs, path))) {
+        rs.writeHead(404)
+        rs.end()
+      }
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+    base = `http://127.0.0.1:${(server.address() as { port: number }).port}`
+    // Licence payée poussée par la console : 10 chantiers, utilisateurs illimités
+    await db.query(`CREATE TABLE IF NOT EXISTS socle_licences (space_id TEXT PRIMARY KEY, plan TEXT NOT NULL, status TEXT NOT NULL, limits JSONB NOT NULL DEFAULT '{}', ends_on DATE, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), seen_guide BOOLEAN NOT NULL DEFAULT FALSE)`)
+    await db.query(`INSERT INTO socle_licences (space_id, plan, status, limits, ends_on) VALUES ('3', 'pro', 'active', '{"chantiers": 10, "utilisateurs": 0}', CURRENT_DATE + 30)`)
+  })
+  afterAll(async () => {
+    await new Promise((r) => server.close(r))
+    await pg.close()
+  })
+
+  const get = async (who: string) => (await (await fetch(base + '/api/socle/licence', { headers: { Authorization: `Bearer jeton-${users[who].id}` } })).json()).data
+
+  it('états : essai sans limite, version gratuite limitée, formule payée, démonstration', async () => {
+    const essai = await get('essai@x.bf')
+    expect(essai.state).toMatchObject({ status: 'essai' })
+    expect(essai.state.trial_left).toBeGreaterThan(28)
+    expect(essai.state.usage.every((u: any) => u.limit === null)).toBe(true)
+    const gratuit = await get('ancienne@x.bf')
+    expect(gratuit.state.status).toBe('gratuit')
+    expect(gratuit.state.usage).toEqual([{ key: 'chantiers', label: 'chantiers', used: 3, limit: 3 }, { key: 'utilisateurs', label: 'utilisateurs', used: 2, limit: 2 }])
+    expect(gratuit.can_buy).toBe(true)
+    expect((await get('chef@x.bf')).can_buy).toBe(false)
+    const payee = await get('payee@x.bf')
+    expect(payee.state).toMatchObject({ status: 'active', plan: 'pro' })
+    expect(payee.state.usage).toEqual([{ key: 'chantiers', label: 'chantiers', used: 3, limit: 10 }, { key: 'utilisateurs', label: 'utilisateurs', used: 1, limit: null }])
+    expect((await get('demo')).state.status).toBe('demo')
+    // Console injoignable (pas de jeton ici) : pas de formules en ligne
+    expect(gratuit.online).toBe(false)
+  })
+
+  it('limites : création refusée au-delà, modification toujours possible', async () => {
+    const lic = socle.licence!
+    await expect(lic.enforce(users['ancienne@x.bf'], 'sites.save', { name: 'Nouveau' })).rejects.toThrow(/limitée à 3 chantiers/)
+    await expect(lic.enforce(users['ancienne@x.bf'], 'sites.save', { id: 1, name: 'Renommé' })).resolves.toBeUndefined()
+    await expect(lic.enforce(users['ancienne@x.bf'], 'team.save', { username: 'nouveau' })).rejects.toThrow(/utilisateurs/)
+    await expect(lic.enforce(users['payee@x.bf'], 'sites.save', { name: 'Nouveau' })).resolves.toBeUndefined()
+    await expect(lic.enforce(users['payee@x.bf'], 'team.save', { username: 'nouveau' })).resolves.toBeUndefined()
+    await expect(lic.enforce(users['essai@x.bf'], 'sites.save', { name: 'Nouveau' })).resolves.toBeUndefined()
+    await expect(lic.enforce(users['ancienne@x.bf'], 'autre.appel', {})).resolves.toBeUndefined()
+    // Licence expirée : retour aux limites gratuites
+    await db.query("UPDATE socle_licences SET ends_on = CURRENT_DATE - 1 WHERE space_id = '3'")
+    expect((await get('payee@x.bf')).state.status).toBe('expiree')
+    await expect(lic.enforce(users['payee@x.bf'], 'sites.save', { name: 'Nouveau' })).rejects.toThrow(/expiré/)
+    await db.query("UPDATE socle_licences SET ends_on = CURRENT_DATE + 30 WHERE space_id = '3'")
+  })
+
+  it('paiement : réservé à l’administrateur, message clair sans console ; guide vu', async () => {
+    const pay = async (who: string) => (await fetch(base + '/api/socle/licence/checkout', { method: 'POST', headers: { Authorization: `Bearer jeton-${users[who].id}`, 'Content-Type': 'application/json' }, body: '{"plan":"pro"}' })).json()
+    expect((await pay('chef@x.bf')).error).toMatch(/administrateur/)
+    expect((await pay('demo')).error).toMatch(/démonstration/)
+    expect((await pay('ancienne@x.bf')).error).toMatch(/indisponible|IAM Technology|préparé/)
+    expect((await get('payee@x.bf')).state.seen_guide).toBe(false)
+    await fetch(base + '/api/socle/licence/guide', { method: 'POST', headers: { Authorization: `Bearer jeton-${users['payee@x.bf'].id}`, 'Content-Type': 'application/json' }, body: '{}' })
+    expect((await get('payee@x.bf')).state.seen_guide).toBe(true)
+    expect((await fetch(base + '/api/socle/licence')).status).toBe(401)
+  })
+})

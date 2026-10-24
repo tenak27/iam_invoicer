@@ -1,7 +1,9 @@
 // Avis de la base commune des applications IAM (source iam-erp/tools/socle ; ne pas modifier ici) :
-// version de démonstration, mise à jour disponible, et proposition d'activer les notifications.
+// version de démonstration, mise à jour disponible, proposition d'activer les notifications, retour du
+// paiement d'une licence et guide d'utilisation.
 import { useEffect, useState } from 'react'
 import { DemoBanner } from './demo'
+import { LicenceNotices, type GuideStep } from './licence'
 import { UpdateNotice } from './update'
 import { enableNotifications, notificationState, watchNotifications, type NotifOptions } from './notifications'
 
@@ -65,10 +67,11 @@ export function NotifyPrompt(o: NotifOptions) {
   )
 }
 
-export function SocleNotices(props: { server: () => string; open: (url: string) => unknown; token: () => string | null; setToken?: (t: string | null) => void; app: string }) {
+export function SocleNotices(props: { server: () => string; open: (url: string) => unknown; token: () => string | null; setToken?: (t: string | null) => void; app: string; guide?: GuideStep[] }) {
   return (
     <div className="socle-stack">
       {props.setToken && <DemoBanner server={props.server} token={props.token} setToken={props.setToken} />}
+      {props.guide && <LicenceNotices server={props.server} token={props.token} app={props.app} guide={props.guide} />}
       <NotifyPrompt server={props.server} token={props.token} app={props.app} />
       <UpdateNotice server={props.server} open={props.open} />
     </div>

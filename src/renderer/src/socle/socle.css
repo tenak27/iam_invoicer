@@ -57,3 +57,40 @@ html.lowend.touch * { -webkit-backdrop-filter: none !important; backdrop-filter:
 .socle-demo-pill .socle-update-dot { background: #c9a227; box-shadow: none; animation: none; }
 .socle-demo-boot { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; gap: 12px; font: 600 1rem/1.4 system-ui, sans-serif; color: #0f1b33; background: #f5f7fb; }
 @media (prefers-color-scheme: dark) { .socle-demo-boot { color: #e8edf7; background: #0b1324; } }
+
+/* ── Licence : état, consommation, formules ; guide après paiement ── */
+.socle-lic { display: grid; gap: 14px; }
+.socle-lic-head { display: grid; gap: 6px; }
+.socle-lic-head p { margin: 0; color: var(--muted, #4a5875); }
+.socle-lic-chip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: .82rem; font-weight: 800; background: #eef2f8; color: #34405a; }
+.socle-lic-chip::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.socle-lic-chip.tone-good { background: #e3f6ec; color: #13744a; }
+.socle-lic-chip.tone-info { background: #e5efff; color: #1d4fb8; }
+.socle-lic-chip.tone-bad { background: #fde8e8; color: #b42318; }
+.socle-lic-usage { display: grid; gap: 10px; }
+.socle-lic-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; }
+.socle-lic-name { font-weight: 700; }
+.socle-lic-count { font-variant-numeric: tabular-nums; color: var(--muted, #4a5875); font-size: .9rem; }
+.socle-lic-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: #e9edf5; overflow: hidden; }
+.socle-lic-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2f80ed, #1b6ef3); }
+.socle-lic-row.full .socle-lic-bar i { background: linear-gradient(90deg, #f97316, #dc2626); }
+.socle-lic-row.full .socle-lic-count { color: #b42318; font-weight: 700; }
+.socle-lic-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.socle-lic-offer { display: grid; gap: 8px; align-content: start; padding: 16px; border-radius: 18px; border: 1px solid rgba(15, 27, 51, .1); background: rgba(255, 255, 255, .6); }
+.socle-lic-offer.current { border-color: #13744a; box-shadow: 0 0 0 3px rgba(19, 116, 74, .15); }
+.socle-lic-offer ul { margin: 0; padding-left: 18px; color: var(--muted, #4a5875); font-size: .9rem; }
+.socle-lic-price { font-size: 1.25rem; font-weight: 800; }
+.socle-lic-price small { font-size: .82rem; font-weight: 600; color: var(--muted, #4a5875); }
+.socle-lic-error { margin: 0; padding: 10px 12px; border-radius: 12px; background: #fde8e8; color: #b42318; }
+.socle-lic-note { margin: 0; font-size: .85rem; }
+.socle-guide { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; padding: 16px; background: rgba(9, 16, 32, .55); pointer-events: auto; animation: socle-up .3s ease-out; }
+.socle-guide-box { width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow: auto; display: grid; gap: 14px; padding: 24px; border-radius: 24px; background: #fff; color: #0f1b33; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .5); }
+.socle-guide-box h2 { margin: 0; font-size: 1.4rem; }
+.socle-guide-box ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+.socle-guide-box li { display: grid; gap: 2px; }
+.socle-guide-box li span { color: #4a5875; }
+.socle-guide-help { margin: 0; font-size: .88rem; color: #4a5875; }
+@media (prefers-color-scheme: dark) {
+  .socle-lic-offer { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .12); }
+  .socle-lic-bar { background: rgba(255, 255, 255, .12); }
+}
