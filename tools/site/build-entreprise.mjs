@@ -8,6 +8,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 import { finishSite } from './premium.mjs'
+import { writeGammeIcons } from './gamme.mjs'
 
 // « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
 // « node tools/site/build-entreprise.mjs btp » : site d'IAM BTP (site-btp/ → out/site-btp)
@@ -321,6 +322,7 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
 // Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
-html = await finishSite(html.replace(/\r\n?/g, '\n'))
+html = await finishSite(html.replace(/\r\n?/g, '\n'), ENTREPRISE ? 'technology' : V.dir.replace('site-', ''))
+await writeGammeIcons(out)
 writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
 console.log(`Site construit dans ${out}`)

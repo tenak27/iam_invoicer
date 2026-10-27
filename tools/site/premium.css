@@ -169,6 +169,63 @@ summary::after { transition: transform .3s var(--ease); }
 .nav.compact .nav-act { margin-left: auto; }
 .nav.compact .menu-ind { display: none; }
 
+/* ── La gamme (gamme.mjs) : bouton « Nos logiciels », panneau, connexion sur téléphone, menu replié ── */
+.nav-in { position: relative; }
+.apps-toggle, .nav-login { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .14); color: inherit; cursor: pointer; transition: background-color .2s ease, transform 160ms var(--ease); }
+.nav.solid :is(.apps-toggle, .nav-login) { background: #eef3f9; }
+.apps-toggle:hover, .nav-login:hover { background: rgba(var(--p-rgb), .14); }
+.apps-toggle:active, .nav-login:active { transform: scale(.94); }
+.nav .apps-toggle[aria-expanded='true'] { background: var(--navy, var(--p-dark)); color: #fff; }
+.nav-login { display: none; }
+@media (max-width: 560px) { .nav-login { display: inline-grid; } }
+/* Panneau : il part de son bouton (en haut à droite), court et sans rebond */
+.gamme { position: fixed; z-index: 60; top: 90px; right: 16px; width: min(620px, calc(100vw - 24px)); padding: 16px; border-radius: 24px; background: #fff; color: var(--ink); box-shadow: 0 30px 70px -24px rgba(var(--shadow-rgb), .45), 0 0 0 1px rgba(var(--shadow-rgb), .06); transform-origin: calc(100% - 70px) -8px; animation: gamme-in .18s var(--ease); }
+.gamme[hidden], .gamme-scrim { display: none; }
+@keyframes gamme-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+.gamme-t { margin: 2px 6px 10px; color: var(--muted); font-size: .76rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.gamme-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.gamme-grid li { position: relative; display: flex; align-items: center; border-radius: 16px; transition: background-color .15s ease; }
+.gamme-grid li:hover { background: var(--soft, #f3f8ff); }
+.gamme-grid li.here { background: rgba(var(--p-rgb), .07); }
+.gamme-app { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 8px 6px 8px 8px; min-height: 56px; color: var(--ink); text-decoration: none; }
+.gamme-app img { flex: none; width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 6px 14px -8px rgba(var(--shadow-rgb), .55); }
+.gamme-app span { min-width: 0; display: grid; }
+.gamme-app b { font-size: .9rem; letter-spacing: -.01em; }
+.gamme-app small { color: var(--muted); font-size: .76rem; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.gamme-open { flex: none; display: grid; place-items: center; width: 36px; height: 36px; margin-right: 6px; border-radius: 50%; color: var(--p-dark); background: rgba(var(--p-rgb), .08); opacity: .75; transition: opacity .15s ease, background-color .15s ease; }
+.gamme-grid li:hover .gamme-open, .gamme-open:focus-visible { opacity: 1; }
+.gamme-open:hover { background: rgba(var(--p-rgb), .16); }
+.gamme-all { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; min-height: 44px; border-radius: 14px; background: var(--soft, #f3f8ff); color: var(--p-dark); font-weight: 700; font-size: .9rem; text-decoration: none; }
+@media (max-width: 560px) {
+  /* Sur téléphone : une feuille qui monte du bas, sur un voile qui reçoit le toucher (et la ferme) */
+  .gamme { position: fixed; top: auto !important; bottom: 0; left: 0; right: 0 !important; width: auto; max-height: 82vh; overflow-y: auto; overscroll-behavior: contain; border-radius: 26px 26px 0 0; padding: 18px 14px calc(18px + env(safe-area-inset-bottom)); animation: gamme-up .34s var(--ease-drawer); }
+  .gamme-scrim:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 59; background: rgba(8, 16, 42, .45); animation: gamme-fade .25s ease; }
+  @keyframes gamme-fade { from { opacity: 0; } }
+  .gamme-grid { grid-template-columns: 1fr; }
+  @keyframes gamme-up { from { transform: translateY(100%); } }
+}
+/* Menu des sections : « Télécharger » avec son icône */
+.menu a.menu-dl { gap: 7px; }
+.menu a.menu-dl svg { flex: none; }
+/* Menu replié : les vrais boutons (Télécharger, Version démo, Se connecter) et la gamme */
+.menu-extra { display: none; }
+@media (max-width: 1040px) {
+  .menu .menu-extra { display: grid; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .menu .menu-extra .btn { justify-content: center; min-height: 48px; padding: 10px 18px; border-radius: 16px; }
+}
+.nav.compact .menu .menu-extra { display: grid; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.menu .menu-extra .btn-ghost { background: var(--soft, #f3f8ff); color: var(--ink); border-color: transparent; }
+.menu-gamme { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 0; border-radius: 16px; background: transparent; color: var(--p-dark); font: inherit; font-weight: 700; cursor: pointer; }
+/* Pied de page : toute la gamme */
+.gamme-band { padding: 8px 0 34px; margin-bottom: 34px; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+.gamme-band h4 { color: #fff; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 14px; }
+.gamme-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.gamme-chip { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px 8px 8px; border-radius: 16px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .86); font-size: .86rem; font-weight: 700; white-space: nowrap; text-decoration: none; transition: background-color .2s ease, transform .3s var(--ease); }
+.gamme-chip img { flex: none; width: 32px; height: 32px; border-radius: 10px; }
+.gamme-chip:hover { background: rgba(255, 255, 255, .12); transform: translateY(-2px); color: #fff; }
+.gamme-chip.here { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .3); color: #fff; }
+@media (max-width: 560px) { .gamme-row { grid-template-columns: 1fr 1fr; } .gamme-chip { font-size: .8rem; } }
+
 /* ── Menu : la section lue est signalée (premium.js) ; sur ordinateur, une pastille glisse d'un lien à
       l'autre (ease-in-out : un élément déjà à l'écran qui se déplace) ── */
 .menu-ind { display: none; }
@@ -202,6 +259,8 @@ summary::after { transition: transform .3s var(--ease); }
   .btn:active:not([aria-disabled='true']), .card:active, .tile:active, .tier:active, .dl:active, .step:active, .chips button:active { transform: none; }
   .prix-card:hover, .prix-card:active, .dl-card:hover, .dl-card:active, .fil .step:hover { transform: none; }
   .fil .steps::before { animation: none; transform: none; }
+  .gamme { animation: none !important; }
+  .gamme-chip:hover { transform: none; }
   .menu-ind { transition: opacity .2s ease; }
   .faq details::details-content { transition: none; }
   .vit-screens img { filter: none; transform: none; transition: opacity .3s ease; }

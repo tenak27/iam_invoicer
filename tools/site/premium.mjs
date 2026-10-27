@@ -4,13 +4,17 @@
 import { readFileSync } from 'node:fs'
 import postcss from 'postcss'
 import config from '../socle/build/postcss.config.mjs'
+import { injectGamme } from './gamme.mjs'
 
 const premium = readFileSync(new URL('./premium.css', import.meta.url), 'utf8')
 const behaviours = readFileSync(new URL('./premium.js', import.meta.url), 'utf8').replace(/\r\n?/g, '\n')
 
-/** Ajoute la finition à la fin du dernier <style> de l'en-tête et les comportements communs (premium.js)
- *  en fin de page, puis conditionne les survols de chaque <style>. */
-export async function finishSite(html) {
+/** Ajoute la gamme d'IAM Technology (gamme.mjs ; key : le site visité), la finition à la fin du dernier
+ *  <style> de l'en-tête et les comportements communs (premium.js) en fin de page, puis conditionne les
+ *  survols de chaque <style>. */
+export async function finishSite(html, key) {
+  if (!key) throw new Error('finishSite : clé du site attendue (invoicer, btp…, technology)')
+  html = injectGamme(html, key)
   const head = html.indexOf('</head>')
   const last = html.lastIndexOf('</style>', head)
   if (last < 0) throw new Error('Aucun <style> dans l’en-tête du site')

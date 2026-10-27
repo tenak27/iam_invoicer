@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 import { build } from 'esbuild'
 import { finishSite } from './premium.mjs'
+import { writeGammeIcons } from './gamme.mjs'
 
 const out = 'out/site'
 rmSync(out, { recursive: true, force: true })
@@ -47,6 +48,8 @@ html = html.replace(/<i data-icon="([A-Za-z]+)"(?: data-size="(\d+)")?(?: data-w
 })
 if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', '))
 // Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
-html = await finishSite(html)
+html = await finishSite(html, 'invoicer')
+// Icônes de la gamme (liste des logiciels de la barre du haut et du pied de page)
+await writeGammeIcons(out)
 writeFileSync(`${out}/index.html`, html)
 console.log(`Site construit dans ${out}`)
