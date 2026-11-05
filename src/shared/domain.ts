@@ -136,6 +136,10 @@ export const DOC_TYPES: Record<DocType, DocTypeInfo> = {
 /** Modèles de mise en page des documents (devis, factures, bons) : même contenu, habillage différent. */
 export const DOC_LAYOUTS = [
   { id: 'moderne', label: 'Moderne', hint: 'Liseré et en-têtes à la couleur de la société.' },
+  { id: 'entreprise', label: 'Entreprise', hint: 'En-tête plein, bande d’informations, émetteur et client côte à côte.' },
+  { id: 'prestige', label: 'Prestige', hint: 'Centré, titres à empattements et filets dorés.' },
+  { id: 'epure', label: 'Épuré', hint: 'Grand titre, grille nette et filets fins : très lisible.' },
+  { id: 'contraste', label: 'Contraste', hint: 'En-tête et tableau anthracite, total en bloc sombre.' },
   { id: 'bandeau', label: 'Bandeau', hint: 'En-tête plein en couleur, blocs teintés.' },
   { id: 'elegant', label: 'Élégant', hint: 'Titres à empattements, filets fins, beaucoup d’air.' },
   { id: 'classique', label: 'Classique', hint: 'Sobre, en-têtes gris anthracite.' },

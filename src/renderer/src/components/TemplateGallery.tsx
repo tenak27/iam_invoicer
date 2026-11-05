@@ -6,6 +6,7 @@ import { CheckCircle, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { DOC_LAYOUTS, type DocLayout } from '@shared/domain'
 import { api } from '../api'
 import { Modal } from './ui'
+import { FitFrame } from './FitFrame'
 
 // Feuille A4 à 96 points par pouce : la vignette en est une réduction exacte
 const SHEET = { w: 794, h: 1123 }
@@ -68,7 +69,7 @@ export function TemplateGallery({ value, color, options, onChange }: { value: Do
       {zoom && (
         <Modal wide title={`Modèle ${DOC_LAYOUTS.find((l) => l.id === zoom)!.label}`} onClose={() => setZoom(null)}
           footer={<><button className="btn" onClick={() => setZoom(null)}>Fermer</button><button className="btn btn-primary" onClick={() => { onChange(zoom); setZoom(null) }}>Choisir ce modèle</button></>}>
-          <div className="preview-frame a4"><iframe title="Aperçu du modèle" srcDoc={html[zoom]} sandbox="" /></div>
+          <div className="preview-frame fit a4">{html[zoom] ? <FitFrame html={html[zoom]!} width={SHEET.w} title="Aperçu du modèle" /> : null}</div>
         </Modal>
       )}
     </>

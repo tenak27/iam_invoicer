@@ -42,7 +42,7 @@ export function integrationsConfig(db: Db, dispatch: IntegrationsConfig['dispatc
     log: (u, details) => audit(db, { db, user: u }, 'integrations', 'integrations', null, details),
     dispatch,
     events: EVENTS,
-    read: /^(parties\.(list|get|options)|products\.(list|categories)|documents\.(list|get)|payments\.list|stock\.(movements|inventory|valuation|warehouses|byWarehouse|transfers|lots|trace)|reports\.(dashboard|sales)|cash\.(current|history|detail)|accounting\.(accounts|balanceSheet|entries|ledger|balance|income)|declarations\.month|crm\.(list|get|agenda|pipeline|clients)|projects\.(list|get)|assets\.list|expenses\.(list|get)|requests\.(list|get)|budget\.(get|forecasts)|recurring\.(list|upcoming)|taxes\.list)$/,
+    read: /^(parties\.(list|get|options)|products\.(list|categories)|documents\.(list|get|searchDesignations)|payments\.list|stock\.(movements|inventory|valuation|warehouses|byWarehouse|transfers|lots|trace)|reports\.(dashboard|sales)|cash\.(current|history|detail)|accounting\.(accounts|balanceSheet|entries|ledger|balance|income)|declarations\.month|crm\.(list|get|agenda|pipeline|clients)|projects\.(list|get)|assets\.list|expenses\.(list|get)|requests\.(list|get)|budget\.(get|forecasts)|recurring\.(list|upcoming)|taxes\.list)$/,
     // Émission de licences, exercices, messages et signatures (envois), imports, assistant : jamais par une clé
     forbidden: /^(licensing|fiscal|fiscalGuard|messages|signatures|imports|assistant)\.|^documents\.purge$|^recurring\.runDue$/,
     triggers: {

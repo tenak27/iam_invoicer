@@ -8,6 +8,7 @@ import { DownloadSimple, FilePdf, FileText, Printer, Receipt } from '@phosphor-i
 import { api, run, unwrap } from '../api'
 import { Loading, Modal } from './ui'
 import { PdfPages } from './PdfPages'
+import { A4_WIDTH, FitFrame } from './FitFrame'
 
 /** `duplicata` : réédition d'un document déjà établi (tampon et mention DUPLICATA sur l'aperçu, le PDF et l'impression). */
 export function DocumentPreview({ id, onClose, ticket = false, duplicata = false }: { id: number; onClose: () => void; ticket?: boolean; duplicata?: boolean }) {
@@ -63,8 +64,9 @@ export function DocumentPreview({ id, onClose, ticket = false, duplicata = false
           <PdfPages data={view.pdf} />
         </div>
       ) : (
-        <div className={`preview-frame ${format}`}>
-          <iframe title="Aperçu du document" srcDoc={view.html} sandbox="allow-same-origin" />
+        // Feuille à sa vraie largeur, réduite pour tenir à l'écran : rien n'est coupé sur téléphone
+        <div className={`preview-frame fit ${format}`}>
+          <FitFrame html={view.html ?? ''} width={format === 'ticket' ? 320 : A4_WIDTH} />
         </div>
       )}
     </Modal>

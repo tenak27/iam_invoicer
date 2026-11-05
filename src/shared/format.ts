@@ -34,6 +34,16 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** Texte comparable dans une recherche : minuscules, sans accents ni ligatures (« Œuvre » → « oeuvre »). */
+export function searchKey(s: string): string {
+  return String(s ?? '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae').normalize('NFD').replace(/\p{M}/gu, '')
+}
+
+/** Comme `searchKey`, sans ponctuation : « Wi-Fi » et « wifi », « main d’œuvre » et « main-d'oeuvre » se rejoignent. */
+export function searchText(s: string): string {
+  return searchKey(s).replace(/[^\p{L}\p{N}\s]/gu, '')
+}
+
 export function addDays(iso: string, days: number): string {
   const d = new Date(iso + 'T12:00:00')
   d.setDate(d.getDate() + days)

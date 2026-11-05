@@ -53,8 +53,90 @@ const tint = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, #fff)
  * Habillage de chaque modèle : le contenu et la structure sont identiques, seules ces règles
  * changent. Elles s'appliquent à l'aperçu, à l'export PDF et à l'impression.
  */
+const GOLD = '#b8975a'
+const GOLD_DARK = '#8a6d3b'
+
 const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   moderne: () => `.band { display: block; }`,
+  entreprise: (c) => `
+  .head { background: ${c}; color: #fff; padding: 18px 20px; border-radius: 12px; align-items: center; }
+  .head .company-name, .head .doc-title h1, .head .num { color: #fff; }
+  .head .muted, .doc-title .meta { display: none; }
+  .head .logo { background: #fff; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; }
+  .doc-title h1 { font-size: 22pt; letter-spacing: 1.5px; }
+  .doc-title .num { font-size: 11pt; opacity: .92; }
+  .meta-strip { display: grid; margin-top: 12px; border: 1px solid #d9e1ea; border-radius: 10px; overflow: hidden; }
+  .meta-strip .cell { padding: 8px 12px; border-left: 1px solid #e4e9ef; }
+  .meta-strip .cell:first-child { border-left: 0; }
+  .meta-strip .amount { background: ${tint(c, 10)}; }
+  .meta-strip .amount b { color: ${c}; font-size: 11.5pt; }
+  .parties { justify-content: space-between; gap: 16px; margin: 16px 0; }
+  .parties .issuer { display: block; }
+  .parties .box { flex: 1; min-width: 0; border: 1px solid #d9e1ea; border-top: 3px solid ${c}; border-radius: 8px; }
+  table.lines th { background: ${tint(c, 12)}; color: #1f2933; border-bottom: 2px solid ${c}; }
+  .words { background: ${tint(c, 7)}; border-left-color: ${c}; border-radius: 0 6px 6px 0; }
+  .pay-note { padding: 9px 12px; border: 1px dashed ${c}; border-radius: 8px; color: #1f2933; }`,
+  prestige: (c) => `
+  .band { display: block; height: 3px; border-radius: 0; margin-bottom: 18px; background: linear-gradient(90deg, ${GOLD}, ${c} 50%, ${GOLD}); }
+  .company-name, .doc-title h1, .box .name, .totals .grand td, .meta-strip b { font-family: Georgia, 'Times New Roman', serif; }
+  .head { flex-direction: column; align-items: center; text-align: center; gap: 4px; padding-bottom: 14px; border-bottom: 1px solid ${GOLD}; }
+  .head .muted, .doc-title .meta { display: none; }
+  .company-name { font-size: 20pt; font-weight: 400; letter-spacing: .5px; color: #1f2933; }
+  .doc-title { text-align: center; }
+  .doc-title h1 { margin-top: 10px; font-size: 25pt; font-weight: 400; letter-spacing: 8px; color: ${c}; }
+  .doc-title .num { text-align: center; font-weight: 400; letter-spacing: 2px; color: #5f6b7a; }
+  .meta-strip { display: grid; padding: 10px 0; border-bottom: 1px solid ${GOLD}; text-align: center; }
+  .meta-strip span { color: ${GOLD_DARK}; letter-spacing: 1.6px; font-size: 7pt; }
+  .meta-strip b { font-weight: 400; font-size: 10.5pt; }
+  .meta-strip .amount b { color: ${c}; }
+  .parties { justify-content: space-between; gap: 30px; margin: 18px 0; }
+  .parties .issuer { display: block; }
+  .parties .box { flex: 1; min-width: 0; border: none; padding: 0; border-radius: 0; }
+  .box .label { color: ${GOLD_DARK}; letter-spacing: 1.6px; font-size: 7pt; }
+  .box .name { font-weight: 400; font-size: 13pt; }
+  table.lines th { background: none; color: #1f2933; text-transform: uppercase; letter-spacing: 1.2px; font-size: 7pt; padding: 9px 6px; border-top: 1px solid ${GOLD}; border-bottom: 1px solid ${GOLD}; }
+  table.lines td { padding: 9px 6px; border-bottom: 1px solid #ece6da; }
+  table.lines tr:nth-child(even) td { background: none; }
+  .totals .grand td { background: none; color: ${c}; font-size: 14pt; font-weight: 400; padding: 8px; border-top: 1px solid ${GOLD}; border-bottom: 3px double ${GOLD}; }
+  .words { background: none; border-left: none; text-align: center; font-style: italic; border-top: 1px solid #ece6da; border-bottom: 1px solid #ece6da; }
+  .sigbox, .secef, .auth { border-color: #e6dcc8; border-radius: 0; }
+  .pay-note { text-align: center; }`,
+  epure: (c) => `
+  .head { flex-direction: row-reverse; align-items: flex-start; }
+  .head > div:first-child { text-align: right; }
+  .head .muted, .doc-title .meta { display: none; }
+  .head .logo { display: block; margin-left: auto; }
+  .company-name { color: #111827; font-size: 13pt; }
+  .doc-title { text-align: left; }
+  .doc-title h1 { font-size: 34pt; font-weight: 800; letter-spacing: -1px; text-transform: none; line-height: 1; color: #111827; }
+  .doc-title h1::after { content: ''; display: block; width: 46px; height: 5px; margin-top: 10px; border-radius: 3px; background: ${c}; }
+  .doc-title .num { text-align: left; margin-top: 10px; font-size: 11pt; font-weight: 500; color: #5f6b7a; }
+  .meta-strip { display: grid; gap: 18px; margin-top: 22px; padding-top: 10px; border-top: 1.5px solid #111827; }
+  .meta-strip span { color: #6b7280; }
+  .meta-strip .amount b { color: ${c}; }
+  .parties { justify-content: space-between; gap: 24px; margin: 22px 0 20px; }
+  .parties .issuer { display: block; }
+  .parties .box { flex: 1; min-width: 0; border: none; padding: 0; border-radius: 0; }
+  table.lines th { background: none; color: #6b7280; font-weight: 500; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .6px; padding: 6px 6px 8px; border-bottom: 1.5px solid #111827; }
+  table.lines td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
+  table.lines tr:nth-child(even) td { background: none; }
+  .totals .grand td { background: none; color: #111827; font-size: 13pt; border-top: 1.5px solid #111827; }
+  .totals .grand td:last-child { color: ${c}; }
+  .words { background: none; border-left: 3px solid ${c}; }
+  .sigbox, .secef, .auth { border-color: #e5e7eb; border-radius: 0; }`,
+  contraste: (c) => `
+  .head { background: #111827; color: #fff; padding: 18px 20px; border-radius: 12px; border-bottom: 4px solid ${c}; align-items: center; }
+  .head .company-name, .head .doc-title h1 { color: #fff; }
+  .head .num, .head .meta td { color: #fff; }
+  .head .muted, .head .meta td:first-child { color: rgba(255, 255, 255, .72); }
+  .head .logo { background: #fff; padding: 6px 10px; border-radius: 8px; }
+  .parties .box { border: none; border-left: 4px solid ${c}; border-radius: 6px; background: #f3f4f6; }
+  table.lines th { background: #111827; color: #fff; }
+  table.lines tr:nth-child(even) td { background: #f3f4f6; }
+  .totals .grand td { background: #111827; color: #fff; }
+  .totals .grand td:last-child { box-shadow: inset 0 -3px 0 ${c}; }
+  .words { background: #f3f4f6; border-left: 4px solid #111827; }
+  .pay-note { padding: 9px 12px; border-radius: 8px; background: #f3f4f6; color: #1f2933; }`,
   classique: () => `
   table.lines th, .totals .grand td { background: #33303f; }`,
   bandeau: (c) => `
@@ -201,6 +283,29 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
 
 
   const partyLabel = info.side === 'sale' ? (type === 'DEV' ? 'Client' : 'Facturé à') : 'Fournisseur'
+  // Bande d'informations (modèles Entreprise, Prestige, Épuré) : date, échéance, référence, code, montant
+  const due = doc.total_ttc - (doc.total_withheld ?? 0)
+  const metaCells = [
+    ['Date', formatDate(doc.date)],
+    doc.due_date && info.payable ? ['Échéance', formatDate(doc.due_date)] : null,
+    doc.reference ? ['Référence', esc(doc.reference)] : null,
+    party.code ? [`Code ${info.side === 'sale' ? 'client' : 'fournisseur'}`, esc(party.code)] : null,
+    showPrices ? [doc.total_withheld > 0 ? 'Net à payer' : 'Montant TTC', money(due)] : null
+  ].filter(Boolean) as [string, string][]
+  const metaStrip = `<div class="meta-strip">${metaCells.map(([k, v], i) => `<div class="cell${showPrices && i === metaCells.length - 1 ? ' amount' : ''}"><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+  // Bloc « Émetteur » (ou « Acheteur » sur les achats) à côté du tiers, pour les modèles qui l'affichent
+  const issuer = `<div class="box issuer">
+      <div class="label">${info.side === 'sale' ? 'Émetteur' : 'Acheteur'}</div>
+      <div class="name">${esc(company.name)}</div>
+      <div class="muted">
+        ${company.address ? nl2br(company.address) + '<br>' : ''}
+        ${[company.city, company.country].filter(Boolean).map(esc).join(', ')}${company.city || company.country ? '<br>' : ''}
+        ${company.phone ? 'Tél. ' + esc(company.phone) + '<br>' : ''}
+        ${company.email ? esc(company.email) + '<br>' : ''}
+        ${company.tax_id ? esc(company.tax_id_label || 'IFU') + ' : ' + esc(company.tax_id) + '<br>' : ''}
+        ${company.rccm ? 'RCCM : ' + esc(company.rccm) : ''}
+      </div>
+    </div>`
   const remaining = doc.total_ttc - (doc.paid ?? 0)
   // Taxes du document ; les retenues à la source sont enregistrées comme règlements à la validation.
   const applied = (doc.taxes ?? []) as AppliedTax[]
@@ -223,7 +328,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   td.n, th.n { width: 26px; text-align: center; color: #7b8794; }
   * { box-sizing: border-box; }
   /* Couleurs et aplats imprimés tels qu'à l'écran, quel que soit le navigateur ou l'imprimante */
-  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { font-family: 'Segoe UI', 'Helvetica Neue', Roboto, 'Noto Sans', Arial, sans-serif; font-size: 10pt; color: #1f2933; margin: 0; font-variant-numeric: tabular-nums; }
   img { max-width: 100%; }
   /* Aperçu à l'écran : la feuille avec ses marges, comme à l'impression */
@@ -266,6 +371,11 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   /* À l'impression, mentions légales et numéros de page sont dans la marge basse de chaque page. */
   @media print { .footer { display: none; } }
   .band { display: none; height: 6px; background: ${c}; border-radius: 3px; margin-bottom: 14px; }
+  /* Bande d'informations et bloc « Émetteur » : affichés par les modèles qui les utilisent */
+  .meta-strip, .parties .issuer { display: none; }
+  .meta-strip { grid-auto-flow: column; grid-auto-columns: 1fr; break-inside: avoid; page-break-inside: avoid; }
+  .meta-strip span { display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .6px; color: #5f6b7a; }
+  .meta-strip b { display: block; margin-top: 2px; font-size: 10pt; font-weight: 600; white-space: nowrap; }
   .auth { display: flex; gap: 12px; align-items: center; margin-top: 16px; padding: 8px 12px; border: 1px solid #d4dbe3; border-radius: 6px; break-inside: avoid; page-break-inside: avoid; font-size: 8.5pt; width: fit-content; max-width: 100%; }
   .auth svg { display: block; flex-shrink: 0; }
   .auth .t { font-weight: 700; color: ${c}; text-transform: uppercase; letter-spacing: .4px; font-size: 8pt; }
@@ -318,7 +428,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
     </div>
   </div>
 
+  ${metaStrip}
+
   <div class="parties">
+    ${issuer}
     <div class="box">
       <div class="label">${partyLabel}</div>
       <div class="name">${esc(party.name)}</div>
@@ -358,7 +471,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   ` : doc.notes ? `<div class="muted" style="margin-top:14px"><strong>Observations</strong><br>${nl2br(doc.notes)}</div>` : ''}
 
   ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours.</p>' : ''}
-  ${type === 'FAC' && company.bank_account ? `<p class="muted" style="margin-top:14px">Règlement par virement : ${esc(company.bank_name)} — ${esc(company.bank_account)}</p>` : ''}
+  ${type === 'FAC' && company.bank_account ? `<p class="muted pay-note" style="margin-top:14px">Règlement par virement : ${esc(company.bank_name)} — ${esc(company.bank_account)}${doc.due_date ? ` · avant le ${formatDate(doc.due_date)}` : ''}</p>` : ''}
   ${signBlock}
   ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
   ${auth ? `<div class="auth">${qrSvg(auth.qr, 84)}<div><div class="t">Document authentique</div><div>Code : <span class="code">${esc(auth.code)}</span></div><div class="muted">${auth.url ? `Scannez ce code, ou saisissez-le sur ${esc(auth.url.replace(/^https?:\/\//, '').replace(/\/verify\/.*$/, '/verify'))}, pour vérifier ce document.` : `Scannez ce code pour lire le numéro, la date et le montant enregistrés par ${esc(company.name)}.`}</div></div></div>` : ''}
@@ -385,6 +498,7 @@ export function receiptHtml(doc: any, company: CompanySettings, evaluation = fal
 <html lang="fr"><head><meta charset="utf-8"><title>${esc(doc.number ?? 'Ticket')}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #000; margin: 0; width: 72mm; }
   .c { text-align: center; }
   .logo { max-width: 40mm; max-height: 18mm; }

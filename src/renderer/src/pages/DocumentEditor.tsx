@@ -9,6 +9,7 @@ import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
 import { ChatCircleText, Copy, DownloadSimple, EnvelopeSimple, Eye, FloppyDisk, Printer, Repeat, SealCheck, Trash, PencilSimple, Prohibit } from '@phosphor-icons/react'
 import { DocumentPreview } from '../components/DocumentPreview'
+import { DesignationField } from '../components/DesignationField'
 
 type Line = LineInput & { key: number; product_ref?: string; lot_refs?: string; tracking?: string }
 let lineKey = 0
@@ -363,7 +364,6 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         <table className="table lines-table" data-cards="lines">
           <thead>
             <tr>
-              {editable && <th style={{ width: 220 }}>Article</th>}
               <th>Désignation</th>
               <th className="num" style={{ width: 90 }}>Qté</th>
               <th className="num" style={{ width: 130 }}>P.U. HT</th>
@@ -376,22 +376,20 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           <tbody>
             {lines.map((l) => (
               <tr key={l.key}>
-                {editable && (
-                  <td>
-                    <select value={l.product_id ?? ''} onChange={(e) => pickProduct(l.key, e.target.value)} aria-label="Article">
-                      <option value="">Ligne libre</option>
-                      {products.data?.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.ref} — {p.name}{p.kind === 'produit' ? ` (stock ${formatNumber(p.stock_qty)})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                )}
                 <td>
                   {editable ? (
                     <>
-                      <textarea rows={Math.min(4, (l.description.match(/\n/g)?.length ?? 0) + 1)} value={l.description} onChange={(e) => updateLine(l.key, { description: e.target.value })} placeholder="Désignation" />
+                      <DesignationField
+                        value={l.description}
+                        docType={type}
+                        side={info.side === 'purchase' ? 'purchase' : 'sale'}
+                        products={products.data}
+                        product={l.product_id ? products.data?.find((p) => p.id === l.product_id) : undefined}
+                        onChange={(text) => updateLine(l.key, { description: text })}
+                        onPickProduct={(id) => pickProduct(l.key, String(id))}
+                        onPickPast={(h) => updateLine(l.key, { product_id: null, product_ref: undefined, tracking: undefined, lot_refs: '', description: h.description, unit_price: h.unit_price, tva_rate: tvaOn ? h.tva_rate : 0 })}
+                        onUnlink={() => updateLine(l.key, { product_id: null, product_ref: undefined, tracking: undefined, lot_refs: '' })}
+                      />
                       {trackingOf(l) !== 'aucun' && info.stock !== 0 && (
                         <input className="lot-input" value={l.lot_refs ?? ''} onChange={(e) => updateLine(l.key, { lot_refs: e.target.value })}
                           placeholder={trackingOf(l) === 'serie' ? `${l.quantity} numéro(s) de série, séparés par des virgules` : 'Numéro de lot'}

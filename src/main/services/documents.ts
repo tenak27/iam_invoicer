@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto'
 import { DOC_TYPES, lineHT, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } from '@shared/taxes'
 import { resolveTaxes } from './taxes'
-import { addDays, todayISO } from '@shared/format'
+import { addDays, searchText, todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { AppError, audit, fail, num, str, type Ctx } from './context'
 import { getSettings } from './settings'
@@ -43,6 +43,40 @@ export async function listDocuments(
      ORDER BY d.date DESC, d.id DESC
      LIMIT 1000`,
     [args.types, search, str(args.status), str(args.from), str(args.to), args.partyId ?? null, !!args.unpaidOnly]
+  )
+}
+
+/** Texte d'une ligne ramené à la forme de `searchText` (minuscules, sans accents, « œ » ni ponctuation), côté base. */
+const FOLDED_DESCRIPTION = `regexp_replace(replace(translate(lower(l.description), 'àâäáãåçéèêëíìîïñóòôöõúùûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy'), 'œ', 'oe'), '[^[:alnum:][:space:]]', '', 'g')`
+
+/**
+ * Désignations libres déjà saisies sur les documents du même côté (ventes ou achats), retrouvées
+ * pendant la saisie d'une ligne : chaque mot tapé doit y figurer, accents et majuscules ignorés.
+ * Renvoie le dernier prix et le dernier taux de TVA appliqués. Les lignes liées au catalogue n'y
+ * sont pas : l'article se retrouve dans le catalogue.
+ */
+export async function searchDesignations(ctx: Ctx, args: { type: DocType; q?: string }) {
+  checkType(args?.type)
+  const side = DOC_TYPES[args.type].side
+  const types = (Object.keys(DOC_TYPES) as DocType[]).filter((t) => DOC_TYPES[t].side === side)
+  // Lettres et chiffres seulement : ni ponctuation ni jokers de LIKE (« % », « _ »)
+  const words = searchText(str(args.q)).split(/\s+/).filter((w) => w.length > 1).slice(0, 6)
+  if (!words.length) return []
+  const params: unknown[] = [types]
+  const conds = words.map((w) => {
+    params.push(`%${w}%`)
+    return `${FOLDED_DESCRIPTION} LIKE $${params.length}`
+  })
+  return ctx.db.query<{ description: string; uses: number; last_date: string; unit_price: number; tva_rate: number }>(
+    `SELECT l.description, COUNT(*)::int AS uses, MAX(d.date) AS last_date,
+            (array_agg(l.unit_price ORDER BY d.date DESC, l.id DESC))[1] AS unit_price,
+            (array_agg(l.tva_rate ORDER BY d.date DESC, l.id DESC))[1] AS tva_rate
+     FROM document_lines l JOIN documents d ON d.id = l.document_id
+     WHERE d.type = ANY($1) AND d.status <> 'annule' AND l.product_id IS NULL AND ${conds.join(' AND ')}
+     GROUP BY l.description
+     ORDER BY MAX(d.date) DESC, COUNT(*) DESC
+     LIMIT 8`,
+    params
   )
 }
 

@@ -151,6 +151,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
     fn: documents.listDocuments
   },
   'documents.get': { access: docModule, fn: documents.getDocument },
+  // Désignations déjà utilisées, proposées pendant la saisie d'une ligne (même côté : ventes ou achats)
+  'documents.searchDesignations': { access: async (_c, a) => sideModule(a?.type), fn: documents.searchDesignations },
   'documents.save': {
     access: async (ctx, a) => (a?.id ? docModule(ctx, a) : sideModule(a?.type)),
     fn: documents.saveAndMaybeValidate

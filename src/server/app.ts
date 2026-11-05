@@ -343,8 +343,13 @@ export function createHandler(opts: ServerOptions) {
     tickets.delete(ticket)
     if (!t || t.expires < Date.now()) throw new HttpError(410, "Ce lien d'impression a expiré. Relancez l'impression depuis l'application.")
     const p = await printable({ db, user: t.user, origin: t.origin }, t.id, t.format, false, { duplicata: !!t.duplicata })
-    const auto = '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})</script>'
-    sendHtml(res, p.html.replace('</body>', `${auto}</body>`), 'SAMEORIGIN')
+    // Téléphone : la feuille entière à l'écran (sans ce réglage, la page était mise en page sur 980 px
+    // puis réduite), et un bouton pour relancer l'impression ou l'enregistrement en PDF
+    const head = '<meta name="viewport" content="width=820"><style>@media screen{.print-bar{position:sticky;top:8px;z-index:9;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 18px;padding:10px 12px;border-radius:12px;background:#0f172a;color:#e2e8f0;font:13px/1.35 "Segoe UI",Arial,sans-serif;box-shadow:0 10px 24px -12px rgba(15,23,42,.6)}.print-bar button{flex:none;min-height:40px;padding:0 16px;border:0;border-radius:999px;background:#fff;color:#0f172a;font:600 14px "Segoe UI",Arial,sans-serif;cursor:pointer}}@media print{.print-bar{display:none!important}}</style>'
+    const bar = '<div class="print-bar" role="toolbar" aria-label="Impression"><button type="button" id="print-now">Imprimer ou enregistrer en PDF</button><span>Sur téléphone, choisissez « Enregistrer au format PDF » comme imprimante.</span></div>'
+    const auto = '<script>document.getElementById("print-now").addEventListener("click",function(){window.print()});window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})</script>'
+    const page = p.html.replace('</head>', `${head}</head>`).replace(/<body([^>]*)>/, `<body$1>${bar}`).replace('</body>', `${auto}</body>`)
+    sendHtml(res, page, 'SAMEORIGIN')
   }
 
   function serveStatic(req: IncomingMessage, res: ServerResponse, path: string, base = opts.webRoot, spa = true, download = false) {

@@ -35,9 +35,9 @@ afterAll(async () => {
 })
 
 describe('Modèles de documents', () => {
-  it('six modèles, même contenu, couleurs imprimées telles quelles', async () => {
+  it('dix modèles, même contenu, couleurs imprimées telles quelles', async () => {
     const company = await getSettings(db)
-    expect(DOC_LAYOUTS.map((l) => l.id)).toEqual(['moderne', 'bandeau', 'elegant', 'classique', 'minimal', 'compact'])
+    expect(DOC_LAYOUTS.map((l) => l.id)).toEqual(['moderne', 'entreprise', 'prestige', 'epure', 'contraste', 'bandeau', 'elegant', 'classique', 'minimal', 'compact'])
     for (const l of DOC_LAYOUTS) {
       const html = sampleDocumentHtml(company, l.id)
       expect(html).toContain(`<body class="tpl-${l.id}">`)
