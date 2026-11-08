@@ -4,9 +4,10 @@
 // Imprimés par window.erp.printHtml : PDF sur ordinateur, fenêtre d'impression sur le web.
 
 import { amountInWords, formatDate, formatMoney, formatQty, todayISO } from '@shared/format'
+import { voucherThemeCss } from '@shared/printTheme'
 import { EXPENSE_CATEGORIES, EXPENSE_STATUS, REQUEST_PRIORITIES, REQUEST_STATUS, type ExpenseCategory, type ExpenseStatus, type RequestPriority, type RequestStatus } from '@shared/workflow'
 
-type Company = { name: string; logo?: string; address?: string; city?: string; phone?: string; email?: string; tax_id?: string; tax_id_label?: string; rccm?: string; doc_color?: string }
+type Company = { name: string; logo?: string; address?: string; city?: string; phone?: string; email?: string; tax_id?: string; tax_id_label?: string; rccm?: string; doc_color?: string; doc_layout?: string }
 type WfEvent = { action: string; comment: string; at: string; user_name: string | null }
 
 const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -81,6 +82,8 @@ function voucherHtml(company: Company, v: Voucher): string {
     .sig .date { color: #5d6475; font-size: 7.5pt; }
     .stamp { position: fixed; top: 42%; left: 18%; font-size: 60pt; font-weight: 800; color: ${stampColor}; transform: rotate(-24deg); letter-spacing: 4px; }
     footer { margin-top: 14px; font-size: 7.5pt; color: #8a94a3; border-top: 1px solid #e4e9ef; padding-top: 5px; }
+    /* Modèle choisi pour les documents de la société */
+    ${voucherThemeCss(company.doc_layout, c)}
   </style></head><body>
     ${v.stamp ? `<div class="stamp">${esc(v.stamp.text)}</div>` : ''}
     <div class="band"></div>

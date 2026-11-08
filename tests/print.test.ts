@@ -4,6 +4,9 @@ import { DOC_LAYOUTS } from '../src/shared/domain'
 import { compareVersions, pickDownload, releaseFiles } from '../src/shared/update'
 import { openDb, type Db } from '../src/main/db'
 import { sampleDocumentHtml } from '../src/main/pdf'
+import { payslipThemeCss, reportThemeCss, voucherThemeCss } from '../src/shared/printTheme'
+import { reportHtml } from '../src/renderer/src/components/reportPrint'
+import { expenseHtml } from '../src/renderer/src/components/workflowPrint'
 import { printable } from '../src/main/printing'
 import { call } from '../src/main/router'
 import type { Ctx, SessionUser } from '../src/main/services/context'
@@ -52,6 +55,26 @@ describe('Modèles de documents', () => {
     expect(sampleDocumentHtml(company, 'bandeau', '#be123c')).toContain('#be123c')
     expect(sampleDocumentHtml(company, 'inconnu' as any)).toContain('class="tpl-moderne"')
     expect((await ok(admin, 'settings.docSample', { layout: 'elegant', color: '#0b4f8a', doc_line_numbers: false })).html).not.toContain('<th class="n">')
+  })
+})
+
+describe('Modèle appliqué aux autres documents imprimés', () => {
+  it('pièces, états et bulletins suivent le modèle et la couleur de la société', () => {
+    const c = '#178a55'
+    for (const theme of [voucherThemeCss, reportThemeCss, payslipThemeCss]) {
+      const all = DOC_LAYOUTS.map((l) => theme(l.id, c))
+      // Au moins six habillages distincts, et un modèle inconnu ramené au modèle par défaut
+      expect(new Set(all).size).toBeGreaterThanOrEqual(6)
+      expect(theme('inconnu', c)).toBe(theme('moderne', c))
+    }
+    const company = { name: 'IAM Technology', doc_color: c, doc_layout: 'entreprise' }
+    const report = reportHtml(company, 'Bilan', 'Au 31/12/2026', [{ head: ['Poste', 'Montant'], numeric: [1], rows: [['Trésorerie', 1500000]] }])
+    expect(report).toContain(c)
+    expect(report).not.toContain('#1550a8')
+    expect(report).toContain('header { background: ' + c)
+    const voucher = expenseHtml({ ...company, doc_layout: 'prestige' }, { number: 'DEP-1', status: 'payee', label: 'Test', user_name: 'A', date: '2026-11-01', category: 'transport', amount: 1000, events: [] })
+    expect(voucher).toContain('Georgia')
+    expect(voucher).toContain('#b8975a')
   })
 })
 
