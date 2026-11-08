@@ -21,7 +21,7 @@ await build({
 })
 
 // Galerie d'écrans et manuels
-const GALLERY = ['tableau-de-bord', 'facture', 'caisse', 'stock', 'bilan', 'rh-paie', 'projet-taches', 'roles']
+const GALLERY = ['tableau-de-bord', 'facture', 'mise-en-page', 'caisse', 'stock', 'bilan', 'rh-paie', 'projet-taches', 'roles']
 mkdirSync(`${out}/assets/galerie`, { recursive: true })
 for (const g of GALLERY) {
   cpSync(`docs/formation/captures/${g}.jpg`, `${out}/assets/galerie/${g}.jpg`)
