@@ -193,16 +193,19 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
     if (!(await db.one('SELECT 1 FROM warehouses WHERE id = $1 AND active', [warehouse]))) fail('Dépôt inconnu ou inactif.')
     const project = input.project_id ? Number(input.project_id) : null
 
+    // Signataire choisi pour ce document (une des signatures enregistrées) ; vide = celui par défaut
+    const signer = str(input.signatory_id).slice(0, 40) || null
+
     let id: number = input.id
     if (id) {
-      await db.query('UPDATE documents SET party_id=$1, date=$2, due_date=$3, reference=$4, notes=$5, warehouse_id=$6, project_id=$7 WHERE id=$8', [
-        party.id, date, due, str(input.reference), str(input.notes), warehouse, project, id
+      await db.query('UPDATE documents SET party_id=$1, date=$2, due_date=$3, reference=$4, notes=$5, warehouse_id=$6, project_id=$7, signatory_id=$8 WHERE id=$9', [
+        party.id, date, due, str(input.reference), str(input.notes), warehouse, project, signer, id
       ])
     } else {
       const row = await db.one<{ id: number }>(
-        `INSERT INTO documents (type, party_id, date, due_date, reference, notes, source_id, created_by, warehouse_id, project_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
-        [type, party.id, date, due, str(input.reference), str(input.notes), input.source_id ?? null, ctx.user?.id ?? null, warehouse, project]
+        `INSERT INTO documents (type, party_id, date, due_date, reference, notes, source_id, created_by, warehouse_id, project_id, signatory_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+        [type, party.id, date, due, str(input.reference), str(input.notes), input.source_id ?? null, ctx.user?.id ?? null, warehouse, project, signer]
       )
       id = row!.id
       await audit(db, ctx, 'creation', type, id)

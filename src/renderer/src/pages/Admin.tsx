@@ -3,8 +3,11 @@ import { formatDate } from '@shared/format'
 import { ROLE_HINTS, ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
-import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister, Stamp } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
+import { StampStudio } from '../components/StampStudio'
+import { Signatories } from '../components/Signatories'
+import type { Signatory } from '@shared/signatories'
 import { UserAvatar } from '../components/Topbar'
 import { DbConfigForm } from './Auth'
 import { CountryField, FiscalFields, ImagePicker } from '../components/CompanyFields'
@@ -62,7 +65,7 @@ export function CompanySettingsPage() {
   const [mailBusy, setMailBusy] = useState('')
   const [smsSecret, setSmsSecret] = useState('')
   const [secefToken, setSecefToken] = useState('')
-  const [drawSig, setDrawSig] = useState(false)
+  const [stampStudio, setStampStudio] = useState(false)
   useEffect(() => {
     if (data) f.setValues({ ...data, default_tva: String(data.default_tva), payment_terms: String(data.payment_terms), smtp_port: String(data.smtp_port) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,6 +73,16 @@ export function CompanySettingsPage() {
   if (error) return <ErrorBox error={error} onRetry={reload} />
   if ((loading && !data) || (!f.values.name && f.values.name !== '')) return <Loading />
   const v = f.values
+  // Signatures enregistrées ; une installation antérieure n'avait qu'une signature (trois réglages) : on la reprend
+  const signers: Signatory[] = v.signatories?.length
+    ? v.signatories
+    : v.signature_image || v.signatory_name
+      ? [{ id: 'principale', name: v.signatory_name ?? '', title: v.signatory_title ?? '', image: v.signature_image ?? '', default: true }]
+      : []
+  const setSigners = (list: Signatory[]) => {
+    const main = list.find((s) => s.default) ?? list[0]
+    f.setValues((cur: any) => ({ ...cur, signatories: list, signature_image: main?.image ?? '', signatory_name: main?.name ?? '', signatory_title: main?.title ?? '' }))
+  }
   const save = async () => {
     const r = await run(async () => {
       await api('settings.save', { ...v, doc_margin_top: Number(v.doc_margin_top) || 14, doc_margin_side: Number(v.doc_margin_side) || 14, doc_margin_bottom: Number(v.doc_margin_bottom) || 22, default_tva: Number(String(v.default_tva).replace(',', '.')), payment_terms: Number(v.payment_terms), smtp_port: Number(v.smtp_port) || 587 })
@@ -225,24 +238,20 @@ export function CompanySettingsPage() {
             <p className="muted small">Sur chaque page : en-tête du tableau répété, mentions légales et « Page X / Y » en bas. Les lignes, les totaux et les signatures ne sont jamais coupés entre deux pages.</p>
           </div>
           <div className="card">
-            <h3>Cachet et signature de la société</h3>
-            <div className="grid grid-4">
-              <ImageField k="stamp" label="Cachet (PNG transparent)" hint="Choisir le cachet" />
-              <div className="field">
-                <span className="field-label">Signature du responsable</span>
-                <div className="logo-box" onClick={() => setDrawSig(true)} role="button" tabIndex={0}>
-                  {v.signature_image ? <img src={v.signature_image} alt="Signature" /> : <span className="muted small">Dessiner la signature</span>}
-                </div>
-                <div className="row gap">
-                  <button className="link-btn small" onClick={() => pick('signature_image')}>Importer une image</button>
-                  {v.signature_image && <button className="link-btn danger small" onClick={() => f.set('signature_image', '')}>Retirer</button>}
+            <h3>Cachet et signatures de la société</h3>
+            <p className="muted small">Le cachet et la signature par défaut sont apposés sur les documents de vente validés et sur les bons de commande. Chaque document peut choisir un autre signataire.</p>
+            <div className="stamp-row">
+              <div className="stamp-col">
+                <ImageField k="stamp" label="Cachet (image à fond transparent)" hint="Importer ou créer le cachet" />
+                <div className="row gap wrap">
+                  <button type="button" className="btn btn-sm" onClick={() => setStampStudio(true)}><Stamp weight="duotone" /> Créer un cachet</button>
+                  <button type="button" className="link-btn small" onClick={() => pick('stamp')}>Importer une image</button>
                 </div>
               </div>
-              <Field label="Nom du signataire"><input {...f.bind('signatory_name')} placeholder={user.full_name} /></Field>
-              <Field label="Qualité"><input {...f.bind('signatory_title')} placeholder="Le Directeur Général" /></Field>
+              <Signatories value={signers} onChange={setSigners} defaultName={user.full_name} pickImage={() => run(() => unwrap(window.erp.pickImage()))} />
             </div>
-            <label className="inline check" style={{ marginTop: 12 }}>
-              <input type="checkbox" checked={!!v.doc_show_stamp} onChange={(e) => f.set('doc_show_stamp', e.target.checked)} /> Apposer le cachet et la signature sur les documents de vente validés
+            <label className="inline check stamp-apply" style={{ marginTop: 12 }}>
+              <input type="checkbox" checked={!!v.doc_show_stamp} onChange={(e) => f.set('doc_show_stamp', e.target.checked)} /> Apposer le cachet et la signature sur les documents de vente validés et les bons de commande
             </label>
           </div>
           <div className="card">
@@ -398,14 +407,14 @@ export function CompanySettingsPage() {
         </div>
       )}
       {showDb && <Modal title={desktop ? 'Emplacement des données' : 'Serveur IAM INVOICER'} onClose={() => setShowDb(false)} wide><DbConfigForm /></Modal>}
-      {drawSig && (
-        <SignatureModal
-          title="Signature du responsable"
-          name={v.signatory_name || user.full_name}
-          onClose={() => setDrawSig(false)}
+      {stampStudio && (
+        <StampStudio
+          company={v}
+          onClose={() => setStampStudio(false)}
           onDone={(png) => {
-            f.set('signature_image', png)
-            setDrawSig(false)
+            f.set('stamp', png)
+            setStampStudio(false)
+            notify('Cachet prêt. Enregistrez les paramètres pour le conserver.')
           }}
         />
       )}

@@ -5,6 +5,7 @@ import { countryProfile } from '../shared/countries'
 import { taxCaption, type AppliedTax } from '../shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import type { CompanySettings } from './services/settings'
+import { pickSignatory } from '@shared/signatories'
 import { qrSvg } from './services/secef'
 
 const esc = (s: unknown): string =>
@@ -227,7 +228,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   const auth: { code: string; qr: string; url: string | null } | null = company.doc_show_qr !== false && doc.auth?.code ? doc.auth : null
   const signatures: any[] = doc.signatures ?? []
   // Signature et cachet de la société : images posées sur les documents validés qu'elle émet (ventes et bons de commande)
-  const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || company.signature_image) && (info.side === 'sale' || type === 'BC')
+  const signer = pickSignatory(company, doc.signatory_id)
+  const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || signer.image) && (info.side === 'sale' || type === 'BC')
   // Zones de signature : toujours présentes, vides si personne n'a encore signé (à signer et tamponner à la main)
   const OURS: Record<string, string> = { BL: 'Livré par', BR: 'Réceptionné par' }
   const THEIRS: Record<string, [string, string]> = {
@@ -240,9 +242,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   }
   const signBlock = !THEIRS[type] ? '' : `<div class="signs">
     <div class="sigbox"><div class="t">${OURS[type] ? OURS[type] + ' — ' : 'Pour '}${esc(company.name)}</div>
-      ${showStamp && company.signature_image ? `<img class="sig" src="${company.signature_image}">` : ''}
+      ${showStamp && signer.image ? `<img class="sig" src="${signer.image}">` : ''}
       ${showStamp && company.stamp ? `<img class="cachet" src="${company.stamp}">` : ''}
-      <div class="who">${company.signatory_name ? esc(company.signatory_name) + (company.signatory_title ? ' — ' + esc(company.signatory_title) : '') : 'Signature et cachet'}</div></div>
+      <div class="who">${signer.name ? esc(signer.name) + (signer.title ? ' — ' + esc(signer.title) : '') : 'Signature et cachet'}</div></div>
     ${signatures.length
       ? signatures.map((g: any) => `<div class="sigbox"><div class="t">${type === 'BL' ? 'Reçu par le client' : 'Bon pour accord du client'}</div>
       <img class="sig" src="${g.image}">

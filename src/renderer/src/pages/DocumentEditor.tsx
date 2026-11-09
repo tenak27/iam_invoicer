@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
+import { parseSignatories, type Signatory } from '@shared/signatories'
 import { api, run, unwrap, useQuery } from '../api'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
@@ -42,6 +43,11 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
   const products = useQuery<any[]>('products.list', {})
   const warehouses = useQuery<any[]>('warehouses.options')
   const projects = useQuery<any[]>('projects.options')
+  // Signatures enregistrées de la société : choix du signataire sur les documents qu'elle émet
+  const signersQ = useQuery<any[]>('settings.listSigners')
+  const signers = useMemo(() => parseSignatories(signersQ.data), [signersQ.data])
+  const choosesSigner = (info.side === 'sale' || type === 'BC') && signers.length > 1
+  const signerLabel = (s?: Signatory) => (s ? `${s.name}${s.title ? ' — ' + s.title : ''}` : '—')
   const [params] = useSearchParams()
 
   const [header, setHeader] = useState({
@@ -51,6 +57,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
     date: doc?.date ?? todayISO(),
     due_date: doc?.due_date ?? '',
     reference: doc?.reference ?? '',
+    signatory_id: doc?.signatory_id ?? '',
     notes: doc?.notes ?? ''
   })
   const [lines, setLines] = useState<Line[]>(() =>
@@ -339,6 +346,16 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
           <Field label={info.side === 'sale' ? 'Référence client (commande, marché…)' : 'Référence fournisseur'} span={2}>
             {editable ? <input value={header.reference} onChange={(e) => setH('reference', e.target.value)} /> : <div className="readonly">{doc.reference || '—'}</div>}
           </Field>
+          {choosesSigner && (
+            <Field label="Signataire" span={2} hint={editable ? 'Signature et mention apposées à la validation' : undefined}>
+              {editable ? (
+                <select value={header.signatory_id} onChange={(e) => setH('signatory_id', e.target.value)}>
+                  <option value="">{signerLabel(signers.find((s) => s.default) ?? signers[0])} (par défaut)</option>
+                  {signers.map((s) => <option key={s.id} value={s.id}>{signerLabel(s)}</option>)}
+                </select>
+              ) : <div className="readonly">{signerLabel(signers.find((s) => s.id === doc.signatory_id) ?? signers.find((s) => s.default) ?? signers[0])}</div>}
+            </Field>
+          )}
           {info.stock !== 0 && (warehouses.data?.length ?? 0) > 1 && (
             <Field label="Dépôt">
               {editable ? (

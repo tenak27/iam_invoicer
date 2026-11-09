@@ -1,4 +1,5 @@
 import type { DocLayout } from '@shared/domain'
+import { parseSignatories, type Signatory } from '@shared/signatories'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 import { forgetLicenceStatus } from './licence'
@@ -52,6 +53,7 @@ export interface CompanySettings {
   signature_image: string // signature du responsable (data URL)
   signatory_name: string
   signatory_title: string
+  signatories: Signatory[] // signatures enregistrées ; celle par défaut est reflétée dans les trois réglages précédents
 
   // Messagerie (le mot de passe est dans la table secrets)
   smtp_host: string
@@ -130,6 +132,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   signature_image: '',
   signatory_name: '',
   signatory_title: 'Le Directeur',
+  signatories: [],
   smtp_host: '',
   smtp_port: 587,
   smtp_secure: false,
@@ -178,7 +181,19 @@ export async function getSettings(db: Db): Promise<CompanySettings> {
   return out
 }
 
-export async function saveSettings(ctx: Ctx, input: Partial<CompanySettings>): Promise<CompanySettings> {
+export async function saveSettings(ctx: Ctx, given: Partial<CompanySettings>): Promise<CompanySettings> {
+  const input: Partial<CompanySettings> = { ...given }
+  // Signatures enregistrées : liste propre, images encodées seulement ; la signature par défaut reste
+  // reflétée dans les anciens réglages (documents, exports et applications des versions précédentes).
+  if ('signatories' in input) {
+    const list = parseSignatories(input.signatories)
+    for (const s of list) if (s.image && !IMAGE_DATA_URL.test(s.image)) fail('Signature invalide : choisissez un fichier PNG, JPG, SVG ou WebP.')
+    const main = list.find((s) => s.default) ?? list[0]
+    input.signatories = list
+    input.signature_image = main?.image ?? ''
+    input.signatory_name = main?.name ?? ''
+    input.signatory_title = main?.title ?? ''
+  }
   await ctx.db.tx(async (db) => {
     for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof CompanySettings)[]) {
       if (!(key in input)) continue

@@ -3,6 +3,7 @@
 
 import { randomBytes } from 'node:crypto'
 import { can, DOC_TYPES, type DocType, type Module } from '@shared/domain'
+import { parseSignatories } from '@shared/signatories'
 import { AppError, fail, type Ctx } from './services/context'
 import * as auth from './services/auth'
 import * as settings from './services/settings'
@@ -70,6 +71,8 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'users.revokeDevice': { access: 'users', fn: licence.revokeDevice },
 
   'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
+  // Signataires proposés dans l'éditeur de document : la liste sans les images (bien plus légère que les réglages complets)
+  'settings.listSigners': { access: 'user', fn: async (ctx) => parseSignatories((await settings.getSettings(ctx.db)).signatories).map((s) => ({ id: s.id, name: s.name, title: s.title, default: s.default })) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
   // Aperçu d'un modèle de document sur une facture d'exemple (réglages en cours de saisie compris)
   'settings.docSample': {

@@ -882,5 +882,7 @@ export const MIGRATIONS: string[] = [
   UPDATE crm_activities a SET party_id = o.party_id FROM opportunities o WHERE o.id = a.opportunity_id AND a.party_id IS NULL;
   CREATE INDEX IF NOT EXISTS crm_activities_party_idx ON crm_activities(party_id);
   CREATE INDEX IF NOT EXISTS crm_activities_due_idx ON crm_activities(done, due_date)
-  `
+  `,
+  // Signataire choisi sur un document : identifiant d'une des signatures enregistrées dans les paramètres
+  `ALTER TABLE documents ADD COLUMN IF NOT EXISTS signatory_id TEXT`
 ]

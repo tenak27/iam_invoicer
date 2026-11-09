@@ -2956,3 +2956,46 @@ h1, h2, h3, .auth-title, .brand-name, .kpi-tile-value, .hero-figure, .stat stron
 .nav-badge.seen { background: #8a94a6; animation: none; }
 .nav-badge.seen::after { display: none; }
 .nav-icon-btn:has(.nav-badge.seen) svg { animation: none; }
+
+/* Cachet et signatures (Société & paramètres) */
+.stamp-row { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.stamp-col { display: grid; gap: 10px; }
+.stamp-col .logo-box { height: auto; min-height: 120px; padding: 10px; }
+.stamp-col .logo-box img { max-height: 170px; }
+.stamp-apply { white-space: normal; align-items: flex-start; }
+.stamp-apply input { margin-top: 3px; flex: 0 0 auto; }
+.stamp-studio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.stamp-preview { display: grid; place-items: center; min-height: 300px; border-radius: var(--r-md); border: 1px solid var(--line); background: repeating-linear-gradient(0deg, #fff 0 27px, #eef2f7 27px 28px); padding: 18px; }
+.stamp-preview img { max-width: 100%; max-height: 320px; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .06)); animation: stamp-in .4s cubic-bezier(.2, .9, .3, 1.25); }
+@keyframes stamp-in { from { transform: scale(1.15) rotate(-7deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.stamp-form { display: grid; gap: 12px; align-content: start; }
+.stamp-form .chips { margin-bottom: 0; }
+.stamp-form .chip { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 13px; }
+.stamp-form .chip.on { background: var(--accent); color: #fff; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; transition: transform .15s; }
+.swatch:hover { transform: scale(1.08); }
+.swatch.on { box-shadow: 0 0 0 2px var(--accent); }
+.swatch.custom { position: relative; overflow: hidden; background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f87171); }
+.swatch.custom input { position: absolute; inset: -8px; width: 200%; height: 200%; opacity: 0; cursor: pointer; }
+.signers { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.signers .row.between { justify-content: space-between; align-items: center; }
+.signers-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.signer { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.signer.is-default { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.signer-thumb { height: 56px; display: grid; place-items: center; background: #fff; border-radius: 8px; border: 1px dashed var(--line); overflow: hidden; }
+.signer-thumb img { max-height: 52px; max-width: 112px; }
+.signer-typed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 18px; color: #1f2a44; padding: 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 112px; }
+.signer-text { display: grid; gap: 2px; min-width: 0; }
+.signer-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.signer-text .tag { justify-self: start; font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: #fff; }
+.signer-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.signer-actions .link-btn svg { vertical-align: -2px; margin-right: 3px; }
+.signers-empty { padding: 14px; border: 1px dashed var(--line); border-radius: var(--r-md); text-align: center; }
+.signer-preview { display: grid; place-items: center; min-height: 120px; border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; padding: 10px; }
+.signer-preview img { max-height: 140px; max-width: 100%; }
+@media (max-width: 760px) {
+  .stamp-row, .stamp-studio { grid-template-columns: 1fr; }
+  .signer { grid-template-columns: 96px minmax(0, 1fr); }
+  .signer-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}

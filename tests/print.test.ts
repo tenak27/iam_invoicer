@@ -5,6 +5,8 @@ import { compareVersions, pickDownload, releaseFiles } from '../src/shared/updat
 import { openDb, type Db } from '../src/main/db'
 import { sampleDocumentHtml } from '../src/main/pdf'
 import { payslipThemeCss, reportThemeCss, voucherThemeCss } from '../src/shared/printTheme'
+import { defaultStampSpec, stampSvg } from '../src/shared/stamp'
+import { parseSignatories, pickSignatory } from '../src/shared/signatories'
 import { reportHtml } from '../src/renderer/src/components/reportPrint'
 import { expenseHtml } from '../src/renderer/src/components/workflowPrint'
 import { printable } from '../src/main/printing'
@@ -150,5 +152,60 @@ describe('Mise à jour disponible', () => {
     expect(pickDownload(files, { platform: 'darwin', arch: 'x64', legacy: true })!.name).toBe('IAM-INVOICER-0.7.0-x64.dmg')
     expect(pickDownload(files, { platform: 'android' })!.name).toBe('IAM-INVOICER-0.7.0-android.apk')
     expect(pickDownload(files, { platform: 'linux' })).toBeNull()
+  })
+})
+
+describe('Cachet et signatures', () => {
+  const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+
+  it('cachet dessiné : trois formes, textes échappés, encre choisie', () => {
+    const spec = defaultStampSpec({ name: 'IAM Technology', legal_form: 'SARL', city: 'Ouagadougou', country: 'Burkina Faso', rccm: 'BF OUA 2020 B 1234', tax_id: '00012345X', phone: '+226 70 00 00 00' })
+    expect(spec.top).toBe('IAM TECHNOLOGY')
+    expect(spec.bottom).toBe('OUAGADOUGOU · BURKINA FASO')
+    expect(spec.lines).toEqual(['SARL', 'RCCM BF OUA 2020 B 1234', 'IFU 00012345X', 'Tél. +226 70 00 00 00'])
+    for (const shape of ['rond', 'ovale', 'rectangle'] as const) {
+      const svg = stampSvg({ ...spec, shape, color: '#b91c1c', top: 'A & B <SARL>' })
+      expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true)
+      expect(svg).toContain('A &amp; B &lt;SARL&gt;')
+      expect(svg).not.toContain('<SARL>')
+      expect(svg).toContain('#b91c1c')
+      expect(svg).toContain('IFU 00012345X')
+    }
+    expect(stampSvg({ ...spec, shape: 'rond' })).toContain('<textPath')
+    expect(stampSvg({ ...spec, shape: 'rectangle' })).not.toContain('<textPath')
+    expect(stampSvg({ ...spec, worn: false })).not.toContain('feTurbulence')
+    // Couleur invalide ramenée à l'encre par défaut
+    expect(stampSvg({ ...spec, color: 'red; background:url(x)' })).toContain('#1e40af')
+  })
+
+  it('signatures enregistrées : une seule par défaut, anciens réglages reflétés, signataire du document imprimé', async () => {
+    expect(parseSignatories('texte')).toEqual([])
+    const list = parseSignatories([{ id: 'a', name: 'Awa', title: 'DG' }, { id: 'b', name: 'Boureima', title: 'DAF', default: true }, { name: 'sans identifiant' }])
+    expect(list.map((s) => [s.id, s.default])).toEqual([['a', false], ['b', true]])
+    expect(pickSignatory({ signatories: list }, 'a').name).toBe('Awa')
+    expect(pickSignatory({ signatories: list }, 'inconnu').name).toBe('Boureima')
+    expect(pickSignatory({ signature_image: PNG, signatory_name: 'Ancien', signatory_title: 'Le Directeur' }).name).toBe('Ancien')
+
+    await ok(admin, 'settings.save', { signatories: [{ id: 'dg', name: 'Awa Ouédraogo', title: 'Directrice Générale', image: PNG, default: true }, { id: 'daf', name: 'Boureima Sawadogo', title: 'DAF', image: PNG }] })
+    const company = await getSettings(db)
+    expect(company.signatories.map((s) => s.id)).toEqual(['dg', 'daf'])
+    expect(company.signatory_name).toBe('Awa Ouédraogo')
+    expect(company.signatory_title).toBe('Directrice Générale')
+    expect(company.signature_image).toBe(PNG)
+    await expect(ok(admin, 'settings.save', { signatories: [{ id: 'x', name: 'X', image: 'javascript:alert(1)' }] })).rejects.toThrow(/Signature invalide/)
+
+    const client = await ok(admin, 'parties.save', { kind: 'client', name: 'Sahel Distribution' })
+    const body = { type: 'FAC', party_id: client.id, date: '2026-11-09', taxes: [], lines: [{ description: 'Maintenance', quantity: 1, unit_price: 50000, tva_rate: 18 }] }
+    const byDaf = await ok(admin, 'documents.save', { ...body, signatory_id: 'daf', validate: true })
+    const html = (await printable(admin, byDaf.id, 'a4', false)).html
+    expect(html).toContain('Boureima Sawadogo — DAF')
+    expect(html).toContain('<img class="sig"')
+    expect(html).not.toContain('Awa Ouédraogo')
+    const byDefault = await ok(admin, 'documents.save', { ...body, validate: true })
+    expect((await printable(admin, byDefault.id, 'a4', false)).html).toContain('Awa Ouédraogo — Directrice Générale')
+    // Le signataire est conservé quand l'en-tête d'un brouillon est réenregistré
+    const draft = await ok(admin, 'documents.save', { ...body, signatory_id: 'daf' })
+    await ok(admin, 'documents.save', { ...body, id: draft.id, signatory_id: 'daf', reference: 'MARCHE-77' })
+    expect((await ok(admin, 'documents.get', { id: draft.id })).signatory_id).toBe('daf')
   })
 })
