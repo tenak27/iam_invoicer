@@ -250,6 +250,8 @@ export function createCloudHandler(opts: CloudOptions): Handler {
           ...opts.shared,
           db,
           publicPath: `/t/${t.slug}`,
+          // Seule la base de l'éditeur (VENDOR_SPACE) peut attribuer des licences
+          clientSpace: t.slug !== (process.env.VENDOR_SPACE || 'iam_technology'),
           // Lu à chaque configuration : un nouveau code remplace l'ancien sans redémarrage
           setupCode: async () => (await manager.get(t.slug))?.setup_code ?? null
         })

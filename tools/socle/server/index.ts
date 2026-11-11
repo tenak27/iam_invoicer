@@ -96,6 +96,8 @@ export function createSocle(opts: SocleOptions): SocleHandler {
     }
     if (recovery && path.startsWith('/api/socle/recovery')) return recovery.handle(req, res, path, ip())
     if (licence && path.startsWith('/api/socle/licence')) return licence.handle(req, res, path)
+    // Site de présentation : coordonnées de vente et demandes de licence des visiteurs (sans session)
+    if (licence && (path === '/api/socle/vendor' || path === '/api/socle/commande')) return licence.handle(req, res, path)
     if (exportFiles && path.startsWith('/api/socle/export')) {
       if (await exportFiles.handle(req, res, path)) return true
     }

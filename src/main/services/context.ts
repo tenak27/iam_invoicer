@@ -15,6 +15,8 @@ export interface Ctx {
   origin?: string
   /** Jeton de la session en cours (serveur web) : conservé quand on ferme les autres sessions. */
   token?: string | null
+  /** Base d'une société cliente hébergée (pas celle de l'éditeur) : jamais d'attribution de licences, identifiant de l'éditeur réservé. */
+  client?: boolean
 }
 
 /** Erreur destinée à être affichée telle quelle à l'utilisateur. */

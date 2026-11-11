@@ -179,3 +179,15 @@ input[type='color']::-moz-color-swatch { border: 0; border-radius: 8px; }
 .socle-nav-count + .socle-nav-caret { margin-left: 0; }
 .nav-collapsed .socle-nav-caret, .nav-collapsed .socle-nav-count { display: none; }
 @media (prefers-reduced-motion: reduce) { .socle-nav-caret { transition: none; } }
+
+/* Licence : demande de licence payée par Mobile Money ou virement (formulaire, modalités, suivi) */
+.socle-lic-actions { display: grid; gap: 6px; }
+.socle-lic-offer.asked { border-color: #1b6ef3; box-shadow: 0 0 0 3px rgba(27, 110, 243, .15); }
+.socle-pay { display: grid; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid rgba(15, 27, 51, .12); background: rgba(27, 110, 243, .05); }
+.socle-pay.done { border-color: #13744a; background: rgba(19, 116, 74, .06); }
+.socle-pay p { margin: 0; color: var(--muted, #4a5875); }
+.socle-pay-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.socle-pay-fields label { display: grid; gap: 4px; font-size: .85rem; font-weight: 700; }
+.socle-pay-fields input, .socle-pay-fields select { font: inherit; min-height: 40px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(15, 27, 51, .18); background: #fff; color: #0f1b33; }
+.socle-pay-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.socle-pay .socle-update-actions a.socle-btn { text-decoration: none; }

@@ -43,16 +43,19 @@ type Access = Module | 'public' | 'user' | ((ctx: Ctx, args: any) => Promise<Mod
 
 const partyModule = (args: any): Module => (args?.kind === 'supplier' ? 'suppliers' : 'clients')
 const sideModule = (type: DocType): Module => (DOC_TYPES[type]?.side === 'purchase' ? 'purchases' : 'sales')
-const docModule = async (ctx: Ctx, args: any): Promise<Module> => {
-  const d = await ctx.db.one('SELECT type FROM documents WHERE id = $1', [args?.id ?? args?.document_id ?? args?.documentId])
+/** Droit selon le côté (vente ou achat) du document désigné par UNE clé précise : celle que lit le service appelé. */
+const docModuleBy = (key: 'id' | 'documentId') => async (ctx: Ctx, args: any): Promise<Module> => {
+  const d = await ctx.db.one('SELECT type FROM documents WHERE id = $1', [args?.[key]])
   if (!d) fail('Document introuvable.')
   return sideModule(d.type)
 }
+const docModule = docModuleBy('id')
+const docModuleById = docModuleBy('documentId')
 
 /** Envoi lié à un document : droit sur ce document ET droit « messages ». */
 const docOrMessages = async (ctx: Ctx, args: any): Promise<Module> => {
   if (args?.documentId) {
-    const mod = await docModule(ctx, args)
+    const mod = await docModuleById(ctx, args)
     if (!can(ctx.user!.role, mod)) return mod
   }
   return 'messages'
@@ -70,7 +73,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'users.devices': { access: 'users', fn: (ctx) => licence.listDevices(ctx.db) },
   'users.revokeDevice': { access: 'users', fn: licence.revokeDevice },
 
-  'settings.get': { access: 'user', fn: (ctx) => settings.getSettings(ctx.db) },
+  'settings.get': { access: 'user', fn: settings.getSettingsFor },
   // Signataires proposés dans l'éditeur de document : la liste sans les images (bien plus légère que les réglages complets)
   'settings.listSigners': { access: 'user', fn: async (ctx) => parseSignatories((await settings.getSettings(ctx.db)).signatories).map((s) => ({ id: s.id, name: s.name, title: s.title, default: s.default })) },
   'settings.save': { access: 'settings', fn: settings.saveSettings },
@@ -238,9 +241,9 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'messages.remind': { access: docOrMessages, fn: messaging.remind },
   'messages.remindAll': { access: 'messages', fn: messaging.remindAll },
 
-  'signatures.list': { access: docModule, fn: signatures.listSignatures },
-  'signatures.signOnSite': { access: docModule, fn: signatures.signOnSite },
-  'signatures.request': { access: docModule, fn: signatures.createRequest },
+  'signatures.list': { access: docModuleById, fn: signatures.listSignatures },
+  'signatures.signOnSite': { access: docModuleById, fn: signatures.signOnSite },
+  'signatures.request': { access: docModuleById, fn: signatures.createRequest },
 
   // Stock avancé
   'warehouses.options': { access: 'user', fn: (ctx) => ctx.db.query('SELECT id, code, name FROM warehouses WHERE active ORDER BY id') },
@@ -373,7 +376,7 @@ async function dispatch(ctx: Ctx, name: string, args: unknown): Promise<CallResu
         mod = typeof route.access === 'function' ? await route.access(ctx, args) : route.access
         if (!can(ctx.user.role, mod)) fail("Vous n'avez pas les droits pour cette action.")
         // Attribution des licences : réservée au compte administrateur de l'éditeur, quel que soit le rôle
-        if (mod === 'licensing' && !isVendorAdmin(ctx.user)) fail(`L'attribution des licences est réservée au compte administrateur de l'éditeur (${VENDOR_ADMIN}).`)
+        if (mod === 'licensing' && (ctx.client || !isVendorAdmin(ctx.user))) fail(`L'attribution des licences est réservée au compte administrateur de l'éditeur (${VENDOR_ADMIN}).`)
       }
       // Copie en ligne d'un serveur d'entreprise : consultation seule, la saisie se fait sur ce serveur
       if (!isReadAction(name) && (await licence.licenceStatus(ctx.db)).mirror)

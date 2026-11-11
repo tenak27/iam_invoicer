@@ -56,6 +56,8 @@ export interface ServerOptions {
   corsOrigin?: string
   /** Préfixe public de ce serveur (client hébergé : « /t/<client> ») pour les liens envoyés. */
   publicPath?: string
+  /** Base d'une société cliente hébergée (pas celle de l'éditeur). */
+  clientSpace?: boolean
   /** Code d'activation exigé à la première configuration (client hébergé). */
   setupCode?: () => Promise<string | null>
   /** Serveur placé derrière un proxy (nginx, Caddy) : l'adresse du visiteur vient de X-Forwarded-For. */
@@ -127,7 +129,7 @@ export function createHandler(opts: ServerOptions) {
     app: 'IAM INVOICER',
     resolveUser: (t) => resolveToken(db, t),
     publicPath: opts.publicPath,
-    config: integrationsConfig(db, (user, name, args, req) => call({ db, user, origin: publicOrigin(req), token: null }, name, args))
+    config: integrationsConfig(db, (user, name, args, req) => call({ db, user, origin: publicOrigin(req), token: null, client: opts.clientSpace === true }, name, args))
   })
   // « Mot de passe oublié ? » : code envoyé par la console d'IAM Technology (e-mail ou WhatsApp)
   const recovery = new RecoveryService({ db, app: 'IAM INVOICER', resolveUser: (t) => resolveToken(db, t), config: recoveryConfig(db) })
@@ -241,7 +243,7 @@ export function createHandler(opts: ServerOptions) {
           throw new HttpError(403, body.setup_code ? "Code d'activation incorrect." : "Saisissez le code d'activation fourni avec votre accès.")
         }
       }
-      const user = await setup({ db, user: null }, body)
+      const user = await setup({ db, user: null, client: opts.clientSpace === true }, body)
       const token = await createToken(db, user.id, String(body.device ?? ''), /^[A-Za-z0-9_-]{8,64}$/.test(String(body.device_id ?? '')) ? String(body.device_id) : null)
       return send(res, 200, { ok: true, data: { token, user } })
     }
@@ -265,7 +267,7 @@ export function createHandler(opts: ServerOptions) {
         const done = await db.one<{ result: string }>('SELECT result FROM client_ops WHERE op_id = $1 AND user_id = $2', [opId, user.id])
         if (done) return send(res, 200, { ...JSON.parse(done.result), replayed: true })
       }
-      const result = await call({ db, user, origin: publicOrigin(req), token }, name, body.args)
+      const result = await call({ db, user, origin: publicOrigin(req), token, client: opts.clientSpace === true }, name, body.args)
       if (opId && user && result.ok) {
         await db.query('INSERT INTO client_ops (op_id, user_id, name, result) VALUES ($1, $2, $3, $4) ON CONFLICT (op_id) DO NOTHING', [opId, user.id, name, JSON.stringify(result)])
       }

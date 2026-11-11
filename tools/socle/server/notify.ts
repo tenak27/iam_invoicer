@@ -180,7 +180,15 @@ export class Notifier {
       const body = await readJson(req)
       const s = body?.subscription
       const endpoint = String(s?.endpoint ?? '')
-      if (!/^https:\/\//.test(endpoint) || !s?.keys?.p256dh || !s?.keys?.auth) {
+      // Seuls les services de notification des navigateurs sont acceptés : le serveur n'écrit jamais vers une adresse choisie par l'utilisateur
+      let pushHost = ''
+      try {
+        pushHost = new URL(endpoint).hostname.toLowerCase()
+      } catch {
+        /* adresse invalide : refusée ci-dessous */
+      }
+      const knownPush = /(^|[.])(googleapis[.]com|push[.]services[.]mozilla[.]com|notify[.]windows[.]com|push[.]apple[.]com)$/.test(pushHost)
+      if (!/^https:\/\//.test(endpoint) || !knownPush || !s?.keys?.p256dh || !s?.keys?.auth) {
         json(res, 400, { ok: false, error: 'Abonnement invalide.' })
         return true
       }

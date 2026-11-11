@@ -1,6 +1,6 @@
 // Projets / chantiers : suivi des temps, coûts, facturation et rentabilité.
 
-import { treasuryFor } from '@shared/domain'
+import { can, treasuryFor } from '@shared/domain'
 import { formatDate, todayISO } from '@shared/format'
 import { EXPENSE_CATEGORIES, isLate, projectProgress, type ExpenseCategory, type TaskStatus } from '@shared/projects'
 import { postEntry, removeSourceEntry } from './accounting'
@@ -278,6 +278,12 @@ export async function saveProject(ctx: Ctx, input: any) {
   return row!
 }
 
+/** Un temps saisi ne se modifie que par son auteur, un administrateur ou la comptabilité. */
+function ownTime(ctx: Ctx, authorId: number | null) {
+  const u = ctx.user
+  if (u && authorId !== u.id && u.role !== 'admin' && !can(u.role, 'accounting')) fail('Ce temps a été saisi par un autre utilisateur : vous ne pouvez pas le modifier.')
+}
+
 export async function saveTime(ctx: Ctx, input: { id?: number; project_id: number; date?: string; hours: number; description: string; billable?: boolean; rate?: number; task_id?: number | null }) {
   const hours = num(input.hours)
   if (hours <= 0 || hours > 24) fail('Durée invalide (entre 0 et 24 heures).')
@@ -288,8 +294,10 @@ export async function saveTime(ctx: Ctx, input: { id?: number; project_id: numbe
   if (!project) fail('Projet introuvable.')
   if (project.status === 'annule') fail('Ce projet est annulé.')
   if (input.id) {
-    const t = await ctx.db.one('SELECT invoice_id FROM time_entries WHERE id = $1', [input.id])
-    if (t?.invoice_id) fail('Ce temps est déjà facturé.')
+    const t = await ctx.db.one('SELECT invoice_id, user_id FROM time_entries WHERE id = $1 AND project_id = $2', [input.id, input.project_id])
+    if (!t) fail('Saisie introuvable.')
+    ownTime(ctx, t.user_id)
+    if (t.invoice_id) fail('Ce temps est déjà facturé.')
     await ctx.db.query('UPDATE time_entries SET date=$1, hours=$2, description=$3, billable=$4, rate=$5, task_id=$6 WHERE id=$7', [date, hours, description, input.billable !== false, Math.max(0, num(input.rate)), Number(input.task_id) || null, input.id])
     return { id: input.id }
   }
@@ -301,8 +309,9 @@ export async function saveTime(ctx: Ctx, input: { id?: number; project_id: numbe
 }
 
 export async function deleteTime(ctx: Ctx, input: { id: number }) {
-  const t = await ctx.db.one('SELECT invoice_id FROM time_entries WHERE id = $1', [input.id])
+  const t = await ctx.db.one('SELECT invoice_id, user_id FROM time_entries WHERE id = $1', [input.id])
   if (!t) fail('Saisie introuvable.')
+  ownTime(ctx, t.user_id)
   if (t.invoice_id) fail('Ce temps est déjà facturé.')
   await ctx.db.query('DELETE FROM time_entries WHERE id = $1', [input.id])
   return true

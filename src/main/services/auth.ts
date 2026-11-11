@@ -1,6 +1,6 @@
 import { randomBytes, scrypt, scryptSync, timingSafeEqual } from 'node:crypto'
 import type { Role } from '@shared/domain'
-import { ROLE_LABELS } from '@shared/domain'
+import { permissionsOf, ROLE_LABELS } from '@shared/domain'
 import { VENDOR_ADMIN } from '@shared/licence'
 import type { Db } from '../db'
 import { audit, fail, str, type Ctx, type SessionUser } from './context'
@@ -55,6 +55,7 @@ export async function setup(
   checkPassword(input.password)
   const username = str(input.username).toLowerCase()
   if (!username) fail("Nom d'utilisateur obligatoire.")
+  if (ctx.client && username === VENDOR_ADMIN) fail('Cet identifiant est réservé.')
   const user = await ctx.db.one<SessionUser>(
     `INSERT INTO users (username, full_name, role, password_hash) VALUES ($1, $2, 'admin', $3)
      RETURNING id, username, full_name, role`,
@@ -107,23 +108,30 @@ export async function saveUser(
   // L'adresse e-mail sert d'identifiant aux sociétés inscrites en ligne : « @ » et « + » admis
   if (!/^[a-z0-9._@+-]{2,80}$/.test(username)) fail("Nom d'utilisateur invalide (lettres, chiffres, . _ - @ ; 2 caractères minimum, sans espace).")
   checkRole(input.role)
+  // Base d'une société cliente : l'identifiant du compte de l'éditeur ne peut pas y être pris
+  if (ctx.client && username === VENDOR_ADMIN) fail('Cet identifiant est réservé.')
   const isAdmin = ctx.user?.role === 'admin'
   if (!isAdmin && (input.role === 'admin' || input.role === 'licences')) fail('Seul un administrateur peut attribuer ce rôle.')
+  // Sans être administrateur, on n'attribue pas un rôle qui ouvre plus de droits que les siens
+  const mine = new Set(ctx.user ? permissionsOf(ctx.user.role as Role) : [])
+  const within = (role: string) => permissionsOf(role as Role).every((m) => mine.has(m))
+  if (ctx.user && !isAdmin && !within(input.role)) fail('Vous ne pouvez pas attribuer un rôle qui a plus de droits que le vôtre.')
   // Licence : nombre d'utilisateurs actifs
   if (input.active !== false) await checkUserQuota(ctx.db, input.id)
   if (input.id) {
     if (input.id === ctx.user?.id && (input.role !== 'admin' || input.active === false))
       fail('Vous ne pouvez pas retirer vos propres droits administrateur.')
     // Compte de l'éditeur (attribution des licences) : modifiable par lui seul, identifiant fixe
-    const target = await ctx.db.one<{ username: string; role: string }>('SELECT username, role FROM users WHERE id = $1', [input.id])
+    const target = await ctx.db.one<{ username: string; role: string; active: boolean }>('SELECT username, role, active FROM users WHERE id = $1', [input.id])
     if (!target) fail('Utilisateur introuvable.')
     if (!isAdmin && (target.role === 'admin' || target.role === 'licences')) fail('Seul un administrateur peut modifier ce compte.')
+    if (ctx.user && !isAdmin && input.id !== ctx.user.id && !within(target.role)) fail('Vous ne pouvez pas modifier un compte qui a plus de droits que le vôtre.')
     if (target?.username === VENDOR_ADMIN) {
       if (input.id !== ctx.user?.id) fail(`Le compte « ${VENDOR_ADMIN} » ne peut être modifié que par son titulaire.`)
       if (username !== VENDOR_ADMIN) fail(`L'identifiant du compte « ${VENDOR_ADMIN} » ne peut pas être changé.`)
     }
     await ctx.db.query('UPDATE users SET username = $1, full_name = $2, role = $3, active = $4 WHERE id = $5', [
-      username, str(input.full_name), input.role, input.active ?? true, input.id
+      username, str(input.full_name), input.role, input.active ?? target.active, input.id
     ])
     if (input.password) {
       checkPassword(input.password)

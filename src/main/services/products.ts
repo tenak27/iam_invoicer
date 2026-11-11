@@ -1,10 +1,14 @@
 // Catalogue : produits stockés et prestations de service.
 
+import { can } from '@shared/domain'
 import { audit, fail, num, str, type Ctx } from './context'
 
 export async function listProducts(ctx: Ctx, args: { search?: string; kind?: string; includeInactive?: boolean; lowStock?: boolean } = {}) {
   const search = `%${str(args.search).toLowerCase()}%`
-  return ctx.db.query(
+  // Coûts d'achat et valeur du stock : seulement pour les rôles qui gèrent les achats, le stock ou la comptabilité
+  const role = ctx.user?.role
+  const costs = !role || role === 'admin' || (['purchases', 'stock', 'accounting', 'products', 'reports'] as const).some((m) => can(role, m))
+  const rows = await ctx.db.query<any>(
     `SELECT *, stock_qty * avg_cost AS stock_value FROM products
      WHERE ($1 OR active)
        AND ($2 = '' OR kind = $2)
@@ -13,6 +17,10 @@ export async function listProducts(ctx: Ctx, args: { search?: string; kind?: str
      ORDER BY name`,
     [!!args.includeInactive, str(args.kind), search, !!args.lowStock]
   )
+  if (costs) return rows
+  // Les expressions de besoin proposent le prix d'achat indicatif ; coût moyen et valeur du stock restent réservés
+  const price = can(role!, 'requests')
+  return rows.map(({ avg_cost: _a, stock_value: _v, purchase_price, ...r }) => (price ? { ...r, purchase_price } : r))
 }
 
 export async function listCategories(ctx: Ctx) {

@@ -205,7 +205,7 @@ describe('notifications : fil des applications installées et abonnements Web Pu
   })
 
   it('abonnement Web Push : enregistré pour l’utilisateur, refusé s’il est incomplet, retiré', async () => {
-    const subscription = { endpoint: 'https://push.exemple.invalid/abc', keys: { p256dh: 'BOr' + 'a'.repeat(84), auth: 'b'.repeat(22) } }
+    const subscription = { endpoint: 'https://fcm.googleapis.com/fcm/send/abc', keys: { p256dh: 'BOr' + 'a'.repeat(84), auth: 'b'.repeat(22) } }
     expect((await post('/api/socle/push/subscribe', { subscription: { endpoint: 'http://non-securise' } })).status).toBe(400)
     expect((await post('/api/socle/push/subscribe', { subscription, device: 'Chrome Android' })).json.data).toBe(true)
     expect(await db.query('SELECT user_id, device FROM socle_push')).toEqual([{ user_id: uid, device: 'Chrome Android' }])

@@ -1,4 +1,4 @@
-import type { DocLayout } from '@shared/domain'
+import { can, type DocLayout } from '@shared/domain'
 import { parseSignatories, type Signatory } from '@shared/signatories'
 import { DEFAULT_STAMP_LAYOUT, parseStampLayout, type StampLayout } from '@shared/stampLayout'
 import type { Db } from '../db'
@@ -182,6 +182,27 @@ export async function getSettings(db: Db): Promise<CompanySettings> {
   const out: any = { ...DEFAULT_SETTINGS }
   for (const r of rows) if (r.key in out) out[r.key] = JSON.parse(r.value)
   return out
+}
+
+/**
+ * Réglages rendus à un utilisateur : complets pour qui gère les paramètres ; pour les autres, sans le
+ * cachet, les signatures (images) ni les identifiants des comptes d'envoi (e-mail, SMS, facture normalisée).
+ */
+export async function getSettingsFor(ctx: Ctx): Promise<CompanySettings> {
+  const s = await getSettings(ctx.db)
+  const role = ctx.user?.role
+  if (!role || role === 'admin' || can(role, 'settings')) return s
+  return {
+    ...s,
+    stamp: '',
+    signature_image: '',
+    signatories: s.signatories.map((x) => ({ ...x, image: '' })),
+    smtp_user: '',
+    smtp_bcc: '',
+    sms_account: '',
+    sms_http_url: '',
+    secef_url: ''
+  }
 }
 
 export async function saveSettings(ctx: Ctx, given: Partial<CompanySettings>): Promise<CompanySettings> {

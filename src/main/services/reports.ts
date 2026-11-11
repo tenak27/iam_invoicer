@@ -1,6 +1,7 @@
 // Tableau de bord et rapports.
 
 import { todayISO } from '@shared/format'
+import { can } from '@shared/domain'
 import { str, type Ctx } from './context'
 
 // Chiffre d'affaires HT net des avoirs.
@@ -107,6 +108,36 @@ export async function dashboard(ctx: Ctx) {
        WHERE d.type = 'FAC' AND d.status = 'valide' ORDER BY d.date DESC, d.id DESC LIMIT 8`
     )
   ])
+  // Chaque bloc n'est rendu qu'aux rôles qui ont le droit correspondant (ventes, achats, stock, encaissements)
+  const role = ctx.user?.role
+  const all = !role || role === 'admin' || can(role, 'accounting') || can(role, 'reports')
+  const sales = all || can(role!, 'sales')
+  const purchases = all || can(role!, 'purchases')
+  const stock = all || can(role!, 'stock') || can(role!, 'products')
+  const money = all || can(role!, 'payments') || can(role!, 'cash')
+  if (!sales || !purchases || !stock || !money) {
+    const saleTypes = new Set(['DEV', 'BL', 'FAC', 'AV'])
+    return {
+      salesPrevMonth: sales ? prevSales?.sales ?? 0 : 0,
+      counts: sales ? counts : { clients: 0, products: stock ? counts?.products ?? 0 : 0, invoices_month: 0 },
+      daily: sales ? daily : [],
+      byMethod: money ? byMethod : [],
+      topProducts: sales ? topProducts : [],
+      transactions: money ? transactions : [],
+      invoices: sales ? invoices : [],
+      salesMonth: sales ? kpi.sales_month : 0,
+      salesYear: sales ? kpi.sales_year : 0,
+      receivable: sales ? receivable.amount : 0,
+      payable: purchases ? payable.amount : 0,
+      cashIn: money ? cash.cash_in : 0,
+      cashOut: money ? cash.cash_out : 0,
+      overdue: sales ? overdue : [],
+      lowStock: stock ? lowStock : [],
+      monthly: sales ? monthly : [],
+      topClients: sales ? topClients : [],
+      recent: (recent as any[]).filter((d) => (saleTypes.has(d.type) ? sales : purchases))
+    }
+  }
   return {
     salesPrevMonth: prevSales?.sales ?? 0,
     counts,

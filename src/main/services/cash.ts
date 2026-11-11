@@ -5,6 +5,7 @@
 // Une vente au comptoir est une facture validée immédiatement et réglée : elle
 // suit donc les mêmes règles que les autres ventes (stock, numérotation, TVA).
 
+import { can } from '@shared/domain'
 import { todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { postEntry } from './accounting'
@@ -197,9 +198,12 @@ export async function close(ctx: Ctx, input: { counted_amount: number; note?: st
   })
 }
 
+/** Toutes les caisses : administrateur et comptabilité ; les autres ne voient que leurs propres sessions. */
+const seesAllTills = (ctx: Ctx) => !ctx.user || ctx.user.role === 'admin' || can(ctx.user.role, 'accounting')
+
 export async function history(ctx: Ctx, args: { from?: string; to?: string } = {}) {
   // Un caissier ne voit que ses propres sessions ; les responsables voient toutes les caisses.
-  const own = ctx.user?.role === 'caissier' ? ctx.user.id : null
+  const own = seesAllTills(ctx) ? null : ctx.user!.id
   return ctx.db.query(
     `SELECT s.*, u.full_name AS user_name,
             COALESCE((SELECT SUM(amount) FROM payments WHERE cash_session_id = s.id AND direction = 'in'), 0) AS sales_total
@@ -213,7 +217,7 @@ export async function history(ctx: Ctx, args: { from?: string; to?: string } = {
 
 export async function detail(ctx: Ctx, args: { id: number }) {
   const summary = await sessionSummary(ctx.db, args.id)
-  if (ctx.user?.role === 'caissier' && summary.session.user_id !== ctx.user.id) fail("Vous n'avez pas accès à cette caisse.")
+  if (!seesAllTills(ctx) && summary.session.user_id !== ctx.user!.id) fail("Vous n'avez pas accès à cette caisse.")
   return summary
 }
 
