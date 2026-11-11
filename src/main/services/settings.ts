@@ -1,5 +1,6 @@
 import type { DocLayout } from '@shared/domain'
 import { parseSignatories, type Signatory } from '@shared/signatories'
+import { DEFAULT_STAMP_LAYOUT, parseStampLayout, type StampLayout } from '@shared/stampLayout'
 import type { Db } from '../db'
 import { audit, fail, type Ctx } from './context'
 import { forgetLicenceStatus } from './licence'
@@ -54,6 +55,7 @@ export interface CompanySettings {
   signatory_name: string
   signatory_title: string
   signatories: Signatory[] // signatures enregistrées ; celle par défaut est reflétée dans les trois réglages précédents
+  doc_stamp_layout: StampLayout // taille et place du cachet et de la signature sur les documents
 
   // Messagerie (le mot de passe est dans la table secrets)
   smtp_host: string
@@ -133,6 +135,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   signatory_name: '',
   signatory_title: 'Le Directeur',
   signatories: [],
+  doc_stamp_layout: DEFAULT_STAMP_LAYOUT,
   smtp_host: '',
   smtp_port: 587,
   smtp_secure: false,
@@ -185,6 +188,7 @@ export async function saveSettings(ctx: Ctx, given: Partial<CompanySettings>): P
   const input: Partial<CompanySettings> = { ...given }
   // Signatures enregistrées : liste propre, images encodées seulement ; la signature par défaut reste
   // reflétée dans les anciens réglages (documents, exports et applications des versions précédentes).
+  if ('doc_stamp_layout' in input) input.doc_stamp_layout = parseStampLayout(input.doc_stamp_layout)
   if ('signatories' in input) {
     const list = parseSignatories(input.signatories)
     for (const s of list) if (s.image && !IMAGE_DATA_URL.test(s.image)) fail('Signature invalide : choisissez un fichier PNG, JPG, SVG ou WebP.')

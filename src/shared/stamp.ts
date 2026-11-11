@@ -92,7 +92,7 @@ export function stampSvg(spec: StampSpec): string {
     ? `<filter id="worn" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="4" seed="11" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.45" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>`
     : ''
   const g = (inner: string, w: number, h: number) =>
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><defs>${worn}</defs><g ${spec.worn ? 'filter="url(#worn)"' : ''} transform="rotate(-3 ${w / 2} ${h / 2})" opacity="0.94">${inner}</g></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><defs>${worn}</defs><g ${spec.worn ? 'filter="url(#worn)"' : ''} transform="rotate(-3 ${w / 2} ${h / 2})" opacity="0.94">${inner}</g></svg>`
 
   if (spec.shape === 'rond') {
     const W = 600

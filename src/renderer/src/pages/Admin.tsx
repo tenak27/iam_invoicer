@@ -7,6 +7,8 @@ import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, Clo
 import { SignaturePad } from '../components/SignaturePad'
 import { StampStudio } from '../components/StampStudio'
 import { Signatories } from '../components/Signatories'
+import { StampLayoutEditor } from '../components/StampLayoutEditor'
+import { parseStampLayout } from '@shared/stampLayout'
 import type { Signatory } from '@shared/signatories'
 import { UserAvatar } from '../components/Topbar'
 import { DbConfigForm } from './Auth'
@@ -250,6 +252,12 @@ export function CompanySettingsPage() {
               </div>
               <Signatories value={signers} onChange={setSigners} defaultName={user.full_name} pickImage={() => run(() => unwrap(window.erp.pickImage()))} />
             </div>
+            {(v.stamp || signers.length > 0) && (
+              <details className="stamp-adjust">
+                <summary>Ajuster la taille et la place sur les documents</summary>
+                <StampLayoutEditor value={parseStampLayout(v.doc_stamp_layout)} onChange={(l) => f.set('doc_stamp_layout', l)} stamp={v.stamp} signature={(signers.find((s) => s.default) ?? signers[0])?.image} company={v.name} signer={[(signers.find((s) => s.default) ?? signers[0])?.name, (signers.find((s) => s.default) ?? signers[0])?.title].filter(Boolean).join(' — ')} />
+              </details>
+            )}
             <label className="inline check stamp-apply" style={{ marginTop: 12 }}>
               <input type="checkbox" checked={!!v.doc_show_stamp} onChange={(e) => f.set('doc_show_stamp', e.target.checked)} /> Apposer le cachet et la signature sur les documents de vente validés et les bons de commande
             </label>

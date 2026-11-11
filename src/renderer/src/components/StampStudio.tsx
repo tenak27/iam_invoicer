@@ -7,7 +7,7 @@ import { Field, Modal } from './ui'
 const NL = String.fromCharCode(10)
 
 /** Image à fond transparent (WebP, sinon PNG) d'un SVG dessiné dans un canevas ; le plus grand côté fait `maxSide` pixels. */
-export function svgToPng(svg: string, maxSide = 720): Promise<string> {
+export function svgToPng(svg: string, maxSide = 1000): Promise<string> {
   return new Promise((resolve, reject) => {
     const m = /viewBox="0 0 ([0-9]+) ([0-9]+)"/.exec(svg)
     const w = m ? Number(m[1]) : 600
@@ -20,10 +20,12 @@ export function svgToPng(svg: string, maxSide = 720): Promise<string> {
       canvas.height = Math.round(h * k)
       const ctx = canvas.getContext('2d')
       if (!ctx) return reject(new Error('Canevas indisponible sur cet appareil.'))
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       try {
         // WebP à fond transparent quand le navigateur sait l'écrire (environ dix fois plus léger qu'un PNG), sinon PNG
-        const webp = canvas.toDataURL('image/webp', 0.9)
+        const webp = canvas.toDataURL('image/webp', 0.92)
         resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/png'))
       } catch (e) {
         reject(e)

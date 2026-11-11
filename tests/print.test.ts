@@ -209,3 +209,17 @@ describe('Cachet et signatures', () => {
     expect((await ok(admin, 'documents.get', { id: draft.id })).signatory_id).toBe('daf')
   })
 })
+
+describe('Cachet et signature ajustés sur les documents', () => {
+  it('taille, place, rotation et encre bornées, appliquées à l’impression', async () => {
+    const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+    await ok(admin, 'settings.save', { stamp: PNG, doc_stamp_layout: { stamp: { size: 150, x: -40, y: 12, rotate: -8, opacity: 5000 }, sign: { size: 9999, x: 20, y: 'abc' } } })
+    const company = await getSettings(db)
+    expect(company.doc_stamp_layout).toEqual({ stamp: { size: 150, x: -40, y: 12, rotate: -8, opacity: 100 }, sign: { size: 250, x: 20, y: 0 } })
+    const client = await ok(admin, 'parties.save', { kind: 'client', name: 'Client Ajustement' })
+    const fac = await ok(admin, 'documents.save', { type: 'FAC', party_id: client.id, date: '2026-11-11', taxes: [], validate: true, lines: [{ description: 'Service', quantity: 1, unit_price: 1000, tva_rate: 18 }] })
+    const html = (await printable(admin, fac.id, 'a4', false)).html
+    expect(html).toContain('class="cachet" style="max-height:165px;max-width:255px;opacity:1.00;transform:translate(-40px,12px) rotate(-8deg)"')
+    expect(html).toContain('class="sig" style="max-height:145px;max-width:500px;position:relative;transform:translate(20px,0px)"')
+  })
+})

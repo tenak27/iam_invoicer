@@ -2999,3 +2999,22 @@ h1, h2, h3, .auth-title, .brand-name, .kpi-tile-value, .hero-figure, .stat stron
   .signer { grid-template-columns: 96px minmax(0, 1fr); }
   .signer-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* Ajustement du cachet et de la signature sur les documents */
+.stamp-adjust { margin-top: 14px; border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 14px; }
+.stamp-adjust > summary { cursor: pointer; font-weight: 600; }
+.stamp-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; margin-top: 14px; align-items: start; }
+.sl-preview { overflow: auto; padding: 60px 30px 40px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-md); touch-action: none; }
+.sl-sigbox { position: relative; width: 335px; min-height: 104px; margin: 0 auto 14px; padding: 8px 12px 26px; border: 1px solid #d4dbe3; border-radius: 6px; font-size: 11px; color: #5f6b7a; display: flow-root; font-family: Arial, Helvetica, sans-serif; }
+.sl-t { text-transform: uppercase; letter-spacing: .4px; font-size: 10px; }
+.sl-who { position: absolute; left: 12px; right: 12px; bottom: 7px; }
+.sl-sig { display: block; margin: 4px 0; cursor: grab; user-select: none; -webkit-user-drag: none; }
+.sl-cachet { position: absolute; right: 10px; top: 10px; cursor: grab; user-select: none; -webkit-user-drag: none; }
+.sl-sig.on, .sl-cachet.on { outline: 1px dashed var(--accent); outline-offset: 3px; }
+.sl-controls { display: grid; gap: 10px; align-content: start; }
+.sl-controls .chips { margin-bottom: 0; }
+.sl-controls .chip { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 13px; }
+.sl-controls .chip.on { background: var(--accent); color: #fff; }
+.sl-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) 62px; gap: 10px; align-items: center; font-size: 13px; }
+.sl-row output { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+@media (max-width: 760px) { .stamp-layout { grid-template-columns: 1fr; } .sl-preview { padding: 50px 8px 30px; } }

@@ -6,6 +6,7 @@ import { taxCaption, type AppliedTax } from '../shared/taxes'
 import { amountInWords, formatDate, formatMoney, formatNumber, formatQty } from '@shared/format'
 import type { CompanySettings } from './services/settings'
 import { pickSignatory } from '@shared/signatories'
+import { parseStampLayout, signStyle, stampStyle } from '@shared/stampLayout'
 import { qrSvg } from './services/secef'
 
 const esc = (s: unknown): string =>
@@ -229,6 +230,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   const signatures: any[] = doc.signatures ?? []
   // Signature et cachet de la société : images posées sur les documents validés qu'elle émet (ventes et bons de commande)
   const signer = pickSignatory(company, doc.signatory_id)
+  // Taille et place du cachet et de la signature, réglées dans les paramètres
+  const stampLayout = parseStampLayout(company.doc_stamp_layout)
   const showStamp = company.doc_show_stamp && doc.status === 'valide' && (company.stamp || signer.image) && (info.side === 'sale' || type === 'BC')
   // Zones de signature : toujours présentes, vides si personne n'a encore signé (à signer et tamponner à la main)
   const OURS: Record<string, string> = { BL: 'Livré par', BR: 'Réceptionné par' }
@@ -242,8 +245,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   }
   const signBlock = !THEIRS[type] ? '' : `<div class="signs">
     <div class="sigbox"><div class="t">${OURS[type] ? OURS[type] + ' — ' : 'Pour '}${esc(company.name)}</div>
-      ${showStamp && signer.image ? `<img class="sig" src="${signer.image}">` : ''}
-      ${showStamp && company.stamp ? `<img class="cachet" src="${company.stamp}">` : ''}
+      ${showStamp && signer.image ? `<img class="sig" style="${signStyle(stampLayout)}" src="${signer.image}">` : ''}
+      ${showStamp && company.stamp ? `<img class="cachet" style="${stampStyle(stampLayout)}" src="${company.stamp}">` : ''}
       <div class="who">${signer.name ? esc(signer.name) + (signer.title ? ' — ' + esc(signer.title) : '') : 'Signature et cachet'}</div></div>
     ${signatures.length
       ? signatures.map((g: any) => `<div class="sigbox"><div class="t">${type === 'BL' ? 'Reçu par le client' : 'Bon pour accord du client'}</div>
@@ -390,7 +393,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .sigbox .who { position: absolute; left: 12px; right: 12px; bottom: 7px; }
   .sigbox { display: flow-root; }
   .sigbox img.sig { max-height: 58px; max-width: 200px; display: block; margin: 4px 0; }
-  .sigbox img.cachet { position: absolute; right: 10px; top: 10px; max-height: 78px; max-width: 120px; opacity: .9; }
+  .sigbox img.cachet { position: absolute; right: 10px; top: 10px; max-height: 110px; max-width: 170px; opacity: .92; transform-origin: center; }
   .sigbox .proof { font-size: 6.5pt; color: #8a94a3; word-break: break-all; }
   .secef { display: flex; gap: 14px; align-items: center; margin-top: 16px; padding: 10px 12px; border: 1px solid #d4dbe3; border-radius: 6px; page-break-inside: avoid; font-size: 8.5pt; }
   .secef .t { font-weight: 700; color: ${c}; text-transform: uppercase; letter-spacing: .4px; font-size: 8pt; }
