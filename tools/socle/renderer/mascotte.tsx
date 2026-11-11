@@ -2,7 +2,7 @@
 // Deux personnages en image (elle et lui) dans public/socle/mascotte. Le personnage change à chaque
 // nouvelle connexion (jeton de session différent) ; sans jeton, il suit l'heure de la journée.
 // Il joue des scènes qui s'enchaînent : salut, au travail devant l'ordinateur, danse, téléphone.
-// Chaque scène alterne ses images et a son mouvement (socle.css, .socle-mascotte.sc-*). Un clic passe
+// Chaque scène enchaîne ses images en fondu et a son mouvement continu (socle.css, .socle-mascotte.sc-*). Un clic passe
 // à la scène suivante avec un mot dans une bulle ; le personnage se penche vers le pointeur.
 // Mouvement réduit demandé : image fixe, la scène ne change qu'au clic.
 import { useEffect, useRef, useState } from 'react'
@@ -12,7 +12,7 @@ type Scene = { name: 'salut' | 'ordi' | 'danse' | 'tel'; frames: [string, number
 const SCENES: Scene[] = [
   { name: 'salut', frames: [['salut', 2600], ['ok', 1500], ['salut', 2200], ['montre', 1600]], last: 11000, say: 'Tout est à jour.' },
   { name: 'ordi', frames: [['ordi1', 3400], ['ordi2', 1500]], last: 12000, say: 'Au travail, je m’occupe du reste.' },
-  { name: 'danse', frames: [['danse1', 460], ['danse2', 460]], last: 7000, say: 'Une tâche de moins, ça se fête.' },
+  { name: 'danse', frames: [['danse1', 560], ['danse2', 560]], last: 7000, say: 'Une tâche de moins, ça se fête.' },
   { name: 'tel', frames: [['tel1', 3200], ['tel2', 1700]], last: 11000, say: 'Tout se suit aussi depuis le téléphone.' },
 ]
 const KEY = 'iam.mascotte'
@@ -43,6 +43,8 @@ export function Mascotte({ className = '', token, messages = [] }: { className?:
   const [bubble, setBubble] = useState<string | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const img = useRef<HTMLImageElement>(null)
+  const ghost = useRef<HTMLImageElement>(null)
+  const shown = useRef('')
   const hide = useRef<number | undefined>(undefined)
   const said = useRef(0)
   const still = useRef(typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
@@ -126,6 +128,22 @@ export function Mascotte({ className = '', token, messages = [] }: { className?:
   }
   const scene = SCENES[at.scene]
   const pose = scene.frames[Math.min(at.frame, scene.frames.length - 1)][0]
+  const url = src(genre, pose)
+
+  // Fondu entre deux images : l'ancienne reste dessous (calque jumeau) le temps que la nouvelle apparaisse
+  useEffect(() => {
+    const before = shown.current
+    shown.current = url
+    const g = ghost.current
+    const m = img.current
+    if (!before || before === url || still.current || !g || !m?.animate) return
+    g.src = before
+    // Danse : poses très différentes, le fondu reste bref pour ne pas dédoubler le personnage
+    const quick = scene.name === 'danse'
+    g.animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0 }], { duration: quick ? 130 : 380, fill: 'forwards' })
+    m.animate([{ opacity: 0 }, { opacity: 1 }], { duration: quick ? 90 : 280, easing: 'ease-out' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url])
 
   return (
     <div ref={box} className={`socle-mascotte sc-${scene.name} ${className}`}>
@@ -135,7 +153,8 @@ export function Mascotte({ className = '', token, messages = [] }: { className?:
         </div>
       )}
       <button type="button" className="socle-mascotte-btn" onClick={react} aria-label="Mascotte : cliquez pour changer de scène">
-        <img ref={img} src={src(genre, pose)} alt="" width={388} height={520} draggable={false} decoding="async" />
+        <img ref={ghost} className="ghost" alt="" width={388} height={520} draggable={false} aria-hidden="true" />
+        <img ref={img} src={url} alt="" width={388} height={520} draggable={false} decoding="async" />
       </button>
     </div>
   )

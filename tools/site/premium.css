@@ -271,14 +271,29 @@ summary::after { transition: transform .3s var(--ease); }
 .hero-art .hero-awa.mascotte { aspect-ratio: auto; width: auto; height: min(88%, 620px); right: 14%; bottom: 0; filter: drop-shadow(0 24px 22px rgba(110, 60, 0, .28)); }
 .contact-art .contact-awa.mascotte { aspect-ratio: auto; width: auto; height: 78%; max-width: none; right: 8%; bottom: 0; }
 img.mascotte { --mx: 0px; --mr: 0deg; cursor: pointer; pointer-events: auto; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent; transform: translateX(var(--mx)) rotate(var(--mr)); transform-origin: 50% 100%; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
-/* Scènes de la mascotte (premium.js) : chacune a son mouvement, le changement d'image fait le reste */
-img.mascotte.sc-salut { animation: mascotte-respire 3.6s ease-in-out infinite; }
-img.mascotte.sc-tel { animation: mascotte-respire 4.4s ease-in-out infinite; }
-img.mascotte.sc-ordi { animation: mascotte-tape .52s ease-in-out infinite; -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 99%); mask-image: linear-gradient(to right, #000 88%, transparent 99%); }
-img.mascotte.sc-danse { animation: mascotte-danse .46s cubic-bezier(.35, 0, .45, 1) infinite alternate; }
-@keyframes mascotte-respire { 50% { transform: translateX(var(--mx)) translateY(-6px) rotate(var(--mr)); } }
-@keyframes mascotte-tape { 50% { transform: translateX(var(--mx)) translateY(-2px) rotate(var(--mr)); } }
-@keyframes mascotte-danse { from { transform: translateX(calc(var(--mx) - 8px)) translateY(0) rotate(calc(var(--mr) - 2.5deg)); } to { transform: translateX(calc(var(--mx) + 8px)) translateY(-12px) rotate(calc(var(--mr) + 2.5deg)); } }
+/* Scènes de la mascotte (premium.js) : mouvement continu propre à chaque scène, fondu entre les images */
+img.mascotte-ghost { opacity: 0; pointer-events: none; }
+img.mascotte.sc-salut { animation: mascotte-respire 4.2s ease-in-out infinite; }
+img.mascotte.sc-tel { animation: mascotte-respire 5s ease-in-out infinite; }
+img.mascotte.sc-ordi { animation: mascotte-tape 2.6s ease-in-out infinite; -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 99%); mask-image: linear-gradient(to right, #000 88%, transparent 99%); }
+img.mascotte.sc-danse { animation: mascotte-danse 1.12s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes mascotte-respire {
+  0%, 100% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)) scale(1, 1); }
+  30% { transform: translateX(calc(var(--mx) + 2px)) translateY(-5px) rotate(calc(var(--mr) + .6deg)) scale(1.004, 1.012); }
+  65% { transform: translateX(calc(var(--mx) - 2px)) translateY(-2px) rotate(calc(var(--mr) - .5deg)) scale(1, 1.006); }
+}
+@keyframes mascotte-tape {
+  0%, 100% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)); }
+  25% { transform: translateX(var(--mx)) translateY(-2px) rotate(calc(var(--mr) - .35deg)); }
+  50% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)); }
+  75% { transform: translateX(var(--mx)) translateY(-1.5px) rotate(calc(var(--mr) + .35deg)); }
+}
+@keyframes mascotte-danse {
+  0%, 100% { transform: translateX(calc(var(--mx) - 10px)) translateY(0) rotate(calc(var(--mr) - 3deg)) scale(1.01, .985); }
+  25% { transform: translateX(var(--mx)) translateY(-16px) rotate(var(--mr)) scale(.995, 1.02); }
+  50% { transform: translateX(calc(var(--mx) + 10px)) translateY(0) rotate(calc(var(--mr) + 3deg)) scale(1.01, .985); }
+  75% { transform: translateX(var(--mx)) translateY(-16px) rotate(var(--mr)) scale(.995, 1.02); }
+}
 .mascotte-bulle { position: absolute; z-index: 6; max-width: 230px; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #fff; color: #0b2a4b; font-size: .92rem; font-weight: 600; line-height: 1.3; box-shadow: 0 14px 30px -16px rgba(7, 42, 75, .5); opacity: 0; translate: 0 6px; transition: opacity .25s, translate .25s; pointer-events: none; }
 .mascotte-bulle.on { opacity: 1; translate: 0 0; }
 @media (max-width: 1040px) { .hero-art .hero-awa.mascotte { height: min(92%, 440px); right: 50%; translate: 50% 0; } }

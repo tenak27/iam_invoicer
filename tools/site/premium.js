@@ -159,12 +159,27 @@
   var SCENES = [
     { name: 'salut', frames: [['salut', 2600], ['ok', 1500], ['salut', 2200], ['montre', 1600]], last: 11000, say: demo ? 'Essayez la version démo, sans créer de compte' : 'Découvrez nos dix logiciels' },
     { name: 'ordi', frames: [['ordi1', 3400], ['ordi2', 1500]], last: 12000, say: 'Au travail : devis, factures et suivi, tout au même endroit' },
-    { name: 'danse', frames: [['danse1', 460], ['danse2', 460]], last: 7000, say: 'Une tâche de moins, ça se fête' },
+    { name: 'danse', frames: [['danse1', 560], ['danse2', 560]], last: 7000, say: 'Une tâche de moins, ça se fête' },
     { name: 'tel', frames: [['tel1', 3200], ['tel2', 1700]], last: 11000, say: 'Tout se suit aussi depuis le téléphone' },
   ]
   SCENES.forEach(function (s) { s.frames.forEach(function (f) { new Image().src = src(f[0]) }) })
   imgs.forEach(function (img, n) {
     var scene = 0, frame = 0, started = 0, timer, hide
+    // Fondu entre deux images : l'ancienne reste dessous (calque jumeau) le temps que la nouvelle apparaisse
+    var ghost = img.cloneNode(false)
+    ghost.classList.add('mascotte-ghost')
+    ghost.setAttribute('aria-hidden', 'true')
+    img.parentNode.insertBefore(ghost, img)
+    var show = function (url) {
+      if (img.getAttribute('src') === url) return
+      if (reduce || !img.animate) { img.src = url; return }
+      ghost.src = img.src
+      img.src = url
+      // Danse : poses très différentes, le fondu reste bref pour ne pas dédoubler le personnage
+      var quick = SCENES[scene].name === 'danse'
+      ghost.animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0 }], { duration: quick ? 130 : 380, fill: 'forwards' })
+      img.animate([{ opacity: 0 }, { opacity: 1 }], { duration: quick ? 90 : 280, easing: 'ease-out' })
+    }
     var bulle = document.createElement('span')
     bulle.className = 'mascotte-bulle'
     img.parentNode.insertBefore(bulle, img.nextSibling)
@@ -178,7 +193,7 @@
     }
     var step = function () {
       var s = SCENES[scene]
-      img.src = src(s.frames[frame][0])
+      show(src(s.frames[frame][0]))
       if (reduce) return
       timer = setTimeout(function () {
         // Onglet en arrière-plan : la scène attend
@@ -193,11 +208,12 @@
     }
     var play = function (k, talk) {
       clearTimeout(timer)
-      SCENES.forEach(function (s) { img.classList.remove('sc-' + s.name) })
+      SCENES.forEach(function (s) { img.classList.remove('sc-' + s.name); ghost.classList.remove('sc-' + s.name) })
       scene = k % SCENES.length
       frame = 0
       started = Date.now()
       img.classList.add('sc-' + SCENES[scene].name)
+      ghost.classList.add('sc-' + SCENES[scene].name)
       if (!reduce && img.animate) img.animate([{ scale: 0.93 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(.2, .9, .3, 1.2)' })
       if (talk) say(SCENES[scene].say)
       step()
@@ -212,8 +228,10 @@
       var r = img.getBoundingClientRect()
       if (r.bottom < 0 || r.top > innerHeight) return
       var dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 600))
-      img.style.setProperty('--mr', (dx * 3).toFixed(2) + 'deg')
-      img.style.setProperty('--mx', (dx * 8).toFixed(1) + 'px')
+      ;[img, ghost].forEach(function (el) {
+        el.style.setProperty('--mr', (dx * 3).toFixed(2) + 'deg')
+        el.style.setProperty('--mx', (dx * 8).toFixed(1) + 'px')
+      })
     }, { passive: true })
   })
 })()
