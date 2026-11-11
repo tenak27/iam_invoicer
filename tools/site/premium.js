@@ -141,3 +141,79 @@
     all('.dl-card', grid).forEach(function (c, k) { c.style.setProperty('--d', k) })
   })
 })()
+
+// ── Mascotte : elle le matin et le soir, lui l'après-midi et la nuit. Elle joue des scènes qui s'enchaînent
+//    (salut, au travail devant l'ordinateur, danse, téléphone) : chaque scène alterne ses images et a son
+//    mouvement (premium.css). Un clic passe à la scène suivante avec un mot dans une bulle ; elle se penche
+//    vers le pointeur. Mouvement réduit demandé : image fixe, la scène ne change qu'au clic. ──
+;(function () {
+  var imgs = Array.prototype.slice.call(document.querySelectorAll('img.mascotte'))
+  if (!imgs.length) return
+  var h = new Date().getHours()
+  var g = (h >= 6 && h < 12) || h >= 18 ? 'f' : 'h'
+  var src = function (p) { return 'assets/mascotte/' + g + '-' + p + '.webp' }
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  var hello = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'
+  var demo = document.querySelector('a[href*="demo"], [data-demo]')
+  // Scène : images [nom, durée en ms], durée de la scène, mot dit au clic
+  var SCENES = [
+    { name: 'salut', frames: [['salut', 2600], ['ok', 1500], ['salut', 2200], ['montre', 1600]], last: 11000, say: demo ? 'Essayez la version démo, sans créer de compte' : 'Découvrez nos dix logiciels' },
+    { name: 'ordi', frames: [['ordi1', 3400], ['ordi2', 1500]], last: 12000, say: 'Au travail : devis, factures et suivi, tout au même endroit' },
+    { name: 'danse', frames: [['danse1', 460], ['danse2', 460]], last: 7000, say: 'Une tâche de moins, ça se fête' },
+    { name: 'tel', frames: [['tel1', 3200], ['tel2', 1700]], last: 11000, say: 'Tout se suit aussi depuis le téléphone' },
+  ]
+  SCENES.forEach(function (s) { s.frames.forEach(function (f) { new Image().src = src(f[0]) }) })
+  imgs.forEach(function (img, n) {
+    var scene = 0, frame = 0, started = 0, timer, hide
+    var bulle = document.createElement('span')
+    bulle.className = 'mascotte-bulle'
+    img.parentNode.insertBefore(bulle, img.nextSibling)
+    var say = function (text) {
+      bulle.textContent = text
+      bulle.style.left = Math.max(70, img.offsetLeft - 100) + 'px'
+      bulle.style.top = Math.max(8, img.offsetTop + img.offsetHeight * 0.08) + 'px'
+      bulle.classList.add('on')
+      clearTimeout(hide)
+      hide = setTimeout(function () { bulle.classList.remove('on') }, 5200)
+    }
+    var step = function () {
+      var s = SCENES[scene]
+      img.src = src(s.frames[frame][0])
+      if (reduce) return
+      timer = setTimeout(function () {
+        // Onglet en arrière-plan : la scène attend
+        if (document.hidden) { step(); return }
+        frame += 1
+        if (frame >= s.frames.length) {
+          frame = 0
+          if (Date.now() - started > s.last) { play(scene + 1); return }
+        }
+        step()
+      }, document.hidden ? 1500 : s.frames[frame][1])
+    }
+    var play = function (k, talk) {
+      clearTimeout(timer)
+      SCENES.forEach(function (s) { img.classList.remove('sc-' + s.name) })
+      scene = k % SCENES.length
+      frame = 0
+      started = Date.now()
+      img.classList.add('sc-' + SCENES[scene].name)
+      if (!reduce && img.animate) img.animate([{ scale: 0.93 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(.2, .9, .3, 1.2)' })
+      if (talk) say(SCENES[scene].say)
+      step()
+    }
+    img.addEventListener('click', function () { play(scene + 1, true) })
+    // Le premier personnage salue à l'arrivée ; le second commence au travail
+    play(n === 0 ? 0 : 1)
+    if (n === 0) setTimeout(function () { say(hello + ' et bienvenue') }, 1400)
+    if (reduce) return
+    addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return
+      var r = img.getBoundingClientRect()
+      if (r.bottom < 0 || r.top > innerHeight) return
+      var dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 600))
+      img.style.setProperty('--mr', (dx * 3).toFixed(2) + 'deg')
+      img.style.setProperty('--mx', (dx * 8).toFixed(1) + 'px')
+    }, { passive: true })
+  })
+})()

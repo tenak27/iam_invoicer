@@ -7,7 +7,8 @@ import { todayISO } from '@shared/format'
 import { useQuery } from '../api'
 import { AreaChart, compact, Donut, Progress, Sparkline } from '../components/charts'
 import { CountUp, DashboardSkeleton } from '../components/motion'
-import { Mascot } from '../components/Mascot'
+import { Mascotte } from '../socle/mascotte'
+import { httpSession } from '../bridge'
 import { Scenery } from '../components/Scenery'
 import { Empty, ErrorBox } from '../components/ui'
 import { useCan, useSession } from '../session'
@@ -133,9 +134,9 @@ export function Dashboard() {
             <p className="hero-sub">Chiffre d'affaires HT du mois <Growth now={d.salesMonth} before={d.salesPrevMonth} /></p>
             {canSales && <button className="btn btn-primary" onClick={() => nav('/docs/FAC')}>Voir les ventes <ArrowRight size={18} weight="bold" aria-hidden="true" /></button>}
           </div>
-          <Mascot
+          <Mascotte
             className="hero-mascot"
-            mood={assistant.data?.some((i) => i.tone === 'danger') ? 'alert' : up ? 'happy' : 'calm'}
+            token={() => httpSession()?.token() ?? null}
             messages={[
               ...(assistant.data ?? []).slice(0, 3).map((i) => i.title),
               up ? 'Les ventes montent, bravo !' : `Bonjour ${first} !`,

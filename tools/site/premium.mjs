@@ -15,6 +15,12 @@ const behaviours = readFileSync(new URL('./premium.js', import.meta.url), 'utf8'
 export async function finishSite(html, key) {
   if (!key) throw new Error('finishSite : clé du site attendue (invoicer, btp…, technology)')
   html = injectGamme(html, key)
+  // Mascotte : le personnage dessiné (SVG) laisse la place au personnage en image, animé par premium.js
+  for (const cls of ['hero-awa', 'contact-awa']) {
+    const from = html.indexOf(`<svg class="${cls}"`)
+    const to = html.indexOf('</svg>', from)
+    if (from >= 0 && to > from) html = `${html.slice(0, from)}<img class="${cls} mascotte" src="assets/mascotte/f-salut.webp" width="717" height="960" alt="" decoding="async">${html.slice(to + 6)}`
+  }
   const head = html.indexOf('</head>')
   const last = html.lastIndexOf('</style>', head)
   if (last < 0) throw new Error('Aucun <style> dans l’en-tête du site')

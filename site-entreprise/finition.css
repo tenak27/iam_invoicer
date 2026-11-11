@@ -43,8 +43,3 @@
 
 /* Survol : un changement de surface, sans déplacement */
 #top .tier:hover { transform: none; }
-
-/* Mascotte en image : hauteur du panneau d'accueil, posée sur le bas, ombre douce au sol */
-#top .hero-awa.mascotte { aspect-ratio: auto; width: auto; height: min(88%, 620px); right: 14%; bottom: 0; filter: drop-shadow(0 24px 22px rgba(110, 60, 0, .28)); }
-#top .contact-awa.mascotte { aspect-ratio: auto; width: auto; height: 78%; max-width: none; right: 8%; bottom: 0; }
-@media (max-width: 1040px) { #top .hero-awa.mascotte { height: min(92%, 440px); right: 50%; translate: 50% 0; bottom: 0; } }

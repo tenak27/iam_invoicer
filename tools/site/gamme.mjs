@@ -36,6 +36,8 @@ const source = (key) => MARQUES + (key === 'artisans' ? 'faso-artisans.png' : `i
 export async function writeGammeIcons(outDir) {
   mkdirSync(`${outDir}/assets/gamme`, { recursive: true })
   for (const g of GAMME) cpSync(`${ICONS}${g.key}.png`, `${outDir}/assets/gamme/${g.key}.png`)
+  // Poses de la mascotte (elle et lui : salut, pouce levé, montre du doigt)
+  cpSync(fileURLToPath(new URL('../../assets/mascotte/', import.meta.url)), `${outDir}/assets/mascotte`, { recursive: true })
 }
 
 // Lancé directement : icônes refaites depuis les logos

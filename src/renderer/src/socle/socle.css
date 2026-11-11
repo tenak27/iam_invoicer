@@ -191,3 +191,29 @@ input[type='color']::-moz-color-swatch { border: 0; border-radius: 8px; }
 .socle-pay-fields input, .socle-pay-fields select { font: inherit; min-height: 40px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(15, 27, 51, .18); background: #fff; color: #0f1b33; }
 .socle-pay-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .socle-pay .socle-update-actions a.socle-btn { text-decoration: none; }
+
+/* Mascotte (mascotte.tsx) : personnage en image dans la carte d'accueil, penché vers le pointeur, bulle de texte */
+.socle-mascotte { --mx: 0px; --mr: 0deg; position: relative; z-index: 1; justify-self: center; align-self: end; height: 250px; margin-bottom: -30px; }
+.socle-mascotte-btn { display: block; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.socle-mascotte-btn:focus-visible { outline: 3px solid #c9a227; outline-offset: 4px; border-radius: 18px; }
+.socle-mascotte img { display: block; height: 100%; width: auto; user-select: none; -webkit-user-drag: none; transform: translateX(var(--mx)) rotate(var(--mr)); transform-origin: 50% 100%; transition: transform .35s cubic-bezier(.2, .8, .2, 1); filter: drop-shadow(0 16px 14px rgba(7, 42, 75, .22)); }
+/* Scènes (salut, ordinateur, danse, téléphone) : chacune a son mouvement, le changement d'image fait le reste */
+.socle-mascotte.sc-salut img { animation: socle-mascotte-respire 3.6s ease-in-out infinite; }
+.socle-mascotte.sc-tel img { animation: socle-mascotte-respire 4.4s ease-in-out infinite; }
+.socle-mascotte.sc-ordi img { animation: socle-mascotte-tape .52s ease-in-out infinite; -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 99%); mask-image: linear-gradient(to right, #000 88%, transparent 99%); }
+.socle-mascotte.sc-danse img { animation: socle-mascotte-danse .46s cubic-bezier(.35, 0, .45, 1) infinite alternate; }
+@keyframes socle-mascotte-respire { 50% { transform: translateX(var(--mx)) translateY(-4px) rotate(var(--mr)); } }
+@keyframes socle-mascotte-tape { 50% { transform: translateX(var(--mx)) translateY(-1.5px) rotate(var(--mr)); } }
+@keyframes socle-mascotte-danse { from { transform: translateX(calc(var(--mx) - 5px)) translateY(0) rotate(calc(var(--mr) - 2.5deg)); } to { transform: translateX(calc(var(--mx) + 5px)) translateY(-8px) rotate(calc(var(--mr) + 2.5deg)); } }
+@keyframes socle-mascotte-pop { from { scale: .94; } to { scale: 1; } }
+.socle-mascotte-bulle { position: absolute; z-index: 2; right: 76%; top: 4%; width: max-content; max-width: 210px; padding: 9px 13px; border-radius: 14px 14px 4px 14px; background: #fff; color: #0b2a4b; font-size: 13px; font-weight: 600; line-height: 1.3; box-shadow: 0 12px 26px -14px rgba(7, 42, 75, .5); animation: socle-mascotte-pop .25s ease-out; }
+.socle-mascotte.hero-mascot { position: absolute; right: 6%; bottom: 0; width: auto; height: 232px; margin: 0; }
+.hello-duo { position: relative; display: grid; }
+.hello-duo .socle-mascotte { position: absolute; right: 0; bottom: -30px; height: 190px; margin: 0; }
+@media (max-width: 760px) {
+  .socle-mascotte { height: 170px; margin-bottom: 0; order: -1; }
+  .socle-mascotte.hero-mascot { height: 150px; right: 0; }
+  .socle-mascotte-bulle { display: none; }
+  .hello-duo .socle-mascotte { height: 100%; bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .socle-mascotte img { animation: none !important; transition: none; } .socle-mascotte-bulle { animation: none; } }

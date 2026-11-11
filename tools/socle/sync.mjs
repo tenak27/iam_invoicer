@@ -52,7 +52,9 @@ for (const app of [...APPS, SELF]) {
   // Survol réservé à la souris, appliqué à la compilation de l'interface (Vite lit ce fichier tout seul)
   put(join(here, 'build/postcss.config.mjs'), join(root, 'postcss.config.mjs'))
   if (app === SELF) {
-    for (const f of ['touch.ts', 'socle.css', 'integrations.tsx', 'recovery.tsx', 'navfold.tsx', 'install.tsx', 'motion.css']) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
+    for (const f of ['touch.ts', 'socle.css', 'integrations.tsx', 'recovery.tsx', 'navfold.tsx', 'install.tsx', 'motion.css', 'mascotte.tsx']) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
+    // Images de la mascotte (public/socle/mascotte)
+    copyTree(join(here, 'renderer/public/socle/mascotte'), join(root, 'src/renderer/public/socle/mascotte'))
   } else {
     copyTree(join(here, 'server'), join(root, 'src/server/socle'))
     for (const f of readdirSync(join(here, 'renderer'))) if (/\.(tsx?|css)$/.test(f)) put(join(here, 'renderer', f), join(root, 'src/renderer/src/socle', f))
