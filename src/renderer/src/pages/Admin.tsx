@@ -36,7 +36,7 @@ const DATA_TEXT: Record<DataMode, string> = {
   remote: 'serveur en ligne'
 }
 
-type SettingsTab = 'societe' | 'taxes' | 'documents' | 'mail' | 'sms' | 'secef' | 'donnees' | 'integrations'
+type SettingsTab = 'societe' | 'taxes' | 'documents' | 'boutique' | 'mail' | 'sms' | 'secef' | 'donnees' | 'integrations'
 
 /** Réglages d'envoi des fournisseurs de messagerie courants (préremplissage du serveur SMTP). */
 const MAIL_PROVIDERS: { name: string; host: string; port: number; secure: boolean; hint?: string }[] = [
@@ -146,6 +146,7 @@ export function CompanySettingsPage() {
         { value: 'societe', label: 'Société' },
         { value: 'taxes', label: 'Taxes' },
         { value: 'documents', label: 'Documents & signature' },
+        { value: 'boutique', label: 'Boutique en ligne' },
         { value: 'mail', label: 'E-mail d’envoi' },
         { value: 'sms', label: 'SMS' },
         { value: 'secef', label: 'Facture certifiée' },
@@ -380,6 +381,22 @@ export function CompanySettingsPage() {
               </div>
             )}
             {v.secef_mode === 'api' && <div className="info-box" style={{ marginTop: 14 }}><span>Le connecteur suit le modèle des API e-MCF (envoi puis confirmation). <strong>Faites valider le format exact avec la documentation remise par la DGI</strong> avant la mise en production. Sans certification, la validation d'une facture est refusée.</span></div>}
+          </div>
+        </div>
+      )}
+
+      {tab === 'boutique' && (
+        <div className="tab-panel" key="boutique">
+          <div className="card">
+            <h3>Boutique en ligne</h3>
+            <p className="muted">Dans le Catalogue, la fiche de chaque article permet de l’afficher dans la section « Nos produits » de l’accueil du site et de le vendre dans la page Boutique, avec sa photo et son prix TTC. Une commande passée dans la boutique arrive dans Ventes, Devis, comme un devis en brouillon portant la référence « Boutique en ligne » ; le client est enregistré comme prospect.</p>
+            <label className="inline check"><input type="checkbox" checked={!!v.shop_enabled} onChange={(e) => f.set('shop_enabled', e.target.checked)} /> Ouvrir la boutique en ligne (fermée : la page Boutique annonce son ouverture prochaine, « Nos produits » reste affichée)</label>
+            <div className="grid grid-2">
+              <Field label="Phrase d’accueil de la boutique" span={2}><input {...f.bind('shop_intro')} placeholder="Licences, matériel et services, au prix affiché" /></Field>
+              <Field label="Moyens de paiement proposés" hint="Un par ligne, avec le numéro ou le compte à utiliser. Vide : Orange Money, Moov Money, virement bancaire, espèces à la livraison." span={2}>
+                <textarea rows={5} {...f.bind('shop_payments')} placeholder={'Orange Money : 07 00 00 00 (IAM Technology)\nMoov Money : 01 00 00 00\nVirement bancaire\nEspèces à la livraison'} />
+              </Field>
+            </div>
           </div>
         </div>
       )}

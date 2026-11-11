@@ -134,9 +134,11 @@ if (LOCATION) cpSync('site-location/captures', `${out}/assets/captures`, { recur
 const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION
 // Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
 // avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
+// Boutique : le catalogue et les photos viennent de la base d'IAM Technology dans IAM INVOICER
+const SHOP = 'https://invoice.iamtechnology.store'
 function withCsp(page) {
   const hashes = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`)
-  const csp = `default-src 'self'; script-src 'self' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; frame-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`
+  const csp = `default-src 'self'; script-src 'self' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: ${SHOP}; frame-src 'self'; connect-src 'self' ${SHOP}; object-src 'none'; base-uri 'self'; form-action 'self'`
   return page.replace(/<meta charset="?utf-?8"?>/i, (m) => `${m}<meta http-equiv="Content-Security-Policy" content="${csp}">`)
 }
 if (ENTREPRISE) {
@@ -299,7 +301,7 @@ const script = `<script>
 </script>`
 
 // La finition (titres, boutons, barre d'accueil, grille des logiciels) ne concerne que le site de l'entreprise
-const extra = readFileSync('site-entreprise/extra.css', 'utf8') + (ENTREPRISE ? readFileSync('site-entreprise/finition.css', 'utf8') : '')
+const extra = readFileSync('site-entreprise/extra.css', 'utf8') + (ENTREPRISE ? readFileSync('site-entreprise/finition.css', 'utf8') + readFileSync('site-entreprise/boutique.css', 'utf8') : '')
 let html = `${head}<style>
 ${extra}</style>
 </head>
@@ -308,7 +310,7 @@ ${extra}</style>
 <div class="read" id="read" aria-hidden="true"></div>
 ${body}
 ${script}
-${ENTREPRISE ? '' : '<script src="socle-telechargements.js" defer></script>'}
+${ENTREPRISE ? `<script>\n${readFileSync('site-entreprise/boutique.js', 'utf8').replace(/\r\n?/g, '\n')}</script>` : '<script src="socle-telechargements.js" defer></script>'}
 </body>
 </html>
 `
@@ -326,4 +328,16 @@ if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', 
 html = await finishSite(html.replace(/\r\n?/g, '\n'), ENTREPRISE ? 'technology' : V.dir.replace('site-', ''))
 await writeGammeIcons(out)
 writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
+// Page de la boutique : même en-tête, même pied et mêmes scripts que l'accueil ; seul le contenu change,
+// et les liens du menu renvoient aux sections de l'accueil
+if (ENTREPRISE) {
+  const from = html.indexOf('>', html.indexOf('<main')) + 1
+  const to = html.lastIndexOf('</main>')
+  const shopPage = `${html.slice(0, from)}\n${readFileSync('site-entreprise/boutique-page.html', 'utf8').replace(/\r\n?/g, '\n')}${html.slice(to)}`
+    .replace(/href="#(?!top"|contenu"|boutique")([a-z-]+)"/g, 'href="./#$1"')
+    .replace('href="boutique.html" data-shop-link hidden', 'href="boutique.html" aria-current="page"')
+    .replace(/<title>[^<]*<\/title>/, '<title>Boutique — IAM Technology | Licences, matériel et services à Ouagadougou</title>')
+    .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="La boutique d’IAM Technology : licences informatiques, matériel et services au prix affiché. Commande en ligne, paiement par Orange Money, Moov Money, virement ou à la livraison.">')
+  writeFileSync(`${out}/boutique.html`, withCsp(shopPage))
+}
 console.log(`Site construit dans ${out}`)

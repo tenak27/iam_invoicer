@@ -884,5 +884,14 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS crm_activities_due_idx ON crm_activities(done, due_date)
   `,
   // Signataire choisi sur un document : identifiant d'une des signatures enregistrées dans les paramètres
-  `ALTER TABLE documents ADD COLUMN IF NOT EXISTS signatory_id TEXT`
+  `ALTER TABLE documents ADD COLUMN IF NOT EXISTS signatory_id TEXT`,
+  // Site de la société : article vendu dans la boutique en ligne (shop), mis en avant dans « Nos produits » (showcase), et sa photo (à part : les listes d'articles restent légères)
+  `
+  ALTER TABLE products ADD COLUMN IF NOT EXISTS shop BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE products ADD COLUMN IF NOT EXISTS showcase BOOLEAN NOT NULL DEFAULT FALSE;
+  CREATE TABLE IF NOT EXISTS shop_images (
+    product_id INT PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE,
+    image TEXT NOT NULL
+  )
+  `
 ]

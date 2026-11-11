@@ -2,6 +2,7 @@
 
 import { can } from '@shared/domain'
 import { audit, fail, num, str, type Ctx } from './context'
+import { checkShopImage, productImage, saveProductImage } from './shop'
 
 export async function listProducts(ctx: Ctx, args: { search?: string; kind?: string; includeInactive?: boolean; lowStock?: boolean } = {}) {
   const search = `%${str(args.search).toLowerCase()}%`
@@ -48,9 +49,14 @@ export async function saveProduct(ctx: Ctx, input: any) {
     input.active ?? true
   ]
   const tracking = kind === 'produit' && ['lot', 'serie'].includes(input.tracking) ? input.tracking : 'aucun'
+  // Boutique en ligne : publication et photo (la photo n'est touchée que si elle est envoyée)
+  const shop = input.shop === true
+  const showcase = input.showcase === true
+  const image = typeof input.shop_image === 'string' ? checkShopImage(input.shop_image) : null
   return ctx.db.tx(async (db) => {
     if (input.id) {
-      await db.query('UPDATE products SET tracking = $1 WHERE id = $2', [tracking, input.id])
+      await db.query('UPDATE products SET tracking = $1, shop = $2, showcase = $3 WHERE id = $4', [tracking, shop, showcase, input.id])
+      if (image !== null) await saveProductImage(db, input.id, image)
       await db.query(
         `UPDATE products SET name=$1, description=$2, category=$3, unit=$4, sale_price=$5, purchase_price=$6,
          tva_rate=$7, min_stock=$8, active=$9,
@@ -78,8 +84,14 @@ export async function saveProduct(ctx: Ctx, input: any) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
       [kind, ref, ...fields, num(input.purchase_price)]
     )
-    await db.query('UPDATE products SET tracking = $1 WHERE id = $2', [tracking, row!.id])
+    await db.query('UPDATE products SET tracking = $1, shop = $2, showcase = $3 WHERE id = $4', [tracking, shop, showcase, row!.id])
+    if (image) await saveProductImage(db, row!.id, image)
     await audit(db, ctx, 'creation', 'article', row!.id, name)
     return row!
   })
+}
+
+/** Photo de l'article pour la boutique en ligne (formulaire de l'article). */
+export async function getProductImage(ctx: Ctx, args: { id: number }) {
+  return productImage(ctx.db, Number(args?.id))
 }

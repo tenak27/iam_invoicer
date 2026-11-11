@@ -1,0 +1,45 @@
+  <section class="shop-hero">
+    <div class="wrap">
+      <h1>La <span class="script">boutique</span></h1>
+      <p id="shop-intro">Licences, matériel et services, au prix affiché. Commandez en ligne et payez comme vous préférez.</p>
+    </div>
+  </section>
+  <section id="boutique" data-shop="https://invoice.iamtechnology.store/t/iam_technology">
+    <div class="wrap">
+      <p class="shop-empty" id="shop-empty" hidden>La boutique ouvre bientôt. En attendant, appelez-nous au <a href="tel:+22605142323">05 14 23 23</a> ou écrivez à <a href="mailto:info@iamtechnology.store">info@iamtechnology.store</a>.</p>
+      <div class="shop-filters" id="shop-filters" role="group" aria-label="Catégories"></div>
+      <div class="shop-grid" id="shop-grid" role="list"></div>
+      <div class="shop-pay" id="shop-pay" hidden><b>Paiement</b><ul id="shop-pay-list"></ul></div>
+    </div>
+    <div class="shop-cart" id="shop-cart" hidden>
+      <span class="shop-cart-text" id="shop-cart-text" role="status"></span>
+      <button type="button" class="btn btn-cta sm" id="shop-checkout">Commander</button>
+    </div>
+    <dialog class="shop-dialog" id="shop-dialog" aria-labelledby="shop-dialog-title">
+      <form id="shop-form" novalidate>
+        <div class="shop-dialog-head">
+          <h3 id="shop-dialog-title">Votre commande</h3>
+          <button type="button" class="shop-close" id="shop-close" aria-label="Fermer">×</button>
+        </div>
+        <ul class="shop-lines" id="shop-lines"></ul>
+        <p class="shop-total">Total <b id="shop-total"></b></p>
+        <div class="shop-fields">
+          <label>Nom et prénom<input name="name" autocomplete="name" required maxlength="120"></label>
+          <label>Téléphone<input name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="30" placeholder="70 00 00 00"></label>
+          <label>E-mail (facultatif)<input name="email" type="email" autocomplete="email" maxlength="160"></label>
+          <label>Ville<input name="city" autocomplete="address-level2" maxlength="80" placeholder="Ouagadougou"></label>
+          <label class="shop-hp" aria-hidden="true">Site web<input name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <fieldset class="shop-payments"><legend>Moyen de paiement</legend><div id="shop-payments"></div></fieldset>
+        <label class="shop-note">Message (facultatif)<textarea name="note" rows="2" maxlength="600"></textarea></label>
+        <p class="shop-error" id="shop-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-cta" id="shop-send">Envoyer la commande</button>
+        <p class="shop-small">Rien n’est débité en ligne. Nous vous appelons pour confirmer la commande et le paiement.</p>
+      </form>
+      <div class="shop-done" id="shop-done" hidden>
+        <h3>Commande enregistrée</h3>
+        <p id="shop-done-text"></p>
+        <button type="button" class="btn btn-navy" id="shop-done-close">Fermer</button>
+      </div>
+    </dialog>
+  </section>

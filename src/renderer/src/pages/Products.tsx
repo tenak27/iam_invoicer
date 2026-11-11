@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatMoney, formatQty } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs, useForm } from '../components/ui'
@@ -8,7 +8,7 @@ import { useCan, useSession } from '../session'
 
 /** Copie d'un article : nouvelle référence attribuée à l'enregistrement, sans stock. */
 function duplicateOf(r: any) {
-  const { id: _id, ref: _ref, stock_qty: _qty, ...rest } = r
+  const { id: _id, ref: _ref, stock_qty: _qty, shop: _shop, showcase: _showcase, ...rest } = r
   return { ...rest, name: `${r.name} (copie)`, active: true, sale_price: String(r.sale_price), purchase_price: String(r.purchase_price), tva_rate: String(r.tva_rate), min_stock: String(r.min_stock) }
 }
 
@@ -65,7 +65,7 @@ export function Products() {
               {rows.map((r) => (
                 <tr key={r.id} className={`clickable ${r.active ? '' : 'inactive'}`} onClick={() => setEditing(r)}>
                   <td className="muted">{r.ref}</td>
-                  <td className="strong">{r.name}<span className={`kind-tag ${r.kind}`}>{r.kind === 'produit' ? 'Produit' : 'Prestation'}</span></td>
+                  <td className="strong">{r.name}<span className={`kind-tag ${r.kind}`}>{r.kind === 'produit' ? 'Produit' : 'Prestation'}</span>{r.showcase && <span className="kind-tag shop">Site</span>}{r.shop && <span className="kind-tag shop">Boutique</span>}</td>
                   <td>{r.category}</td>
                   <td className="num"><Money value={r.sale_price} /></td>
                   <td className="num"><Money value={r.purchase_price} /></td>
@@ -101,11 +101,25 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
     ...(product.id ? { sale_price: String(product.sale_price), purchase_price: String(product.purchase_price), tva_rate: String(product.tva_rate), min_stock: String(product.min_stock) } : {})
   })
   const [busy, setBusy] = useState(false)
+  // Photo pour la boutique en ligne : chargée à l'ouverture, envoyée seulement si elle a changé
+  const [photo, setPhoto] = useState('')
+  const [photoChanged, setPhotoChanged] = useState(false)
+  const file = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (product.id && (product.shop || product.showcase)) void api<string>('products.image', { id: product.id }).then((img) => setPhoto(img ?? '')).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const pickPhoto = async (picked?: File) => {
+    if (!picked) return
+    const img = await run(() => shopPhoto(picked))
+    if (img) { setPhoto(img); setPhotoChanged(true) }
+  }
   const isProduct = f.values.kind === 'produit'
   const margin = Number(f.values.sale_price) - Number(f.values.purchase_price)
+  const priceTtc = Math.round(Number(f.values.sale_price) * (1 + Number(f.values.tva_rate) / 100))
   const submit = async () => {
     setBusy(true)
-    const r = await run(() => api('products.save', f.values), 'Article enregistré.')
+    const r = await run(() => api('products.save', { ...f.values, shop: !!f.values.shop, showcase: !!f.values.showcase, ...(photoChanged ? { shop_image: photo } : {}) }), 'Article enregistré.')
     setBusy(false)
     if (r) onSaved()
   }
@@ -146,10 +160,48 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
           {product.id && isProduct && <> · Stock actuel : <strong>{formatQty(product.stock_qty)} {product.unit}</strong> · coût moyen {formatMoney(product.avg_cost)}</>}
         </div>
       </div>
+      <div className="shop-pub">
+        <strong className="shop-pub-title">Sur le site de la société</strong>
+        <label className="inline check"><input type="checkbox" checked={!!f.values.showcase} onChange={(e) => f.set('showcase', e.target.checked)} /> Afficher dans la section « Nos produits » de l’accueil</label>
+        <label className="inline check"><input type="checkbox" checked={!!f.values.shop} onChange={(e) => f.set('shop', e.target.checked)} /> Vendre dans la boutique en ligne (page Boutique)</label>
+        {(f.values.shop || f.values.showcase) && (
+          <div className="shop-pub-row">
+            <button type="button" className="shop-photo" onClick={() => file.current?.click()} aria-label="Choisir la photo de l'article">
+              {photo ? <img src={photo} alt="" /> : <span className="muted small">Ajouter une photo</span>}
+            </button>
+            <input ref={file} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = '' }} />
+            <p className="muted small">
+              Prix affiché sur le site : <strong>{formatMoney(priceTtc)}</strong>{Number(f.values.tva_rate) > 0 ? ' TTC' : ''} par {f.values.unit || 'unité'}. La désignation, la description et la catégorie y sont reprises.
+              <br />La boutique s’ouvre et ses moyens de paiement se règlent dans Paramètres, onglet « Boutique en ligne ».
+              {photo && <><br /><button type="button" className="link-btn danger small" onClick={() => { setPhoto(''); setPhotoChanged(true) }}>Retirer la photo</button></>}
+            </p>
+          </div>
+        )}
+      </div>
       {product.id && (
         <label className="inline check"><input type="checkbox" checked={!!f.values.active} onChange={(e) => f.set('active', e.target.checked)} /> Actif (proposé dans les documents)</label>
       )}
       {!product.id && isProduct && <p className="muted small">Le stock se met à jour via les réceptions fournisseurs, les livraisons/factures et l’inventaire. Pour un stock de départ, utilisez « État du stock → Entrée / sortie ».</p>}
     </Modal>
   )
+}
+
+/** Photo d'un article pour la boutique : réduite à 640 px de côté au plus, en WebP (JPEG à défaut). */
+async function shopPhoto(picked: File): Promise<string> {
+  if (!/^image\/(png|jpeg|webp)$/.test(picked.type)) throw new Error('Choisissez une photo PNG, JPG ou WebP.')
+  const url = URL.createObjectURL(picked)
+  try {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    const k = Math.min(1, 640 / Math.max(img.naturalWidth, img.naturalHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * k))
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * k))
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+    const webp = canvas.toDataURL('image/webp', 0.82)
+    return webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', 0.84)
+  } finally {
+    URL.revokeObjectURL(url)
+  }
 }

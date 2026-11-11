@@ -4,6 +4,8 @@
     <nav class="menu" id="menu" aria-label="Sections">
       <a href="#domaines">Domaines</a>
       <a href="#logiciels">Logiciels</a>
+      <a href="#produits" data-products-link hidden>Produits</a>
+      <a href="boutique.html" data-shop-link hidden>Boutique</a>
       <a href="#marques">Nos marques</a>
       <a href="#pourquoi">Pourquoi nous</a>
       <a href="#histoire">Histoire</a>
@@ -231,6 +233,17 @@
       </div>
     </div>
     {{TEAR_BOTTOM}}
+  </section>
+
+  <section id="produits" data-shop="https://invoice.iamtechnology.store/t/iam_technology" hidden>
+    <div class="wrap">
+      <div class="head center rv">
+        <h2>Nos <span class="script">produits</span></h2>
+        <p>Matériel, licences et services choisis par nos équipes, au prix affiché.</p>
+      </div>
+      <div class="shop-grid" id="produits-grid" role="list"></div>
+      <p class="shop-more" data-shop-link hidden><a class="btn btn-navy" href="boutique.html">Voir toute la boutique<i data-icon="ArrowRight"></i></a></p>
+    </div>
   </section>
 
   <section id="marques">

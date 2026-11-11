@@ -145,6 +145,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'products.list': { access: 'user', fn: products.listProducts },
   'products.categories': { access: 'user', fn: products.listCategories },
   'products.save': { access: 'products', fn: products.saveProduct },
+  'products.image': { access: 'products', fn: products.getProductImage },
 
   'documents.list': {
     access: async (_c, a) => {

@@ -31,6 +31,7 @@ import { publicRequest, signRemote } from '../main/services/signatures'
 import { documentHtml } from '../main/pdf'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatMoney } from '@shared/format'
+import { shopCatalogue, shopImage, shopOrder } from '../main/services/shop'
 import { signPageHtml } from './signPage'
 import { verifyPageHtml } from './verifyPage'
 import { verifyDocument } from '../main/services/documents'
@@ -117,6 +118,8 @@ export function createHandler(opts: ServerOptions) {
   const { db } = opts
   const limiter = new LoginLimiter()
   const verifyLimiter = new LoginLimiter()
+  // Boutique en ligne : 8 commandes par adresse et par quart d'heure
+  const shopLimiter = new Limiter(8)
   // Essais répartis sur de nombreuses adresses contre un même compte : 30 échecs par quart d'heure
   const accountLimiter = new Limiter(30)
   // Rafales : 3 000 requêtes d'API par minute et par adresse (un bureau entier derrière une même adresse passe)
@@ -292,6 +295,28 @@ export function createHandler(opts: ServerOptions) {
       for (const [k, t] of tickets) if (t.expires < now) tickets.delete(k)
       tickets.set(ticket, { user, id, format, duplicata: body.duplicata === true, origin: publicOrigin(req), expires: now + 120_000 })
       return send(res, 200, { ok: true, data: { url: `/print/${ticket}` } })
+    }
+    // Boutique en ligne (services/shop.ts) : catalogue des articles publiés, photos, commande sans compte
+    if (method === 'GET' && path === '/api/public/shop') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' })
+      return res.end(JSON.stringify({ ok: true, data: await shopCatalogue(db) }))
+    }
+    const shopImg = /^\/api\/public\/shop\/image\/(\d{1,9})$/.exec(path)
+    if (method === 'GET' && shopImg) {
+      const img = await shopImage(db, Number(shopImg[1]))
+      if (!img) throw new HttpError(404, 'Image introuvable.')
+      // Affichée sur le site de la société (autre domaine)
+      res.writeHead(200, { 'Content-Type': img.type, 'Content-Length': String(img.body.length), 'Cache-Control': 'public, max-age=300', 'Cross-Origin-Resource-Policy': 'cross-origin' })
+      return res.end(img.body)
+    }
+    if (method === 'POST' && path === '/api/public/shop/order') {
+      const ip = clientIp(req)
+      if (shopLimiter.blocked(ip)) throw new HttpError(429, 'Trop de commandes depuis cette connexion. Réessayez dans 15 minutes ou appelez-nous.')
+      const body = await readJson(req)
+      // Champ invisible rempli par les robots : on répond comme si la commande était passée
+      if (body.website) return send(res, 200, { ok: true, data: { order: 'B-00000', total: 0, currency: '', payment: '', phone: '' } })
+      shopLimiter.hit(ip)
+      return send(res, 200, { ok: true, data: await shopOrder(db, body) })
     }
     const signMatch = /^\/api\/public\/sign\/([A-Za-z0-9_-]{20,})$/.exec(path)
     if (method === 'POST' && signMatch) {

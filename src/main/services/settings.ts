@@ -82,6 +82,13 @@ export interface CompanySettings {
   secef_mode: '' | 'simulation' | 'api'
   secef_url: string
   secef_nim: string
+
+  // Boutique en ligne (services/shop.ts) : articles publiés visibles sur le site de la société
+  shop_enabled: boolean
+  /** Phrase d'accueil affichée au-dessus des articles. */
+  shop_intro: string
+  /** Moyens de paiement proposés, un par ligne (« Orange Money : 07 00 00 00 »). */
+  shop_payments: string
 }
 
 /** Images de la société, insérées dans les documents. */
@@ -151,7 +158,10 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   public_url: '',
   secef_mode: '',
   secef_url: '',
-  secef_nim: ''
+  secef_nim: '',
+  shop_enabled: false,
+  shop_intro: '',
+  shop_payments: ''
 }
 
 export async function getSecret(db: Db, key: SecretKey): Promise<string> {
