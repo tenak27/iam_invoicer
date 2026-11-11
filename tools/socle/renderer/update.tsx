@@ -110,7 +110,7 @@ export function UpdateNotice({ server, open }: { server: () => string; open: (ur
   }
   const android = Capacitor.getPlatform() === 'android'
   return (
-    <div className="socle-card socle-update" role="dialog" aria-live="polite" aria-label="Mise à jour disponible">
+    <div className="socle-card socle-update" role="status" aria-label="Mise à jour disponible">
       <div className="socle-update-head">
         <span className="socle-update-dot" aria-hidden="true" />
         <b>Mise à jour disponible</b>
@@ -127,7 +127,7 @@ export function UpdateNotice({ server, open }: { server: () => string; open: (ur
       </p>
       <div className="socle-update-actions">
         <button type="button" className="socle-btn" onClick={later}>Plus tard</button>
-        <button type="button" className="socle-btn socle-btn-primary" onClick={go} autoFocus>
+        <button type="button" className="socle-btn socle-btn-primary" onClick={go}>
           {update.reload ? 'Recharger' : 'Télécharger'}
         </button>
       </div>

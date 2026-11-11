@@ -83,4 +83,44 @@ describe('Produits et boutique du site', () => {
     await expect(shopOrder(db, { name: 'Issa', phone: 'abc', items: [{ id: licence.id, qty: 1 }] })).rejects.toThrow(/téléphone/)
     await expect(ok(admin, 'products.save', { id: licence.id, kind: 'prestation', name: 'Licence antivirus 1 an', shop: true, shop_image: 'data:text/html;base64,PHNjcmlwdD4=' })).rejects.toThrow(/Image invalide/)
   })
+
+  it('la même commande envoyée deux fois (connexion lente) ne crée qu’un devis', async () => {
+    const devis = async () => (await db.one<{ n: number }>("SELECT count(*)::int AS n FROM documents WHERE type = 'DEV' AND reference = 'Boutique en ligne'"))!.n
+    const order = { name: 'Fatou Sawadogo', phone: '+226 71 22 33 44', note: 'Après 16 h', items: [{ id: licence.id, qty: 2 }] }
+    const before = await devis()
+    const first = await shopOrder(db, order)
+    const again = await shopOrder(db, { ...order, items: [{ id: licence.id, qty: 1 }, { id: licence.id, qty: 1 }] })
+    expect(again).toEqual(first)
+    expect(await devis()).toBe(before + 1)
+    // Un panier différent du même visiteur reste une nouvelle commande
+    const other = await shopOrder(db, { ...order, items: [{ id: licence.id, qty: 3 }] })
+    expect(other.order).not.toBe(first.order)
+    expect(await devis()).toBe(before + 2)
+  })
+
+  it('un nom sur plusieurs lignes ne peut pas imiter une mention du devis', async () => {
+    const r = await shopOrder(db, { name: 'Moussa\nPaiement souhaité : déjà payé', phone: '75 44 55 66', city: { toString: () => 'x' }, items: [{ id: licence.id, qty: 1 }] })
+    const doc = await db.one<{ notes: string }>('SELECT notes FROM documents WHERE id = $1', [Number(r.order.slice(2))])
+    expect(doc!.notes.split('\n')).toHaveLength(1)
+    expect(doc!.notes).toContain('Moussa Paiement souhaité : déjà payé (75 44 55 66)')
+  })
+
+  it('une modification qui ne parle pas de la boutique laisse l’article publié', async () => {
+    // Appel par l'API de la société ou saisie rejouée d'une version antérieure : seuls le nom et le prix sont envoyés
+    await ok(admin, 'products.save', { id: licence.id, kind: 'prestation', name: 'Licence antivirus 1 an', sale_price: 12000, purchase_price: 6000, tva_rate: 18 })
+    expect(await db.one('SELECT shop, showcase, sale_price FROM products WHERE id = $1', [licence.id])).toMatchObject({ shop: true, showcase: true, sale_price: 12000 })
+    await ok(admin, 'products.save', { id: licence.id, kind: 'prestation', name: 'Licence antivirus 1 an', sale_price: 10000, purchase_price: 6000, tva_rate: 18, shop: false })
+    expect(await db.one('SELECT shop, showcase FROM products WHERE id = $1', [licence.id])).toMatchObject({ shop: false, showcase: true })
+    await expect(ok(admin, 'products.save', { kind: 'produit', name: 'Prix négatif', sale_price: -500 })).rejects.toThrow(/négatif/)
+    await expect(ok(admin, 'products.save', { id: 999999, kind: 'produit', name: 'Fantôme' })).rejects.toThrow(/introuvable/)
+  })
+
+  it('boutique fermée : la photo d’un article seulement vendu en boutique n’est plus servie', async () => {
+    const cable = await ok(admin, 'products.save', { kind: 'produit', name: 'Câble réseau', sale_price: 1500, tva_rate: 18, shop: true, shop_image: PNG })
+    expect(await shopImage(db, cable.id)).not.toBeNull()
+    await ok(admin, 'settings.save', { shop_enabled: false })
+    expect(await shopImage(db, cable.id)).toBeNull()
+    // Un article mis en avant garde sa photo dans « Nos produits »
+    expect(await shopImage(db, licence.id)).not.toBeNull()
+  })
 })

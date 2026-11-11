@@ -70,9 +70,11 @@ export async function shopCatalogue(db: Db) {
 
 /** Image d'un article publié, prête à être servie (type et contenu). */
 export async function shopImage(db: Db, id: number): Promise<{ type: string; body: Buffer } | null> {
+  // Même règle que le catalogue : boutique fermée, seuls les articles mis en avant gardent leur photo en ligne
+  const open = !!(await getSettings(db)).shop_enabled
   const row = await db.one<{ image: string }>(
-    'SELECT i.image FROM shop_images i JOIN products p ON p.id = i.product_id WHERE i.product_id = $1 AND (p.shop OR p.showcase) AND p.active',
-    [id]
+    'SELECT i.image FROM shop_images i JOIN products p ON p.id = i.product_id WHERE i.product_id = $1 AND (p.showcase OR (p.shop AND $2)) AND p.active',
+    [id, open]
   )
   const m = row && IMAGE.exec(row.image)
   if (!m) return null
@@ -99,21 +101,24 @@ export interface ShopOrderInput {
   items?: unknown
 }
 
+/** Champ d'une seule ligne : un retour à la ligne glissé dans un nom ne doit pas imiter une autre mention du devis. */
+const oneLine = (v: unknown, max: number) => (typeof v === 'string' || typeof v === 'number' ? str(v).replace(/\s+/g, ' ').slice(0, max) : '')
+
 /** Commande passée sur le site : prospect + devis en brouillon. Renvoie de quoi confirmer au visiteur. */
 export async function shopOrder(db: Db, input: ShopOrderInput) {
   const c = await getSettings(db)
   if (!c.shop_enabled) fail('La boutique en ligne est fermée.')
-  const name = str(input.name).slice(0, 120)
+  const name = oneLine(input.name, 120)
   if (name.length < 2) fail('Indiquez votre nom.')
-  const phone = str(input.phone).slice(0, 30)
+  const phone = oneLine(input.phone, 30)
   const digits = phone.replace(/\D/g, '')
   if (digits.length < 8 || digits.length > 15 || !/^[+\d][\d\s().-]*$/.test(phone)) fail('Indiquez un numéro de téléphone valide.')
-  const email = str(input.email).slice(0, 160)
+  const email = oneLine(input.email, 160)
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) fail('Adresse e-mail invalide.')
-  const city = str(input.city).slice(0, 80)
-  const note = str(input.note).slice(0, 600)
+  const city = oneLine(input.city, 80)
+  const note = typeof input.note === 'string' ? str(input.note).slice(0, 600) : ''
   const payments = shopPayments(c.shop_payments)
-  const payment = str(input.payment)
+  const payment = oneLine(input.payment, 160)
   if (payment && !payments.includes(payment)) fail('Moyen de paiement inconnu.')
 
   const asked = Array.isArray(input.items) ? input.items.slice(0, 20) : []
@@ -128,19 +133,34 @@ export async function shopOrder(db: Db, input: ShopOrderInput) {
   const products = await db.query<any>('SELECT id, name, sale_price, tva_rate FROM products WHERE shop AND active AND id = ANY($1::int[])', [[...wanted.keys()]])
   if (products.length !== wanted.size) fail("Un article du panier n'est plus proposé. Actualisez la page.")
 
-  // Garde-fou : la boutique ne peut pas remplir la base (300 commandes par jour au plus)
-  const today = await db.one<{ n: number }>("SELECT count(*)::int AS n FROM documents WHERE reference = $1 AND created_at > now() - interval '1 day'", [SHOP_SOURCE])
-  if ((today?.n ?? 0) >= 300) fail('Trop de commandes aujourd’hui. Appelez-nous pour commander.')
-
-  const ctx = { db, user: null }
+  const receipt = (id: number, total: number) => ({ order: `B-${String(id).padStart(5, '0')}`, total, currency: c.currency, payment, phone: c.phone })
+  const notes = [`Commande passée sur la boutique en ligne par ${name} (${phone}${email ? `, ${email}` : ''}${city ? `, ${city}` : ''}).`, payment && `Paiement souhaité : ${payment}`, note && `Message : ${note}`].filter(Boolean).join('\n')
   // Jamais rattachée à une fiche client existante : seulement à un prospect déjà venu de la boutique avec ce numéro
   const known = await db.one<{ id: number }>(
     "SELECT id FROM parties WHERE kind = 'client' AND is_prospect AND source = $1 AND regexp_replace(phone, '\\D', '', 'g') = $2 ORDER BY id LIMIT 1",
     [SHOP_SOURCE, digits]
   )
+  // Connexion lente, bouton touché deux fois : la même commande renvoyée dans le quart d'heure n'est pas enregistrée deux fois
+  if (known) {
+    const recent = await db.query<{ id: number; total_ttc: number }>(
+      `SELECT id, total_ttc FROM documents
+       WHERE type = 'DEV' AND status = 'brouillon' AND party_id = $1 AND reference = $2 AND notes = $3 AND created_at > now() - interval '15 minutes'
+       ORDER BY id DESC LIMIT 5`,
+      [known.id, SHOP_SOURCE, notes]
+    )
+    for (const d of recent) {
+      const had = await db.query<{ product_id: number; quantity: number }>('SELECT product_id, quantity FROM document_lines WHERE document_id = $1', [d.id])
+      if (had.length === wanted.size && had.every((l) => wanted.get(l.product_id) === l.quantity)) return receipt(d.id, Math.round(d.total_ttc))
+    }
+  }
+
+  // Garde-fou : la boutique ne peut pas remplir la base (300 commandes par jour au plus)
+  const today = await db.one<{ n: number }>("SELECT count(*)::int AS n FROM documents WHERE type = 'DEV' AND reference = $1 AND created_at > now() - interval '1 day'", [SHOP_SOURCE])
+  if ((today?.n ?? 0) >= 300) fail('Trop de commandes aujourd’hui. Appelez-nous pour commander.')
+
+  const ctx = { db, user: null }
   const party = known ?? (await saveParty(ctx, { kind: 'client', name, phone, email, city, is_prospect: true, source: SHOP_SOURCE, payment_terms: 0 }))
   const lines = products.map((p) => ({ product_id: p.id, description: p.name, quantity: wanted.get(p.id)!, unit_price: p.sale_price, tva_rate: p.tva_rate }))
-  const notes = [`Commande passée sur la boutique en ligne par ${name} (${phone}${email ? `, ${email}` : ''}${city ? `, ${city}` : ''}).`, payment && `Paiement souhaité : ${payment}`, note && `Message : ${note}`].filter(Boolean).join('\n')
   const { id } = await saveDocument(ctx, { type: 'DEV', party_id: party.id, reference: SHOP_SOURCE, notes, lines })
   const doc = await db.one<{ total_ttc: number }>('SELECT total_ttc FROM documents WHERE id = $1', [id])
   const total = Math.round(doc?.total_ttc ?? 0)
@@ -150,5 +170,5 @@ export async function shopOrder(db: Db, input: ShopOrderInput) {
     const body = [`Nouvelle commande sur la boutique en ligne : ${total} ${c.currency}.`, '', ...lines.map((l) => `- ${l.quantity} x ${l.description}`), '', notes, '', 'Le devis en brouillon est dans IAM INVOICER, Ventes, Devis.'].join('\n')
     void sendEmail(ctx, { to: c.email, subject: 'Nouvelle commande de la boutique en ligne', body, documentId: id, kind: 'boutique' }).catch(() => {})
   }
-  return { order: `B-${String(id).padStart(5, '0')}`, total, currency: c.currency, payment, phone: c.phone }
+  return receipt(id, total)
 }

@@ -7,7 +7,7 @@ import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
-import { finishSite } from './premium.mjs'
+import { finishSite, stampAssets } from './premium.mjs'
 import { writeGammeIcons } from './gamme.mjs'
 
 // « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
@@ -121,7 +121,8 @@ mkdirSync(`${out}/assets`, { recursive: true })
 for (const f of V.assets) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 // Icône du logiciel (dessinée) : onglet du navigateur et écran d'accueil d'iOS
 const slug = V.icon.replace(/-mark\.svg$/, '')
-for (const f of [`${slug}-favicon.png`, `${slug}-apple-touch.png`]) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
+// … et image d'aperçu des liens partagés (WhatsApp, Facebook) : la même icône, 512 px
+for (const f of [`${slug}-favicon.png`, `${slug}-apple-touch.png`, `${slug}-icone.png`]) cpSync(`assets/marques/${f}`, `${out}/assets/${f}`)
 if (MAILS) cpSync('site-mails/captures', `${out}/assets/captures`, { recursive: true })
 if (BTP) cpSync('site-btp/captures', `${out}/assets/captures`, { recursive: true })
 if (ECOM) cpSync('site-ecommerce/captures', `${out}/assets/captures`, { recursive: true })
@@ -154,12 +155,17 @@ const cut = (from, to) => {
   return src.slice(a, b)
 }
 
+// Adresse publique du site (aperçu de l'application, adresse canonique, image de partage)
+const host = ENTREPRISE ? 'iamtechnology.store' : `${V.dir.replace('site-', '')}.iamtechnology.store`
 const head = src
   .slice(0, src.indexOf('</head>'))
   .replace(/<title>[^<]*<\/title>/, `<title>${V.title}</title>`)
   .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${V.description}">`)
   .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${V.ogTitle}">`)
   .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${V.description}">`)
+  .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="https://${host}/">`)
+  .replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="https://${host}/assets/${slug}-icone.png">`)
+  .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="https://${host}/">`)
   .replace(/<link rel="icon"[^>]*>(\s*<link rel="apple-touch-icon"[^>]*>)?/, `<link rel="icon" href="assets/${V.icon.replace(/-mark\.svg$/, '')}-favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/${V.icon.replace(/-mark\.svg$/, '')}-apple-touch.png">`)
 
@@ -180,7 +186,6 @@ let body = readFileSync(`${V.dir}/body.html`, 'utf8')
 
 // Aperçu de l'application : les captures deviennent une vitrine (onglets + grande fenêtre de
 // navigateur à l'adresse du logiciel), en HTML statique ; le script commun gère les onglets.
-const host = ENTREPRISE ? 'iamtechnology.store' : `${V.dir.replace('site-', '')}.iamtechnology.store`
 body = body.replace(/<div class="shots">([\s\S]*?)\n\s*<\/div>/, (whole, inner) => {
   const figs = [...inner.matchAll(/<figure[^>]*>\s*<img ([^>]*)>\s*<figcaption><b>([^<]*)<\/b>([^<]*)<\/figcaption>\s*<\/figure>/g)]
   if (figs.length < 2) return whole
@@ -327,17 +332,26 @@ if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', 
 // Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
 html = await finishSite(html.replace(/\r\n?/g, '\n'), ENTREPRISE ? 'technology' : V.dir.replace('site-', ''))
 await writeGammeIcons(out)
+// Empreinte dans l'adresse des images et des scripts, servis avec un cache d'un an (le script des
+// téléchargements est copié plus tard dans le site de chaque logiciel : son empreinte vient de sa source)
+html = stampAssets(html, out, { 'socle-telechargements.js': 'tools/socle/site/socle-telechargements.js' })
 writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
 // Page de la boutique : même en-tête, même pied et mêmes scripts que l'accueil ; seul le contenu change,
 // et les liens du menu renvoient aux sections de l'accueil
 if (ENTREPRISE) {
+  const shopDescription = 'La boutique d’IAM Technology : licences informatiques, matériel et services au prix affiché. Commande en ligne, paiement par Orange Money, Moov Money, virement ou à la livraison.'
   const from = html.indexOf('>', html.indexOf('<main')) + 1
   const to = html.lastIndexOf('</main>')
   const shopPage = `${html.slice(0, from)}\n${readFileSync('site-entreprise/boutique-page.html', 'utf8').replace(/\r\n?/g, '\n')}${html.slice(to)}`
     .replace(/href="#(?!top"|contenu"|boutique")([a-z-]+)"/g, 'href="./#$1"')
     .replace('href="boutique.html" data-shop-link hidden', 'href="boutique.html" aria-current="page"')
     .replace(/<title>[^<]*<\/title>/, '<title>Boutique — IAM Technology | Licences, matériel et services à Ouagadougou</title>')
-    .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="La boutique d’IAM Technology : licences informatiques, matériel et services au prix affiché. Commande en ligne, paiement par Orange Money, Moov Money, virement ou à la livraison.">')
+    .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${shopDescription}">`)
+    // Lien partagé : le titre, le texte et l'adresse de la boutique, pas ceux de l'accueil
+    .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Boutique — IAM Technology">')
+    .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${shopDescription}">`)
+    .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="https://${host}/boutique.html">`)
+    .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="https://${host}/boutique.html">`)
   writeFileSync(`${out}/boutique.html`, withCsp(shopPage))
 }
 console.log(`Site construit dans ${out}`)

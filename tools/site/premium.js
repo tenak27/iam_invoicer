@@ -151,27 +151,56 @@
   if (!imgs.length) return
   var h = new Date().getHours()
   var g = (h >= 6 && h < 12) || h >= 18 ? 'f' : 'h'
-  var src = function (p) { return 'assets/mascotte/' + g + '-' + p + '.webp' }
+  // Les images sont servies avec un cache long : elles portent le numéro posé à la construction (premium.mjs)
+  var ver = (/\?.*$/.exec(imgs[0].getAttribute('src') || '') || [''])[0]
+  var src = function (p) { return 'assets/mascotte/' + g + '-' + p + '.webp' + ver }
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
   var hello = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir'
   var demo = document.querySelector('a[href*="demo"], [data-demo]')
   // Scène : images [nom, durée en ms], durée de la scène, mot dit au clic
   var SCENES = [
     { name: 'salut', frames: [['salut', 2600], ['ok', 1500], ['salut', 2200], ['montre', 1600]], last: 11000, say: demo ? 'Essayez la version démo, sans créer de compte' : 'Découvrez nos dix logiciels' },
-    { name: 'ordi', frames: [['ordi1', 3400], ['ordi2', 1500]], last: 12000, say: 'Au travail : devis, factures et suivi, tout au même endroit' },
+    { name: 'ordi', frames: [['ordi1', 3400], ['ordi2', 1500]], last: 12000, say: 'Au travail : tout se suit au même endroit' },
     { name: 'danse', frames: [['danse1', 560], ['danse2', 560]], last: 7000, say: 'Une tâche de moins, ça se fête' },
     { name: 'tel', frames: [['tel1', 3200], ['tel2', 1700]], last: 11000, say: 'Tout se suit aussi depuis le téléphone' },
   ]
-  SCENES.forEach(function (s) { s.frames.forEach(function (f) { new Image().src = src(f[0]) }) })
+  // Images chargées à l'avance scène par scène (la scène en cours et la suivante), une fois la page
+  // arrivée : sur une connexion lente, elles ne passent pas devant le texte et les polices. Une image
+  // n'est affichée qu'une fois chargée : en attendant, le personnage garde sa pose.
+  var ready = {}, waiting = {}
+  var load = function (url, then) {
+    if (ready[url]) { if (then) then(); return }
+    if (then) (waiting[url] = waiting[url] || []).push(then)
+    if (ready[url] === false) return
+    ready[url] = false
+    var im = new Image()
+    im.onload = function () {
+      ready[url] = true
+      var todo = waiting[url] || []
+      delete waiting[url]
+      todo.forEach(function (f) { f() })
+    }
+    im.onerror = function () { delete ready[url]; delete waiting[url] }
+    im.src = url
+  }
+  var loaded = document.readyState === 'complete'
+  var preload = function (k) {
+    if (!loaded) return
+    SCENES[k % SCENES.length].frames.forEach(function (f) { load(src(f[0])) })
+  }
   imgs.forEach(function (img, n) {
-    var scene = 0, frame = 0, started = 0, timer, hide
+    var scene = 0, frame = 0, started = 0, timer, hide, wanted = ''
+    // L'après-midi et la nuit, c'est lui : l'image de la page (elle) est remplacée avant d'être vue
+    if (img.getAttribute('src') !== src('salut')) img.src = src('salut')
     // Fondu entre deux images : l'ancienne reste dessous (calque jumeau) le temps que la nouvelle apparaisse
     var ghost = img.cloneNode(false)
     ghost.classList.add('mascotte-ghost')
     ghost.setAttribute('aria-hidden', 'true')
     img.parentNode.insertBefore(ghost, img)
     var show = function (url) {
+      wanted = url
       if (img.getAttribute('src') === url) return
+      if (!ready[url]) { load(url, function () { if (wanted === url) show(url) }); return }
       if (reduce || !img.animate) { img.src = url; return }
       ghost.src = img.src
       img.src = url
@@ -185,8 +214,25 @@
     img.parentNode.insertBefore(bulle, img.nextSibling)
     var say = function (text) {
       bulle.textContent = text
-      bulle.style.left = Math.max(70, img.offsetLeft - 100) + 'px'
-      bulle.style.top = Math.max(8, img.offsetTop + img.offsetHeight * 0.08) + 'px'
+      var left = img.offsetLeft - 100
+      if (left >= 70) {
+        // Assez de place à côté du personnage : la bulle se pose à hauteur de sa tête
+        bulle.style.left = left + 'px'
+        bulle.style.top = Math.max(8, img.offsetTop + img.offsetHeight * 0.08) + 'px'
+      } else {
+        // Écran étroit, personnage au milieu : la bulle ne doit pas cacher son visage. Elle passe
+        // au-dessus de sa tête s'il y a la place, sinon à hauteur de ses jambes
+        bulle.style.left = '0px'
+        var room = img.parentNode.clientWidth, bw = bulle.offsetWidth, bh = bulle.offsetHeight
+        var above = img.offsetTop - bh - 4
+        if (above >= 36) {
+          bulle.style.left = Math.max(8, Math.min(room - bw - 8, img.offsetLeft + (img.offsetWidth - bw) / 2)) + 'px'
+          bulle.style.top = above + 'px'
+        } else {
+          bulle.style.left = Math.max(8, room - bw - 8) + 'px'
+          bulle.style.top = (img.offsetTop + img.offsetHeight * 0.6) + 'px'
+        }
+      }
       bulle.classList.add('on')
       clearTimeout(hide)
       hide = setTimeout(function () { bulle.classList.remove('on') }, 5200)
@@ -216,12 +262,24 @@
       ghost.classList.add('sc-' + SCENES[scene].name)
       if (!reduce && img.animate) img.animate([{ scale: 0.93 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(.2, .9, .3, 1.2)' })
       if (talk) say(SCENES[scene].say)
+      preload(scene)
+      if (!reduce) preload(scene + 1)
       step()
     }
     img.addEventListener('click', function () { play(scene + 1, true) })
-    // Le premier personnage salue à l'arrivée ; le second commence au travail
-    play(n === 0 ? 0 : 1)
-    if (n === 0) setTimeout(function () { say(hello + ' et bienvenue') }, 1400)
+    // Le premier personnage salue à l'arrivée ; le second commence au travail, quand on arrive à lui
+    var begin = function () {
+      play(n === 0 ? 0 : 1)
+      if (n === 0) setTimeout(function () { say(hello + ' et bienvenue') }, 1400)
+    }
+    if (n === 0 || !('IntersectionObserver' in window)) begin()
+    else {
+      var near = new IntersectionObserver(function (es) {
+        if (es.some(function (e) { return e.isIntersecting })) { near.disconnect(); begin() }
+      }, { rootMargin: '300px 0px' })
+      near.observe(img)
+    }
+    if (!loaded) addEventListener('load', function () { loaded = true; if (started) { preload(scene); if (!reduce) preload(scene + 1) } })
     if (reduce) return
     addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return

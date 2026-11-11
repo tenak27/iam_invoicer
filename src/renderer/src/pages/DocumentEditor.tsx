@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DOC_TYPES, lineHT, PAYMENT_METHODS, type DocType, type LineInput } from '@shared/domain'
 import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@shared/taxes'
@@ -119,7 +119,11 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
   type Saved = { id?: number; queued?: boolean; validated?: boolean; error?: string }
   /** `queued` : saisie faite hors connexion, en attente de synchronisation (pas encore d'identifiant). */
+  // Un seul enregistrement à la fois : Ctrl+S répété sur un nouveau document créerait deux brouillons
+  const saving = useRef(false)
   const save = async (validate?: { applyStock?: boolean }): Promise<Saved | undefined> => {
+    if (saving.current) return undefined
+    saving.current = true
     setBusy(true)
     const r = await run(() =>
       api<Saved>('documents.save', {
@@ -135,6 +139,7 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
         taxes: chosenCodes
       })
     )
+    saving.current = false
     setBusy(false)
     if (!r) return undefined
     setDirty(false)

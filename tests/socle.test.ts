@@ -13,6 +13,8 @@ import { pickFile } from '../tools/socle/renderer/versions'
 import { excelDate, excelDateTime, phoneText, toCsv } from '../tools/socle/renderer/csv'
 import { Notifier } from '../tools/socle/server/notify'
 import { ConsoleAgent } from '../tools/socle/server/agent'
+import { ExportService } from '../tools/socle/server/exports'
+import { internalIp } from '../tools/socle/server/integrations'
 import { openDb, type Db } from '../src/main/db'
 
 describe('installateurs', () => {
@@ -75,6 +77,13 @@ describe('serveur : /api/downloads et /telechargements/', () => {
     expect(part.status).toBe(206)
     expect(part.headers.get('content-range')).toBe('bytes 4-9/10')
     expect(await part.text()).toBe('456789')
+    // Reprise d'un fichier remplacé entre-temps (If-Range ne correspond plus) : le fichier entier, pas un mélange
+    const stale = await fetch(base + '/telechargements/App-Setup-1.1.0.exe', { headers: { Range: 'bytes=4-', 'If-Range': 'Thu, 01 Jan 2015 00:00:00 GMT' } })
+    expect(stale.status).toBe(200)
+    expect(await stale.text()).toBe('0123456789')
+    const fresh = await fetch(base + '/telechargements/App-Setup-1.1.0.exe', { headers: { Range: 'bytes=4-', 'If-Range': full.headers.get('last-modified')! } })
+    expect(fresh.status).toBe(206)
+    expect(await fresh.text()).toBe('456789')
     expect((await fetch(base + '/telechargements/lisez-moi.txt')).status).toBe(404)
     expect((await fetch(base + '/telechargements/..%2F..%2Fetc%2Fpasswd')).status).toBe(404)
   })
@@ -850,5 +859,26 @@ describe('récupération des comptes : code envoyé par la console, nouveau mot 
     const r = await post('/api/socle/recovery/request', { identifier: 'awa' }, undefined, '198.51.100.7')
     expect(r.status).toBe(429)
     expect(r.json.error).toMatch(/Trop de demandes/)
+  })
+})
+
+describe('base commune : garde-fous', () => {
+  it('webhooks : une adresse interne écrite en IPv6 est refusée comme en IPv4', () => {
+    // « https://[::ffff:127.0.0.1]/ » devient ::ffff:7f00:1 une fois l'adresse lue
+    expect(new URL('https://[::ffff:127.0.0.1]/').hostname).toBe('[::ffff:7f00:1]')
+    for (const ip of ['127.0.0.1', '10.1.2.3', '192.168.1.10', '172.20.0.1', '169.254.169.254', '::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '::ffff:a00:1', '::ffff:c0a8:101', '64:ff9b::7f00:1', 'fd12::1', 'fe80::1', 'febf::1', 'ff02::1'])
+      expect([ip, internalIp(ip)]).toEqual([ip, true])
+    for (const ip of ['8.8.8.8', '196.28.245.1', '::ffff:808:808', '::ffff:8.8.8.8', '2001:4860:4860::8888']) expect([ip, internalIp(ip)]).toEqual([ip, false])
+  })
+
+  it('exports gardés pour le téléphone : la mémoire occupée reste bornée, les plus anciens partent', () => {
+    const svc = new ExportService(async () => ({ id: 1 }))
+    const big = 'x'.repeat(8 * 1024 * 1024)
+    const first = svc.keep('un.csv', big)
+    const urls = Array.from({ length: 8 }, (_, i) => svc.keep(`liste-${i}.csv`, big))
+    const kept = (svc as unknown as { files: Map<string, { body: Buffer }> }).files
+    expect([...kept.values()].reduce((n, f) => n + f.body.length, 0)).toBeLessThanOrEqual(64 * 1024 * 1024)
+    expect(kept.has(first.split('/').pop()!)).toBe(false)
+    expect(kept.has(urls[7].split('/').pop()!)).toBe(true)
   })
 })

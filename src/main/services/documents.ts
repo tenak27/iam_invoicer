@@ -12,7 +12,7 @@ import { computeFullTotals, WITHHOLDING_METHOD, type AppliedTax, type TaxDef } f
 import { resolveTaxes } from './taxes'
 import { addDays, searchText, todayISO } from '@shared/format'
 import type { Db } from '../db'
-import { AppError, audit, fail, num, str, type Ctx } from './context'
+import { AppError, audit, fail, isoDate, num, str, type Ctx } from './context'
 import { getSettings } from './settings'
 import { applyStockMovement, lineLots, moveLots } from './stock'
 import { postDocument, postPayment, removeSourceEntry } from './accounting'
@@ -108,8 +108,11 @@ export async function loadDocument(db: Db, id: number) {
   return { ...doc, party, lines, payments, children }
 }
 
+/** Plafond d'une quantité, d'un prix et d'un montant de ligne (mille milliards). */
+const MAX_AMOUNT = 1e12
+
 function cleanLines(raw: any[]): (LineInput & { lot_refs: string })[] {
-  const lines = (raw ?? [])
+  const lines = (Array.isArray(raw) ? raw : [])
     .map((l) => ({
       product_id: l.product_id ? Number(l.product_id) : null,
       description: str(l.description),
@@ -124,6 +127,8 @@ function cleanLines(raw: any[]): (LineInput & { lot_refs: string })[] {
     if (!l.description) fail('Chaque ligne doit avoir une désignation.')
     if (l.quantity <= 0) fail(`Quantité invalide pour « ${l.description} ».`)
     if (l.unit_price < 0) fail(`Prix invalide pour « ${l.description} ».`)
+    // Faute de frappe (un numéro de téléphone dans la quantité…) : au-delà, les totaux n'ont plus de sens
+    if (l.quantity > MAX_AMOUNT || l.unit_price > MAX_AMOUNT || l.quantity * l.unit_price > MAX_AMOUNT) fail(`Montant trop élevé pour « ${l.description} » : vérifiez la quantité et le prix.`)
   }
   return lines
 }
@@ -184,9 +189,8 @@ export async function saveDocument(ctx: Ctx, input: any): Promise<{ id: number }
     const party = await db.one('SELECT id, kind, payment_terms FROM parties WHERE id = $1', [input.party_id])
     if (!party) fail(info.side === 'sale' ? 'Choisissez un client.' : 'Choisissez un fournisseur.')
     if ((info.side === 'sale') !== (party.kind === 'client')) fail('Le tiers ne correspond pas au type de document.')
-    const date = str(input.date) || todayISO()
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) fail('Date invalide.')
-    let due: string | null = str(input.due_date) || null
+    const date = isoDate(input.date, todayISO())
+    let due: string | null = isoDate(input.due_date, '') || null
     if (!due && info.payable) due = addDays(date, party.payment_terms)
     const lines = cleanLines(input.lines)
     const warehouse = Number(input.warehouse_id) || 1

@@ -224,7 +224,8 @@ summary::after { transition: transform .3s var(--ease); }
 .gamme-chip img { flex: none; width: 32px; height: 32px; border-radius: 10px; }
 .gamme-chip:hover { background: rgba(255, 255, 255, .12); transform: translateY(-2px); color: #fff; }
 .gamme-chip.here { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .3); color: #fff; }
-@media (max-width: 560px) { .gamme-row { grid-template-columns: 1fr 1fr; } .gamme-chip { font-size: .8rem; } }
+/* Téléphone : deux colonnes qui tiennent dans l'écran (les noms longs passent sur deux lignes) */
+@media (max-width: 560px) { .gamme-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gamme-chip { min-width: 0; font-size: .8rem; line-height: 1.2; white-space: normal; } }
 
 /* ── Menu : la section lue est signalée (premium.js) ; sur ordinateur, une pastille glisse d'un lien à
       l'autre (ease-in-out : un élément déjà à l'écran qui se déplace) ── */

@@ -1,13 +1,44 @@
 // Finition commune des sites (tools/site/premium.css et premium.js) et survol réservé à la souris,
 // appliqués à la construction : appelé par build.mjs (site d'IAM INVOICER) et build-entreprise.mjs
 // (IAM Technology et les sites des logiciels). Le greffon est celui des applications (tools/socle/build).
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import postcss from 'postcss'
 import config from '../socle/build/postcss.config.mjs'
 import { injectGamme } from './gamme.mjs'
 
 const premium = readFileSync(new URL('./premium.css', import.meta.url), 'utf8')
 const behaviours = readFileSync(new URL('./premium.js', import.meta.url), 'utf8').replace(/\r\n?/g, '\n')
+
+// Les serveurs des logiciels servent les images et les scripts des sites avec un cache d'un an : une
+// adresse qui ne change pas resterait un an chez le visiteur. Chaque fichier porte donc l'empreinte de
+// son contenu dans son adresse (?v=…), qui ne change que lorsque le fichier change.
+const digest = (data) => createHash('sha1').update(data).digest('hex').slice(0, 8)
+/** Empreinte de toutes les poses de la mascotte (premium.js en déduit l'adresse de chaque pose). */
+const MASCOTTE = fileURLToPath(new URL('../../assets/mascotte/', import.meta.url))
+const mascotteVersion = digest(readdirSync(MASCOTTE).sort().map((f) => `${f}:${digest(readFileSync(MASCOTTE + f))}`).join('|'))
+
+/** Ajoute ?v=<empreinte> aux images et aux scripts du site (src et href vers assets/… ou vers un script
+ *  à la racine) présents dans outDir ; `extra` donne le fichier source d'un script copié plus tard.
+ *  Les adresses qui portent déjà un numéro et le contenu des scripts et des styles ne sont pas touchés. */
+export function stampAssets(html, outDir, extra = {}) {
+  const seen = new Map()
+  const version = (path) => {
+    if (!seen.has(path)) {
+      const file = extra[path] ?? `${outDir}/${path}`
+      seen.set(path, existsSync(file) && statSync(file).isFile() ? digest(readFileSync(file)) : '')
+    }
+    return seen.get(path)
+  }
+  return html
+    .split(/(<script(?![^>]*\ssrc=)[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)/)
+    .map((part, i) => (i % 2 ? part : part.replace(/\b(src|href)="(assets\/[^"?#]+|[\w-]+\.js)"/g, (m, attr, path) => {
+      const v = version(path)
+      return v ? `${attr}="${path}?v=${v}"` : m
+    })))
+    .join('')
+}
 
 /** Ajoute la gamme d'IAM Technology (gamme.mjs ; key : le site visité), la finition à la fin du dernier
  *  <style> de l'en-tête et les comportements communs (premium.js) en fin de page, puis conditionne les
@@ -19,7 +50,7 @@ export async function finishSite(html, key) {
   for (const cls of ['hero-awa', 'contact-awa']) {
     const from = html.indexOf(`<svg class="${cls}"`)
     const to = html.indexOf('</svg>', from)
-    if (from >= 0 && to > from) html = `${html.slice(0, from)}<img class="${cls} mascotte" src="assets/mascotte/f-salut.webp" width="717" height="960" alt="" decoding="async">${html.slice(to + 6)}`
+    if (from >= 0 && to > from) html = `${html.slice(0, from)}<img class="${cls} mascotte" src="assets/mascotte/f-salut.webp?v=${mascotteVersion}" width="717" height="960" alt="" decoding="async">${html.slice(to + 6)}`
   }
   const head = html.indexOf('</head>')
   const last = html.lastIndexOf('</style>', head)

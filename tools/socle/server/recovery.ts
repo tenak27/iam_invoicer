@@ -116,6 +116,7 @@ export class RecoveryService {
   private perIp = new Window(5, 60 * 60_000)
   private perAccount = new Window(3, 60 * 60_000)
   private resetsPerIp = new Window(20, 60 * 60_000)
+  private passwordTries = new Window(5, 15 * 60_000)
   private consoleUrl = (process.env.CONSOLE_URL || 'https://pilotage.iamtechnology.store').replace(/\/+$/, '')
   private consoleToken = process.env.CONSOLE_TOKEN ?? ''
   private pepper = process.env.SECRETS_KEY || process.env.CONSOLE_TOKEN || 'iam-socle'
@@ -246,18 +247,19 @@ export class RecoveryService {
     }
     const u = await this.find(String(input?.identifier ?? ''))
     if (!u) throw httpError(400, GENERIC)
-    const row = await this.opts.db.one<{ code_hash: string; attempts: number; valid: boolean }>('SELECT code_hash, attempts, expires_at > now() AS valid FROM socle_recovery_codes WHERE user_id = $1', [u.id])
-    if (!row || !row.valid) throw httpError(400, GENERIC)
-    if (row.attempts >= MAX_ATTEMPTS) {
-      await this.opts.db.query('DELETE FROM socle_recovery_codes WHERE user_id = $1', [u.id])
-      throw httpError(400, 'Trop d’essais avec ce code : demandez-en un nouveau.')
+    // L'essai est compté avant la comparaison, en une seule instruction : des demandes envoyées en
+    // même temps ne dépassent pas les 5 essais permis
+    const row = await this.opts.db.one<{ code_hash: string; attempts: number }>(
+      'UPDATE socle_recovery_codes SET attempts = attempts + 1 WHERE user_id = $1 AND expires_at > now() AND attempts < $2 RETURNING code_hash, attempts',
+      [u.id, MAX_ATTEMPTS]
+    )
+    if (!row) {
+      const spent = await this.opts.db.query('DELETE FROM socle_recovery_codes WHERE user_id = $1 AND expires_at > now() AND attempts >= $2 RETURNING user_id', [u.id, MAX_ATTEMPTS])
+      throw httpError(400, spent.length ? 'Trop d’essais avec ce code : demandez-en un nouveau.' : GENERIC)
     }
     const expected = Buffer.from(row.code_hash, 'hex')
     const got = Buffer.from(this.hash(u.id, code), 'hex')
-    if (expected.length !== got.length || !timingSafeEqual(expected, got)) {
-      await this.opts.db.query('UPDATE socle_recovery_codes SET attempts = attempts + 1 WHERE user_id = $1', [u.id])
-      throw httpError(400, row.attempts + 1 >= MAX_ATTEMPTS ? 'Trop d’essais avec ce code : demandez-en un nouveau.' : GENERIC)
-    }
+    if (expected.length !== got.length || !timingSafeEqual(expected, got)) throw httpError(400, row.attempts >= MAX_ATTEMPTS ? 'Trop d’essais avec ce code : demandez-en un nouveau.' : GENERIC)
     await this.opts.db.query('DELETE FROM socle_recovery_codes WHERE user_id = $1', [u.id])
     await this.opts.config.setPassword(u.id, password)
     await this.opts.config.log?.(u.id, 'Mot de passe réinitialisé avec un code de récupération (sessions fermées)').catch(() => {})
@@ -287,6 +289,8 @@ export class RecoveryService {
   async saveContacts(user: any, input: any) {
     await this.init()
     if (!(await this.opts.config.user(user.id))) throw httpError(400, 'La version de démonstration n’a pas de coordonnées de récupération.')
+    // Une session ouverte ne sert pas à deviner le mot de passe : 5 essais par quart d'heure
+    if (!this.passwordTries.take(String(user.id))) throw httpError(429, 'Trop d’essais : réessayez dans un quart d’heure.')
     if (!(await this.opts.config.checkPassword(user.id, String(input?.password ?? '')))) throw httpError(400, 'Mot de passe incorrect.')
     const email = String(input?.email ?? '').trim().toLowerCase().slice(0, 160)
     const rawPhone = String(input?.phone ?? '').trim().slice(0, 40)

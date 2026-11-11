@@ -2,7 +2,7 @@
 
 import { can, DOC_TYPES, type DocType } from '@shared/domain'
 import { todayISO } from '@shared/format'
-import { audit, fail, num, str, type Ctx } from './context'
+import { audit, fail, isoDate, num, str, type Ctx } from './context'
 import { postPayment, removeSourceEntry } from './accounting'
 
 /** Côtés que l'utilisateur peut voir et régler : ventes (encaissements), achats (décaissements) ; la comptabilité voit tout. */
@@ -59,6 +59,7 @@ export async function addPayment(
     const remaining = doc.total_ttc - doc.paid
     if (amount > remaining + 0.5) fail(`Le montant dépasse le reste à régler (${Math.round(remaining)}).`)
     if (!str(input.method)) fail('Choisissez un mode de paiement.')
+    const date = isoDate(input.date, todayISO())
     // Ventes au comptoir : tous les règlements sont rattachés à la caisse. Ailleurs, seules les
     // espèces reçues ou versées par un utilisateur dont la caisse est ouverte y passent.
     let sessionId = opts.cashSessionId ?? null
@@ -73,7 +74,7 @@ export async function addPayment(
         directionFor(doc.type),
         doc.party_id,
         doc.id,
-        str(input.date) || todayISO(),
+        date,
         amount,
         str(input.method),
         str(input.reference),

@@ -79,4 +79,29 @@ describe('IAM INVOICER : mot de passe oublié', () => {
     expect(audit.map((a) => a.details)).toContain('Mot de passe réinitialisé avec un code de récupération (sessions fermées)')
     expect(JSON.stringify(audit)).not.toContain(code)
   })
+
+  it('dix essais de code envoyés en même temps ne dépassent pas les 5 permis ; le mot de passe des coordonnées ne se devine pas', async () => {
+    relayed.length = 0
+    expect((await post('/api/socle/recovery/request', { identifier: 'admin' })).json.data).toEqual({ sent: true })
+    await until(() => relayed.length >= 2)
+    const code = relayed[0].code
+    const wrong = code === '000000' ? '111111' : '000000'
+    const tries = await Promise.all(Array.from({ length: 10 }, () => post('/api/socle/recovery/reset', { identifier: 'admin', code: wrong, password: 'autre-secret-2026' })))
+    expect(tries.map((t) => t.status)).toEqual(Array(10).fill(400))
+    const rows = await db.query<{ attempts: number }>('SELECT attempts FROM socle_recovery_codes')
+    expect(rows.every((r) => r.attempts <= 5)).toBe(true)
+    // Essais épuisés : même le bon code ne passe plus, le mot de passe n'a pas changé
+    expect((await post('/api/socle/recovery/reset', { identifier: 'admin', code, password: 'autre-secret-2026' })).json.ok).toBe(false)
+    expect(await db.query('SELECT 1 FROM socle_recovery_codes')).toEqual([])
+    const login = await post('/api/login', { username: 'admin', password: 'nouveau-secret-2026' })
+    expect(login.json.ok).toBe(true)
+    // Coordonnées de récupération : 5 essais de mot de passe par quart d'heure, puis refus même avec le bon
+    const t = login.json.data.token
+    const statuses: number[] = []
+    for (let i = 0; i < 5; i++) statuses.push((await post('/api/socle/recovery/contacts', { email: '', phone: '', password: 'faux' }, t)).status)
+    expect(statuses).toContain(429)
+    const blocked = await post('/api/socle/recovery/contacts', { email: '', phone: '', password: 'nouveau-secret-2026' }, t)
+    expect(blocked.status).toBe(429)
+    expect(blocked.json.error).toMatch(/quart d’heure/)
+  })
 })

@@ -192,36 +192,50 @@ input[type='color']::-moz-color-swatch { border: 0; border-radius: 8px; }
 .socle-pay-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .socle-pay .socle-update-actions a.socle-btn { text-decoration: none; }
 
-/* Mascotte (mascotte.tsx) : personnage en image dans la carte d'accueil, penché vers le pointeur, bulle de texte */
+/* Mascotte (mascotte.tsx) : personnage en image dans la carte d'accueil, penché vers le pointeur, bulle de texte.
+   Enveloppes : bouton (penché vers le pointeur) > scène (entrée et sortie, pilotées par mascotte.tsx) >
+   balancement > respiration > deux calques d'image qui se relaient. Uniquement transform et opacity. */
 .socle-mascotte { --mx: 0px; --mr: 0deg; position: relative; z-index: 1; justify-self: center; align-self: end; height: 250px; margin-bottom: -30px; }
-.socle-mascotte-btn { display: block; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.socle-mascotte-btn { position: relative; display: block; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transform: translateX(var(--mx)) rotate(var(--mr)); transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.22, 1, .36, 1); }
 .socle-mascotte-btn:focus-visible { outline: 3px solid #c9a227; outline-offset: 4px; border-radius: 18px; }
-.socle-mascotte img { display: block; height: 100%; width: auto; user-select: none; -webkit-user-drag: none; transform: translateX(var(--mx)) rotate(var(--mr)); transform-origin: 50% 100%; transition: transform .35s cubic-bezier(.2, .8, .2, 1); filter: drop-shadow(0 16px 14px rgba(7, 42, 75, .22)); }
-/* Scènes (salut, ordinateur, danse, téléphone) : mouvement continu propre à chaque scène, fondu entre les images */
-.socle-mascotte-btn { position: relative; }
-.socle-mascotte img.ghost { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; }
-.socle-mascotte.sc-salut img { animation: socle-mascotte-respire 4.2s ease-in-out infinite; }
-.socle-mascotte.sc-tel img { animation: socle-mascotte-respire 5s ease-in-out infinite; }
-.socle-mascotte.sc-ordi img { animation: socle-mascotte-tape 2.6s ease-in-out infinite; -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 99%); mask-image: linear-gradient(to right, #000 88%, transparent 99%); }
-.socle-mascotte.sc-danse img { animation: socle-mascotte-danse 1.12s cubic-bezier(.45, 0, .55, 1) infinite; }
-@keyframes socle-mascotte-respire {
-  0%, 100% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)) scale(1, 1); }
-  30% { transform: translateX(calc(var(--mx) + 1px)) translateY(-3px) rotate(calc(var(--mr) + .6deg)) scale(1.004, 1.012); }
-  65% { transform: translateX(calc(var(--mx) - 1px)) translateY(-1px) rotate(calc(var(--mr) - .5deg)) scale(1, 1.006); }
+.socle-mascotte-scene, .socle-mascotte-balance, .socle-mascotte-souffle { display: block; height: 100%; transform-origin: 50% 100%; }
+.socle-mascotte-scene { transition: transform .16s cubic-bezier(.23, 1, .32, 1); }
+.socle-mascotte-btn:active .socle-mascotte-scene { transform: scale(.97); }
+.socle-mascotte-souffle { position: relative; filter: drop-shadow(0 16px 14px rgba(7, 42, 75, .22)); }
+.socle-mascotte img { position: relative; z-index: 1; display: block; height: 100%; width: auto; user-select: none; -webkit-user-drag: none; }
+.socle-mascotte img.calque { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; }
+/* Scènes (salut, ordinateur, danse, téléphone). Deux animations simples, aller et retour, de périodes
+   différentes : la vitesse ne retombe jamais à zéro au même instant, le geste ne se répète pas à l'identique.
+   Le délai négatif fait partir le balancement du milieu de sa course, pas d'une extrémité. */
+.socle-mascotte.sc-salut .socle-mascotte-balance { animation: socle-mascotte-balance 3.1s cubic-bezier(.37, 0, .63, 1) -1.55s infinite alternate; }
+.socle-mascotte.sc-salut .socle-mascotte-souffle { animation: socle-mascotte-souffle 2.3s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.socle-mascotte.sc-tel .socle-mascotte-balance { --b-r: .45deg; --b-x: .6px; animation: socle-mascotte-balance 3.7s cubic-bezier(.37, 0, .63, 1) -1.85s infinite alternate; }
+.socle-mascotte.sc-tel .socle-mascotte-souffle { animation: socle-mascotte-souffle 2.6s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+/* Ordinateur : le bureau ne tangue pas, seule la frappe se voit ; l'image est coupée à droite, on l'estompe */
+.socle-mascotte.sc-ordi .socle-mascotte-balance { --b-r: .22deg; --b-x: 0px; animation: socle-mascotte-balance 2.9s cubic-bezier(.37, 0, .63, 1) -1.45s infinite alternate; }
+.socle-mascotte.sc-ordi .socle-mascotte-souffle { --s-y: -1.5px; --s-h: 1.004; animation: socle-mascotte-souffle 1.3s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.socle-mascotte.sc-ordi img { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 99%); mask-image: linear-gradient(to right, #000 88%, transparent 99%); }
+/* Danse : un balancement par image (560 ms, comme dans mascotte.tsx), deux rebonds par balancement ;
+   le rebond monte en ralentissant et retombe en accélérant (la courbe s'inverse au retour) */
+.socle-mascotte.sc-danse .socle-mascotte-balance { --b-r: 3deg; --b-x: 6px; animation: socle-mascotte-balance .56s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.socle-mascotte.sc-danse .socle-mascotte-souffle { animation: socle-mascotte-rebond .28s cubic-bezier(.2, .6, .4, 1) infinite alternate; }
+@keyframes socle-mascotte-balance {
+  from { transform: translateX(calc(var(--b-x, 1px) * -1)) rotate(calc(var(--b-r, .65deg) * -1)); }
+  to { transform: translateX(var(--b-x, 1px)) rotate(var(--b-r, .65deg)); }
 }
-@keyframes socle-mascotte-tape {
-  0%, 100% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)); }
-  25% { transform: translateX(var(--mx)) translateY(-1.5px) rotate(calc(var(--mr) - .35deg)); }
-  50% { transform: translateX(var(--mx)) translateY(0) rotate(var(--mr)); }
-  75% { transform: translateX(var(--mx)) translateY(-1px) rotate(calc(var(--mr) + .35deg)); }
+@keyframes socle-mascotte-souffle {
+  from { transform: translateY(0) scale(1, 1); }
+  to { transform: translateY(var(--s-y, -3px)) scale(1.003, var(--s-h, 1.012)); }
 }
-@keyframes socle-mascotte-danse {
-  0%, 100% { transform: translateX(calc(var(--mx) - 6px)) translateY(0) rotate(calc(var(--mr) - 3deg)) scale(1.01, .985); }
-  25% { transform: translateX(var(--mx)) translateY(-10px) rotate(var(--mr)) scale(.995, 1.02); }
-  50% { transform: translateX(calc(var(--mx) + 6px)) translateY(0) rotate(calc(var(--mr) + 3deg)) scale(1.01, .985); }
-  75% { transform: translateX(var(--mx)) translateY(-10px) rotate(var(--mr)) scale(.995, 1.02); }
+@keyframes socle-mascotte-rebond {
+  from { transform: translateY(0) scale(1.012, .984); }
+  to { transform: translateY(-10px) scale(.995, 1.02); }
 }
-.socle-mascotte-bulle { position: absolute; z-index: 2; right: 76%; top: 4%; width: max-content; max-width: 210px; padding: 9px 13px; border-radius: 14px 14px 4px 14px; background: #fff; color: #0b2a4b; font-size: 13px; font-weight: 600; line-height: 1.3; box-shadow: 0 12px 26px -14px rgba(7, 42, 75, .5); animation: socle-mascotte-pop .25s ease-out; }
+/* Onglet caché ou mascotte hors de l'écran (mascotte.tsx) : tout s'arrête, et reprend au même point */
+.socle-mascotte.en-pause .socle-mascotte-balance, .socle-mascotte.en-pause .socle-mascotte-souffle { animation-play-state: paused; }
+.socle-mascotte-bulle { position: absolute; z-index: 2; right: 76%; top: 4%; width: max-content; max-width: 210px; padding: 9px 13px; border-radius: 14px 14px 4px 14px; background: #fff; color: #0b2a4b; font-size: 13px; font-weight: 600; line-height: 1.3; box-shadow: 0 12px 26px -14px rgba(7, 42, 75, .5); transform-origin: 100% 100%; animation: socle-mascotte-pop .22s cubic-bezier(.23, 1, .32, 1); transition: opacity .18s ease-out, transform .18s ease-out; }
+.socle-mascotte-bulle.part { opacity: 0; transform: translateY(4px) scale(.98); }
+@keyframes socle-mascotte-pop { from { opacity: 0; transform: translateY(6px) scale(.96); } }
 .socle-mascotte.hero-mascot { position: absolute; right: 6%; bottom: 0; width: auto; height: 232px; margin: 0; }
 .hello-duo { position: relative; display: grid; }
 .hello-duo .socle-mascotte { position: absolute; right: 0; bottom: -30px; height: 190px; margin: 0; }
@@ -231,4 +245,11 @@ input[type='color']::-moz-color-swatch { border: 0; border-radius: 8px; }
   .socle-mascotte-bulle { display: none; }
   .hello-duo .socle-mascotte { height: 100%; bottom: 0; }
 }
-@media (prefers-reduced-motion: reduce) { .socle-mascotte img { animation: none !important; transition: none; } .socle-mascotte-bulle { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .socle-mascotte-btn, .socle-mascotte-scene { transition: none; transform: none; }
+  .socle-mascotte-btn:active .socle-mascotte-scene { transform: none; }
+  .socle-mascotte .socle-mascotte-balance, .socle-mascotte .socle-mascotte-souffle { animation: none !important; }
+  .socle-mascotte-bulle { animation: socle-mascotte-fondu .15s ease; transition: opacity .15s ease; }
+  .socle-mascotte-bulle.part { transform: none; }
+}
+@keyframes socle-mascotte-fondu { from { opacity: 0; } }

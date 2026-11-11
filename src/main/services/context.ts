@@ -41,3 +41,12 @@ export const num = (v: unknown): number => {
   const n = typeof v === 'number' ? v : parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.'))
   return Number.isFinite(n) ? n : 0
 }
+
+/** Date saisie (AAAA-MM-JJ) : vide = aujourd'hui (`fallback`) ; refuse un texte libre ou un jour qui n'existe pas. */
+export function isoDate(v: unknown, fallback: string): string {
+  const s = str(v)
+  if (!s) return fallback
+  const t = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00Z') : null
+  if (!t || Number.isNaN(t.getTime()) || t.toISOString().slice(0, 10) !== s) fail('Date invalide.')
+  return s
+}

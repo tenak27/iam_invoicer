@@ -146,11 +146,15 @@ export function createHandler(opts: ServerOptions) {
       chunks.push(chunk as Buffer)
     }
     if (size === 0) return {}
+    let body: unknown
     try {
-      return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+      body = JSON.parse(Buffer.concat(chunks).toString('utf8'))
     } catch {
       throw new HttpError(400, 'JSON invalide.')
     }
+    // Toutes les routes lisent des champs nommés : « null », un texte ou une liste ne sont pas une demande
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) throw new HttpError(400, 'JSON invalide.')
+    return body
   }
 
   function send(res: ServerResponse, status: number, body: unknown) {
@@ -298,8 +302,10 @@ export function createHandler(opts: ServerOptions) {
     }
     // Boutique en ligne (services/shop.ts) : catalogue des articles publiés, photos, commande sans compte
     if (method === 'GET' && path === '/api/public/shop') {
+      // Lu avant d'écrire l'en-tête : une panne de lecture donne une erreur, pas une réponse vide
+      const catalogue = JSON.stringify({ ok: true, data: await shopCatalogue(db) })
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=60' })
-      return res.end(JSON.stringify({ ok: true, data: await shopCatalogue(db) }))
+      return res.end(catalogue)
     }
     const shopImg = /^\/api\/public\/shop\/image\/(\d{1,9})$/.exec(path)
     if (method === 'GET' && shopImg) {

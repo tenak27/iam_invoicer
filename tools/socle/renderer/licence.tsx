@@ -77,6 +77,9 @@ async function call<T>(h: Hooks, path: string, body?: unknown): Promise<T> {
     method: body === undefined ? 'GET' : 'POST',
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
     body: body === undefined ? undefined : JSON.stringify(body)
+  }).catch(() => {
+    // Réseau coupé : le navigateur ne donne qu'un message technique en anglais
+    throw new Error('Connexion impossible : vérifiez votre réseau, puis réessayez.')
   })
   const json = await res.json().catch(() => null)
   if (!json?.ok) throw new Error(json?.error || 'Service indisponible pour le moment.')

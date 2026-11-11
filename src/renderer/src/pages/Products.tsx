@@ -105,18 +105,26 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
   const [photo, setPhoto] = useState('')
   const [photoChanged, setPhotoChanged] = useState(false)
   const file = useRef<HTMLInputElement>(null)
+  // Lue aussi quand on coche une publication sur un article qui avait déjà sa photo : elle serait en ligne sans être montrée ici
+  const published = !!(f.values.shop || f.values.showcase)
+  const photoAsked = useRef(false)
   useEffect(() => {
-    if (product.id && (product.shop || product.showcase)) void api<string>('products.image', { id: product.id }).then((img) => setPhoto(img ?? '')).catch(() => {})
+    if (!product.id || !published || photoAsked.current) return
+    photoAsked.current = true
+    void api<string>('products.image', { id: product.id }).then((img) => setPhoto((now) => now || (img ?? ''))).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [published])
   const pickPhoto = async (picked?: File) => {
     if (!picked) return
     const img = await run(() => shopPhoto(picked))
     if (img) { setPhoto(img); setPhotoChanged(true) }
   }
   const isProduct = f.values.kind === 'produit'
-  const margin = Number(f.values.sale_price) - Number(f.values.purchase_price)
-  const priceTtc = Math.round(Number(f.values.sale_price) * (1 + Number(f.values.tva_rate) / 100))
+  // Même lecture que le serveur : « 10 000 » et « 1250,5 » sont des montants valides
+  const amount = (v: unknown) => parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')) || 0
+  const salePrice = amount(f.values.sale_price)
+  const margin = salePrice - amount(f.values.purchase_price)
+  const priceTtc = Math.round(salePrice * (1 + Number(f.values.tva_rate) / 100))
   const submit = async () => {
     setBusy(true)
     const r = await run(() => api('products.save', { ...f.values, shop: !!f.values.shop, showcase: !!f.values.showcase, ...(photoChanged ? { shop_image: photo } : {}) }), 'Article enregistré.')
@@ -156,7 +164,7 @@ function ProductForm({ product, onClose, onSaved }: { product: any; onClose: () 
         )}
         <div className="field span-3 muted small" style={{ alignSelf: 'end' }}>
           Marge brute unitaire : <strong>{formatMoney(margin)}</strong>
-          {Number(f.values.sale_price) > 0 && ` (${Math.round((margin / Number(f.values.sale_price)) * 100)} %)`}
+          {salePrice > 0 && ` (${Math.round((margin / salePrice) * 100)} %)`}
           {product.id && isProduct && <> · Stock actuel : <strong>{formatQty(product.stock_qty)} {product.unit}</strong> · coût moyen {formatMoney(product.avg_cost)}</>}
         </div>
       </div>

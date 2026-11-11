@@ -37,6 +37,7 @@ export async function saveProduct(ctx: Ctx, input: any) {
   if (!name) fail('La désignation est obligatoire.')
   const tva = num(input.tva_rate)
   if (tva < 0 || tva > 100) fail('Taux de TVA invalide.')
+  if (num(input.sale_price) < 0 || num(input.purchase_price) < 0) fail('Un prix ne peut pas être négatif.')
   const fields = [
     name,
     str(input.description),
@@ -50,12 +51,19 @@ export async function saveProduct(ctx: Ctx, input: any) {
   ]
   const tracking = kind === 'produit' && ['lot', 'serie'].includes(input.tracking) ? input.tracking : 'aucun'
   // Boutique en ligne : publication et photo (la photo n'est touchée que si elle est envoyée)
-  const shop = input.shop === true
-  const showcase = input.showcase === true
+  // Modification qui n'en parle pas (API, saisie rejouée d'une version antérieure) : publication et traçabilité inchangées
+  const keep = (given: unknown) => !!input.id && given === undefined
+  const shop = keep(input.shop) ? null : input.shop === true
+  const showcase = keep(input.showcase) ? null : input.showcase === true
   const image = typeof input.shop_image === 'string' ? checkShopImage(input.shop_image) : null
   return ctx.db.tx(async (db) => {
     if (input.id) {
-      await db.query('UPDATE products SET tracking = $1, shop = $2, showcase = $3 WHERE id = $4', [tracking, shop, showcase, input.id])
+      const found = await db.query(
+        `UPDATE products SET tracking = CASE WHEN $5 = 'prestation' THEN 'aucun' ELSE COALESCE($1, tracking) END,
+         shop = COALESCE($2, shop), showcase = COALESCE($3, showcase) WHERE id = $4 RETURNING id`,
+        [keep(input.tracking) ? null : tracking, shop, showcase, input.id, kind]
+      )
+      if (!found.length) fail('Article introuvable.')
       if (image !== null) await saveProductImage(db, input.id, image)
       await db.query(
         `UPDATE products SET name=$1, description=$2, category=$3, unit=$4, sale_price=$5, purchase_price=$6,
@@ -84,7 +92,7 @@ export async function saveProduct(ctx: Ctx, input: any) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
       [kind, ref, ...fields, num(input.purchase_price)]
     )
-    await db.query('UPDATE products SET tracking = $1, shop = $2, showcase = $3 WHERE id = $4', [tracking, shop, showcase, row!.id])
+    await db.query('UPDATE products SET tracking = $1, shop = $2, showcase = $3 WHERE id = $4', [tracking, shop === true, showcase === true, row!.id])
     if (image) await saveProductImage(db, row!.id, image)
     await audit(db, ctx, 'creation', 'article', row!.id, name)
     return row!

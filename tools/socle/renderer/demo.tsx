@@ -58,7 +58,9 @@ export async function startDemoIfAsked(h: DemoHooks): Promise<void> {
   const root = document.getElementById('root')
   if (root) root.innerHTML = '<div class="socle-demo-boot"><span class="socle-update-dot"></span>Préparation de votre démonstration…</div>'
   try {
-    const res = await fetch(h.server() + '/api/socle/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    const res = await fetch(h.server() + '/api/socle/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {
+      throw new Error('Connexion impossible : vérifiez votre réseau, puis réessayez.')
+    })
     const json = await res.json().catch(() => null)
     if (!json?.ok) throw new Error(json?.error || 'Démonstration indisponible pour le moment.')
     // Une vraie session déjà ouverte dans ce navigateur est mise de côté, puis rendue en quittant la démo

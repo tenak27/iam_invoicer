@@ -151,11 +151,20 @@ async function readJson(req: IncomingMessage): Promise<any> {
   }
 }
 
-function internalIp(ip: string): boolean {
+/** Adresse du réseau interne : boucle locale, réseaux privés, lien local, multidiffusion. */
+export function internalIp(ip: string): boolean {
   if (ip.includes(':')) {
     const v = ip.toLowerCase()
-    if (v.startsWith('::ffff:')) return internalIp(v.slice(7))
-    return v === '::1' || v === '::' || v.startsWith('fc') || v.startsWith('fd') || v.startsWith('fe80')
+    // IPv4 portée par une adresse IPv6 (::ffff:127.0.0.1, 64:ff9b::…) : jugée comme l'IPv4, y compris
+    // sous sa forme hexadécimale (« https://[::ffff:127.0.0.1]/ » devient ::ffff:7f00:1 dans une adresse)
+    const dotted = /^(?:::ffff:|64:ff9b::)(\d+\.\d+\.\d+\.\d+)$/.exec(v)
+    if (dotted) return internalIp(dotted[1])
+    const hex = /^(?:::ffff:|64:ff9b::)([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(v)
+    if (hex) {
+      const [hi, lo] = [parseInt(hex[1], 16), parseInt(hex[2], 16)]
+      return internalIp(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`)
+    }
+    return v === '::1' || v === '::' || /^f[cd]/.test(v) || /^fe[89ab]/.test(v) || v.startsWith('ff')
   }
   const [a, b] = ip.split('.').map(Number)
   return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224

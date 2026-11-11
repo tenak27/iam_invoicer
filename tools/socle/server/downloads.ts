@@ -79,9 +79,14 @@ export async function listDownloads(dir: string | undefined): Promise<DownloadFi
     const c = classify(name)
     if (!c) continue
     const path = join(dir, name)
-    const st = statSync(path)
-    if (!st.isFile()) continue
-    out.push({ name, ...c, size: st.size, updated: st.mtime.toISOString().slice(0, 10), sha256: await sha256(path, `${path}|${st.size}|${st.mtimeMs}`), url: '/telechargements/' + encodeURIComponent(name) })
+    // Un fichier illisible (lien cassé, envoi en cours, retiré entre-temps) est passé : les autres restent proposés
+    try {
+      const st = statSync(path)
+      if (!st.isFile()) continue
+      out.push({ name, ...c, size: st.size, updated: st.mtime.toISOString().slice(0, 10), sha256: await sha256(path, `${path}|${st.size}|${st.mtimeMs}`), url: '/telechargements/' + encodeURIComponent(name) })
+    } catch (e) {
+      console.warn(`Téléchargement ignoré (${name}) : ${(e as Error).message}`)
+    }
   }
   // Version la plus récente d'abord, puis le fichier le plus récent
   return out.sort((a, b) => compareVersions(b.version, a.version) || b.updated.localeCompare(a.updated) || a.name.localeCompare(b.name))
@@ -125,8 +130,19 @@ export function serveDownload(req: IncomingMessage, res: ServerResponse, dir: st
     'Last-Modified': st.mtime.toUTCString(),
     'X-Content-Type-Options': 'nosniff'
   }
+  // Lecture interrompue (fichier retiré pendant l'envoi) : la connexion est coupée, le serveur continue ;
+  // téléchargement abandonné (connexion mobile qui coupe) : le fichier est refermé tout de suite
+  const send = (opts?: { start: number; end: number }) => {
+    const stream = createReadStream(file, opts)
+    stream.on('error', () => res.destroy())
+    res.on('close', () => stream.destroy())
+    stream.pipe(res)
+  }
   const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ''))
-  if (range && (range[1] || range[2])) {
+  // Reprise d'un fichier remplacé depuis (If-Range ne correspond plus) : tout le fichier, pas un mélange des deux
+  const ifRange = req.headers['if-range']
+  const same = !ifRange || ifRange === headers['Last-Modified']
+  if (range && same && (range[1] || range[2])) {
     let start = range[1] ? Number(range[1]) : st.size - Number(range[2])
     let end = range[1] && range[2] ? Number(range[2]) : st.size - 1
     start = Math.max(0, start)
@@ -138,11 +154,11 @@ export function serveDownload(req: IncomingMessage, res: ServerResponse, dir: st
     }
     res.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${st.size}`, 'Content-Length': end - start + 1 })
     if (req.method === 'HEAD') res.end()
-    else createReadStream(file, { start, end }).pipe(res)
+    else send({ start, end })
     return true
   }
   res.writeHead(200, { ...headers, 'Content-Length': st.size })
   if (req.method === 'HEAD') res.end()
-  else createReadStream(file).pipe(res)
+  else send()
   return true
 }

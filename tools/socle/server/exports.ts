@@ -14,6 +14,8 @@ const TTL_MS = 10 * 60_000
 const MAX_BYTES = 8 * 1024 * 1024
 /** Fichiers gardés en même temps au plus (les plus anciens partent d'abord). */
 const MAX_FILES = 200
+/** Mémoire occupée au plus par les fichiers gardés (un compte ne peut pas remplir celle du serveur). */
+const MAX_TOTAL_BYTES = 64 * 1024 * 1024
 
 interface Kept {
   name: string
@@ -50,9 +52,17 @@ export class ExportService {
   keep(name: string, content: string): string {
     const now = Date.now()
     for (const [k, f] of this.files) if (f.expires < now) this.files.delete(k)
-    while (this.files.size >= MAX_FILES) this.files.delete(this.files.keys().next().value as string)
+    const body = Buffer.from(content, 'utf8')
+    // Nombre et poids total bornés : les plus anciens partent d'abord
+    let total = body.length
+    for (const f of this.files.values()) total += f.body.length
+    for (const [k, f] of this.files) {
+      if (this.files.size < MAX_FILES && total <= MAX_TOTAL_BYTES) break
+      total -= f.body.length
+      this.files.delete(k)
+    }
     const key = randomBytes(24).toString('base64url')
-    this.files.set(key, { name: exportName(name), body: Buffer.from(content, 'utf8'), expires: now + TTL_MS })
+    this.files.set(key, { name: exportName(name), body, expires: now + TTL_MS })
     return `/api/socle/export/${key}`
   }
 

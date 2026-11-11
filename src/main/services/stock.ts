@@ -5,7 +5,7 @@
 import { weightedCost } from '@shared/domain'
 import { formatQty, todayISO } from '@shared/format'
 import type { Db } from '../db'
-import { audit, fail, num, str, type Ctx } from './context'
+import { audit, fail, isoDate, num, str, type Ctx } from './context'
 
 export interface MovementInput {
   productId: number
@@ -73,7 +73,7 @@ export async function listMovements(ctx: Ctx, args: { productId?: number; from?:
 
 /** Inventaire : on saisit les quantités comptées, l'écart est enregistré en mouvement. */
 export async function recordInventory(ctx: Ctx, args: { date?: string; note?: string; warehouseId?: number; counts: { productId: number; counted: number }[] }) {
-  const date = str(args.date) || todayISO()
+  const date = isoDate(args.date, todayISO())
   const wh = Number(args.warehouseId) || 1
   let adjusted = 0
   await ctx.db.tx(async (db) => {
@@ -105,12 +105,13 @@ export async function adjustStock(ctx: Ctx, args: { productId: number; quantity:
   const qty = num(args.quantity)
   if (qty === 0) fail('Quantité nulle.')
   if (!str(args.note)) fail('Indiquez le motif du mouvement.')
+  const date = isoDate(args.date, todayISO())
   await ctx.db.tx(async (db) => {
     await applyStockMovement(db, ctx, {
       productId: args.productId,
       quantity: qty,
       unitCost: qty > 0 && args.unitCost != null && str(args.unitCost) !== '' ? num(args.unitCost) : null,
-      date: str(args.date) || todayISO(),
+      date,
       kind: 'ajustement',
       warehouseId: Number(args.warehouseId) || 1,
       allowNegative: false,
@@ -183,7 +184,7 @@ export async function transfer(ctx: Ctx, input: { from: number; to: number; date
   if (!from || !to || from === to) fail('Choisissez deux dépôts différents.')
   const lines = (input.lines ?? []).map((l) => ({ productId: Number(l.productId), quantity: num(l.quantity), lot: str(l.lot) })).filter((l) => l.productId && l.quantity > 0)
   if (lines.length === 0) fail('Ajoutez au moins un article à transférer.')
-  const date = str(input.date) || todayISO()
+  const date = isoDate(input.date, todayISO())
   return ctx.db.tx(async (db) => {
     const number = await nextTransferNumber(db, date)
     const row = await db.one<{ id: number }>(

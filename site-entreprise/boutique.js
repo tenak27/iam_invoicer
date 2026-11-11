@@ -11,7 +11,8 @@
   var $ = function (id) { return document.getElementById(id) }
   var el = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n }
   var shop = null, cart = {}, filter = ''
-  var money = function (n) { return Math.round(n).toLocaleString('fr-FR') + ' ' + (shop.company.currency || 'FCFA') }
+  // Espace insécable avant la devise : le montant ne se coupe jamais entre le nombre et « FCFA »
+  var money = function (n) { return Math.round(n).toLocaleString('fr-FR') + ' ' + (shop.company.currency || 'FCFA') }
   var count = function () { return Object.keys(cart).reduce(function (s, k) { return s + cart[k] }, 0) }
   var total = function () { return shop.items.reduce(function (s, p) { return s + (cart[p.id] || 0) * p.price }, 0) }
 
@@ -148,9 +149,15 @@
         items: Object.keys(cart).map(function (id) { return { id: Number(id), qty: cart[id] } })
       })
     })
-      .then(function (r) { return r.json() })
+      // Réponse illisible (page d'erreur du serveur) : traitée comme un refus, sans message technique
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: r.status === 429 ? 'Trop de demandes en peu de temps. Réessayez dans quelques minutes.' : '' } }) })
       .then(function (r) {
-        if (!r.ok) throw new Error(r.error || 'La commande n’a pas pu être enregistrée.')
+        if (!r.ok) {
+          // Seul le message écrit pour le client est affiché (said) ; toute autre erreur reste générique
+          var refused = new Error(r.error || 'La commande n’a pas pu être enregistrée. Réessayez ou appelez-nous.')
+          refused.said = true
+          throw refused
+        }
         var d = r.data
         $('shop-done-text').textContent = 'Commande ' + d.order + ' : ' + money(d.total) + '.\n' +
           (d.payment ? 'Paiement choisi : ' + d.payment + '.\n' : '') +
@@ -161,7 +168,7 @@
         form.hidden = true
         $('shop-done').hidden = false
       })
-      .catch(function (x) { fail(x && x.message && x.message !== 'Failed to fetch' ? x.message : 'Connexion impossible. Réessayez ou appelez-nous.') })
+      .catch(function (x) { fail(x && x.said ? x.message : 'Connexion impossible. Vérifiez votre connexion puis réessayez, ou appelez-nous.') })
       .then(function () { btn.disabled = false; btn.textContent = 'Envoyer la commande' })
   }
 

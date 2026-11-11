@@ -11,6 +11,14 @@
 <meta property="og:title" content="IAM INVOICER — Toute votre gestion, même sans Internet">
 <meta property="og:description" content="Facturation, caisse, stock, dépenses, comptabilité SYSCOHADA et paie pour le Burkina Faso et la zone OHADA. Essai gratuit de 30 jours.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://invoice.iamtechnology.store/">
+<meta property="og:image" content="https://invoice.iamtechnology.store/assets/iam-invoicer-icone.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:site_name" content="IAM Technology">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://invoice.iamtechnology.store/">
 <link rel="icon" href="assets/iam-invoicer-favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/iam-invoicer-apple-touch.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -450,6 +458,9 @@
     .vs-row > * { padding: 12px; font-size: .88rem; align-items: flex-start; }
     .vs-badge { left: 50%; width: 44px; height: 44px; font-size: .86rem; top: -24px; }
   }
+  /* Téléphone : l'icône passe au-dessus du texte, qui dispose alors de toute la largeur de la case
+     (« Automatiques, » ne déborde plus sur la case voisine) */
+  @media (max-width: 480px) { .vs-row:not(.vs-head) > :not(:first-child) { flex-direction: column; gap: 6px; padding: 12px 10px; overflow-wrap: anywhere; } }
 
   /* ── Métiers ── */
   .jobs { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
@@ -914,7 +925,10 @@
   .contact-card .foot-acces label { color: var(--ink); font-weight: 800; }
   .contact-card .foot-acces input { background: #fbfcfe; border-color: #dde5ef; color: var(--text); }
   .contact-card .foot-acces input::placeholder { color: #8090a6; }
-  .contact-card .foot-acces input:focus { border-color: var(--navy-2); }
+  .contact-card .foot-acces input:focus { border-color: var(--navy-2); box-shadow: 0 0 0 4px rgba(15, 76, 134, .18); }
+  .contact-card .foot-acces .row .btn { flex: none; }
+  /* Téléphone : le champ sur toute la largeur (son texte d'aide se lit en entier), le bouton dessous */
+  @media (max-width: 440px) { .contact-card .foot-acces .row { flex-direction: column; } .contact-card .foot-acces .row .btn { justify-content: center; } }
   .contact-card .docs { margin-top: 0; grid-template-columns: 1fr 1fr; }
   .contact-card .doc { padding: 14px 16px; border-radius: 18px; box-shadow: none; border: 1px solid #f0e2c2; }
 
@@ -1741,7 +1755,7 @@
           <div class="why-stats">
             <div><b><span data-count="30">30</span> j</b><span>d'essai gratuit</span></div>
             <div><b data-count="12">12</b><span>rôles prêts</span></div>
-            <div><b data-count="6">6</b><span>modèles de documents</span></div>
+            <div><b data-count="10">10</b><span>modèles de documents</span></div>
             <div><b data-count="5">5</b><span>plateformes</span></div>
           </div>
         </div>

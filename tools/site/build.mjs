@@ -6,7 +6,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 import { build } from 'esbuild'
-import { finishSite } from './premium.mjs'
+import { finishSite, stampAssets } from './premium.mjs'
 import { writeGammeIcons } from './gamme.mjs'
 
 const out = 'out/site'
@@ -51,5 +51,8 @@ if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', 
 html = await finishSite(html, 'invoicer')
 // Icônes de la gamme (liste des logiciels de la barre du haut et du pied de page)
 await writeGammeIcons(out)
-writeFileSync(`${out}/index.html`, html)
+// Image d'aperçu des liens partagés (WhatsApp, Facebook) : l'icône du logiciel, 512 px
+cpSync('assets/marques/iam-invoicer-icone.png', `${out}/assets/iam-invoicer-icone.png`)
+// Empreinte dans l'adresse des images et des scripts, servis avec un cache d'un an
+writeFileSync(`${out}/index.html`, stampAssets(html, out))
 console.log(`Site construit dans ${out}`)

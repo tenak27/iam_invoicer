@@ -35,6 +35,8 @@ export async function saveTextFile(file: string, content: string, env: ExportEnv
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(env.token ? { Authorization: `Bearer ${env.token}` } : {}) },
       body: JSON.stringify({ name: file, content })
+    }).catch(() => {
+      throw new Error('Connexion impossible : vérifiez votre réseau, puis réessayez.')
     })
     const j = await r.json().catch(() => ({ ok: false, error: `Export impossible (${r.status}).` }))
     if (!j.ok) throw new Error(j.error || 'Export impossible.')
