@@ -111,8 +111,8 @@ const V = LOCATION
       out: 'out/site-entreprise',
       assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'faso-artisans.png'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM TECHNOLOGY accompagne votre entreprise vers l'excellence technologique : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2013.",
-      ogTitle: 'IAM Technology — Transformez votre vision digitale en réalité',
+      description: "IAM Technology équipe les entreprises du Burkina Faso : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2013.",
+      ogTitle: 'IAM Technology — Informatique, sécurité et logiciels à Ouagadougou depuis 2013',
       icon: 'iam-technology-mark.svg'
     }
 const out = V.out
@@ -298,7 +298,8 @@ const script = `<script>
 })()
 </script>`
 
-const extra = readFileSync('site-entreprise/extra.css', 'utf8')
+// La finition (titres, boutons, barre d'accueil, grille des logiciels) ne concerne que le site de l'entreprise
+const extra = readFileSync('site-entreprise/extra.css', 'utf8') + (ENTREPRISE ? readFileSync('site-entreprise/finition.css', 'utf8') : '')
 let html = `${head}<style>
 ${extra}</style>
 </head>

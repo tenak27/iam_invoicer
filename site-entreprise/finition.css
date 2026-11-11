@@ -1,0 +1,45 @@
+/* Finition propre à iamtechnology.store (chargée après extra.css, pour ce seul site). Le préfixe #top
+   (identifiant du <body>) fait passer ces règles devant la feuille commune sans !important. */
+
+/* Titres : la taille fait la hiérarchie, pas la graisse */
+#top h1, #top h2, #top h3 { font-weight: 600; letter-spacing: -.02em; }
+#top h3 { letter-spacing: -.01em; }
+/* Le titre d'accueil tient sur deux lignes, la barre de repères reste dans le premier écran */
+#top .hero h1 { font-size: clamp(2rem, 4.6vw, 3.9rem); }
+#top .histoire-year b { font-weight: 600; letter-spacing: -.02em; }
+
+/* L'écriture cursive reste la signature de l'accueil ; ailleurs, les titres sont d'une seule voix */
+#top .head h2 .script, #top .histoire-copy h2 .script, #top .contact-card h2 .script { font-family: inherit; font-size: 1em; font-weight: inherit; color: inherit; letter-spacing: inherit; }
+#top .promo-t .script { font-family: inherit; font-weight: 600; font-size: clamp(1.25rem, 2vw, 1.6rem); letter-spacing: -.01em; }
+
+/* Étiquettes en minuscules, sans interlettrage */
+#top .hero-bar small, #top .histoire-year span, #top .coords b, #top .acces-tag, #top .who { text-transform: none; letter-spacing: 0; }
+#top .hero-bar small { font-weight: 500; font-size: .86rem; }
+#top .coords b { font-size: .86rem; font-weight: 500; }
+#top .histoire-year span { font-size: .9rem; font-weight: 500; }
+
+/* Boutons : rayon de contrôle, graisse moyenne, ombre neutre et courte (plus de halo vert) */
+#top .btn { border-radius: 14px; font-weight: 600; }
+#top .btn-cta, #top .btn-cta:hover { box-shadow: 0 10px 20px -14px rgba(7, 42, 75, .5), inset 0 1px 0 rgba(255, 255, 255, .18); }
+#top .btn-navy, #top .btn-navy:hover { box-shadow: 0 10px 20px -14px rgba(7, 42, 75, .5); }
+#top .btn-glass .play { border-radius: 10px; }
+#top .nav .btn { border-radius: 999px; }
+
+/* Barre d'accueil : quatre repères de même nature, le téléphone est un lien et non un troisième bouton */
+#top .hero-bar { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 14px 10px; }
+#top .hero-bar b a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(11, 58, 102, .35); }
+@media (max-width: 1040px) { #top .hero-bar { grid-template-columns: 1fr 1fr; } #top .hero-bar > div:nth-child(3) { display: block; } #top .hero-bar > div:nth-child(odd) { border-left: 0; } }
+@media (max-width: 640px) { #top .hero-bar { grid-template-columns: 1fr; } }
+
+/* Logiciels : la carte « Sur mesure » ferme la grille sur toute la largeur au lieu de rester seule à gauche */
+@media (min-width: 901px) {
+  #top #logiciels .tiers > .tier:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 28px; padding: 12px 28px 12px 12px; }
+  #top #logiciels .tiers > .tier:last-child .tier-img { flex: none; width: 220px; height: 180px; margin: 0; }
+  #top #logiciels .tiers > .tier:last-child .tier-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; align-items: center; gap: 8px 28px; padding: 14px 0; }
+  #top #logiciels .tiers > .tier:last-child .tier-row, #top #logiciels .tiers > .tier:last-child .who { grid-column: 1; }
+  #top #logiciels .tiers > .tier:last-child ul { grid-column: 2; grid-row: 1 / span 2; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+  #top #logiciels .tiers > .tier:last-child .btn { grid-column: 3; grid-row: 1 / span 2; margin: 0; }
+}
+
+/* Survol : un changement de surface, sans déplacement */
+#top .tier:hover { transform: none; }
