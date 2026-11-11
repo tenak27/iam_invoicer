@@ -109,10 +109,10 @@ const V = LOCATION
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'faso-artisans.png'],
+      assets: ['mascotte.webp', 'iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'faso-artisans.png'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
-      description: "IAM Technology équipe les entreprises du Burkina Faso : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2013.",
-      ogTitle: 'IAM Technology — Informatique, sécurité et logiciels à Ouagadougou depuis 2013',
+      description: "IAM Technology équipe les entreprises du Burkina Faso : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2021.",
+      ogTitle: 'IAM Technology — Informatique, sécurité et logiciels à Ouagadougou depuis 2021',
       icon: 'iam-technology-mark.svg'
     }
 const out = V.out
@@ -169,11 +169,18 @@ const tearBottom = cut('<svg class="tear tear-bottom"', '</svg>') + '</svg>'
 const contactArt = cut('<div class="contact-art rv">', '<div class="contact-card')
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
+// Site de l'entreprise : la mascotte dessinée laisse la place au personnage en image (assets/marques/mascotte.webp)
+const mascotte = (cls) => `<img class="${cls} mascotte" src="assets/mascotte.webp" width="494" height="1100" alt="" decoding="async">`
+const swapMascotte = (art, cls) => {
+  const from = art.indexOf(`<svg class="${cls}"`)
+  const to = art.indexOf('</svg>', from)
+  return ENTREPRISE && from >= 0 && to > from ? art.slice(0, from) + mascotte(cls) + art.slice(to + 6) : art
+}
 let body = readFileSync(`${V.dir}/body.html`, 'utf8')
-  .replace('{{HERO_ART}}', heroArt)
+  .replace('{{HERO_ART}}', swapMascotte(heroArt, 'hero-awa'))
   .replaceAll('{{TEAR_TOP}}', tearTop)
   .replaceAll('{{TEAR_BOTTOM}}', tearBottom)
-  .replace('{{CONTACT_ART}}', contactArt)
+  .replace('{{CONTACT_ART}}', swapMascotte(contactArt, 'contact-awa'))
   .replaceAll('__VERSION__', version)
 
 // Aperçu de l'application : les captures deviennent une vitrine (onglets + grande fenêtre de
