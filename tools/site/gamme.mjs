@@ -28,6 +28,7 @@ export const GAMME = [
   { key: 'cloud', name: 'IAM CLOUD', url: 'https://cloud.iamtechnology.store/', say: 'Fichiers et travail d’équipe' },
   { key: 'sante', name: 'IAM SANTÉ', url: 'https://sante.iamtechnology.store/', say: 'Dossier patient électronique' },
   { key: 'location', name: 'IAM LOCATION', url: 'https://location.iamtechnology.store/', say: 'Gestion locative' },
+  { key: 'traffic', name: 'IAM TRAFFIC', url: 'https://traffic.iamtechnology.store/', say: 'Analyse du réseau' },
   { key: 'artisans', name: 'FASO ARTISANS', url: 'https://artisans-bf.com/', say: 'Artisans vérifiés près de chez vous' }
 ]
 const source = (key) => MARQUES + (key === 'artisans' ? 'faso-artisans.png' : `iam-${key}-apple-touch.png`)
