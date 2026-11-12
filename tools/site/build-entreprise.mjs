@@ -26,7 +26,19 @@ const CLOUD = process.argv[2] === 'cloud'
 const SANTE = process.argv[2] === 'sante'
 // « node tools/site/build-entreprise.mjs location » : site d'IAM LOCATION (site-location/ → out/site-location)
 const LOCATION = process.argv[2] === 'location'
-const V = LOCATION
+// « node tools/site/build-entreprise.mjs traffic » : site d'IAM TRAFFIC (site-traffic/ → out/site-traffic)
+const TRAFFIC = process.argv[2] === 'traffic'
+const V = TRAFFIC
+  ? {
+      dir: 'site-traffic',
+      out: 'out/site-traffic',
+      assets: ['iam-traffic.svg', 'iam-traffic-mark.svg'],
+      title: 'IAM TRAFFIC — Analyse du réseau : trafic, paquets, débit, appareils et alertes | IAM Technology',
+      description: "IAM TRAFFIC : trafic entrant et sortant en direct, paquets reçus et émis, test de débit, liste des appareils avec leur adresse IP, programmes connectés, adresses douteuses et alertes. Pour les entreprises, cybercafés et écoles du Burkina Faso.",
+      ogTitle: 'IAM TRAFFIC — Voyez ce qui passe sur votre réseau',
+      icon: 'iam-traffic-mark.svg'
+    }
+  : LOCATION
   ? {
       dir: 'site-location',
       out: 'out/site-location',
@@ -131,8 +143,9 @@ if (EDU) cpSync('site-education/captures', `${out}/assets/captures`, { recursive
 if (CLOUD) cpSync('site-cloud/captures', `${out}/assets/captures`, { recursive: true })
 if (SANTE) cpSync('site-sante/captures', `${out}/assets/captures`, { recursive: true })
 if (LOCATION) cpSync('site-location/captures', `${out}/assets/captures`, { recursive: true })
+if (TRAFFIC) cpSync('site-traffic/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION
+const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION && !TRAFFIC
 // Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
 // avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
 // Boutique : le catalogue et les photos viennent de la base d'IAM Technology dans IAM INVOICER

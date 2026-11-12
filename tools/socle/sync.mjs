@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const docs = resolve(here, '../../..')
-export const APPS = ['iam-mails', 'iam-btp', 'iam-ecommerce', 'iam-reminder', 'iam-education', 'iam-cloud', 'iam-sante', 'iam-location', 'faso-artisans']
+export const APPS = ['iam-mails', 'iam-btp', 'iam-ecommerce', 'iam-reminder', 'iam-education', 'iam-cloud', 'iam-sante', 'iam-location', 'faso-artisans', 'iam-traffic']
 const SELF = 'iam-erp'
 const NO_BACKGROUND = new Set(['iam-reminder'])
 
