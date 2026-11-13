@@ -74,7 +74,7 @@ function voucherHtml(company: Company, v: Voucher): string {
     .words { text-align: right; font-size: 8.5pt; color: #5d6475; margin-top: 4px; font-style: italic; }
     h2 { font-size: 10pt; margin: 18px 0 4px; color: ${c}; text-transform: uppercase; letter-spacing: .4px; }
     .hist td { font-size: 8.5pt; padding: 4px 8px; }
-    .signs { display: grid; grid-template-columns: repeat(${v.signatures.length}, 1fr); gap: 10px; margin-top: 18px; page-break-inside: avoid; }
+    .signs { display: grid; grid-template-columns: repeat(${v.signatures.length}, 1fr); gap: 10px; margin-top: 18px; page-break-inside: avoid; break-inside: avoid; break-before: avoid; page-break-before: avoid; }
     .sig { border: 1px solid #d4dbe3; border-radius: 6px; padding: 8px 10px; min-height: 108px; display: flex; flex-direction: column; font-size: 8.5pt; }
     .sig .t { text-transform: uppercase; letter-spacing: .4px; font-size: 7.5pt; color: #5d6475; }
     .sig .who { margin-top: auto; font-weight: 700; }

@@ -97,8 +97,8 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .box .label { color: ${GOLD_DARK}; letter-spacing: 1.6px; font-size: 7pt; }
   .box .name { font-weight: 400; font-size: 13pt; }
   table.lines th { background: none; color: #1f2933; text-transform: uppercase; letter-spacing: 1.2px; font-size: 7pt; padding: 9px 6px; border-top: 1px solid ${GOLD}; border-bottom: 1px solid ${GOLD}; }
-  table.lines td { padding: 9px 6px; border-bottom: 1px solid #ece6da; }
-  table.lines tr:nth-child(even) td { background: none; }
+  table.lines > tbody > tr > td { padding: 9px 6px; border-bottom: 1px solid #ece6da; }
+  table.lines > tbody > tr:nth-child(even) > td { background: none; }
   .totals .grand td { background: none; color: ${c}; font-size: 14pt; font-weight: 400; padding: 8px; border-top: 1px solid ${GOLD}; border-bottom: 3px double ${GOLD}; }
   .words { background: none; border-left: none; text-align: center; font-style: italic; border-top: 1px solid #ece6da; border-bottom: 1px solid #ece6da; }
   .sigbox, .secef, .auth { border-color: #e6dcc8; border-radius: 0; }
@@ -120,8 +120,8 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .parties .issuer { display: block; }
   .parties .box { flex: 1; min-width: 0; border: none; padding: 0; border-radius: 0; }
   table.lines th { background: none; color: #6b7280; font-weight: 500; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .6px; padding: 6px 6px 8px; border-bottom: 1.5px solid #111827; }
-  table.lines td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
-  table.lines tr:nth-child(even) td { background: none; }
+  table.lines > tbody > tr > td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
+  table.lines > tbody > tr:nth-child(even) > td { background: none; }
   .totals .grand td { background: none; color: #111827; font-size: 13pt; border-top: 1.5px solid #111827; }
   .totals .grand td:last-child { color: ${c}; }
   .words { background: none; border-left: 3px solid ${c}; }
@@ -134,7 +134,7 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .head .logo { background: #fff; padding: 6px 10px; border-radius: 8px; }
   .parties .box { border: none; border-left: 4px solid ${c}; border-radius: 6px; background: #f3f4f6; }
   table.lines th { background: #111827; color: #fff; }
-  table.lines tr:nth-child(even) td { background: #f3f4f6; }
+  table.lines > tbody > tr:nth-child(even) > td { background: #f3f4f6; }
   .totals .grand td { background: #111827; color: #fff; }
   .totals .grand td:last-child { box-shadow: inset 0 -3px 0 ${c}; }
   .words { background: #f3f4f6; border-left: 4px solid #111827; }
@@ -148,7 +148,7 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .head .logo { background: #fff; padding: 5px 8px; border-radius: 6px; }
   .box { border: none; border-left: 4px solid ${c}; border-radius: 4px; background: ${tint(c, 9)}; }
   table.lines th { background: ${tint(c, 14)}; color: #1f2933; border-bottom: 2px solid ${c}; }
-  table.lines tr:nth-child(even) td { background: ${tint(c, 4)}; }
+  table.lines > tbody > tr:nth-child(even) > td { background: ${tint(c, 4)}; }
   .words { background: ${tint(c, 9)}; }
   .totals .grand td:first-child { border-radius: 6px 0 0 6px; }
   .totals .grand td:last-child { border-radius: 0 6px 6px 0; }`,
@@ -159,15 +159,15 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .head { padding-bottom: 14px; border-bottom: 1px solid ${c}; }
   .box { border: none; border-top: 1.5px solid ${c}; border-radius: 0; padding: 8px 0 0; }
   table.lines th { background: none; color: #1f2933; border-top: 1.5px solid ${c}; border-bottom: 1.5px solid ${c}; text-transform: uppercase; letter-spacing: .8px; font-size: 7.5pt; padding: 8px 6px; }
-  table.lines td { padding: 8px 6px; }
-  table.lines tr:nth-child(even) td { background: none; }
+  table.lines > tbody > tr > td { padding: 8px 6px; }
+  table.lines > tbody > tr:nth-child(even) > td { background: none; }
   .totals .grand td { background: none; color: ${c}; border-top: 1.5px solid ${c}; border-bottom: 1.5px solid ${c}; font-size: 12pt; }
   .words { background: none; border-left: none; border-top: 1px solid #d4dbe3; border-bottom: 1px solid #d4dbe3; font-style: italic; }
   .sigbox, .secef, .auth { border-radius: 0; }`,
   minimal: () => `
   .company-name, .doc-title h1, .secef .t, .auth .t { color: #1f2933; }
   table.lines th { background: none; color: #1f2933; border-bottom: 1.5px solid #1f2933; }
-  table.lines tr:nth-child(even) td { background: none; }
+  table.lines > tbody > tr:nth-child(even) > td { background: none; }
   .totals .grand td { background: none; color: #1f2933; border-top: 1.5px solid #1f2933; border-bottom: 1.5px solid #1f2933; }
   .words { background: none; border-left: 2px solid #1f2933; }`,
   compact: () => `
@@ -181,7 +181,7 @@ const TEMPLATE_CSS: Record<DocLayout, (c: string) => string> = {
   .parties { margin: 10px 0; }
   .box { padding: 6px 10px; }
   table.lines th { padding: 4px 5px; font-size: 7.5pt; }
-  table.lines td { padding: 3px 5px; }
+  table.lines > tbody > tr > td { padding: 3px 5px; }
   .bottom { margin-top: 8px; }
   .totals td { padding: 2px 8px; }
   .words { margin-top: 8px; padding: 5px 10px; }
@@ -269,7 +269,7 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
 
   const margins = docMargins(company)
   const numbered = company.doc_line_numbers !== false
-  const lines = doc.lines
+  const rows: string[] = doc.lines
     .map(
       (l: any, i: number) => `
       <tr>
@@ -284,7 +284,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
         <td class="num">${formatNumber(l.total_ht)}</td>` : ''}
       </tr>`
     )
-    .join('')
+  // Les dernières lignes restent avec la fin du document (totaux, signatures) : elles forment avec elle
+  // une section du tableau qui ne se coupe pas. Deux lignes, ou trois pour garder l'alternance des fonds.
+  const kept = rows.length <= 3 ? rows.length : rows.length % 2 === 0 ? 2 : 3
+  const columns = (numbered ? 1 : 0) + 3 + (showPrices ? 4 : 0)
 
 
   const partyLabel = info.side === 'sale' ? (type === 'DEV' ? 'Client' : 'Facturé à') : 'Fournisseur'
@@ -330,6 +333,15 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   table.lines tr, table.totals tr { break-inside: avoid; page-break-inside: avoid; }
   .head, .parties { break-after: avoid; page-break-after: avoid; }
   .bottom, .words, .signs, .sign, .secef, .terms { break-inside: avoid; page-break-inside: avoid; }
+  /* Fin du document : totaux, montant en lettres, mentions et signatures ne se séparent pas et restent
+     avec les dernières lignes du tableau (section « end », déplacée d'un bloc sur la page suivante quand
+     elle ne tient plus). Les signatures ne se retrouvent donc jamais seules sur une page. */
+  table.lines > tbody.end { break-inside: avoid; page-break-inside: avoid; }
+  table.lines > tbody > tr.fin > td { padding: 0 !important; border: 0 !important; background: none !important; }
+  .closing { break-inside: avoid; page-break-inside: avoid; }
+  /* Un paragraphe ne laisse pas une ligne isolée en haut ou en bas de page */
+  p, .muted, .terms, .words { orphans: 3; widows: 3; }
+  .secef, .auth { break-before: avoid; page-break-before: avoid; }
   td.n, th.n { width: 26px; text-align: center; color: #7b8794; }
   * { box-sizing: border-box; }
   /* Couleurs et aplats imprimés tels qu'à l'écran, quel que soit le navigateur ou l'imprimante */
@@ -354,8 +366,8 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   .box .name { font-size: 11.5pt; font-weight: 600; margin: 2px 0 4px; }
   table.lines { width: 100%; border-collapse: collapse; }
   table.lines th { background: ${c}; color: #fff; font-weight: 600; font-size: 8.5pt; text-align: left; padding: 6px 6px; }
-  table.lines td { padding: 6px 6px; border-bottom: 1px solid #e4e9ef; vertical-align: top; }
-  table.lines tr:nth-child(even) td { background: #f6f8fb; }
+  table.lines > tbody > tr > td { padding: 6px 6px; border-bottom: 1px solid #e4e9ef; vertical-align: top; }
+  table.lines > tbody > tr:nth-child(even) > td { background: #f6f8fb; }
   .num { text-align: right; white-space: nowrap; }
   th.num { text-align: right; }
   .ref { color: #5f6b7a; font-size: 8.5pt; white-space: nowrap; }
@@ -456,9 +468,10 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
       ${numbered ? '<th class="n">N°</th>' : ''}<th>Réf.</th><th>Désignation</th><th class="num">Qté</th>
       ${showPrices ? '<th class="num">P.U. HT</th><th class="num">Remise</th><th class="num">TVA</th><th class="num">Total HT</th>' : ''}
     </tr></thead>
-    <tbody>${lines}</tbody>
-  </table>
-
+    <tbody>${rows.slice(0, rows.length - kept).join('')}</tbody>
+    <tbody class="end">${rows.slice(rows.length - kept).join('')}
+    <tr class="fin"><td colspan="${columns}">
+  <div class="closing">
   ${showPrices ? `
   <div class="bottom">
     <div class="notes">${doc.notes ? `<div class="muted"><strong>Observations</strong><br>${nl2br(doc.notes)}</div>` : ''}</div>
@@ -478,6 +491,9 @@ export function documentHtml(doc: any, company: CompanySettings, forPdf = false,
   ${type === 'DEV' ? '<p class="muted" style="margin-top:14px">Devis valable 30 jours.</p>' : ''}
   ${type === 'FAC' && company.bank_account ? `<p class="muted pay-note" style="margin-top:14px">Règlement par virement : ${esc(company.bank_name)} — ${esc(company.bank_account)}${doc.due_date ? ` · avant le ${formatDate(doc.due_date)}` : ''}</p>` : ''}
   ${signBlock}
+  </div>
+    </td></tr></tbody>
+  </table>
   ${doc.secef_code ? `<div class="secef ${doc.secef_code.startsWith('SIM-') ? 'sim' : ''}">${qrSvg(doc.secef_qr)}<div><div class="t">${doc.secef_code.startsWith('SIM-') ? 'Simulation SECeF — non valable fiscalement' : 'Facture certifiée SECeF — DGI'}</div><div>Code : <strong>${esc(doc.secef_code)}</strong></div><div>NIM : ${esc(doc.secef_nim)} · Compteurs : ${esc(doc.secef_counters)}</div><div>Date et heure : ${esc(doc.secef_date)}</div></div></div>` : ''}
   ${auth ? `<div class="auth">${qrSvg(auth.qr, 84)}<div><div class="t">Document authentique</div><div>Code : <span class="code">${esc(auth.code)}</span></div><div class="muted">${auth.url ? `Scannez ce code, ou saisissez-le sur ${esc(auth.url.replace(/^https?:\/\//, '').replace(/\/verify\/.*$/, '/verify'))}, pour vérifier ce document.` : `Scannez ce code pour lire le numéro, la date et le montant enregistrés par ${esc(company.name)}.`}</div></div></div>` : ''}
   ${company.doc_terms && info.side === 'sale' ? `<div class="terms"><strong>Conditions générales</strong>\n${esc(company.doc_terms)}</div>` : ''}

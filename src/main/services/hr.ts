@@ -317,7 +317,9 @@ export async function payslipsHtml(ctx: Ctx, args: { runId: number; employeeId?:
     .lines td:nth-child(n+2), .lines th:nth-child(n+2) { text-align: right; }
     .lines tfoot td { font-weight: 700; border-top: 2px solid #c9d1dd; }
     .net { display: flex; justify-content: space-between; margin-top: 12px; padding: 10px 14px; background: ${color}; color: #fff; font-size: 13pt; border-radius: 6px; }
-    .sign { display: flex; justify-content: space-between; margin-top: 26px; } .sign div { width: 40%; border-top: 1px solid #9aa5b1; padding-top: 4px; color: #5f6b7a; height: 60px; }
+    /* Net à payer et signatures restent ensemble : les signatures ne partent jamais seules sur une page */
+    .net, .small { break-after: avoid; page-break-after: avoid; } .lines tr { break-inside: avoid; page-break-inside: avoid; }
+    .sign { display: flex; justify-content: space-between; margin-top: 26px; break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid; } .sign div { width: 40%; border-top: 1px solid #9aa5b1; padding-top: 4px; color: #5f6b7a; height: 60px; }
     ${payslipThemeCss(company.doc_layout, color)}
   </style></head><body>${pages.join('') || '<p>Aucun bulletin.</p>'}</body></html>`
 }
