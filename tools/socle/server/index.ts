@@ -29,6 +29,8 @@ export type { Notice } from './notify'
 export type { DemoSeed } from './demo'
 export type { LicenceConfig, LicenceState } from './licence'
 export type { IntegrationsConfig, LockState } from './integrations'
+export { catalogProblems, McpEndpoint, toolName } from './mcp'
+export type { McpAccess, McpArg, McpTool } from './mcp'
 export type { RecoveryConfig, RecoveryUser } from './recovery'
 
 export interface SocleOptions {
@@ -85,7 +87,7 @@ export function createSocle(opts: SocleOptions): SocleHandler {
   const agent = opts.db && process.env.CONSOLE_TOKEN ? new ConsoleAgent({ db: opts.db, app: opts.app, version: opts.version, token: process.env.CONSOLE_TOKEN }) : null
   const demo = opts.demo && opts.resolveUser ? new DemoService({ seed: opts.demo.seed, token: opts.demo.token, resolveUser: opts.resolveUser }) : null
   const licence = opts.licence && opts.db && opts.resolveUser ? new LicenceService({ db: opts.db, app: opts.app, config: opts.licence, resolveUser: opts.resolveUser }) : null
-  const integrations = opts.integrations && opts.db && opts.resolveUser ? new IntegrationsService({ db: opts.db, app: opts.app, config: opts.integrations, resolveUser: opts.resolveUser, notify, enforce: licence ? (u, n, a) => licence.enforce(u, n, a) : undefined }) : null
+  const integrations = opts.integrations && opts.db && opts.resolveUser ? new IntegrationsService({ db: opts.db, app: opts.app, config: opts.integrations, resolveUser: opts.resolveUser, notify, version: opts.version, enforce: licence ? (u, n, a) => licence.enforce(u, n, a) : undefined }) : null
   const recovery = opts.recovery && opts.db && opts.resolveUser ? new RecoveryService({ db: opts.db, app: opts.app, config: opts.recovery, resolveUser: opts.resolveUser, notify }) : null
   const exportFiles = opts.resolveUser ? new ExportService(opts.resolveUser) : null
   const socle = async function socle(req: IncomingMessage, res: ServerResponse, path: string) {
@@ -101,7 +103,7 @@ export function createSocle(opts: SocleOptions): SocleHandler {
     if (exportFiles && path.startsWith('/api/socle/export')) {
       if (await exportFiles.handle(req, res, path)) return true
     }
-    if (integrations && (path.startsWith('/api/socle/integrations') || path.startsWith('/api/v1/'))) return integrations.handle(req, res, path)
+    if (integrations && (path.startsWith('/api/socle/integrations') || path.startsWith('/api/v1/') || path === '/api/mcp')) return integrations.handle(req, res, path)
     if (path.startsWith('/api/socle/console/')) {
       if (agent) return agent.handle(req, res, path)
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' })

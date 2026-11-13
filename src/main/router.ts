@@ -344,7 +344,10 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'budget.deleteForecast': { access: 'budget', fn: budget.deleteForecast }
 }
 
-export type CallResult = { ok: true; data: unknown } | { ok: false; error: string }
+/** Noms de tous les appels du routeur (contrôle du catalogue MCP, tests). */
+export const CALLS = Object.keys(routes)
+
+export type CallResult ={ ok: true; data: unknown } | { ok: false; error: string }
 
 /** Toujours permis, même licence expirée : se mettre en règle (raison sociale, comptes, licence). */
 const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'users.devices', 'users.revokeDevice', 'auth.changePassword'])

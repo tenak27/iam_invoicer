@@ -21,11 +21,13 @@
 //   POST /api/socle/integrations/lock             verrouiller
 //   POST /api/socle/integrations/unlock           { password, code? } → modifications possibles 15 minutes
 //   GET|POST /api/v1/<appel>                      API des logiciels tiers (Authorization: Bearer iak_…)
+//   POST /api/mcp                                 serveur MCP pour les assistants (même clé, mcp.ts)
 
 import { createHash, createHmac, randomBytes } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { isIP } from 'node:net'
+import { McpEndpoint, type McpTool } from './mcp'
 import type { Notice, SocleDb } from './notify'
 
 /** Événement pour les webhooks : [nom, données]. */
@@ -64,6 +66,10 @@ export interface IntegrationsConfig {
   forbidden?: RegExp
   /** Exemples montrés dans « Comment utiliser l'API » (ex. « GET sites.list »). */
   examples?: string[]
+  /** Outils proposés aux assistants par le serveur MCP (/api/mcp, mêmes clés et mêmes droits que /api/v1). */
+  mcp?: McpTool[]
+  /** Présentation de l'application donnée à l'assistant à la connexion (à défaut : texte général). */
+  mcpInstructions?: string
   /** Écran des paramètres dans l'application (lien de la notification). */
   settingsUrl?: string
   fail: (message: string) => never
@@ -257,6 +263,7 @@ export class IntegrationsService {
   private ready: Promise<unknown> | null = null
   private perKey = new Window(120, 60_000)
   readonly lockOf: IntegrationLock
+  private mcp: McpEndpoint | null = null
 
   constructor(
     private opts: {
@@ -269,10 +276,38 @@ export class IntegrationsService {
       enforce?: (user: any, name: string, args: unknown) => Promise<void>
       /** Préfixe public du serveur (client hébergé d'IAM INVOICER : « /t/<client> »), pour l'adresse de l'API affichée. */
       publicPath?: string
+      version?: string
     }
   ) {
     this.lockOf = new IntegrationLock(opts.db)
     current = this
+    const tools = opts.config.mcp ?? []
+    if (tools.length)
+      this.mcp = new McpEndpoint({
+        app: opts.app,
+        version: opts.version,
+        tools,
+        instructions: opts.config.mcpInstructions,
+        access: async (key) => {
+          const who = await this.userForKey(key)
+          if (!who) return null
+          const id = keyHash(key)
+          return {
+            refusal: (name) => this.refusal(name, who.scope),
+            readOnly: (name) => (this.opts.config.read ?? READ).test(name),
+            take: () => this.perKey.take(id),
+            run: (name, args, req) => this.run(who.user, name, args, req)
+          }
+        }
+      })
+  }
+
+  /** Appel au nom de l'auteur de la clé : limites de la licence, puis événements des webhooks. */
+  private async run(user: any, name: string, args: unknown, req: IncomingMessage) {
+    await this.opts.enforce?.(user, name, args)
+    const out = await this.opts.config.dispatch(user, name, args, req)
+    if (out?.ok) this.after(user, name, args, out.data)
+    return out
   }
 
   private init() {
@@ -338,6 +373,8 @@ export class IntegrationsService {
       webhooks: hooks,
       events: this.opts.config.events,
       api: `${baseUrl}/api/v1/`,
+      mcp: this.mcp ? `${baseUrl}/api/mcp` : null,
+      mcp_tools: this.mcp?.size ?? 0,
       examples: this.opts.config.examples ?? []
     }
   }
@@ -506,9 +543,7 @@ export class IntegrationsService {
       // Nombres et booléens reconnus ; un code à zéro initial (« 0042 ») reste du texte
       for (const [k, v] of new URL(req.url ?? '/', 'http://x').searchParams) args[k] = /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v) && v.length < 16 ? Number(v) : v === 'true' ? true : v === 'false' ? false : v
     } else args = await readJson(req)
-    await this.opts.enforce?.(who.user, name, args)
-    const out = await this.opts.config.dispatch(who.user, name, args, req)
-    if (out?.ok) this.after(who.user, name, args, out.data)
+    const out = await this.run(who.user, name, args, req)
     return json(res, out?.ok ? 200 : 400, out)
   }
 
@@ -552,6 +587,10 @@ export class IntegrationsService {
 
   async handle(req: IncomingMessage, res: ServerResponse, path: string): Promise<boolean> {
     const isApi = path.startsWith('/api/v1/')
+    if (path === '/api/mcp') {
+      if (this.mcp) return this.mcp.handle(req, res)
+      return json(res, 404, { ok: false, error: 'Ressource inconnue.' }), true
+    }
     if (!isApi && path !== '/api/socle/integrations' && !path.startsWith('/api/socle/integrations/')) return false
     try {
       if (isApi) {

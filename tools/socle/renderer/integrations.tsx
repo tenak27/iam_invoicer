@@ -45,6 +45,9 @@ interface Data {
   webhooks: Webhook[]
   events: Record<string, string>
   api: string
+  /** Adresse du serveur MCP (assistants), ou rien si l'application n'en propose pas. */
+  mcp?: string | null
+  mcp_tools?: number
   examples: string[]
   /** Faux : clés en lecture seule uniquement. */
   writable?: boolean
@@ -402,6 +405,20 @@ export function IntegrationsPanel(props: Hooks & { app: string }) {
               Webhooks : chaque envoi est un POST JSON <code>{'{ id, app, event, created_at, space_id, data }'}</code>, signé par l’en-tête <code>X-IAM-Signature: sha256=…</code> (HMAC-SHA256 du corps avec le secret du webhook).
             </p>
           </details>
+          {data.mcp && (
+            <details className="socle-int-doc">
+              <summary>Relier un assistant (Claude, ChatGPT, Cursor…)</summary>
+              <p>
+                {props.app} parle le protocole MCP : un assistant peut consulter vos données et agir pour vous, avec {data.mcp_tools} outil{(data.mcp_tools ?? 0) > 1 ? 's' : ''}. Donnez-lui cette adresse et une clé d’API dans l’en-tête <code>Authorization: Bearer &lt;clé&gt;</code> :
+              </p>
+              <pre>{data.mcp}</pre>
+              <p>Dans Claude Code, par exemple :</p>
+              <pre>{`claude mcp add --transport http ${props.app.toLowerCase().replace(/[^a-z0-9]+/g, '-')} ${data.mcp} \\\n  --header "Authorization: Bearer <clé>"`}</pre>
+              <p>
+                Avec une clé en lecture seule, l’assistant ne fait que consulter : commencez par là. Une clé en lecture et écriture lui permet d’enregistrer et de supprimer, au nom de l’administrateur qui l’a créée ; révoquez la clé pour couper l’accès.
+              </p>
+            </details>
+          )}
 
           <div className="socle-int-head">
             <h3>Webhooks</h3>

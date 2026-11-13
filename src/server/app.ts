@@ -14,6 +14,7 @@
 //   GET  /api/downloads              installateurs disponibles (site de présentation)
 //   GET  /api/ios-manifest/:fichier  manifeste d'installation iPhone d'un .ipa signé
 //   /api/socle/integrations, /api/v1/<appel>   clés d'API et webhooks de la société (integrations.ts)
+//   POST /api/mcp                    serveur MCP pour les assistants, avec la même clé d'API (mcp.ts)
 //   /api/socle/recovery…            « Mot de passe oublié ? » : code envoyé par la console d'IAM Technology (recovery.ts)
 // Authentification : en-tête « Authorization: Bearer <jeton> ».
 
@@ -132,6 +133,7 @@ export function createHandler(opts: ServerOptions) {
     app: 'IAM INVOICER',
     resolveUser: (t) => resolveToken(db, t),
     publicPath: opts.publicPath,
+    version: opts.version,
     config: integrationsConfig(db, (user, name, args, req) => call({ db, user, origin: publicOrigin(req), token: null, client: opts.clientSpace === true }, name, args))
   })
   // « Mot de passe oublié ? » : code envoyé par la console d'IAM Technology (e-mail ou WhatsApp)

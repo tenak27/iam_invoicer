@@ -7,6 +7,7 @@ import { audit, fail, type SessionUser } from '../main/services/context'
 import { checkUserPassword } from '../main/services/auth'
 import { isDemoDb } from '../main/services/demoMode'
 import type { IntegrationsConfig, Trigger } from '../../tools/socle/server/integrations'
+import { MCP_TOOLS } from './mcp'
 
 export const EVENTS: Record<string, string> = {
   'document.created': 'Document créé (devis, facture, bon de commande…)',
@@ -42,7 +43,7 @@ export function integrationsConfig(db: Db, dispatch: IntegrationsConfig['dispatc
     log: (u, details) => audit(db, { db, user: u }, 'integrations', 'integrations', null, details),
     dispatch,
     events: EVENTS,
-    read: /^(parties\.(list|get|options)|products\.(list|categories)|documents\.(list|get|searchDesignations)|payments\.list|stock\.(movements|inventory|valuation|warehouses|byWarehouse|transfers|lots|trace)|reports\.(dashboard|sales)|cash\.(current|history|detail)|accounting\.(accounts|balanceSheet|entries|ledger|balance|income)|declarations\.month|crm\.(list|get|agenda|pipeline|clients)|projects\.(list|get)|assets\.list|expenses\.(list|get)|requests\.(list|get)|budget\.(get|forecasts)|recurring\.(list|upcoming)|taxes\.list)$/,
+    read: /^(parties\.(list|get|options)|products\.(list|categories)|documents\.(list|get|searchDesignations)|payments\.list|stock\.(movements|valuation|warehouses|byWarehouse|transfers|lots|trace)|reports\.(dashboard|sales)|cash\.(current|history|detail)|accounting\.(accounts|balanceSheet|entries|ledger|balance|income)|declarations\.month|crm\.(list|get|agenda|pipeline|clients)|projects\.(list|get)|assets\.list|expenses\.(list|get)|requests\.(list|get)|budget\.(get|forecasts)|recurring\.(list|upcoming)|taxes\.list)$/,
     // Émission de licences, exercices, messages et signatures (envois), imports, assistant : jamais par une clé
     forbidden: /^(licensing|fiscal|fiscalGuard|messages|signatures|imports|assistant)\.|^documents\.purge$|^recurring\.runDue$/,
     triggers: {
@@ -63,6 +64,8 @@ export function integrationsConfig(db: Db, dispatch: IntegrationsConfig['dispatc
       'cash.close': (a) => ['cash.closed', { counted_amount: Number(a.counted_amount) || 0, note: String(a.note ?? '') }]
     },
     examples: ['POST documents.list {"types": ["FAC"], "unpaidOnly": true}', 'GET parties.list?kind=client', 'POST payments.add {"document_id": 42, "amount": 150000, "method": "Orange Money", "reference": "OM-1024"}'],
+    // Outils proposés aux assistants par /api/mcp (mêmes clés, mêmes droits)
+    mcp: MCP_TOOLS,
     settingsUrl: '/settings',
     fail
   }
