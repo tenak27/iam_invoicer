@@ -30,6 +30,7 @@ export type { DemoSeed } from './demo'
 export type { LicenceConfig, LicenceState } from './licence'
 export type { IntegrationsConfig, LockState } from './integrations'
 export { catalogProblems, McpEndpoint, toolName } from './mcp'
+export { coffreAvailable, configureCoffreKey, isSealed, seal, sealColumn, unseal, unsealOr } from './coffre'
 export type { McpAccess, McpArg, McpTool } from './mcp'
 export type { RecoveryConfig, RecoveryUser } from './recovery'
 

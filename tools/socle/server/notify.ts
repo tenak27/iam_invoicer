@@ -12,6 +12,7 @@
 // Toutes exigent le jeton de session (Authorization: Bearer …), sauf la clé publique.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import webpush from 'web-push'
+import { coffreAvailable, isSealed, seal, unseal } from './coffre'
 
 export interface SocleDb {
   query<T = any>(sql: string, params?: unknown[]): Promise<T[]>
@@ -93,10 +94,12 @@ export class Notifier {
       let keys = await this.opts.db.one<{ value: string }>("SELECT value FROM socle_kv WHERE key = 'vapid'")
       if (!keys) {
         const k = webpush.generateVAPIDKeys()
-        await this.opts.db.query("INSERT INTO socle_kv (key, value) VALUES ('vapid', $1) ON CONFLICT (key) DO NOTHING", [JSON.stringify(k)])
+        await this.opts.db.query("INSERT INTO socle_kv (key, value) VALUES ('vapid', $1) ON CONFLICT (key) DO NOTHING", [seal(JSON.stringify(k))])
         keys = await this.opts.db.one<{ value: string }>("SELECT value FROM socle_kv WHERE key = 'vapid'")
       }
-      const { publicKey, privateKey } = JSON.parse(keys!.value)
+      // Coffre des clés : la clé privée des notifications restée en clair est chiffrée dès que la clé du serveur existe
+      if (coffreAvailable() && !isSealed(keys!.value)) await this.opts.db.query("UPDATE socle_kv SET value = $1 WHERE key = 'vapid'", [seal(keys!.value)])
+      const { publicKey, privateKey } = JSON.parse(unseal(keys!.value))
       this.publicKey = publicKey
       webpush.setVapidDetails('https://iamtechnology.store', publicKey, privateKey)
     })()

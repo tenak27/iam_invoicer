@@ -27,6 +27,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto'
 import { lookup } from 'node:dns/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { isIP } from 'node:net'
+import { sealColumn, seal, unseal } from './coffre'
 import { McpEndpoint, type McpTool } from './mcp'
 import type { Notice, SocleDb } from './notify'
 
@@ -313,6 +314,8 @@ export class IntegrationsService {
   private init() {
     this.ready ??= (async () => {
       for (const t of TABLES) await this.opts.db.query(t)
+      // Coffre des clés : les secrets de signature restés en clair sont chiffrés dès que la clé du serveur existe
+      await sealColumn(this.opts.db, 'socle_webhooks', 'secret')
     })().catch((e) => {
       this.ready = null
       throw e
@@ -420,7 +423,7 @@ export class IntegrationsService {
       return { id }
     }
     const secret = `whsec_${randomBytes(24).toString('base64url')}`
-    const r = await this.opts.db.one<{ id: number }>('INSERT INTO socle_webhooks (space_id, url, events, secret) VALUES ($1, $2, $3, $4) RETURNING id', [space, url, events, secret])
+    const r = await this.opts.db.one<{ id: number }>('INSERT INTO socle_webhooks (space_id, url, events, secret) VALUES ($1, $2, $3, $4) RETURNING id', [space, url, events, seal(secret)])
     await this.opts.config.log?.(user, `Webhook ajouté : ${u!.host}`)
     return { id: r!.id, secret }
   }
@@ -438,7 +441,7 @@ export class IntegrationsService {
     await this.editable(user, space)
     const r = await this.opts.db.one<{ secret: string }>('SELECT secret FROM socle_webhooks WHERE id = $1 AND space_id = $2', [Number(input?.id) || 0, space])
     if (!r) this.fail('Webhook introuvable.')
-    return r
+    return { secret: unseal(r!.secret) }
   }
 
   async testWebhook(user: any, space: string, input: any) {
@@ -559,7 +562,7 @@ export class IntegrationsService {
 
   private async deliver(h: { id: number; url: string; secret: string }, space: string, event: string, data: unknown, attempts = 3) {
     const body = JSON.stringify({ id: randomBytes(8).toString('hex'), app: this.opts.app, event, created_at: new Date().toISOString(), space_id: space, data })
-    const sig = createHmac('sha256', h.secret).update(body).digest('hex')
+    const sig = createHmac('sha256', unseal(h.secret)).update(body).digest('hex')
     let last = { status: 'echec', code: 0, error: '' }
     for (let i = 0; i < attempts; i++) {
       if (i) await new Promise((r) => setTimeout(r, i * 5000))
