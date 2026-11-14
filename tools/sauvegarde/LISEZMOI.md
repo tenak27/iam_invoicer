@@ -56,6 +56,20 @@ rm /root/iam_btp.dump
 
 Effacer `C:\restauration` ensuite : il contient les clés en clair.
 
+## Coffre des clés
+
+Les logiciels chiffrent en base les secrets qu'ils doivent relire (secrets de webhook, clé des notifications,
+jetons WhatsApp et SMS, mots de passe SMTP, secrets de double authentification) avec la clé `SECRETS_KEY` de leur
+fichier `deploy/.env` (`tools/socle/server/coffre.ts`). Sans cette clé, ils fonctionnent mais gardent ces secrets en clair.
+
+Activer le coffre sur le serveur, une seule fois (crée la clé là où elle manque, relance les serveurs, refait une sauvegarde) :
+
+```sh
+ssh root@<serveur> /opt/iam-sauvegardes/activer-coffre.sh
+```
+
+Une clé ne se change jamais : les secrets déjà chiffrés deviendraient illisibles. Elle est dans chaque archive (`cles/point-env`).
+
 ## Changer la paire de clés
 
 Sur le poste : `openssl req -x509 -newkey rsa:4096 -nodes -keyout depot.key -out depot.crt -days 7300 -subj "/CN=IAM"`,
