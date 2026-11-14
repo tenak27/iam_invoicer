@@ -28,7 +28,19 @@ const SANTE = process.argv[2] === 'sante'
 const LOCATION = process.argv[2] === 'location'
 // « node tools/site/build-entreprise.mjs traffic » : site d'IAM TRAFFIC (site-traffic/ → out/site-traffic)
 const TRAFFIC = process.argv[2] === 'traffic'
-const V = TRAFFIC
+// « node tools/site/build-entreprise.mjs media » : site d'IAM MEDIA (site-media/ → out/site-media)
+const MEDIA = process.argv[2] === 'media'
+const V = MEDIA
+  ? {
+      dir: 'site-media',
+      out: 'out/site-media',
+      assets: ['iam-media.svg', 'iam-media-mark.svg'],
+      title: 'IAM MEDIA — Les films et séries de votre NAS, sur tous vos écrans | IAM Technology',
+      description: "IAM MEDIA : les films, séries, animés et documentaires rangés sur votre NAS, avec affiches et synopsis, classement automatique, reprise de lecture et un profil par personne. Sur le téléviseur, le téléphone, l'ordinateur ou le navigateur.",
+      ogTitle: 'IAM MEDIA — Les films de votre NAS, sur tous vos écrans',
+      icon: 'iam-media-mark.svg'
+    }
+  : TRAFFIC
   ? {
       dir: 'site-traffic',
       out: 'out/site-traffic',
@@ -121,7 +133,7 @@ const V = TRAFFIC
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'iam-traffic.svg', 'faso-artisans.png'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'iam-traffic.svg', 'iam-media.svg', 'faso-artisans.png'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
       description: "IAM Technology équipe les entreprises du Burkina Faso : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2021.",
       ogTitle: 'IAM Technology — Informatique, sécurité et logiciels à Ouagadougou depuis 2021',
@@ -144,8 +156,9 @@ if (CLOUD) cpSync('site-cloud/captures', `${out}/assets/captures`, { recursive: 
 if (SANTE) cpSync('site-sante/captures', `${out}/assets/captures`, { recursive: true })
 if (LOCATION) cpSync('site-location/captures', `${out}/assets/captures`, { recursive: true })
 if (TRAFFIC) cpSync('site-traffic/captures', `${out}/assets/captures`, { recursive: true })
+if (MEDIA) cpSync('site-media/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION && !TRAFFIC
+const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION && !TRAFFIC && !MEDIA
 // Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
 // avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
 // Boutique : le catalogue et les photos viennent de la base d'IAM Technology dans IAM INVOICER
