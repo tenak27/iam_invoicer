@@ -148,6 +148,10 @@ export async function prepareRun(ctx: Ctx, input: { period: string }) {
       `SELECT id FROM employees WHERE active AND hire_date <= $1 AND (exit_date IS NULL OR exit_date >= $2) ORDER BY id`,
       [end, `${period}-01`]
     )
+    // Salarié désactivé ou sorti depuis la dernière préparation : son bulletin quitte la paie
+    const ids = employees.map((e) => e.id)
+    const keep = ids.map((_, i) => `$${i + 2}`).join(', ')
+    await db.query(ids.length ? `DELETE FROM payslips WHERE run_id = $1 AND employee_id NOT IN (${keep})` : 'DELETE FROM payslips WHERE run_id = $1', [run.id, ...ids])
     for (const e of employees) {
       const existing = await db.one<{ detail: string }>('SELECT detail FROM payslips WHERE run_id = $1 AND employee_id = $2', [run.id, e.id])
       const variables = existing ? JSON.parse(existing.detail).variables ?? {} : {}
@@ -169,6 +173,7 @@ export async function setVariables(ctx: Ctx, input: { runId: number; employeeId:
       bonus: num(v.bonus), overtime: num(v.overtime), absence_days: num(v.absence_days), advance: num(v.advance), other_deductions: num(v.other_deductions)
     }
     if (Object.values(variables).some((x) => (x ?? 0) < 0)) fail('Les montants variables doivent être positifs.')
+    if (!(await db.one('SELECT 1 FROM payslips WHERE run_id = $1 AND employee_id = $2', [input.runId, input.employeeId]))) fail('Ce salarié ne figure pas dans cette paie : recalculez-la.')
     await computeFor(db, input.runId, input.employeeId, variables, await getParams(db))
     await recompute(db, input.runId)
     return true

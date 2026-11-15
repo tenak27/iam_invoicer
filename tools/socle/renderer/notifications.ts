@@ -68,7 +68,9 @@ export async function enableNotifications(o: NotifOptions): Promise<NotifState> 
   return p as NotifState
 }
 
-let synced = ''
+// État inconnu à l'ouverture : sans session, le premier contrôle désabonne l'appareil (déconnexion suivie
+// d'une fermeture de l'onglet avant le contrôle suivant, sur un poste partagé)
+let synced = '?'
 /**
  * Suit la session : abonnement de l'appareil quand un utilisateur est connecté (si les
  * notifications sont déjà autorisées), désabonnement à la déconnexion (appareil partagé).

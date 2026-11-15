@@ -289,6 +289,9 @@ describe('Inscription libre depuis le site', () => {
     expect((await http('POST', '/api/inscription', { ...form, email: 'pas-une-adresse' })).json.error).toMatch(/e-mail/)
     expect((await http('POST', '/api/inscription', { ...form, password: 'court' })).json.error).toMatch(/10 caractères/)
     expect((await http('POST', '/api/inscription', { ...form, company: 'x' })).json.error).toMatch(/société/)
+    // Mot de passe courant ou trop long : refusé avant la création de la base
+    expect((await http('POST', '/api/inscription', { ...form, password: 'motdepasse' })).json.error).toMatch(/trop courant/)
+    expect((await http('POST', '/api/inscription', { ...form, password: 'x'.repeat(201) })).json.error).toMatch(/trop long/)
     expect((await manager.list()).length).toBe(before)
   })
 

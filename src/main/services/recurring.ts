@@ -94,6 +94,9 @@ export async function runDue(ctx: Ctx, input: { today?: string } = {}) {
     // Au plus 24 échéances rattrapées par contrat et par passage (sécurité)
     for (let i = 0; i < 24 && next <= today && (!r.end_date || next <= r.end_date); i++) {
       const documentId = await ctx.db.tx(async (db) => {
+        // Deux passages simultanés (deux postes qui s'ouvrent en même temps) : seul le premier crée l'échéance
+        const cur = await db.one<{ next_date: string; active: boolean }>('SELECT next_date, active FROM recurring_invoices WHERE id = $1 FOR UPDATE', [r.id])
+        if (!cur || !cur.active || String(cur.next_date) !== next) return null
         const c: Ctx = { ...ctx, db }
         const period = `${next.split('-').reverse().join('/')}`
         const { id } = await saveDocument(c, {
@@ -108,6 +111,7 @@ export async function runDue(ctx: Ctx, input: { today?: string } = {}) {
         )
         return id
       })
+      if (documentId == null) break
       created.push({ id: r.id, label: r.label, documentId, validated: !!r.auto_validate })
       next = nextDate(next, r.frequency)
     }

@@ -55,6 +55,19 @@ describe('Transformation et duplicata', () => {
     expect(log.length).toBe(1)
   })
 
+  it('deux transformations en même temps : un seul bon de livraison ; un second ne peut pas être validé', async () => {
+    const dev = await quote()
+    const [a, b] = await Promise.all([ok(admin, 'documents.convert', { id: dev, to: 'BL' }), ok(admin, 'documents.convert', { id: dev, to: 'BL' })])
+    expect(a.id).toBe(b.id)
+    expect((await ok(admin, 'documents.get', { id: dev })).children.filter((c: any) => c.type === 'BL')).toHaveLength(1)
+    // Brouillon en double créé autrement (ancienne version, import) : la validation du second est refusée
+    await ok(admin, 'documents.validate', { id: a.id })
+    const twin = await ok(admin, 'documents.save', { type: 'BL', party_id: clientId, source_id: dev, lines: [{ description: 'Installation réseau', quantity: 1, unit_price: 100000, tva_rate: 18 }] })
+    const r = await call(admin, 'documents.validate', { id: twin.id })
+    expect(r.ok).toBe(false)
+    expect(r.ok ? '' : r.error).toMatch(/déjà été transformé/)
+  })
+
   it('le document réédité porte la mention DUPLICATA, l’original non', async () => {
     const dev = await quote()
     const bl = await ok(admin, 'documents.convert', { id: dev, to: 'BL' })

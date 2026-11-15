@@ -205,12 +205,18 @@ export class LicenceService {
     const today = new Date().toISOString().slice(0, 10)
     const trialEnd = space ? new Date(new Date(space.created_at).getTime() + (config.trialDays ?? 30) * 86_400_000) : null
     const trialLeft = trialEnd ? Math.ceil((trialEnd.getTime() - Date.now()) / 86_400_000) : null
+    // Essai accordé ou prolongé depuis la console : il court jusqu'à sa date de fin, quelle que soit l'ancienneté de l'espace
+    const grantedLeft = row?.status === 'essai' && row.ends_on && row.ends_on >= today ? Math.floor((Date.parse(row.ends_on + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 86_400_000) + 1 : null
     let status: LicenceState['status']
     let limits: Record<string, number> | null
+    let left = trialLeft
     if (space?.demo) [status, limits] = ['demo', null]
     else if (row?.status === 'active' && (!row.ends_on || row.ends_on >= today)) [status, limits] = ['active', row.limits ?? {}]
     else if (row?.status === 'suspendue') [status, limits] = ['suspendue', config.free]
-    else if (trialLeft != null && trialLeft > 0) [status, limits] = ['essai', null]
+    else if (grantedLeft != null) {
+      ;[status, limits] = ['essai', null]
+      left = Math.max(trialLeft ?? 0, grantedLeft)
+    } else if (trialLeft != null && trialLeft > 0) [status, limits] = ['essai', null]
     else if (row?.status === 'active' || row?.status === 'expiree') [status, limits] = ['expiree', config.free]
     else [status, limits] = ['gratuit', config.free]
     const usage = []
@@ -228,7 +234,7 @@ export class LicenceService {
       suspendue: 'Licence suspendue',
       aucune: 'Sans licence'
     }
-    return { status, plan: row?.plan ?? '', label: labels[status], ends_on: row?.ends_on ?? null, trial_left: status === 'essai' ? trialLeft : null, usage, seen_guide: !!row?.seen_guide }
+    return { status, plan: row?.plan ?? '', label: labels[status], ends_on: row?.ends_on ?? null, trial_left: status === 'essai' ? left : null, usage, seen_guide: !!row?.seen_guide }
   }
 
   /** Refuse une création au-delà des limites de l'espace (appelé avant chaque appel de l'API). */

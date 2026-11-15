@@ -358,6 +358,10 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
     const type = doc.type as DocType
     if (type !== 'DEV' && type !== 'BC') await assertPeriodOpen(db, doc.date)
     const info = DOC_TYPES[type]
+    if (type !== 'AV' && doc.source_id) {
+      const twin = await db.one<{ number: string }>("SELECT number FROM documents WHERE source_id = $1 AND type = $2 AND status = 'valide' AND id <> $3 LIMIT 1", [doc.source_id, type, doc.id])
+      if (twin) fail(`Le document d'origine a déjà été transformé : ${info.label.toLowerCase()} ${twin.number}.`)
+    }
     const lines = await db.query('SELECT * FROM document_lines WHERE document_id = $1 ORDER BY position', [doc.id])
     if (lines.length === 0) fail('Ajoutez au moins une ligne avant de valider.')
 
@@ -465,18 +469,7 @@ export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType 
   const from = src.type as DocType
   if (!DOC_TYPES[from].convertsTo.includes(args.to)) fail('Transformation impossible pour ce type de document.')
   if (src.status !== 'valide') fail('Validez le document avant de le transformer.')
-  if (args.to !== 'AV') {
-    const done = await ctx.db.one<{ id: number; status: string; number: string | null }>(
-      "SELECT id, status, number FROM documents WHERE source_id = $1 AND type = $2 AND status <> 'annule' ORDER BY id LIMIT 1",
-      [src.id, args.to]
-    )
-    if (done) {
-      const duplicata = done.status === 'valide'
-      if (duplicata) await audit(ctx.db, ctx, 'duplicata', args.to, done.id, `${done.number} réédité depuis ${src.number}`)
-      return { id: done.id, existing: true, duplicata, number: done.number }
-    }
-  }
-  return saveDocument(ctx, {
+  const create = (c: Ctx) => saveDocument(c, {
     type: args.to,
     party_id: src.party_id,
     date: todayISO(),
@@ -487,6 +480,22 @@ export async function convertDocument(ctx: Ctx, args: { id: number; to: DocType 
     project_id: src.project_id,
     lines: src.lines,
     taxes: (src.taxes ?? []).map((t: AppliedTax) => t.code)
+  })
+  if (args.to === 'AV') return create(ctx)
+  // Source verrouillée le temps de chercher et de créer : deux transformations simultanées (double appui,
+  // deux postes) ne produisent qu'un seul document
+  return ctx.db.tx(async (db) => {
+    await db.query('SELECT id FROM documents WHERE id = $1 FOR UPDATE', [src.id])
+    const done = await db.one<{ id: number; status: string; number: string | null }>(
+      "SELECT id, status, number FROM documents WHERE source_id = $1 AND type = $2 AND status <> 'annule' ORDER BY id LIMIT 1",
+      [src.id, args.to]
+    )
+    if (done) {
+      const duplicata = done.status === 'valide'
+      if (duplicata) await audit(db, ctx, 'duplicata', args.to, done.id, `${done.number} réédité depuis ${src.number}`)
+      return { id: done.id, existing: true, duplicata, number: done.number }
+    }
+    return create({ ...ctx, db })
   })
 }
 

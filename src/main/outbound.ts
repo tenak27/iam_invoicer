@@ -14,8 +14,32 @@ export function restrictOutbound(on: boolean) {
 }
 export const outboundRestricted = () => restricted
 
+/** Adresse IPv4 portée par une adresse IPv6 (::ffff:a.b.c.d, ::ffff:7f00:1, ::a.b.c.d, 64:ff9b::/96…), sinon null. */
+function embeddedIPv4(v: string): string | null {
+  let s = v
+  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(s)
+  if (dotted) {
+    if (isIP(dotted[1]) !== 4) return null
+    const [a, b, c, d] = dotted[1].split('.').map(Number)
+    s = s.slice(0, -dotted[1].length) + ((a << 8) | b).toString(16) + ':' + ((c << 8) | d).toString(16)
+  }
+  const halves = s.split('::')
+  if (halves.length > 2) return null
+  const head = halves[0] ? halves[0].split(':') : []
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(':') : []
+  const fill = halves.length === 2 ? 8 - head.length - tail.length : 0
+  if (fill < 0) return null
+  const g = [...head, ...Array(fill).fill('0'), ...tail].map((x) => parseInt(x || '0', 16))
+  if (g.length !== 8 || g.some((x) => !(x >= 0 && x <= 0xffff))) return null
+  const zero = (from: number, to: number) => g.slice(from, to).every((x) => x === 0)
+  const mapped = (zero(0, 5) && (g[5] === 0xffff || g[5] === 0)) || (zero(0, 4) && g[4] === 0xffff && g[5] === 0) || (g[0] === 0x64 && g[1] === 0xff9b && zero(2, 6))
+  if (!mapped || (zero(0, 7) && g[7] <= 1)) return null
+  return [g[6] >> 8, g[6] & 0xff, g[7] >> 8, g[7] & 0xff].join('.')
+}
+
 export function isInternalAddress(ip: string): boolean {
-  const v = ip.toLowerCase().replace(/^::ffff:/, '')
+  let v = ip.toLowerCase().replace(/^\[|\]$/g, '').replace(/%.*$/, '')
+  if (isIP(v) === 6) v = embeddedIPv4(v) ?? v
   if (isIP(v) === 4) {
     const [a, b] = v.split('.').map(Number)
     return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224

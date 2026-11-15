@@ -69,6 +69,8 @@ function configurePgTypes(): void {
 async function openServer(cfg: Extract<DbConfig, { mode: 'server' }>): Promise<Db> {
   configurePgTypes()
   const pool = new pg.Pool({ ...cfg, max: cfg.max ?? 5, connectionTimeoutMillis: 5000 })
+  // Connexion inactive coupée (redémarrage de PostgreSQL, réseau) : sans écouteur, Node arrêterait tout le serveur
+  pool.on('error', (e) => console.error('[base] connexion inactive perdue :', e.message))
   const exec: Exec = async (sql, params) => (await pool.query(sql, params as any[])).rows
   const tx: Db['tx'] = async (fn) => {
     const client = await pool.connect()

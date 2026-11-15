@@ -120,6 +120,18 @@ describe('Paie Burkina Faso', () => {
     const slip = run.payslips.find((s: any) => s.employee_id === empId)
     expect(slip.gross).toBe(295000)
     expect(slip.detail.lines.some((l: any) => l.label === 'Avance sur salaire')).toBe(true)
+    // Salarié désactivé avant le recalcul : son bulletin quitte la paie, ses variables sont refusées
+    const temp = { first_name: 'Awa', last_name: 'Sawadogo', hire_date: '2025-06-01', base_salary: 150000 }
+    const tempId = (await ok(rh, 'hr.saveEmployee', temp)).id
+    await ok(rh, 'hr.prepareRun', { period: '2026-09' })
+    expect((await ok(rh, 'hr.run', { id: runId })).payslips).toHaveLength(3)
+    await ok(rh, 'hr.saveEmployee', { ...temp, id: tempId, active: false })
+    await ok(rh, 'hr.prepareRun', { period: '2026-09' })
+    run = await ok(rh, 'hr.run', { id: runId })
+    expect(run.payslips.map((s: any) => s.employee_id)).not.toContain(tempId)
+    expect(run.net).toBe(run.payslips.reduce((s: number, p: any) => s + p.net, 0))
+    expect(run.payslips.find((s: any) => s.employee_id === empId).gross).toBe(295000) // variables gardées
+    expect(await err(rh, 'hr.setVariables', { runId, employeeId: tempId, variables: { bonus: 1000 } })).toMatch(/ne figure pas/)
   })
 
   it('validation : écriture de paie équilibrée, puis paiement', async () => {

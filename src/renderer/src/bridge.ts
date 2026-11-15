@@ -127,16 +127,61 @@ function createHttpBridge(): ErpBridge {
     token = r.data.token
     store.set(TOKEN_KEY, token)
     store.set(USER_KEY, JSON.stringify(r.data.user))
+    // Reconnecté : les saisies de ce compte restées en attente partent tout de suite
+    setTimeout(() => autoSync(), 0)
     return { ok: true, data: r.data.user }
   }
 
+  // Données hors ligne propres à chaque compte : sur un appareil partagé, le cache et les saisies en
+  // attente d'un utilisateur ne sont jamais servis ni envoyés au nom d'un autre
+  const owner = () => {
+    try {
+      return Number(JSON.parse(store.get(USER_KEY) ?? 'null')?.id) || 0
+    } catch {
+      return 0
+    }
+  }
+  const mine = (k: string) => `u${owner()}:${k}`
+  // Saisies laissées par une version précédente (sans compte dans la clé) : rattachées au compte de l'appareil
+  if (owner())
+    for (const k of ['iam.offline.queue', 'iam.offline.failed']) {
+      const old = store.get(k)
+      if (old && !store.get(mine(k))) store.set(mine(k), old)
+      if (old) store.set(k, null)
+    }
+  // Efface du navigateur les lectures gardées pour la consultation hors ligne (pas les saisies en attente)
+  const dropCache = (prefix: string) => {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i)
+        if (k?.startsWith(SCOPE + prefix + 'iam.cache.')) localStorage.removeItem(k)
+      }
+    } catch {
+      /* stockage indisponible */
+    }
+  }
+  dropCache('') // cache d'une version précédente, sans compte dans la clé
+  // Session expirée pendant l'envoi de la file : les saisies restent en attente jusqu'à la reconnexion
+  let syncing = false
   const offline = createOfflineLayer(
-    { getItem: store.get, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.set(k, null) },
-    (name, args, opId) => request('POST', '/api/call', { name, args, opId }),
+    { getItem: (k) => store.get(mine(k)), setItem: (k, v) => store.set(mine(k), v), removeItem: (k) => store.set(mine(k), null) },
+    async (name, args, opId) => {
+      if (syncing && !token) return { ok: false, error: 'Reconnectez-vous pour envoyer vos saisies.', network: true }
+      const r = await request('POST', '/api/call', { name, args, opId })
+      return !r.ok && syncing && !token ? { ...r, network: true } : r
+    },
     () => window.dispatchEvent(new Event('iam-offline'))
   )
+  const sync = async () => {
+    syncing = true
+    try {
+      return await offline.sync()
+    } finally {
+      syncing = false
+    }
+  }
   const autoSync = () => {
-    if (offline.pending().length) offline.sync()
+    if (token && offline.pending().length) void sync()
   }
   window.addEventListener('online', autoSync)
   setInterval(autoSync, 30_000)
@@ -150,8 +195,17 @@ function createHttpBridge(): ErpBridge {
     offline: {
       pending: () => offline.pending().length,
       failed: () => offline.failed(),
-      sync: () => offline.sync(),
-      clearFailed: () => offline.clearFailed()
+      sync,
+      clearFailed: () => offline.clearFailed(),
+      state: () => ({
+        reachable: navigator.onLine,
+        pending: offline.pending().length,
+        failed: offline.failed(),
+        lastSync: null,
+        lastPrefetch: null,
+        localBytes: 0,
+        needsLogin: !token
+      })
     },
 
     // Application web : nouvelle version déjà servie → recharger. Application mobile : installateur du serveur.
@@ -209,6 +263,7 @@ function createHttpBridge(): ErpBridge {
     setup: async (input) => keepToken(await request('POST', '/api/setup', { ...(input as object), device: `IAM INVOICER ${Capacitor.getPlatform()}`, device_id: deviceId() })),
     async logout() {
       await request('POST', '/api/logout', {})
+      dropCache(`u${owner()}:`)
       token = null
       store.set(TOKEN_KEY, null)
       store.set(USER_KEY, null)

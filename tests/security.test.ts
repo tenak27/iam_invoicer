@@ -478,10 +478,10 @@ describe('Secrets', () => {
   })
 
   it('une société hébergée ne peut pas faire appeler le réseau interne du serveur', async () => {
-    for (const ip of ['127.0.0.1', '10.0.0.5', '172.18.0.2', '192.168.1.10', '169.254.169.254', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '100.64.0.1']) expect(isInternalAddress(ip), ip).toBe(true)
-    for (const ip of ['8.8.8.8', '145.223.34.191', '2606:4700::1111']) expect(isInternalAddress(ip), ip).toBe(false)
+    for (const ip of ['127.0.0.1', '10.0.0.5', '172.18.0.2', '192.168.1.10', '169.254.169.254', '0.0.0.0', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '100.64.0.1', '::ffff:7f00:1', '::ffff:a00:5', '::ffff:a9fe:a9fe', '::127.0.0.1', '::7f00:1', '64:ff9b::a00:1', '::ffff:0:7f00:1', '[::ffff:7f00:1]']) expect(isInternalAddress(ip), ip).toBe(true)
+    for (const ip of ['8.8.8.8', '145.223.34.191', '2606:4700::1111', '::ffff:808:808', '64:ff9b::808:808']) expect(isInternalAddress(ip), ip).toBe(false)
     restrictOutbound(true)
-    for (const target of ['http://127.0.0.1:8090/api/admin/tenants', 'http://localhost:5432/', 'http://[::1]/', 'http://169.254.169.254/latest/meta-data/', 'file:///etc/passwd', 'gopher://127.0.0.1/', '10.0.0.1'])
+    for (const target of ['http://127.0.0.1:8090/api/admin/tenants', 'http://localhost:5432/', 'http://[::1]/', 'http://169.254.169.254/latest/meta-data/', 'file:///etc/passwd', 'gopher://127.0.0.1/', '10.0.0.1', 'http://[::ffff:127.0.0.1]:8090/x', 'http://[::ffff:a9fe:a9fe]/', '::ffff:7f00:1'])
       await expect(assertPublicHost(target, 'Passerelle'), target).rejects.toThrow(/interne|http\(s\)|invalide/)
     const s = sites.a
     await must(s, s.admin, 'settings.save', { sms_provider: 'http', sms_http_url: 'http://127.0.0.1:1/x?to={to}&m={message}', smtp_host: '127.0.0.1', smtp_from_email: 'a@b.bf' })

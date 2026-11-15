@@ -37,7 +37,7 @@ import type { Db } from '../main/db'
 import { AppError, type SessionUser } from '../main/services/context'
 import { issueLicence, listIssued, revokeIssued, vendorKeyAvailable } from '../main/services/licensing'
 import { createToken, resolveToken } from '../main/services/tokens'
-import { setup } from '../main/services/auth'
+import { checkPassword, setup } from '../main/services/auth'
 import { InvoicerDemo } from './demo'
 import { adminPageHtml } from './adminPage'
 import { createHandler, type ServerOptions } from './app'
@@ -117,7 +117,7 @@ export function createCloudHandler(opts: CloudOptions): Handler {
   const ipOf = (req: IncomingMessage) => clientIp(req, opts.shared.trustProxy)
 
   /** Nouvelle société hébergée, configurée d'un coup : plus de code d'activation à attendre. */
-  async function selfSignup(body: any, device: string) {
+  async function selfSignup(body: any, device: string, beforeCreate: () => void = () => {}) {
     const clean = (v: unknown, max: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
     const company = clean(body?.company, 120)
     const fullName = clean(body?.full_name, 120)
@@ -129,6 +129,9 @@ export function createCloudHandler(opts: CloudOptions): Handler {
     if (fullName.length < 2) throw new AppError('Indiquez votre nom.')
     if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) throw new AppError('Adresse e-mail invalide : elle sert d’identifiant de connexion.')
     if (password.length < 10) throw new AppError('Le mot de passe doit contenir au moins 10 caractères.')
+    // Avant toute création de base : un mot de passe refusé plus loin coûterait une base créée puis supprimée
+    checkPassword(password)
+    beforeCreate()
     const created = await manager.create({ name: company, contact: [fullName, email, phone].filter(Boolean).join(' · '), notes: `Inscription en ligne le ${new Date().toISOString().slice(0, 10)} (évaluation)` })
     try {
       const t = (await manager.get(created.slug))!
@@ -276,9 +279,11 @@ export function createCloudHandler(opts: CloudOptions): Handler {
         if (signupsByIp.blocked(ip)) return json(res, 429, { ok: false, error: 'Trop d’inscriptions depuis cette adresse. Réessayez dans une heure.' })
         if (signupsByDay.blocked('jour')) return json(res, 429, { ok: false, error: 'Trop d’inscriptions aujourd’hui. Réessayez demain ou contactez IAM Technology.' })
         const body = await readJson(req)
-        const data = await selfSignup(body, String(body.device ?? req.headers['user-agent'] ?? ''))
-        signupsByIp.hit(ip)
-        signupsByDay.hit('jour')
+        // Chaque tentative qui va jusqu'à la création d'une base compte, réussie ou non
+        const data = await selfSignup(body, String(body.device ?? req.headers['user-agent'] ?? ''), () => {
+          signupsByIp.hit(ip)
+          signupsByDay.hit('jour')
+        })
         console.log(`Inscription en ligne : société « ${data.name} » (${data.slug})`)
         return json(res, 200, { ok: true, data })
       }

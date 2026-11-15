@@ -57,4 +57,18 @@ describe('Factures récurrentes', () => {
     expect((await ok(admin, 'documents.get', { id: r.created[0].documentId })).status).toBe('brouillon')
     expect(await checkIntegrity(db)).toEqual([])
   })
+
+  it('deux passages en même temps : une seule facture par échéance', async () => {
+    const { id } = await ok(admin, 'recurring.save', {
+      party_id: client, label: 'Location de matériel', frequency: 'mensuel', next_date: '2026-08-05', auto_validate: true,
+      lines: [{ description: 'Location mensuelle', quantity: 1, unit_price: 20000, tva_rate: 18 }]
+    })
+    const [a, b] = await Promise.all([ok(admin, 'recurring.runDue', { today: '2026-09-10' }), ok(admin, 'recurring.runDue', { today: '2026-09-10' })])
+    const mine = [...a.created, ...b.created].filter((c: any) => c.id === id)
+    expect(mine).toHaveLength(2) // août et septembre, une fois chacun
+    expect((await ok<any[]>(admin, 'recurring.list')).find((x) => x.id === id)).toMatchObject({ generated: 2, next_date: '2026-10-05' })
+    const docs = (await ok<any[]>(admin, 'documents.list', { types: ['FAC'] })).filter((d) => d.reference === 'Location de matériel')
+    expect(docs).toHaveLength(2)
+    expect(await checkIntegrity(db)).toEqual([])
+  })
 })
