@@ -360,6 +360,8 @@ export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallR
     if (e instanceof AppError) return { ok: false, error: e.message }
     // Valeur que la base refuse (identifiant qui n'est pas un nombre, date impossible…) : demande invalide, pas une panne
     if (['22P02', '22003', '22007', '22008', '22001', '23503', '23514'].includes(String((e as any)?.code))) return { ok: false, error: 'Valeur invalide dans la demande.' }
+    // Valeur déjà prise (numéro, code, référence en double) : message clair au lieu d'une « erreur technique »
+    if (String((e as any)?.code) === '23505') return { ok: false, error: 'Cette valeur existe déjà (numéro, code ou référence en double) : choisissez-en une autre.' }
     // Le détail (requête SQL, chemin de fichier…) reste dans le journal du serveur
     const ref = randomBytes(4).toString('hex')
     console.error(`[${name}] incident ${ref}`, e)

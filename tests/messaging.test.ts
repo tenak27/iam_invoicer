@@ -153,6 +153,9 @@ describe('SMS', () => {
   })
 
   it('relance groupée des factures échues', async () => {
+    // La facture vient d'être relancée par e-mail : pas de nouvel envoi dans les 24 heures
+    expect(await ok(admin, 'messages.remindAll', { channel: 'email' })).toEqual({ sent: 0, failed: [] })
+    await db.query("UPDATE message_log SET created_at = now() - interval '2 days' WHERE channel = 'email'")
     const r = await ok(admin, 'messages.remindAll', { channel: 'email' })
     expect(r).toEqual({ sent: 1, failed: [] })
     expect(sentMails.at(-1).subject).toMatch(/Rappel/)

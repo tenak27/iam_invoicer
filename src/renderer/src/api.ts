@@ -60,7 +60,9 @@ export async function unwrap<T = any>(p: Promise<{ ok: true; data: T } | { ok: f
 /** Export CSV (séparateur « ; », lisible directement par Excel en français). */
 export async function exportCsv(filename: string, columns: { label: string; value: (row: any) => unknown }[], rows: any[]) {
   const cell = (v: unknown) => {
-    const s = typeof v === 'number' ? String(v).replace('.', ',') : String(v ?? '')
+    let s = typeof v === 'number' ? String(v).replace('.', ',') : String(v ?? '')
+    // Texte qui commencerait une formule dans Excel (= + - @, tabulation) : neutralisé par une apostrophe
+    if (typeof v !== 'number' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const content = [columns.map((c) => cell(c.label)).join(';'), ...rows.map((r) => columns.map((c) => cell(c.value(r))).join(';'))].join('\r\n')

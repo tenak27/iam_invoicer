@@ -190,9 +190,13 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
   /** Réédition d'un document déjà établi depuis celui-ci (identifiant du document à imprimer en duplicata). */
   const [duplicataId, setDuplicataId] = useState<number | null>(null)
+  // Une transformation à la fois : un double clic n'ouvre pas deux fois le même document
+  const converting = useRef(false)
   const convert = async (to: DocType) => {
+    if (converting.current) return
+    converting.current = true
     const label = DOC_TYPES[to].label
-    const r = await run(() => api<{ id: number; existing?: boolean; duplicata?: boolean; number?: string | null }>('documents.convert', { id: doc.id, to }))
+    const r = await run(() => api<{ id: number; existing?: boolean; duplicata?: boolean; number?: string | null }>('documents.convert', { id: doc.id, to })).finally(() => { converting.current = false })
     if (!r) return
     if (r.duplicata) {
       notify(`${label} ${r.number} déjà établi${DOC_TYPES[to].fem ? 'e' : ''} : réédition en duplicata.`, 'info')

@@ -10,9 +10,13 @@ import { saveDocument, validateDocument } from './documents'
 export type Frequency = 'mensuel' | 'trimestriel' | 'semestriel' | 'annuel'
 const MONTHS: Record<Frequency, number> = { mensuel: 1, trimestriel: 3, semestriel: 6, annuel: 12 }
 
-/** Date d'échéance suivante (même jour du mois, ramené au dernier jour si besoin). */
-export function nextDate(iso: string, f: Frequency): string {
-  const [y, m, d] = iso.split('-').map(Number)
+/**
+ * Date d'échéance suivante (même jour du mois, ramené au dernier jour si besoin). « anchor » : jour choisi
+ * au départ (un contrat du 31 revient au 31 après un mois plus court, au lieu de rester au 28).
+ */
+export function nextDate(iso: string, f: Frequency, anchor?: number | null): string {
+  const [y, m, day] = iso.split('-').map(Number)
+  const d = anchor && anchor >= 1 && anchor <= 31 ? anchor : day
   const total = y * 12 + (m - 1) + MONTHS[f]
   const ny = Math.floor(total / 12)
   const nm = (total % 12) + 1
@@ -44,18 +48,18 @@ export async function saveRecurring(ctx: Ctx, input: any) {
   if (!lines.length) fail('Ajoutez au moins une ligne.')
   const party = await ctx.db.one("SELECT id FROM parties WHERE id = $1 AND kind = 'client'", [input.party_id])
   if (!party) fail('Choisissez un client.')
-  const values = [party.id, label, JSON.stringify(lines), JSON.stringify(Array.isArray(input.taxes) ? input.taxes : []), frequency, next, end, !!input.auto_validate, Number(input.project_id) || null, input.active !== false]
+  const values = [party.id, label, JSON.stringify(lines), JSON.stringify(Array.isArray(input.taxes) ? input.taxes : []), frequency, next, end, !!input.auto_validate, Number(input.project_id) || null, input.active !== false, Number(next.slice(8, 10))]
   if (input.id) {
     await ctx.db.query(
-      'UPDATE recurring_invoices SET party_id=$1, label=$2, lines=$3, taxes=$4, frequency=$5, next_date=$6, end_date=$7, auto_validate=$8, project_id=$9, active=$10 WHERE id=$11',
+      'UPDATE recurring_invoices SET party_id=$1, label=$2, lines=$3, taxes=$4, frequency=$5, next_date=$6, end_date=$7, auto_validate=$8, project_id=$9, active=$10, anchor_day=$11 WHERE id=$12',
       [...values, input.id]
     )
     await audit(ctx.db, ctx, 'modification', 'facture_recurrente', Number(input.id), label)
     return { id: Number(input.id) }
   }
   const row = await ctx.db.one<{ id: number }>(
-    `INSERT INTO recurring_invoices (party_id, label, lines, taxes, frequency, next_date, end_date, auto_validate, project_id, active)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+    `INSERT INTO recurring_invoices (party_id, label, lines, taxes, frequency, next_date, end_date, auto_validate, project_id, active, anchor_day)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
     values
   )
   await audit(ctx.db, ctx, 'creation', 'facture_recurrente', row!.id, label)
@@ -89,7 +93,10 @@ export async function runDue(ctx: Ctx, input: { today?: string } = {}) {
   const today = str(input.today) || todayISO()
   const due = await ctx.db.query("SELECT * FROM recurring_invoices WHERE active AND next_date <= $1 ORDER BY next_date, id", [today])
   const created: { id: number; label: string; documentId: number; validated: boolean }[] = []
+  const failed: { id: number; label: string; error: string }[] = []
   for (const r of due) {
+    // Un contrat en erreur (client supprimé, article retiré…) ne bloque pas les suivants
+    try {
     let next: string = r.next_date
     // Au plus 24 échéances rattrapées par contrat et par passage (sécurité)
     for (let i = 0; i < 24 && next <= today && (!r.end_date || next <= r.end_date); i++) {
@@ -104,7 +111,7 @@ export async function runDue(ctx: Ctx, input: { today?: string } = {}) {
           reference: r.label, notes: `${r.label} — échéance du ${period}`, lines: r.lines, taxes: r.taxes
         })
         if (r.auto_validate) await validateDocument(c, { id })
-        const following = nextDate(next, r.frequency)
+        const following = nextDate(next, r.frequency, r.anchor_day)
         await db.query(
           'UPDATE recurring_invoices SET next_date = $1, generated = generated + 1, last_document_id = $2, active = CASE WHEN end_date IS NOT NULL AND $1 > end_date THEN FALSE ELSE active END WHERE id = $3',
           [following, id, r.id]
@@ -113,11 +120,15 @@ export async function runDue(ctx: Ctx, input: { today?: string } = {}) {
       })
       if (documentId == null) break
       created.push({ id: r.id, label: r.label, documentId, validated: !!r.auto_validate })
-      next = nextDate(next, r.frequency)
+      next = nextDate(next, r.frequency, r.anchor_day)
+    }
+    } catch (e) {
+      failed.push({ id: r.id, label: r.label, error: e instanceof Error ? e.message : String(e) })
+      console.error(`[recurrentes] contrat ${r.id} en erreur :`, e instanceof Error ? e.message : e)
     }
   }
   if (created.length) await audit(ctx.db, ctx, 'generation', 'factures_recurrentes', null, `${created.length} facture(s)`)
-  return { created }
+  return { created, failed }
 }
 
 /** Contrats dont l'échéance tombe dans les jours à venir (tableau de bord). */

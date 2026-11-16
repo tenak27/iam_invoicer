@@ -374,8 +374,10 @@ export async function remindAll(ctx: Ctx, input: { channel: 'email' | 'sms' }) {
     `SELECT d.id, d.number FROM documents d
      WHERE d.type = 'FAC' AND d.status = 'valide' AND d.due_date < $1
        AND d.total_ttc > COALESCE((SELECT SUM(amount) FROM payments WHERE document_id = d.id), 0) + 0.5
+       -- Déjà relancée par ce canal dans les dernières 24 h : pas de nouvel envoi à chaque clic
+       AND NOT EXISTS (SELECT 1 FROM message_log l WHERE l.document_id = d.id AND l.channel = $2 AND l.status = 'envoye' AND l.created_at > now() - interval '24 hours')
      ORDER BY d.due_date`,
-    [todayISO()]
+    [todayISO(), input.channel === 'sms' ? 'sms' : 'email']
   )
   const result = { sent: 0, failed: [] as { number: string; error: string }[] }
   for (const d of overdue) {

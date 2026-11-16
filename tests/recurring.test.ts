@@ -29,6 +29,9 @@ describe('Factures récurrentes', () => {
     expect(nextDate('2026-11-15', 'trimestriel')).toBe('2027-02-15')
     expect(nextDate('2026-03-31', 'semestriel')).toBe('2026-09-30')
     expect(nextDate('2026-02-28', 'annuel')).toBe('2027-02-28')
+    // Jour choisi au départ : un contrat du 31 revient au 31 après février
+    expect(nextDate('2026-02-28', 'mensuel', 31)).toBe('2026-03-31')
+    expect(nextDate('2026-04-30', 'mensuel', 31)).toBe('2026-05-31')
   })
 
   it('rattrape les échéances manquées et s’arrête à la date de fin', async () => {

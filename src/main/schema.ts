@@ -893,5 +893,9 @@ export const MIGRATIONS: string[] = [
     product_id INT PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE,
     image TEXT NOT NULL
   )
-  `
+  `,
+  // Facture récurrente : jour d'échéance choisi au départ (un contrat du 31 revient au 31 après février)
+  `ALTER TABLE recurring_invoices ADD COLUMN IF NOT EXISTS anchor_day INT`,
+  // Paiements d'un tiers (relevés, soldes) : index sur le tiers
+  `CREATE INDEX IF NOT EXISTS payments_party_idx ON payments(party_id)`
 ]
