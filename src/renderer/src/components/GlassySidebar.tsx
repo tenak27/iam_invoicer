@@ -2,8 +2,9 @@
 //   - tuiles d'icônes colorées (dégradé par rubrique) en squircle ;
 //   - état rail (replié) avec effet loupe façon dock macOS au survol ;
 //   - état étendu avec libellés et pilule active qui glisse (motion layoutId) ;
-//   - lettrage !am DÉPENSE en tête, compte en pied.
-import { useRef, type ReactNode } from 'react'
+//   - lettrage de marque en tête, compte en pied ;
+//   - sur mobile (≤900 px) : tiroir plein écran, l'état réduit (rail) est ignoré.
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { CaretDown, DotsThreeOutline, LockSimple, type Icon } from '@phosphor-icons/react'
@@ -17,6 +18,20 @@ function GsbAvatar({ name, address, size }: { name: string; address: string; siz
   let h = 0
   for (const c of address) h = (h * 31 + c.charCodeAt(0)) >>> 0
   return <span className="gsb-avatar" style={{ width: size, height: size, background: GSB_AV_COLORS[h % GSB_AV_COLORS.length], fontSize: size * 0.38 }} aria-hidden="true">{initials}</span>
+}
+
+// Vrai quand l'écran est en mode mobile (tiroir) : l'état rail n'a alors plus de sens.
+function useIsMobile(): boolean {
+  const [m, setM] = useState(() => (typeof matchMedia === 'function' ? matchMedia('(max-width: 900px)').matches : false))
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return
+    const mq = matchMedia('(max-width: 900px)')
+    const on = () => setM(mq.matches)
+    on()
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  return m
 }
 
 export interface GItem { to: string; label: string; icon: Icon; tone: string; color?: string; locked?: boolean }
@@ -62,10 +77,13 @@ export function GlassySidebar({
   lockedHref?: string
 }) {
   const navRef = useRef<HTMLElement>(null)
+  const mobile = useIsMobile()
+  // État « rail » (icônes seules) : seulement sur grand écran. Dans le tiroir mobile, tout reste déplié.
+  const rail = collapsed && !mobile
 
   // Effet loupe (dock) : uniquement en mode rail, au survol vertical.
   const magnify = (clientY: number) => {
-    if (!collapsed || reduce || !navRef.current) return
+    if (!rail || reduce || !navRef.current) return
     navRef.current.querySelectorAll<HTMLElement>('.gsb-tile').forEach((el) => {
       const r = el.getBoundingClientRect()
       const d = Math.abs(r.top + r.height / 2 - clientY)
@@ -83,26 +101,26 @@ export function GlassySidebar({
   }
 
   return (
-    <aside className={`glass-sb ${collapsed ? 'rail' : 'wide'}`} aria-label="Navigation principale">
+    <aside className={`glass-sb ${rail ? 'rail' : 'wide'}`} aria-label="Navigation principale">
       <div className="gsb-brand">
-        {collapsed
+        {rail
           ? <img className="gsb-mark" src={logoSrc} width={38} height={38} alt="" />
           : (wordmark ?? <img className="gsb-word" src="./wordmark.svg" alt="" />)}
-        {!collapsed && <span className="gsb-company">{companyName}</span>}
+        {!rail && <span className="gsb-company">{companyName}</span>}
         <button className="gsb-collapse" onClick={onToggle} aria-pressed={collapsed} aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'}>
           <DotsThreeOutline size={18} weight="fill" aria-hidden="true" />
         </button>
       </div>
 
-      {!collapsed && topSlot && <div className="gsb-slot">{topSlot}</div>}
+      {!rail && topSlot && <div className="gsb-slot">{topSlot}</div>}
 
       <nav className="gsb-nav" ref={navRef} onMouseMove={(e) => magnify(e.clientY)} onMouseLeave={resetMag}>
         {sections.map((section, si) => {
-          const shut = !collapsed && !!section.title && !!fold && fold.isFolded(section.title)
+          const shut = !rail && !!section.title && !!fold && fold.isFolded(section.title)
           const items = shut ? section.items.filter((it) => isActive(it.to)) : section.items
           return (
           <div className={`gsb-section${shut ? ' is-folded' : ''}`} key={si}>
-            {section.title && !collapsed && (fold
+            {section.title && !rail && (fold
               ? <button type="button" className="gsb-sec-lbl gsb-fold" onClick={() => fold.toggle(section.title!)} aria-expanded={!shut}><span>{section.title}</span><CaretDown size={12} weight="bold" className="gsb-fold-ic" style={{ transform: shut ? 'rotate(-90deg)' : 'none' }} aria-hidden="true" /></button>
               : <div className="gsb-sec-lbl">{section.title}</div>)}
             {items.map((it) => {
@@ -110,13 +128,13 @@ export function GlassySidebar({
               const locked = !!it.locked
               const active = !locked && isActive(it.to)
               return (
-                <NavLink key={it.to} to={locked ? lockedHref : it.to} end={it.to === '/'} className={`gsb-item${active ? ' active' : ''}${locked ? ' locked' : ''}`} title={locked ? `${it.label} — non inclus dans votre licence` : collapsed ? it.label : undefined} style={{ ['--c1' as string]: c1, ['--c2' as string]: c2 }}>
+                <NavLink key={it.to} to={locked ? lockedHref : it.to} end={it.to === '/'} className={`gsb-item${active ? ' active' : ''}${locked ? ' locked' : ''}`} title={locked ? `${it.label} — non inclus dans votre licence` : rail ? it.label : undefined} style={{ ['--c1' as string]: c1, ['--c2' as string]: c2 }}>
                   {active && !reduce && <motion.span layoutId="gsb-pill" className="gsb-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
                   {active && reduce && <span className="gsb-pill" aria-hidden="true" />}
-                  <span className="gsb-tile" aria-hidden="true"><it.icon size={19} weight={active ? 'fill' : 'regular'} />{collapsed && badges?.[it.to] && <span className="gsb-dot" />}</span>
-                  {!collapsed && <span className="gsb-label">{it.label}</span>}
-                  {!collapsed && locked && <LockSimple className="gsb-lock" size={14} weight="fill" aria-label="non inclus" />}
-                  {!collapsed && !locked && badges?.[it.to] && <span className="gsb-badge">{badges[it.to]}</span>}
+                  <span className="gsb-tile" aria-hidden="true"><it.icon size={19} weight={active ? 'fill' : 'regular'} />{rail && badges?.[it.to] && <span className="gsb-dot" />}</span>
+                  {!rail && <span className="gsb-label">{it.label}</span>}
+                  {!rail && locked && <LockSimple className="gsb-lock" size={14} weight="fill" aria-label="non inclus" />}
+                  {!rail && !locked && badges?.[it.to] && <span className="gsb-badge">{badges[it.to]}</span>}
                 </NavLink>
               )
             })}
@@ -125,11 +143,11 @@ export function GlassySidebar({
         })}
       </nav>
 
-      {!collapsed && bottomSlot && <div className="gsb-slot">{bottomSlot}</div>}
+      {!rail && bottomSlot && <div className="gsb-slot">{bottomSlot}</div>}
 
       <div className="gsb-foot">
-        <GsbAvatar name={name} address={address} size={collapsed ? 34 : 36} />
-        {!collapsed && (
+        <GsbAvatar name={name} address={address} size={rail ? 34 : 36} />
+        {!rail && (
           <div className="gsb-who">
             <b>{name}</b>
             <span>{address}</span>

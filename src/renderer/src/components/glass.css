@@ -64,15 +64,21 @@
 /* Cartes un peu vitrées sur le fond ambiant */
 .app .content .card { background: rgba(255, 255, 255, .74); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .7); box-shadow: 0 10px 30px rgba(40, 50, 95, .08); }
 
-/* Mobile : la barre devient un tiroir qui glisse */
+/* Mobile (≤900 px) : la barre devient un tiroir plein écran qui glisse.
+   Le composant force l'état déplié sur mobile (pas de rail), donc rien à « ré-étendre » ici :
+   on positionne simplement le tiroir, hors écran puis visible quand .app.nav-open. */
 @media (max-width: 900px) {
-  .glass-sb { position: fixed; top: 0; left: 0; bottom: 0; margin: 12px; width: 258px; z-index: 40;
-    transform: translateX(calc(-100% - 16px)); transition: transform .4s cubic-bezier(.22, 1.1, .36, 1); }
-  .glass-sb.rail { width: 258px; padding: 14px 12px; align-items: stretch; }
-  .glass-sb.rail .gsb-brand { flex-direction: row; padding: 4px 6px 10px; }
-  .glass-sb.rail .gsb-nav, .glass-sb.rail .gsb-section { align-items: stretch; }
-  .glass-sb.rail .gsb-item { padding: 8px 10px; justify-content: flex-start; }
-  .app.nav-open .glass-sb { transform: none; }
+  .glass-sb {
+    position: fixed; z-index: 60; top: 0; left: 0; bottom: 0;
+    width: min(300px, 86vw); margin: 0; align-items: stretch;
+    border-radius: 0 26px 26px 0;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(var(--tabbar-h, 64px) + env(safe-area-inset-bottom) + 16px);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform .34s cubic-bezier(.22, 1.1, .36, 1), visibility .34s;
+  }
+  .app.nav-open .glass-sb { transform: none; visibility: visible; box-shadow: 0 24px 70px rgba(20, 24, 50, .4); }
+  /* Le bouton de repli (rail) n'a aucun sens dans un tiroir mobile */
+  .gsb-collapse { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
