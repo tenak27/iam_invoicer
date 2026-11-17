@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "motion": "^12.4.0",
     "nodemailer": "^10.0.13",
     "pg": "^8.23.1",
     "qrcode": "^1.5.4"

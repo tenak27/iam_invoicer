@@ -3,7 +3,7 @@ import { PageContext, type Tone } from './pageContext'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   ArrowsDownUp, ArrowUUpLeft, BookOpen, Buildings, CashRegister, ChartBar, ChartLineUp, ClipboardText,
-  ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, SidebarSimple, Factory, FileText, House, ListChecks, ListNumbers,
+  ClockCounterClockwise, Tray, PaperPlaneTilt, Notebook, Handshake, IdentificationBadge, Kanban, Bank, ChartPieSlice, Stack, DotsThreeOutline, Factory, FileText, House, ListChecks, ListNumbers,
   Notepad, Package, Receipt, Scales, ShoppingCart, Truck, UserGear, Users, Wallet, Warehouse,
   WifiSlash, CloudArrowUp, ArrowsClockwise, UserCircle, FileArrowUp, Vault, Stamp, Certificate, LockSimple, Hourglass, ShieldCheck, Repeat, Key, type Icon, Coins } from '@phosphor-icons/react'
 import { can, type Module } from '@shared/domain'
@@ -14,9 +14,10 @@ import { UpdatePrompt } from './UpdatePrompt'
 import { OFFLINE_LABELS } from '@shared/offline'
 import { useCountUpEnhancer } from './motion'
 import { useResponsiveTables } from './responsiveTables'
-import { useNavIndicator } from './fx'
 import { SidebarArt } from './Scenery'
-import { NavFoldTitle, useNavFold } from '../socle/navfold'
+import { useNavFold } from '../socle/navfold'
+import { GlassySidebar, GlassBackdrop } from './GlassySidebar'
+import './glass.css'
 import { InstallPrompt } from '../socle/install'
 
 type Item = { to: string; label: string; short?: string; module: Module; icon: Icon; end?: boolean; tone?: Tone }
@@ -261,12 +262,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const fold = useNavFold('iam-invoicer', collapsed)
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
-  const navRef = useRef<HTMLElement>(null)
   useCountUpEnhancer(mainRef, location.pathname)
   useResponsiveTables(mainRef, location.pathname)
   const online = useOnline()
   const allowed = ALL_ITEMS.filter((it) => can(user.role, it.module) && moduleLicensed(licence, it.module))
-  const navInd = useNavIndicator(navRef, [location.pathname, collapsed, allowed.length, licence?.vendor, fold.version])
   const tabs = TAB_PRIORITY.map((to) => allowed.find((it) => it.to === to)).filter(Boolean).slice(0, 4) as Item[]
 
   useEffect(() => {
@@ -290,58 +289,33 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const current = currentItem(location.pathname)
   const tone: Tone = current?.tone ?? 'blue'
+  const whiteLabel = !!licence?.whiteLabel
+  const sections = NAV.map((section) => ({
+    title: section.title,
+    items: section.items
+      .filter((it) => can(user.role, it.module) && (it.module !== 'licensing' || !!licence?.vendor))
+      .map((it) => ({ to: it.to, label: it.label, icon: it.icon, tone: it.tone ?? section.tone, locked: !!licence && !moduleLicensed(licence, it.module) }))
+  })).filter((s) => s.items.length)
+  const isActive = (to: string) => (current ? current.to === to : to === '/')
 
   return (
     <div className={`app ${open ? 'nav-open' : ''} ${collapsed ? 'nav-collapsed' : ''}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Aller au contenu</a>
       <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />
-      <aside className="sidebar" aria-label="Navigation principale">
-        <div className="brand">
-          {licence?.whiteLabel && company.logo ? <img className="brand-logo brand-own" src={company.logo} width={34} height={34} alt="" /> : <BrandMark size={34} />}
-          <div className="brand-text">
-            {licence?.whiteLabel
-              ? <><div className="brand-name brand-own-name">{company.name}</div><div className="brand-sub">Gestion commerciale</div></>
-              : <><div className="brand-name">IAM <span>INVOICER</span></div><div className="brand-sub">{company.name || 'Votre société'}</div></>}
-          </div>
-          <button className="collapse-btn" onClick={toggleCollapsed} aria-pressed={collapsed} aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'} title={collapsed ? 'Déplier le menu' : 'Replier le menu'}>
-            <SidebarSimple size={20} aria-hidden="true" />
-          </button>
-        </div>
-        <nav ref={navRef} className={navInd ? 'has-ind' : undefined}>
-          {navInd && <span className={`nav-ind${navInd.ready ? ' ready' : ''}`} aria-hidden="true" style={{ transform: `translate(${navInd.x}px, ${navInd.y}px)`, width: navInd.w, height: navInd.h }} />}
-          {NAV.map((section, i) => {
-            // Émission de licences : seulement sur le poste ou le serveur de l'éditeur
-            const items = section.items.filter((it) => can(user.role, it.module) && (it.module !== 'licensing' || !!licence?.vendor))
-            if (items.length === 0) return null
-            // Section repliée : seule la page ouverte, si elle en fait partie, reste affichée
-            const shut = fold.isFolded(section.title)
-            return (
-              <div key={i} className={`nav-section${shut ? ' is-folded' : ''}`}>
-                {section.title && <NavFoldTitle title={section.title} folded={shut} count={items.length} onToggle={() => fold.toggle(section.title!)} />}
-                {(shut ? items.filter((it) => it === current) : items).map((it) => {
-                  // Module hors licence : visible, cadenassé, mène à la page Licence.
-                  const locked = !!licence && !moduleLicensed(licence, it.module)
-                  return (
-                    <NavLink
-                      key={it.to}
-                      to={locked ? '/licence' : it.to}
-                      end={it.end}
-                      title={locked ? `${it.label} — non inclus dans votre licence` : collapsed ? it.label : undefined}
-                      className={({ isActive }) => `nav-link ${isActive && !locked ? 'active' : ''} ${locked ? 'locked' : ''}`}
-                    >
-                      <it.icon className="nav-icon" size={21} aria-hidden="true" />
-                      <span className="nav-label">{it.label}</span>
-                      {locked && <LockSimple className="nav-lock" size={15} weight="fill" aria-label="non inclus" />}
-                    </NavLink>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </nav>
-        <SidebarArt />
-        <div className="weave sidebar-weave" />
-      </aside>
+      <GlassBackdrop />
+      <GlassySidebar
+        sections={sections}
+        collapsed={collapsed}
+        onToggle={toggleCollapsed}
+        isActive={isActive}
+        name={user.full_name || user.username}
+        address={user.username}
+        companyName={whiteLabel ? 'Gestion commerciale' : (company.name || 'Votre société')}
+        logoSrc={whiteLabel && company.logo ? company.logo : './logo.svg'}
+        wordmark={whiteLabel ? <span className="gsb-wordtext">{company.name}</span> : undefined}
+        fold={fold}
+        bottomSlot={<SidebarArt />}
+      />
       <UpdatePrompt />
       <div className="socle-stack">
         {/* Navigateur : installer IAM INVOICER sur l'appareil (pas dans la société de démonstration) */}
