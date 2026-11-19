@@ -293,3 +293,22 @@
     }, { passive: true })
   })
 })()
+
+// Bandeau cookies (tools/site/legal.mjs) : affiché une fois, mémorisé dans le navigateur. Ces sites ne
+// posent aucun traceur ; le bandeau informe et laisse consulter la politique.
+;(function () {
+  var note = document.getElementById('cookie-note')
+  if (!note) return
+  var KEY = 'iam.cookies.v1'
+  var seen = false
+  try { seen = localStorage.getItem(KEY) === 'ok' } catch (e) {}
+  if (seen) return
+  note.hidden = false
+  requestAnimationFrame(function () { note.classList.add('on') })
+  var ok = note.querySelector('[data-cookie-ok]')
+  if (ok) ok.addEventListener('click', function () {
+    try { localStorage.setItem(KEY, 'ok') } catch (e) {}
+    note.classList.remove('on')
+    setTimeout(function () { note.hidden = true }, 300)
+  })
+})()

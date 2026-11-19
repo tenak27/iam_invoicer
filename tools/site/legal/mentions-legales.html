@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mentions légales · {{APP}}</title>
+<meta name="description" content="Mentions légales de {{APP}} : éditeur, directeur de la publication, hébergeur, propriété intellectuelle et contact.">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="{{ICON}}">
+<style>
+  :root { color-scheme: light; --ink: #0f1b33; --muted: #4a5875; --line: #e3e8f0; --accent: #1b6ef3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 "Public Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: var(--ink); background: #f6f8fb; }
+  header { background: #0b1b3a; color: #fff; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; }
+  header a { color: #fff; text-decoration: none; font-weight: 700; }
+  header nav a { font-weight: 500; opacity: .85; margin-left: 14px; font-size: .95rem; }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  main { padding: 32px 20px 56px; }
+  article { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 28px 28px 20px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; line-height: 1.2; }
+  h2 { font-size: 1.15rem; margin: 26px 0 8px; }
+  .muted { color: var(--muted); font-size: .92rem; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); }
+  footer { padding: 0 20px 40px; text-align: center; }
+  @media (max-width: 600px) { article { padding: 20px 16px; } header nav { display: none; } }
+</style>
+</head>
+<body>
+<header><div class="wrap"><a href="/">{{APP}}</a><nav><a href="/legal/confidentialite.html">Confidentialité</a><a href="/legal/conditions.html">Conditions générales</a><a href="/">Retour au site</a></nav></div></header>
+<main><div class="wrap"><article>
+  <h1>Mentions légales</h1>
+  <p class="muted">Application et site <strong>{{APP}}</strong> ({{HOST}}). Dernière mise à jour : {{DATE}}.</p>
+
+  <h2>1. Éditeur</h2>
+  <p>Le présent site et l'application {{APP}} sont édités par <span data-vendor="name">IAM Technology</span>, entreprise établie à <span data-vendor="city">Ouagadougou</span>, <span data-vendor="country">Burkina Faso</span>.<br>
+  Contact : <a data-vendor="email" data-vendor-href="mailto" href="mailto:info@iamtechnology.store">info@iamtechnology.store</a> · <span data-vendor="phone">+226 05 14 23 23</span>.<br>
+  Les informations d'immatriculation (RCCM, IFU) sont communiquées sur simple demande.</p>
+
+  <h2>2. Directeur de la publication</h2>
+  <p>Le directeur de la publication est le représentant légal de <span data-vendor="name">IAM Technology</span>. Toute demande relative au contenu du site peut être adressée à <a data-vendor="email" data-vendor-href="mailto" href="mailto:info@iamtechnology.store">info@iamtechnology.store</a>.</p>
+
+  <h2>3. Hébergement</h2>
+  <p>Le site et l'application sont hébergés sur un serveur exploité par <strong>Hostinger International Ltd</strong> (61 Lordou Vironos Street, 6023 Larnaca, Chypre — <a href="https://www.hostinger.fr/" rel="noopener" target="_blank">hostinger.fr</a>). Pour les clients qui installent l'application sur leur propre matériel (NAS, serveur, Proxmox), l'hébergement est assuré par le client lui-même.</p>
+
+  <h2>4. Propriété intellectuelle</h2>
+  <p>L'application {{APP}}, son code, sa charte graphique, ses textes, ses logos et la marque <span data-vendor="name">IAM Technology</span> sont la propriété exclusive de l'éditeur et sont protégés par le droit d'auteur et le droit des marques. Toute reproduction, représentation ou réutilisation, totale ou partielle, sans autorisation écrite préalable est interdite. Les données saisies par le client dans l'application restent la propriété du client.</p>
+
+  <h2>5. Données personnelles et cookies</h2>
+  <p>Le traitement des données personnelles est décrit dans la <a href="/legal/confidentialite.html">politique de confidentialité</a>, conformément à la loi n° 001-2021/AN du 30 mars 2021 (Burkina Faso). L'usage du stockage local et des cookies est détaillé dans la <a href="/legal/cookies.html">politique relative aux cookies</a>.</p>
+
+  <h2>6. Conditions d'utilisation</h2>
+  <p>L'accès et l'utilisation de l'application sont régis par les <a href="/legal/conditions.html">conditions générales d'utilisation et de vente</a>.</p>
+
+  <h2>7. Responsabilité</h2>
+  <p>L'éditeur s'efforce d'assurer l'exactitude et la mise à jour des informations publiées sur ce site, sans pouvoir en garantir l'exhaustivité. Les liens vers des sites tiers sont fournis pour votre commodité ; l'éditeur n'est pas responsable de leur contenu.</p>
+
+  <h2>8. Droit applicable</h2>
+  <p>Les présentes mentions sont soumises au droit burkinabè et aux Actes uniformes de l'OHADA. Les tribunaux de <span data-vendor="city">Ouagadougou</span> sont compétents, sauf règle impérative contraire.</p>
+</article></div></main>
+<footer><p class="muted">© <span data-year></span> <span data-vendor="name">IAM Technology</span> · <span data-vendor="city">Ouagadougou</span>, <span data-vendor="country">Burkina Faso</span></p></footer>
+<script src="/legal/vendor.js" defer></script>
+</body>
+</html>

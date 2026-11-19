@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookies et stockage local · {{APP}}</title>
+<meta name="description" content="Politique de {{APP}} relative aux cookies et au stockage local : ce qui est enregistré, pourquoi, combien de temps et comment le gérer.">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="{{ICON}}">
+<style>
+  :root { color-scheme: light; --ink: #0f1b33; --muted: #4a5875; --line: #e3e8f0; --accent: #1b6ef3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 "Public Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: var(--ink); background: #f6f8fb; }
+  header { background: #0b1b3a; color: #fff; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; }
+  header a { color: #fff; text-decoration: none; font-weight: 700; }
+  header nav a { font-weight: 500; opacity: .85; margin-left: 14px; font-size: .95rem; }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  main { padding: 32px 20px 56px; }
+  article { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 28px 28px 20px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; line-height: 1.2; }
+  h2 { font-size: 1.15rem; margin: 26px 0 8px; }
+  .muted { color: var(--muted); font-size: .92rem; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; margin: 10px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  a { color: var(--accent); }
+  footer { padding: 0 20px 40px; text-align: center; }
+  @media (max-width: 600px) { article { padding: 20px 16px; } header nav { display: none; } th, td { padding: 6px; } }
+</style>
+</head>
+<body>
+<header><div class="wrap"><a href="/">{{APP}}</a><nav><a href="/legal/confidentialite.html">Confidentialité</a><a href="/legal/mentions-legales.html">Mentions légales</a><a href="/">Retour au site</a></nav></div></header>
+<main><div class="wrap"><article>
+  <h1>Cookies et stockage local</h1>
+  <p class="muted">Application et site <strong>{{APP}}</strong> ({{HOST}}). Dernière mise à jour : {{DATE}}.</p>
+
+  <p>Un cookie, ou une donnée de stockage local, est une petite information enregistrée par votre navigateur. {{APP}} n'en utilise que le strict nécessaire : <strong>aucun cookie publicitaire, aucun traceur, aucune mesure d'audience d'un tiers</strong>. Rien de ce que nous enregistrons n'est partagé avec un annonceur ou un réseau social.</p>
+
+  <h2>Ce que nous enregistrons</h2>
+  <table>
+    <tr><th>Nom</th><th>Rôle</th><th>Type</th><th>Durée</th></tr>
+    <tr><td>Session de connexion</td><td>Vous garder connecté à votre espace, de façon sécurisée</td><td>Nécessaire</td><td>Durée de la session / jusqu'à la déconnexion</td></tr>
+    <tr><td>Préférences d'affichage</td><td>Mémoriser votre thème (clair, sombre), la langue et la mise en page choisie</td><td>Nécessaire au confort</td><td>Jusqu'à effacement par vous</td></tr>
+    <tr><td>Accord sur les cookies</td><td>Se souvenir que vous avez vu et accepté ce bandeau</td><td>Nécessaire</td><td>12 mois</td></tr>
+  </table>
+  <p>Ces éléments sont indispensables au fonctionnement du service ou à votre confort d'utilisation ; c'est pourquoi ils ne font pas l'objet d'un consentement préalable distinct. Le paiement par carte, lorsqu'il est proposé, est assuré par Stripe, qui peut déposer ses propres cookies de sécurité au moment du paiement, selon sa politique.</p>
+
+  <h2>Gérer ou supprimer</h2>
+  <p>Vous pouvez à tout moment effacer ces données depuis les réglages de votre navigateur (rubrique « Cookies et données de sites » ou « Données de navigation »), ou en utilisant la navigation privée. La suppression de la session vous déconnectera et effacera vos préférences d'affichage ; le service continuera de fonctionner normalement.</p>
+
+  <h2>En savoir plus</h2>
+  <p>Le détail des données personnelles traitées figure dans la <a href="/legal/confidentialite.html">politique de confidentialité</a>. Pour toute question : <a data-vendor="email" data-vendor-href="mailto" href="mailto:info@iamtechnology.store">info@iamtechnology.store</a>.</p>
+</article></div></main>
+<footer><p class="muted">© <span data-year></span> <span data-vendor="name">IAM Technology</span> · <span data-vendor="city">Ouagadougou</span>, <span data-vendor="country">Burkina Faso</span></p></footer>
+<script src="/legal/vendor.js" defer></script>
+</body>
+</html>

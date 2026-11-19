@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import postcss from 'postcss'
 import config from '../socle/build/postcss.config.mjs'
 import { injectGamme } from './gamme.mjs'
+import { injectLegal } from './legal.mjs'
 
 const premium = readFileSync(new URL('./premium.css', import.meta.url), 'utf8')
 const behaviours = readFileSync(new URL('./premium.js', import.meta.url), 'utf8').replace(/\r\n?/g, '\n')
@@ -46,6 +47,8 @@ export function stampAssets(html, outDir, extra = {}) {
 export async function finishSite(html, key) {
   if (!key) throw new Error('finishSite : clé du site attendue (invoicer, btp…, technology)')
   html = injectGamme(html, key)
+  // Liens légaux au pied de page et bandeau cookies (tools/site/legal.mjs), communs à tous les sites
+  html = injectLegal(html)
   // Mascotte : le personnage dessiné (SVG) laisse la place au personnage en image, animé par premium.js
   for (const cls of ['hero-awa', 'contact-awa']) {
     const from = html.indexOf(`<svg class="${cls}"`)

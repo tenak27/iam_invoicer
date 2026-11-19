@@ -8,7 +8,8 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import * as Icons from '@phosphor-icons/react'
 import { finishSite, stampAssets } from './premium.mjs'
-import { writeGammeIcons } from './gamme.mjs'
+import { writeGammeIcons, GAMME } from './gamme.mjs'
+import { writeLegalPages } from './legal.mjs'
 
 // « node tools/site/build-entreprise.mjs mails » : site d'IAM MAILS (site-mails/ → out/site-mails)
 // « node tools/site/build-entreprise.mjs btp » : site d'IAM BTP (site-btp/ → out/site-btp)
@@ -183,7 +184,7 @@ if (TRAFFIC) cpSync('site-traffic/captures', `${out}/assets/captures`, { recursi
 if (MEDIA) cpSync('site-media/captures', `${out}/assets/captures`, { recursive: true })
 if (DEPENSE) cpSync('site-depense/captures', `${out}/assets/captures`, { recursive: true })
 // Animation des marques (page autonome, intégrée au site d'IAM Technology dans un cadre)
-const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION && !TRAFFIC && !MEDIA && !DEPENSE
+const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SANTE && !LOCATION && !TRAFFIC && !MEDIA && !DEPENSE && !SENTINEL
 // Le site d'IAM Technology est servi tel quel par nginx : sa politique de contenu est dans la page,
 // avec l'empreinte de chaque script intégré (les sites des logiciels la reçoivent de leur serveur)
 // Boutique : le catalogue et les photos viennent de la base d'IAM Technology dans IAM INVOICER
@@ -383,6 +384,10 @@ if (missing.size) throw new Error('Icônes inconnues : ' + [...missing].join(', 
 // Finition commune des sites et survol réservé à la souris (tools/site/premium.mjs)
 html = await finishSite(html.replace(/\r\n?/g, '\n'), ENTREPRISE ? 'technology' : V.dir.replace('site-', ''))
 await writeGammeIcons(out)
+// Pages légales communes (confidentialité, conditions, mentions légales, cookies) dans /legal/
+const legalKey = ENTREPRISE ? 'technology' : V.dir.replace('site-', '')
+const legalApp = ENTREPRISE ? 'IAM Technology' : (GAMME.find((g) => g.key === legalKey)?.name ?? V.title.split(' — ')[0])
+writeLegalPages(out, { app: legalApp, host, icon: `/assets/${slug}-favicon.png` })
 // Empreinte dans l'adresse des images et des scripts, servis avec un cache d'un an (le script des
 // téléchargements est copié plus tard dans le site de chaque logiciel : son empreinte vient de sa source)
 html = stampAssets(html, out, { 'socle-telechargements.js': 'tools/socle/site/socle-telechargements.js' })
