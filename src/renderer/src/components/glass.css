@@ -1,11 +1,85 @@
 /* IAM — habillage « verre » : barre latérale animée + fond ambiant + cartes vitrées.
    Les teintes du fond ambiant suivent la couleur de marque de l'application (--primary-rgb) ;
-   les tuiles d'icônes sont colorées par rubrique (TONE dans GlassySidebar.tsx). */
+   les tuiles d'icônes sont colorées par rubrique (TONE dans GlassySidebar.tsx).
+   Les couleurs de surface passent par des jetons (--gsb-*) pour gérer le mode nuit. */
+
+:root {
+  --gsb-bg-grad: linear-gradient(135deg, #eef1f7 0%, #e8ecf3 55%, #e5e9f1 100%);
+  --gsb-panel: rgba(255, 255, 255, .5);
+  --gsb-panel-bd: rgba(255, 255, 255, .65);
+  --gsb-panel-hi: rgba(255, 255, 255, .75);
+  --gsb-chip: rgba(255, 255, 255, .6);
+  --gsb-chip-hover: #fff;
+  --gsb-ink: #39414f;
+  --gsb-ink-active: #1e2533;
+  --gsb-ink-muted: #6b7280;
+  --gsb-ink-faint: #9aa2b1;
+  --gsb-hover: rgba(255, 255, 255, .45);
+  --gsb-pill: rgba(255, 255, 255, .82);
+  --gsb-pill-hi: #fff;
+  --gsb-card: rgba(255, 255, 255, .74);
+  --gsb-card-bd: rgba(255, 255, 255, .7);
+  --gsb-kpi: rgba(255, 255, 255, .8);
+  --gsb-kpi-bd: rgba(255, 255, 255, .72);
+  --gsb-foot-line: rgba(70, 80, 120, .12);
+  --gsb-ring: rgba(255, 255, 255, .85);
+  --gsb-shadow: rgba(40, 50, 95, .16);
+  --gsb-card-shadow: rgba(40, 50, 95, .08);
+}
+
+/* Mode nuit : surfaces sombres, textes clairs (aligné sur data-theme='dark' du socle) */
+:root[data-theme='dark'] {
+  --gsb-bg-grad: linear-gradient(135deg, #1b1f33 0%, #20243a 55%, #23283f 100%);
+  --gsb-panel: rgba(40, 44, 66, .55);
+  --gsb-panel-bd: rgba(255, 255, 255, .09);
+  --gsb-panel-hi: rgba(255, 255, 255, .06);
+  --gsb-chip: rgba(255, 255, 255, .08);
+  --gsb-chip-hover: rgba(255, 255, 255, .16);
+  --gsb-ink: #c7c5dc;
+  --gsb-ink-active: #f0eefc;
+  --gsb-ink-muted: #acabc1;
+  --gsb-ink-faint: #8f8ea6;
+  --gsb-hover: rgba(255, 255, 255, .06);
+  --gsb-pill: rgba(255, 255, 255, .1);
+  --gsb-pill-hi: rgba(255, 255, 255, .14);
+  --gsb-card: rgba(47, 51, 73, .66);
+  --gsb-card-bd: rgba(255, 255, 255, .08);
+  --gsb-kpi: rgba(47, 51, 73, .72);
+  --gsb-kpi-bd: rgba(255, 255, 255, .08);
+  --gsb-foot-line: rgba(255, 255, 255, .1);
+  --gsb-ring: rgba(20, 24, 40, .6);
+  --gsb-shadow: rgba(0, 0, 0, .4);
+  --gsb-card-shadow: rgba(0, 0, 0, .28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --gsb-bg-grad: linear-gradient(135deg, #1b1f33 0%, #20243a 55%, #23283f 100%);
+    --gsb-panel: rgba(40, 44, 66, .55);
+    --gsb-panel-bd: rgba(255, 255, 255, .09);
+    --gsb-panel-hi: rgba(255, 255, 255, .06);
+    --gsb-chip: rgba(255, 255, 255, .08);
+    --gsb-chip-hover: rgba(255, 255, 255, .16);
+    --gsb-ink: #c7c5dc;
+    --gsb-ink-active: #f0eefc;
+    --gsb-ink-muted: #acabc1;
+    --gsb-ink-faint: #8f8ea6;
+    --gsb-hover: rgba(255, 255, 255, .06);
+    --gsb-pill: rgba(255, 255, 255, .1);
+    --gsb-pill-hi: rgba(255, 255, 255, .14);
+    --gsb-card: rgba(47, 51, 73, .66);
+    --gsb-card-bd: rgba(255, 255, 255, .08);
+    --gsb-kpi: rgba(47, 51, 73, .72);
+    --gsb-kpi-bd: rgba(255, 255, 255, .08);
+    --gsb-foot-line: rgba(255, 255, 255, .1);
+    --gsb-ring: rgba(20, 24, 40, .6);
+    --gsb-shadow: rgba(0, 0, 0, .4);
+    --gsb-card-shadow: rgba(0, 0, 0, .28);
+  }
+}
 
 /* Fond ambiant derrière toute l'application, teinté par la couleur de l'app */
 .app { position: relative; }
-.glass-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  background: linear-gradient(135deg, #eef1f7 0%, #e8ecf3 55%, #e5e9f1 100%); }
+.glass-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--gsb-bg-grad); }
 .glass-bg .gb { position: absolute; border-radius: 50%; filter: blur(66px); }
 .glass-bg .g1 { width: 460px; height: 460px; left: -80px; top: -60px; background: rgba(var(--primary-rgb, 60 84 165), .30); }
 .glass-bg .g2 { width: 400px; height: 400px; right: 2%; top: 26%; background: rgba(var(--primary-rgb, 60 84 165), .16); }
@@ -15,10 +89,10 @@
 /* Barre en verre (remplace l'ancienne .sidebar) */
 .glass-sb { position: relative; z-index: 3; flex-shrink: 0; display: flex; flex-direction: column;
   width: 258px; margin: 14px 0 14px 14px; padding: 14px 12px;
-  background: rgba(255, 255, 255, .5);
+  background: var(--gsb-panel);
   -webkit-backdrop-filter: blur(22px) saturate(165%); backdrop-filter: blur(22px) saturate(165%);
-  border: 1px solid rgba(255, 255, 255, .65); border-radius: 26px;
-  box-shadow: 0 22px 55px rgba(40, 50, 95, .16), inset 0 1px 0 rgba(255, 255, 255, .75);
+  border: 1px solid var(--gsb-panel-bd); border-radius: 26px;
+  box-shadow: 0 22px 55px var(--gsb-shadow), inset 0 1px 0 var(--gsb-panel-hi);
   transition: width .5s cubic-bezier(.22, 1.1, .36, 1); }
 .glass-sb.rail { width: 80px; padding: 14px 0; align-items: center; }
 
@@ -26,12 +100,12 @@
 .gsb-brand { display: flex; align-items: center; gap: 8px; padding: 4px 6px 10px; min-width: 0; }
 .glass-sb.rail .gsb-brand { flex-direction: column; padding: 4px 0 10px; }
 .gsb-word { height: 28px; width: auto; max-width: 150px; display: block; }
-.gsb-wordtext { font-weight: 800; font-size: 15px; letter-spacing: .3px; color: #1e2533; white-space: nowrap; }
+.gsb-wordtext { font-weight: 800; font-size: 15px; letter-spacing: .3px; color: var(--gsb-ink-active); white-space: nowrap; }
 .gsb-wordtext b { font-weight: 800; color: rgb(var(--primary-rgb, 60 84 165)); }
 .gsb-mark { border-radius: 11px; display: block; }
-.gsb-company { flex: 1; min-width: 0; font-size: 11.5px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gsb-collapse { border: none; background: rgba(255, 255, 255, .6); width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; color: #4b5563; flex: none; }
-.gsb-collapse:hover { background: #fff; }
+.gsb-company { flex: 1; min-width: 0; font-size: 11.5px; color: var(--gsb-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gsb-collapse { border: none; background: var(--gsb-chip); width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; color: var(--gsb-ink); flex: none; }
+.gsb-collapse:hover { background: var(--gsb-chip-hover); }
 
 /* Navigation */
 .gsb-nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 3px; padding: 2px; }
@@ -39,30 +113,30 @@
 .gsb-section { display: flex; flex-direction: column; gap: 3px; }
 .glass-sb.rail .gsb-section { align-items: center; }
 .gsb-section + .gsb-section { margin-top: 8px; }
-.gsb-sec-lbl { font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #9aa2b1; padding: 10px 12px 4px; }
+.gsb-sec-lbl { font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--gsb-ink-faint); padding: 10px 12px 4px; }
 
-.gsb-item { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 13px; text-decoration: none; color: #39414f; font-weight: 600; font-size: 13.5px; min-width: 0; }
+.gsb-item { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 13px; text-decoration: none; color: var(--gsb-ink); font-weight: 600; font-size: 13.5px; min-width: 0; }
 .glass-sb.rail .gsb-item { padding: 7px; justify-content: center; }
-.gsb-item:hover { background: rgba(255, 255, 255, .45); }
-.gsb-item.active { color: #1e2533; }
-.gsb-pill { position: absolute; inset: 0; border-radius: 13px; background: rgba(255, 255, 255, .82); box-shadow: 0 8px 20px rgba(40, 50, 95, .14), inset 0 1px 0 #fff; z-index: 0; }
+.gsb-item:hover { background: var(--gsb-hover); }
+.gsb-item.active { color: var(--gsb-ink-active); }
+.gsb-pill { position: absolute; inset: 0; border-radius: 13px; background: var(--gsb-pill); box-shadow: 0 8px 20px var(--gsb-card-shadow), inset 0 1px 0 var(--gsb-pill-hi); z-index: 0; }
 .gsb-tile { --s: 1; --tx: 0; position: relative; z-index: 1; width: 34px; height: 34px; border-radius: 11px; flex: none; display: grid; place-items: center; color: #fff;
   background: linear-gradient(155deg, var(--c1), var(--c2));
   box-shadow: 0 3px 8px rgba(40, 50, 95, .22), inset 0 1px 0 rgba(255, 255, 255, .4);
   transform: translateX(var(--tx)) scale(var(--s)); transform-origin: left center; transition: transform .16s ease-out; }
 .gsb-label { position: relative; z-index: 1; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gsb-badge { position: relative; z-index: 1; flex: none; }
-.gsb-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: #ef4444; border: 1.5px solid rgba(255, 255, 255, .85); }
+.gsb-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: #ef4444; border: 1.5px solid var(--gsb-ring); }
 
 /* Pied : compte */
-.gsb-foot { display: flex; align-items: center; gap: 10px; padding: 10px 8px 2px; margin-top: 8px; border-top: 1px solid rgba(70, 80, 120, .12); }
+.gsb-foot { display: flex; align-items: center; gap: 10px; padding: 10px 8px 2px; margin-top: 8px; border-top: 1px solid var(--gsb-foot-line); }
 .glass-sb.rail .gsb-foot { justify-content: center; padding: 10px 0 2px; }
 .gsb-who { min-width: 0; }
-.gsb-who b { display: block; font-size: 12.5px; }
-.gsb-who span { display: block; font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gsb-who b { display: block; font-size: 12.5px; color: var(--gsb-ink-active); }
+.gsb-who span { display: block; font-size: 11px; color: var(--gsb-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Cartes un peu vitrées sur le fond ambiant */
-.app .content .card { background: rgba(255, 255, 255, .74); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .7); box-shadow: 0 10px 30px rgba(40, 50, 95, .08); }
+.app .content .card { background: var(--gsb-card); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--gsb-card-bd); box-shadow: 0 10px 30px var(--gsb-card-shadow); }
 
 /* Mobile (≤900 px) : la barre devient un tiroir plein écran qui glisse.
    Le composant force l'état déplié sur mobile (pas de rail), donc rien à « ré-étendre » ici :
@@ -87,23 +161,23 @@
 
 /* Pages améliorées : survol des cartes, tuiles KPI vitrées */
 .app .content .card { transition: transform .22s ease, box-shadow .22s ease; }
-.app .content .card:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(40, 50, 95, .13); }
-.app .content .mini-kpi { background: rgba(255, 255, 255, .8); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .72); box-shadow: 0 10px 30px rgba(40, 50, 95, .08); border-radius: 18px; transition: transform .2s ease, box-shadow .2s ease; }
-.app .content .mini-kpi:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(40, 50, 95, .12); }
+.app .content .card:hover { transform: translateY(-2px); box-shadow: 0 18px 44px var(--gsb-card-shadow); }
+.app .content .mini-kpi { background: var(--gsb-kpi); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--gsb-kpi-bd); box-shadow: 0 10px 30px var(--gsb-card-shadow); border-radius: 18px; transition: transform .2s ease, box-shadow .2s ease; }
+.app .content .mini-kpi:hover { transform: translateY(-2px); box-shadow: 0 16px 38px var(--gsb-card-shadow); }
 
 /* Emplacement pour un widget propre à l'app (sélecteur, jauge) */
 .gsb-slot { padding: 4px 6px; }
 
 /* En-tête de section repliable (ex. IAM ÉDUCATION) */
-.gsb-fold { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; border: none; background: none; cursor: pointer; text-align: left; }
-.gsb-fold:hover { color: #6b7280; }
-.gsb-fold-ic { flex: none; transition: transform .2s ease; color: #9aa2b1; }
+.gsb-fold { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; border: none; background: none; cursor: pointer; text-align: left; color: inherit; }
+.gsb-fold:hover { color: var(--gsb-ink-muted); }
+.gsb-fold-ic { flex: none; transition: transform .2s ease; color: var(--gsb-ink-faint); }
 .gsb-section.is-folded { gap: 0; }
 
 /* Entrée verrouillée (module hors licence) */
 .gsb-item.locked { opacity: .62; }
 .gsb-item.locked:hover { opacity: .8; }
-.gsb-lock { position: relative; z-index: 1; flex: none; color: #9aa2b1; }
+.gsb-lock { position: relative; z-index: 1; flex: none; color: var(--gsb-ink-faint); }
 
 /* Avatar autonome du pied */
 .gsb-avatar { flex: none; display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 700; box-shadow: 0 2px 6px rgba(40, 50, 95, .22), inset 0 1px 0 rgba(255, 255, 255, .35); }
