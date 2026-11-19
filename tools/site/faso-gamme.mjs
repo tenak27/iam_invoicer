@@ -6,6 +6,7 @@
 // Usage : node tools/site/faso-gamme.mjs
 import { readFileSync, writeFileSync } from 'node:fs'
 import { GAMME, writeGammeIcons } from './gamme.mjs'
+import { writeLegalPages } from './legal.mjs'
 
 const SITE = 'C:/Users/konat/Documents/faso-artisans/site'
 const FILE = `${SITE}/index.html`
@@ -95,6 +96,34 @@ const JS = `<script>
   })()
 </script>`
 
+// ── Pages légales et bandeau cookies (tools/site/legal.mjs), comme sur tous les sites IAM ──
+const LEGAL = '<div class="g-legal"><a href="/legal/confidentialite.html">Confidentialité</a><a href="/legal/conditions.html">Conditions générales</a><a href="/legal/mentions-legales.html">Mentions légales</a><a href="/legal/cookies.html">Cookies</a></div>'
+const COOKIE = '<div class="fa-cookie" id="fa-cookie" role="dialog" aria-label="Information sur les cookies" hidden><p>Ce site n\'utilise que les cookies et le stockage nécessaires à son fonctionnement et à vos préférences, sans traceur publicitaire. <a href="/legal/cookies.html">En savoir plus</a></p><button type="button" class="btn btn-green" data-cookie-ok>J’ai compris</button></div>'
+const COOKIE_CSS = `
+  .g-legal { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; padding: 16px 20px 4px; }
+  .g-legal a { color: var(--muted, #5a6b86); font-size: .86rem; text-decoration: none; }
+  .g-legal a:hover { text-decoration: underline; }
+  .fa-cookie { position: fixed; left: 50%; bottom: 16px; translate: -50% 0; z-index: 70; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; width: min(680px, calc(100% - 24px)); padding: 12px 16px; border-radius: 16px; background: #fff; border: 1px solid rgba(13, 59, 120, .14); box-shadow: 0 18px 40px -22px rgba(7, 42, 75, .5); opacity: 0; translate: -50% 10px; transition: opacity .3s ease, translate .3s ease; }
+  .fa-cookie.on { opacity: 1; translate: -50% 0; }
+  .fa-cookie p { margin: 0; flex: 1; min-width: 220px; color: var(--navy, #0d3b78); font-size: .9rem; line-height: 1.45; }
+  @media (prefers-reduced-motion: reduce) { .fa-cookie { transition: none; } }`
+const COOKIE_JS = `<script>
+(function () {
+  var note = document.getElementById('fa-cookie')
+  if (!note) return
+  var KEY = 'iam.cookies.v1', seen = false
+  try { seen = localStorage.getItem(KEY) === 'ok' } catch (e) {}
+  if (seen) return
+  note.hidden = false
+  requestAnimationFrame(function () { note.classList.add('on') })
+  var ok = note.querySelector('[data-cookie-ok]')
+  if (ok) ok.addEventListener('click', function () {
+    try { localStorage.setItem(KEY, 'ok') } catch (e) {}
+    note.classList.remove('on'); setTimeout(function () { note.hidden = true }, 300)
+  })
+})()
+</script>`
+
 function block(name, content, insert, css = false) {
   // Dans une feuille de style, un repère HTML serait lu comme du CSS (et invaliderait la règle suivante)
   const [a, b] = css ? [`/*gamme:${name}*/`, `/*/gamme:${name}*/`] : [`<!--gamme:${name}-->`, `<!--/gamme:${name}-->`]
@@ -116,6 +145,13 @@ block('nav', NAV, (h, w) => h.replace(/(<a class="btn btn-primary" href="\/app\/
 block('panneaux', PANELS, (h, w) => h.replace(/<\/header>\n/, `</header>\n${w}\n`))
 block('pied', PIED, (h, w) => h.replace(/<footer>\n/, `<footer>\n${w}\n`))
 block('js', JS, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
+// Légal et cookies : liens au pied, bandeau et son comportement (idempotents par repères)
+block('legalcss', COOKIE_CSS, (h, w) => h.replace(/\n<\/style>/, `\n${w}\n</style>`), true)
+block('legal', LEGAL, (h, w) => h.replace(/<\/footer>/, `${w}\n</footer>`))
+block('cookie', COOKIE, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
+block('cookiejs', COOKIE_JS, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
 writeFileSync(FILE, html)
 await writeGammeIcons(SITE)
-console.log('gamme ajoutée au site de FASO ARTISANS')
+// Pages légales communes dans faso-artisans/site/legal/
+writeLegalPages(SITE, { app: 'FASO ARTISANS', host: 'artisans-bf.com', icon: '/assets/logo.png' })
+console.log('gamme + pages légales ajoutées au site de FASO ARTISANS')
