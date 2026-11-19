@@ -31,6 +31,7 @@ export const GAMME = [
   { key: 'traffic', name: 'IAM TRAFFIC', url: 'https://traffic.iamtechnology.store/', say: 'Analyse du réseau' },
   { key: 'media', name: 'IAM MEDIA', url: 'https://media.iamtechnology.store/', say: 'Films et séries de votre NAS' },
   { key: 'depense', name: 'IAM DÉPENSE', url: 'https://depense.iamtechnology.store/', say: 'Dépenses, budgets et projets' },
+  { key: 'sentinel', name: 'IAM SENTINEL', url: 'https://sentinel.iamtechnology.store/', say: 'Parc réseau découvert et sécurisé' },
   { key: 'artisans', name: 'FASO ARTISANS', url: 'https://artisans-bf.com/', say: 'Artisans vérifiés près de chez vous' }
 ]
 const source = (key) => MARQUES + (key === 'artisans' ? 'faso-artisans.png' : `iam-${key}-apple-touch.png`)

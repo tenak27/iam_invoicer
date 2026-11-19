@@ -32,7 +32,19 @@ const TRAFFIC = process.argv[2] === 'traffic'
 const MEDIA = process.argv[2] === 'media'
 // « node tools/site/build-entreprise.mjs depense » : site d'IAM DÉPENSE (site-depense/ → out/site-depense)
 const DEPENSE = process.argv[2] === 'depense'
-const V = DEPENSE
+// « node tools/site/build-entreprise.mjs sentinel » : site d'IAM SENTINEL (site-sentinel/ → out/site-sentinel)
+const SENTINEL = process.argv[2] === 'sentinel'
+const V = SENTINEL
+  ? {
+      dir: 'site-sentinel',
+      out: 'out/site-sentinel',
+      assets: ['iam-sentinel.svg', 'iam-sentinel-mark.svg'],
+      title: 'IAM SENTINEL — Découverte, inventaire et sécurité de tout votre parc réseau | IAM Technology',
+      description: "IAM SENTINEL : une plateforme client-serveur qui découvre, cartographie et sécurise chaque machine du réseau (Windows, macOS, Linux, imprimantes, caméras, routeurs). Carte en araignée, inventaire temps réel, score de risque et vulnérabilités, actions à distance signées et tracées. Hébergée ou installée sur site, facturée en FCFA, pour les entreprises, banques, écoles et administrations du Burkina Faso.",
+      ogTitle: 'IAM SENTINEL — Tout votre parc, sous les yeux',
+      icon: 'iam-sentinel-mark.svg'
+    }
+  : DEPENSE
   ? {
       dir: 'site-depense',
       out: 'out/site-depense',
@@ -145,7 +157,7 @@ const V = DEPENSE
   : {
       dir: 'site-entreprise',
       out: 'out/site-entreprise',
-      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'iam-traffic.svg', 'iam-media.svg', 'iam-depense.svg', 'faso-artisans.png'],
+      assets: ['iam-technology.svg', 'iam-technology-mark.svg', 'iam-invoicer.svg', 'iam-mails.svg', 'iam-btp.svg', 'iam-ecommerce.svg', 'iam-reminder.svg', 'iam-education.svg', 'iam-cloud.svg', 'iam-sante.svg', 'iam-location.svg', 'iam-traffic.svg', 'iam-media.svg', 'iam-depense.svg', 'iam-sentinel.svg', 'faso-artisans.png'],
       title: 'IAM Technology — Solutions informatiques, domotique, sécurité et logiciels | Ouagadougou',
       description: "IAM Technology équipe les entreprises du Burkina Faso : solutions informatiques, domotique, sécurité et surveillance, logiciels IAM INVOICER, IAM MAILS, IAM BTP, IAM E-COMMERCE, IAM REMINDER, IAM EDUCATION, IAM CLOUD, IAM SANTÉ, IAM LOCATION et FASO ARTISANS. Ouagadougou, depuis 2021.",
       ogTitle: 'IAM Technology — Informatique, sécurité et logiciels à Ouagadougou depuis 2021',
