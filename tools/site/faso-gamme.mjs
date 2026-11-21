@@ -124,6 +124,19 @@ const COOKIE_JS = `<script>
 })()
 </script>`
 
+// Mesure d'audience first-party (comme les autres sites IAM, tools/site/premium.mjs) : page vue signalée
+// à la console (pilotage), sans cookie ni traceur ni donnée personnelle (hôte et chemin seuls).
+const BEACON = `<script>
+(function () {
+  try {
+    var body = JSON.stringify({ host: location.host, path: location.pathname })
+    var url = 'https://pilotage.iamtechnology.store/api/public/hit'
+    if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))
+    else fetch(url, { method: 'POST', body: body, keepalive: true, mode: 'no-cors' })
+  } catch (e) {}
+})()
+</script>`
+
 function block(name, content, insert, css = false) {
   // Dans une feuille de style, un repère HTML serait lu comme du CSS (et invaliderait la règle suivante)
   const [a, b] = css ? [`/*gamme:${name}*/`, `/*/gamme:${name}*/`] : [`<!--gamme:${name}-->`, `<!--/gamme:${name}-->`]
@@ -150,6 +163,8 @@ block('legalcss', COOKIE_CSS, (h, w) => h.replace(/\n<\/style>/, `\n${w}\n</styl
 block('legal', LEGAL, (h, w) => h.replace(/<\/footer>/, `${w}\n</footer>`))
 block('cookie', COOKIE, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
 block('cookiejs', COOKIE_JS, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
+// Balise de mesure d'audience (idempotente par repère)
+block('beacon', BEACON, (h, w) => h.replace(/(<script src="socle-telechargements\.js" defer><\/script>)/, `${w}\n$1`))
 writeFileSync(FILE, html)
 await writeGammeIcons(SITE)
 // Pages légales communes dans faso-artisans/site/legal/

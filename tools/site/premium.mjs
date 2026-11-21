@@ -12,6 +12,19 @@ import { injectLegal } from './legal.mjs'
 const premium = readFileSync(new URL('./premium.css', import.meta.url), 'utf8')
 const behaviours = readFileSync(new URL('./premium.js', import.meta.url), 'utf8').replace(/\r\n?/g, '\n')
 
+// Mesure d'audience first-party : chaque page vue est signalée à la console d'IAM Technology (pilotage),
+// sur notre propre infrastructure, sans cookie ni traceur ni donnée personnelle (hôte et chemin seuls).
+const beacon = `<script>
+(function () {
+  try {
+    var body = JSON.stringify({ host: location.host, path: location.pathname })
+    var url = 'https://pilotage.iamtechnology.store/api/public/hit'
+    if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'text/plain' }))
+    else fetch(url, { method: 'POST', body: body, keepalive: true, mode: 'no-cors' })
+  } catch (e) {}
+})()
+</script>`
+
 // Les serveurs des logiciels servent les images et les scripts des sites avec un cache d'un an : une
 // adresse qui ne change pas resterait un an chez le visiteur. Chaque fichier porte donc l'empreinte de
 // son contenu dans son adresse (?v=…), qui ne change que lorsque le fichier change.
@@ -61,7 +74,7 @@ export async function finishSite(html, key) {
   html = `${html.slice(0, last)}\n${premium}${html.slice(last)}`
   const end = html.lastIndexOf('</body>')
   if (end < 0) throw new Error('Pas de </body> dans le site')
-  html = `${html.slice(0, end)}<script>\n${behaviours}</script>\n${html.slice(end)}`
+  html = `${html.slice(0, end)}<script>\n${behaviours}</script>\n${beacon}\n${html.slice(end)}`
   html = frenchSpacing(html)
   let out = ''
   let at = 0
