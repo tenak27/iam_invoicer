@@ -57,5 +57,20 @@ writeLegalPages(out, { app: 'IAM INVOICER', host: 'invoice.iamtechnology.store',
 // Image d'aperçu des liens partagés (WhatsApp, Facebook) : l'icône du logiciel, 512 px
 cpSync('assets/marques/iam-invoicer-icone.png', `${out}/assets/iam-invoicer-icone.png`)
 // Empreinte dans l'adresse des images et des scripts, servis avec un cache d'un an
-writeFileSync(`${out}/index.html`, stampAssets(html, out))
+const finalHtml = stampAssets(html, out)
+writeFileSync(`${out}/index.html`, finalHtml)
+// Vraie page 404, habillée comme le site : contenu principal remplacé, non indexée.
+// Servie avec le statut 404 par le serveur (src/server/app.ts).
+{
+  const mStart = finalHtml.indexOf('>', finalHtml.indexOf('<main')) + 1
+  const mEnd = finalHtml.lastIndexOf('</main>')
+  if (mStart > 0 && mEnd > mStart) {
+    const block = '\n<section class="wrap" style="min-height:52vh;display:grid;place-content:center;text-align:center;gap:14px;padding:12vh 0"><p style="font-size:clamp(3rem,12vw,5rem);font-weight:800;margin:0;line-height:1">404</p><h1 style="margin:0">Cette page est introuvable</h1><p>La page que vous cherchez a changé d’adresse ou n’existe plus.</p><p><a class="btn btn-cta" href="/">Retour à l’accueil</a></p></section>\n'
+    const page404 = (finalHtml.slice(0, mStart) + block + finalHtml.slice(mEnd))
+      .replace(/<title>[^<]*<\/title>/, '<title>Page introuvable — IAM INVOICER</title>')
+      .replace(/<meta name="robots"[^>]*>\s*/g, '')
+      .replace('</title>', '</title>\n<meta name="robots" content="noindex">')
+    writeFileSync(`${out}/404.html`, page404)
+  }
+}
 console.log(`Site construit dans ${out}`)

@@ -399,9 +399,13 @@ export function createHandler(opts: ServerOptions) {
     let file = normalize(join(root, decoded))
     // Le fichier doit être DANS le dossier web (et pas dans un dossier voisin au nom proche).
     if (file !== root && !file.startsWith(root + sep)) throw new HttpError(403, 'Accès refusé.')
-    if (!existsSync(file) || statSync(file).isDirectory()) {
-      if (!spa) throw new HttpError(404, 'Fichier introuvable.')
-      file = join(root, 'index.html') // application monopage
+    // Un dossier (ou la racine) rend sa page index.html.
+    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
+    if (!existsSync(file)) {
+      // Application monopage : toute route inconnue rend l'index (le routage se fait côté client).
+      if (spa) file = join(root, 'index.html')
+      // Site de présentation : une adresse inconnue est une vraie erreur 404 (pas un repli silencieux).
+      else return serve404(req, res, root)
     }
     if (!existsSync(file)) throw new HttpError(404, 'Page introuvable.')
     const ext = extname(file)
@@ -414,6 +418,19 @@ export function createHandler(opts: ServerOptions) {
     })
     if (req.method === 'HEAD') return res.end()
     createReadStream(file).pipe(res)
+  }
+
+  /** Vraie page 404 d'un site : sa page 404.html si elle existe, sinon une page minimale ; statut 404. */
+  function serve404(req: IncomingMessage, res: ServerResponse, root: string) {
+    const page = join(root, '404.html')
+    if (existsSync(page) && statSync(page).isFile()) {
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'Content-Security-Policy': fileCsp(page) })
+      if (req.method === 'HEAD') return res.end()
+      return createReadStream(page).pipe(res)
+    }
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' })
+    if (req.method === 'HEAD') return res.end()
+    res.end('<!doctype html><html lang="fr"><meta charset="utf-8"><title>Page introuvable</title><body style="font-family:system-ui,sans-serif;text-align:center;padding:14vh 24px;color:#1e293b"><h1 style="font-size:3rem;margin:0">404</h1><p>Cette page est introuvable.</p><p><a href="/" style="color:#2563eb">Retour à l’accueil</a></p></body></html>')
   }
 
   return async function handle(req: IncomingMessage, res: ServerResponse) {
@@ -457,7 +474,8 @@ export function createHandler(opts: ServerOptions) {
         return res.end()
       }
       if (path.startsWith('/app/')) return serveStatic(req, res, path.slice('/app'.length))
-      return serveStatic(req, res, path, site, true)
+      // Site de présentation : pas une application monopage → une adresse inconnue renvoie une vraie 404.
+      return serveStatic(req, res, path, site, false)
     } catch (e) {
       if (res.headersSent) return res.end()
       // Requête refusée avant d'être lue en entier : la connexion n'est pas réutilisée

@@ -392,6 +392,20 @@ writeLegalPages(out, { app: legalApp, host, icon: `/assets/${slug}-favicon.png` 
 // téléchargements est copié plus tard dans le site de chaque logiciel : son empreinte vient de sa source)
 html = stampAssets(html, out, { 'socle-telechargements.js': 'tools/socle/site/socle-telechargements.js' })
 writeFileSync(`${out}/index.html`, ENTREPRISE ? withCsp(html) : html)
+// Vraie page 404, habillée comme le site (même en-tête, pied et gamme) : contenu principal remplacé,
+// non indexée. Servie avec le statut 404 par le serveur (src/server/app.ts).
+{
+  const mStart = html.indexOf('>', html.indexOf('<main')) + 1
+  const mEnd = html.lastIndexOf('</main>')
+  if (mStart > 0 && mEnd > mStart) {
+    const block = '\n<section class="wrap" style="min-height:52vh;display:grid;place-content:center;text-align:center;gap:14px;padding:12vh 0"><p style="font-size:clamp(3rem,12vw,5rem);font-weight:800;margin:0;line-height:1">404</p><h1 style="margin:0">Cette page est introuvable</h1><p>La page que vous cherchez a changé d’adresse ou n’existe plus.</p><p><a class="btn btn-cta" href="/">Retour à l’accueil</a></p></section>\n'
+    const page404 = (html.slice(0, mStart) + block + html.slice(mEnd))
+      .replace(/<title>[^<]*<\/title>/, `<title>Page introuvable — ${legalApp}</title>`)
+      .replace(/<meta name="robots"[^>]*>\s*/g, '')
+      .replace('</title>', '</title>\n<meta name="robots" content="noindex">')
+    writeFileSync(`${out}/404.html`, ENTREPRISE ? withCsp(page404) : page404)
+  }
+}
 // Page de la boutique : même en-tête, même pied et mêmes scripts que l'accueil ; seul le contenu change,
 // et les liens du menu renvoient aux sections de l'accueil
 if (ENTREPRISE) {
