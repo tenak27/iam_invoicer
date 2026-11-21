@@ -191,7 +191,7 @@ const ENTREPRISE = !MAILS && !BTP && !ECOM && !REMINDER && !EDU && !CLOUD && !SA
 const SHOP = 'https://invoice.iamtechnology.store'
 function withCsp(page) {
   const hashes = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`)
-  const csp = `default-src 'self'; script-src 'self' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: ${SHOP}; frame-src 'self'; connect-src 'self' ${SHOP}; object-src 'none'; base-uri 'self'; form-action 'self'`
+  const csp = `default-src 'self'; script-src 'self' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: ${SHOP}; frame-src 'self'; connect-src 'self' ${SHOP} https://pilotage.iamtechnology.store; object-src 'none'; base-uri 'self'; form-action 'self'`
   return page.replace(/<meta charset="?utf-?8"?>/i, (m) => `${m}<meta http-equiv="Content-Security-Policy" content="${csp}">`)
 }
 if (ENTREPRISE) {
