@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, formatMoney } from '@shared/format'
 import { api, exportCsv, run, useQuery } from '../api'
+import { confirmSensitive } from '../biometric'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, Money, PageHeader, RowActions, SearchInput, Tabs } from '../components/ui'
 import { Eye, Trash, ArrowCircleDown, ArrowCircleUp, Scales, Receipt } from '@phosphor-icons/react'
 import { useCan } from '../session'
@@ -75,8 +76,10 @@ export function Payments() {
                       {
                         label: 'Supprimer le règlement', icon: Trash, tone: 'danger',
                         onClick: async () => {
-                          if (await confirmDialog(`Supprimer le règlement de ${formatMoney(r.amount)} ?`, { danger: true, detail: "L'écriture comptable correspondante est aussi supprimée. Impossible pour un règlement d'une caisse clôturée." }))
-                            if (await run(() => api('payments.delete', { id: r.id }), 'Règlement supprimé.')) reload()
+                          if (!(await confirmDialog(`Supprimer le règlement de ${formatMoney(r.amount)} ?`, { danger: true, detail: "L'écriture comptable correspondante est aussi supprimée. Impossible pour un règlement d'une caisse clôturée." }))) return
+                          const cred = await confirmSensitive(`Confirmez la suppression du règlement de ${formatMoney(r.amount)}.`)
+                          if (!cred) return
+                          if (await run(() => api('payments.delete', { id: r.id, ...cred }), 'Règlement supprimé.')) reload()
                         }
                       }
                     ]} />

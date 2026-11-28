@@ -7,6 +7,7 @@ import { audit, fail, str, type Ctx, type SessionUser } from './context'
 import { checkUserQuota } from './licence'
 import { saveSettings, type CompanySettings } from './settings'
 import { revokeOthers, revokeUser } from './tokens'
+import { verifyAssertion } from './webauthn'
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex')
@@ -169,4 +170,17 @@ export async function changeOwnPassword(ctx: Ctx, input: { current: string; next
 export async function revokeOtherSessions(ctx: Ctx) {
   await revokeOthers(ctx.db, ctx.user!.id, ctx.token)
   return true
+}
+
+/**
+ * Confirme une action sensible (annulation ou suppression d'une facture, remboursement) :
+ * assertion biométrique (Face ID / empreinte / Windows Hello, serveur web) ou, à défaut,
+ * mot de passe du compte. Échoue si aucune confirmation valide n'est fournie.
+ */
+export async function requireConfirm(ctx: Ctx, input: { password?: string; assertion?: any } | string): Promise<void> {
+  if (!ctx.user) fail('Session expirée, veuillez vous reconnecter.')
+  const data = typeof input === 'string' ? { password: input, assertion: undefined } : (input ?? {})
+  if (data.assertion && (await verifyAssertion(ctx, data.assertion))) return
+  if (data.password && (await checkUserPassword(ctx.db, ctx.user.id, data.password))) return
+  fail('Confirmez cette action par Face ID / empreinte ou votre mot de passe.')
 }

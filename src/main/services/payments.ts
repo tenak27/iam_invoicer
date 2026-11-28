@@ -3,6 +3,7 @@
 import { can, DOC_TYPES, type DocType } from '@shared/domain'
 import { todayISO } from '@shared/format'
 import { audit, fail, isoDate, num, str, type Ctx } from './context'
+import { requireConfirm } from './auth'
 import { postPayment, removeSourceEntry } from './accounting'
 
 /** Côtés que l'utilisateur peut voir et régler : ventes (encaissements), achats (décaissements) ; la comptabilité voit tout. */
@@ -89,7 +90,8 @@ export async function addPayment(
   })
 }
 
-export async function deletePayment(ctx: Ctx, args: { id: number }) {
+export async function deletePayment(ctx: Ctx, args: { id: number; password?: string; assertion?: any }) {
+  await requireConfirm(ctx, { password: args?.password, assertion: args?.assertion })
   return ctx.db.tx(async (db) => {
     const p = await db.one('SELECT * FROM payments WHERE id = $1', [args.id])
     if (!p) fail('Paiement introuvable.')

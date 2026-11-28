@@ -13,6 +13,7 @@ import { resolveTaxes } from './taxes'
 import { addDays, searchText, todayISO } from '@shared/format'
 import type { Db } from '../db'
 import { AppError, audit, fail, isoDate, num, str, type Ctx } from './context'
+import { requireConfirm } from './auth'
 import { getSettings } from './settings'
 import { applyStockMovement, lineLots, moveLots } from './stock'
 import { postDocument, postPayment, removeSourceEntry } from './accounting'
@@ -252,8 +253,9 @@ export async function deleteDraft(ctx: Ctx, args: { id: number }) {
 }
 
 /** Administrateur : supprime définitivement un document annulé (le journal d'activité garde la trace de son numéro). */
-export async function purgeDocument(ctx: Ctx, args: { id: number }) {
+export async function purgeDocument(ctx: Ctx, args: { id: number; password?: string; assertion?: any }) {
   if (ctx.user?.role !== 'admin') fail("Seul l'administrateur peut supprimer un document annulé.")
+  await requireConfirm(ctx, { password: args?.password, assertion: args?.assertion })
   return ctx.db.tx(async (db) => {
     const doc = await db.one('SELECT status, type, number FROM documents WHERE id = $1 FOR UPDATE', [args.id])
     if (!doc) fail('Document introuvable.')
@@ -410,7 +412,8 @@ export async function validateDocument(ctx: Ctx, args: { id: number; applyStock?
   return loadDocument(ctx.db, args.id)
 }
 
-export async function cancelDocument(ctx: Ctx, args: { id: number }) {
+export async function cancelDocument(ctx: Ctx, args: { id: number; password?: string; assertion?: any }) {
+  await requireConfirm(ctx, { password: args?.password, assertion: args?.assertion })
   await ctx.db.tx(async (db) => {
     const doc = await db.one('SELECT * FROM documents WHERE id = $1 FOR UPDATE', [args.id])
     if (!doc) fail('Document introuvable.')

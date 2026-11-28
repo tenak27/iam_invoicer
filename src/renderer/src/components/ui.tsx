@@ -124,6 +124,51 @@ export function ConfirmHost() {
   )
 }
 
+// Confirmation d'une action sensible par mot de passe (repli quand Face ID / empreinte n'est
+// pas disponible : application installée, ou aucune clé d'accès enregistrée).
+type PwState = { message: string; detail?: string; resolve: (pw: string | null) => void } | null
+let openPw: ((s: PwState) => void) | null = null
+
+export function passwordDialog(message: string, opts: { detail?: string } = {}): Promise<string | null> {
+  return new Promise((resolve) => { if (openPw) openPw({ message, ...opts, resolve }); else resolve(null) })
+}
+
+export function PasswordPromptHost() {
+  const [state, setState] = useState<PwState>(null)
+  const [pw, setPw] = useState('')
+  useEffect(() => {
+    openPw = setState
+    return () => { openPw = null }
+  }, [])
+  if (!state) return null
+  const close = (value: string | null) => {
+    state.resolve(value)
+    setState(null)
+    setPw('')
+  }
+  return (
+    <Modal
+      title="Confirmation"
+      onClose={() => close(null)}
+      footer={
+        <>
+          <button className="btn" onClick={() => close(null)}>Annuler</button>
+          <button className="btn btn-primary" disabled={!pw} onClick={() => close(pw)}>Confirmer</button>
+        </>
+      }
+    >
+      <p className="confirm-msg">{state.message}</p>
+      {state.detail && <p className="muted">{state.detail}</p>}
+      <label className="field span-1" style={{ marginTop: 8 }}>
+        <span className="field-label">Votre mot de passe</span>
+        <input type="password" value={pw} autoFocus autoComplete="current-password"
+          onChange={(e) => setPw(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && pw) close(pw) }} />
+      </label>
+    </Modal>
+  )
+}
+
 // ---------- Formulaires ----------
 
 export function Field(props: { label: string; children: ReactNode; hint?: string; span?: 1 | 2 | 3 | 4 }) {

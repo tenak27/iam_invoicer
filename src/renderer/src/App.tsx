@@ -5,7 +5,7 @@ import { api } from './api'
 import { setDefaultCurrency } from '@shared/format'
 import { setRolePermissions } from '@shared/domain'
 import { countryProfile } from '@shared/countries'
-import { ConfirmHost, notify, Toaster } from './components/ui'
+import { ConfirmHost, PasswordPromptHost, notify, Toaster } from './components/ui'
 import { Layout } from './components/Layout'
 import { SessionContext, type Session, type User } from './session'
 import { DbConfigScreen, FirstRunScreen, LoginScreen, SetupScreen } from './pages/Auth'
@@ -149,6 +149,7 @@ export default function App() {
     <>
       <Toaster />
       <ConfirmHost />
+      <PasswordPromptHost />
       {welcome && <WelcomeSplash info={welcome} onDone={closeWelcome} />}
       {phase === 'loading' && <StartupScreen />}
       {phase === 'db-error' && <DbConfigScreen error={dbError} />}

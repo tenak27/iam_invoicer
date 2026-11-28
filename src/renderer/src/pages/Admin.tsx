@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { formatDate } from '@shared/format'
 import { ROLE_HINTS, ROLE_LABELS, PERMISSIONS, type Role } from '@shared/domain'
 import { api, run, unwrap, useQuery } from '../api'
+import { biometricSupported, enablePasskey } from '../biometric'
 import { confirmDialog, Empty, ErrorBox, Field, Loading, Modal, notify, PageHeader, RowActions, Tabs, useForm } from '../components/ui'
 import { ArrowCounterClockwise, ArrowsClockwise, CloudArrowDown, CloudCheck, CloudSlash, Database, PencilSimple, Prohibit, Trash, UsersThree, UserCheck, ShieldCheck, CashRegister, Stamp } from '@phosphor-icons/react'
 import { SignaturePad } from '../components/SignaturePad'
@@ -623,6 +624,41 @@ async function squareImage(dataUrl: string, size = 256): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.86)
 }
 
+/** Face ID / empreinte (clé d'accès) : confirme les actions sensibles (annulation ou suppression
+ * d'une facture, remboursement). Disponible sur le serveur web ; sur l'application installée, la
+ * confirmation reste par mot de passe. */
+function PasskeyCard() {
+  const supported = biometricSupported()
+  const { data: keys, reload } = useQuery<any[]>('auth.passkey.list')
+  if (!supported) return null
+  const enable = async () => {
+    if (await run(async () => { await enablePasskey(); return true }, 'Face ID / empreinte activé sur cet appareil.')) void reload()
+  }
+  const remove = async (id: string) => {
+    if (!(await confirmDialog('Supprimer cette clé d’accès ?', { danger: true }))) return
+    if (await run(() => api('auth.passkey.remove', { id }), 'Clé d’accès supprimée.')) void reload()
+  }
+  return (
+    <div className="card narrow">
+      <h3>Face ID / empreinte</h3>
+      <p className="muted small" style={{ marginTop: 0 }}>Confirmez les actions sensibles (annulation ou suppression d’une facture, remboursement) d’un simple regard ou d’une empreinte, au lieu de taper votre mot de passe.</p>
+      {keys?.length ? (
+        <div className="stack">
+          {keys.map((k) => (
+            <div key={k.id} className="row between" style={{ alignItems: 'center' }}>
+              <span className="row gap" style={{ alignItems: 'center' }}><ShieldCheck size={18} aria-hidden="true" /> {k.label} <span className="muted small">· activé le {formatDate((k.created_at ?? '').slice(0, 10))}</span></span>
+              <button className="btn btn-ghost" onClick={() => remove(k.id)}><Trash size={16} aria-hidden="true" /> Retirer</button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="muted small">Aucune clé d’accès sur cet appareil.</p>
+      )}
+      <div className="form-actions"><button className="btn btn-primary" onClick={enable}><ShieldCheck size={18} aria-hidden="true" /> Activer Face ID / empreinte</button></div>
+    </div>
+  )
+}
+
 export function MyAccount() {
   const { user, updateUser } = useSession()
   // Navigateur et mobile : e-mail et WhatsApp de récupération du mot de passe
@@ -667,6 +703,7 @@ export function MyAccount() {
           <div className="form-actions"><button className="btn btn-ghost" onClick={async () => { if (await confirmDialog('Déconnecter tous vos autres appareils ?', { detail: 'Vos autres sessions seront fermées ; vous resterez connecté sur ce poste.' })) await run(() => api('auth.revokeOthers', {}), 'Vos autres appareils sont déconnectés.') }}>Déconnecter tous mes autres appareils</button></div>
         </div>
       </div>
+      <PasskeyCard />
       {http && (
         <div className="narrow">
           <RecoveryContacts server={http.server} token={http.token} />

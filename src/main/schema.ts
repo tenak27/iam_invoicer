@@ -897,5 +897,24 @@ export const MIGRATIONS: string[] = [
   // Facture récurrente : jour d'échéance choisi au départ (un contrat du 31 revient au 31 après février)
   `ALTER TABLE recurring_invoices ADD COLUMN IF NOT EXISTS anchor_day INT`,
   // Paiements d'un tiers (relevés, soldes) : index sur le tiers
-  `CREATE INDEX IF NOT EXISTS payments_party_idx ON payments(party_id)`
+  `CREATE INDEX IF NOT EXISTS payments_party_idx ON payments(party_id)`,
+  // Clés d'accès (passkeys WebAuthn) : confirmation biométrique des actions sensibles (serveur web)
+  `
+  CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    credential_id TEXT PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    public_key TEXT NOT NULL,
+    counter BIGINT NOT NULL DEFAULT 0,
+    transports TEXT,
+    label TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX IF NOT EXISTS webauthn_credentials_user_idx ON webauthn_credentials(user_id);
+  CREATE TABLE IF NOT EXISTS webauthn_challenges (
+    user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    challenge TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+  )
+  `
 ]

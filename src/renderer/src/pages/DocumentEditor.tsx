@@ -5,6 +5,7 @@ import { computeFullTotals, taxCaption, type AppliedTax, type TaxDef } from '@sh
 import { amountInWords, formatDate, formatMoney, formatNumber, todayISO } from '@shared/format'
 import { parseSignatories, type Signatory } from '@shared/signatories'
 import { api, run, unwrap, useQuery } from '../api'
+import { confirmSensitive } from '../biometric'
 import { confirmDialog, ErrorBox, Field, Loading, Modal, Money, notify, PageHeader, PaymentBadge, StatusBadge, useForm } from '../components/ui'
 import { useCan, useSession } from '../session'
 import { DocumentMessages, SendEmailModal, SendSmsModal, SignaturesPanel } from '../components/DocumentComms'
@@ -184,7 +185,14 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
   const action = async (name: string, msg: string, confirmMsg?: string, detail?: string) => {
     if (confirmMsg && !(await confirmDialog(confirmMsg, { detail, danger: true }))) return
-    const r = await run(() => api(name, { id: doc.id }), msg)
+    // Actions sensibles (annulation, suppression) : confirmation Face ID / empreinte, ou mot de passe.
+    let extra: { password?: string; assertion?: unknown } = {}
+    if (name === 'documents.cancel' || name === 'documents.purge') {
+      const cred = await confirmSensitive('Confirmez cette action sensible.')
+      if (!cred) return
+      extra = cred
+    }
+    const r = await run(() => api(name, { id: doc.id, ...extra }), msg)
     if (r) onReload()
   }
 
@@ -229,7 +237,9 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
 
   const purge = async () => {
     if (!(await confirmDialog(`Supprimer définitivement ${doc.number ?? 'ce document'} ?`, { danger: true, detail: 'Action irréversible. Le document annulé disparaît des listes ; le journal d’activité garde la trace de son numéro.' }))) return
-    if (await run(() => api('documents.purge', { id: doc.id }), 'Document supprimé.')) nav(`/docs/${type}`)
+    const cred = await confirmSensitive(`Confirmez la suppression définitive de ${doc.number ?? 'ce document'}.`)
+    if (!cred) return
+    if (await run(() => api('documents.purge', { id: doc.id, ...cred }), 'Document supprimé.')) nav(`/docs/${type}`)
   }
 
   const [preview, setPreview] = useState(false)
@@ -505,8 +515,10 @@ function Editor({ type, doc, onReload }: { type: DocType; doc: any | null; onRel
                   <td className="num"><Money value={p.amount} /></td>
                   <td className="num">
                     <button className="link-btn danger" onClick={async () => {
-                      if (await confirmDialog(`Supprimer le règlement de ${formatMoney(p.amount)} ?`, { danger: true }))
-                        if (await run(() => api('payments.delete', { id: p.id }), 'Règlement supprimé.')) onReload()
+                      if (!(await confirmDialog(`Supprimer le règlement de ${formatMoney(p.amount)} ?`, { danger: true }))) return
+                      const cred = await confirmSensitive(`Confirmez la suppression du règlement de ${formatMoney(p.amount)}.`)
+                      if (!cred) return
+                      if (await run(() => api('payments.delete', { id: p.id, ...cred }), 'Règlement supprimé.')) onReload()
                     }}>Supprimer</button>
                   </td>
                 </tr>

@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { DOC_TYPES, type DocType } from '@shared/domain'
 import { formatDate, todayISO } from '@shared/format'
 import { api, exportCsv, run, unwrap, useQuery } from '../api'
+import { confirmSensitive } from '../biometric'
 import { useSession } from '../session'
 import { confirmDialog, Empty, ErrorBox, Loading, Money, PageHeader, PaymentBadge, RowActions, SearchInput, StatusBadge } from '../components/ui'
 import { Copy, Eye, FilePdf, Printer, Trash, Files, Coins, HourglassMedium, Warning, PencilLine, Prohibit } from '@phosphor-icons/react'
@@ -40,11 +41,15 @@ function DocumentListInner({ type }: { type: DocType }) {
   const isAdmin = useSession().user.role === 'admin'
   const cancel = async (r: any) => {
     if (!(await confirmDialog(`Annuler ${r.number} ?`, { danger: true, detail: 'Les écritures comptables sont retirées et le stock éventuel est rétabli. Le numéro reste réservé, marqué ANNULÉ.' }))) return
-    if (await run(() => api('documents.cancel', { id: r.id }), 'Document annulé.')) reload()
+    const cred = await confirmSensitive(`Confirmez l’annulation de ${r.number}.`)
+    if (!cred) return
+    if (await run(() => api('documents.cancel', { id: r.id, ...cred }), 'Document annulé.')) reload()
   }
   const purge = async (r: any) => {
     if (!(await confirmDialog(`Supprimer définitivement ${r.number ?? 'ce document'} ?`, { danger: true, detail: 'Action irréversible. Le journal d’activité garde la trace de son numéro.' }))) return
-    if (await run(() => api('documents.purge', { id: r.id }), 'Document supprimé.')) reload()
+    const cred = await confirmSensitive(`Confirmez la suppression définitive de ${r.number ?? 'ce document'}.`)
+    if (!cred) return
+    if (await run(() => api('documents.purge', { id: r.id, ...cred }), 'Document supprimé.')) reload()
   }
 
   const doExport = () =>
