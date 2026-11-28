@@ -664,6 +664,7 @@ export function MyAccount() {
           <Field label="Nouveau mot de passe"><input type="password" {...f.bind('next')} /></Field>
           <Field label="Confirmation"><input type="password" {...f.bind('confirm')} /></Field>
           <div className="form-actions"><button className="btn btn-primary" onClick={submit}>Modifier</button></div>
+          <div className="form-actions"><button className="btn btn-ghost" onClick={async () => { if (await confirmDialog('Déconnecter tous vos autres appareils ?', { detail: 'Vos autres sessions seront fermées ; vous resterez connecté sur ce poste.' })) await run(() => api('auth.revokeOthers', {}), 'Vos autres appareils sont déconnectés.') }}>Déconnecter tous mes autres appareils</button></div>
         </div>
       </div>
       {http && (

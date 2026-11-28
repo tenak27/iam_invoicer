@@ -164,3 +164,9 @@ export async function changeOwnPassword(ctx: Ctx, input: { current: string; next
   await audit(ctx.db, ctx, 'modification', 'mot_de_passe', ctx.user!.id)
   return true
 }
+
+/** Ferme les sessions ouvertes sur les autres appareils (garde le poste courant). */
+export async function revokeOtherSessions(ctx: Ctx) {
+  await revokeOthers(ctx.db, ctx.user!.id, ctx.token)
+  return true
+}

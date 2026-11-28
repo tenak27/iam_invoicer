@@ -65,6 +65,7 @@ export const routes: Record<string, { access: Access; fn: Handler }> = {
   'auth.needsSetup': { access: 'public', fn: (ctx) => auth.needsSetup(ctx.db) },
   'auth.setup': { access: 'public', fn: auth.setup },
   'auth.changePassword': { access: 'user', fn: auth.changeOwnPassword },
+  'auth.revokeOthers': { access: 'user', fn: auth.revokeOtherSessions },
   'auth.profile': { access: 'user', fn: auth.getProfile },
   'auth.setAvatar': { access: 'user', fn: auth.setAvatar },
 
@@ -350,7 +351,7 @@ export const CALLS = Object.keys(routes)
 export type CallResult ={ ok: true; data: unknown } | { ok: false; error: string }
 
 /** Toujours permis, même licence expirée : se mettre en règle (raison sociale, comptes, licence). */
-const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'users.devices', 'users.revokeDevice', 'auth.changePassword'])
+const LICENCE_FREE = new Set(['licence.status', 'licence.activate', 'settings.get', 'settings.save', 'settings.docSample', 'users.list', 'users.save', 'users.devices', 'users.revokeDevice', 'auth.changePassword', 'auth.revokeOthers'])
 
 export async function call(ctx: Ctx, name: string, args: unknown): Promise<CallResult> {
   try {
