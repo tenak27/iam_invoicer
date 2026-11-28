@@ -5,7 +5,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import type { Db } from '../db'
 import type { SessionUser } from './context'
 
-const TTL_DAYS = 30
+const TTL_DAYS = 7
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 
